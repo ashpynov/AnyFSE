@@ -1,0 +1,234 @@
+#include <windows.h>
+#include <evntrace.h>
+#include <evntcons.h>
+#include <tdh.h>
+#include <iostream>
+#include <string>
+#include <thread>
+#include <atomic>
+#include <functional>
+
+class TraceEventSession {
+private:
+    TRACEHANDLE m_sessionHandle;
+    TRACEHANDLE m_traceHandle;
+    std::wstring m_sessionName;
+    std::atomic<bool> m_stopping;
+    std::thread m_processingThread;
+
+    // Process event callback
+    std::function<void(const std::wstring&)> m_processStartCallback;
+
+    static void WINAPI EventRecordCallback(EVENT_RECORD* pEventRecord) {
+        TraceEventSession* pThis = reinterpret_cast<TraceEventSession*>(pEventRecord->UserContext);
+        if (pThis) {
+            pThis->HandleEvent(pEventRecord);
+        }
+    }
+
+    void HandleEvent(EVENT_RECORD* pEventRecord) {
+        if (pEventRecord->EventHeader.EventDescriptor.Opcode == 1) { // Process Start
+            HandleProcessStart(pEventRecord);
+        }
+    }
+
+    void HandleProcessStart(EVENT_RECORD* pEventRecord) {
+        DWORD status = ERROR_SUCCESS;
+        PTRACE_EVENT_INFO pInfo = NULL;
+        DWORD bufferSize = 0;
+
+        // Get the event information
+        status = TdhGetEventInformation(pEventRecord, 0, NULL, NULL, &bufferSize);
+        if (status == ERROR_INSUFFICIENT_BUFFER) {
+            pInfo = (PTRACE_EVENT_INFO)malloc(bufferSize);
+            if (pInfo) {
+                status = TdhGetEventInformation(pEventRecord, 0, NULL, pInfo, &bufferSize);
+                if (status == ERROR_SUCCESS) {
+                    // Extract ImageFileName
+                    std::wstring imageFileName = ExtractStringProperty(pEventRecord, pInfo, L"ImageFileName");
+                    
+                    if (!imageFileName.empty() && m_processStartCallback) {
+                        m_processStartCallback(imageFileName);
+                    }
+                }
+                free(pInfo);
+            }
+        }
+    }
+
+    std::wstring ExtractStringProperty(EVENT_RECORD* pEventRecord, PTRACE_EVENT_INFO pInfo, LPCWSTR propertyName) {
+        DWORD status = ERROR_SUCCESS;
+        PROPERTY_DATA_DESCRIPTOR descriptor;
+        DWORD propertySize = 0;
+        std::wstring result;
+
+        // Find the property
+        for (DWORD i = 0; i < pInfo->TopLevelPropertyCount; i++) {
+            if (wcscmp((LPWSTR)((PBYTE)pInfo + pInfo->EventPropertyInfoArray[i].NameOffset), propertyName) == 0) {
+                descriptor.PropertyName = (ULONGLONG)propertyName;
+                descriptor.ArrayIndex = ULONG_MAX;
+                
+                // Get property size
+                status = TdhGetPropertySize(pEventRecord, 0, NULL, 1, &descriptor, &propertySize);
+                if (status == ERROR_SUCCESS && propertySize > 0) {
+                    WCHAR* buffer = new WCHAR[propertySize / sizeof(WCHAR) + 1];
+                    if (buffer) {
+                        status = TdhGetProperty(pEventRecord, 0, NULL, 1, &descriptor, propertySize, (PBYTE)buffer);
+                        if (status == ERROR_SUCCESS) {
+                            buffer[propertySize / sizeof(WCHAR)] = L'\0';
+                            result = buffer;
+                        }
+                        delete[] buffer;
+                    }
+                }
+                break;
+            }
+        }
+        return result;
+    }
+
+    void ProcessEvents() {
+        EVENT_TRACE_LOGFILE logFile = {0};
+        logFile.LoggerName = (LPWSTR)m_sessionName.c_str();
+        logFile.ProcessTraceMode = PROCESS_TRACE_MODE_EVENT_RECORD | PROCESS_TRACE_MODE_REAL_TIME;
+        logFile.EventRecordCallback = EventRecordCallback;
+        logFile.Context = this;
+
+        m_traceHandle = OpenTrace(&logFile);
+        if (m_traceHandle == INVALID_PROCESSTRACE_HANDLE) {
+            std::wcerr << L"OpenTrace failed: " << GetLastError() << std::endl;
+            return;
+        }
+
+        while (!m_stopping) {
+            DWORD status = ProcessTrace(&m_traceHandle, 1, NULL, NULL);
+            if (status != ERROR_SUCCESS && status != ERROR_CANCELLED) {
+                break;
+            }
+            Sleep(100);
+        }
+
+        CloseTrace(m_traceHandle);
+    }
+
+public:
+    TraceEventSession(const std::wstring& sessionName) 
+        : m_sessionName(sessionName), 
+        m_stopping(false), 
+        m_sessionHandle(0), 
+        m_traceHandle(0) {
+    }
+
+    ~TraceEventSession() {
+        Stop();
+    }
+
+    bool EnableKernelProvider(ULONGLONG keywords) {
+        EVENT_TRACE_PROPERTIES* pSessionProperties = nullptr;
+        ULONG bufferSize = sizeof(EVENT_TRACE_PROPERTIES) + (m_sessionName.size() + 1) * sizeof(WCHAR);
+        
+        pSessionProperties = (EVENT_TRACE_PROPERTIES*)malloc(bufferSize);
+        if (!pSessionProperties) return false;
+
+        ZeroMemory(pSessionProperties, bufferSize);
+        pSessionProperties->Wnode.BufferSize = bufferSize;
+        pSessionProperties->Wnode.Flags = WNODE_FLAG_TRACED_GUID;
+        pSessionProperties->Wnode.ClientContext = 1; // Use QPC timer
+        pSessionProperties->Wnode.Guid = SystemTraceControlGuid;
+        pSessionProperties->EnableFlags = keywords;
+        pSessionProperties->LogFileMode = EVENT_TRACE_REAL_TIME_MODE;
+        pSessionProperties->LoggerNameOffset = sizeof(EVENT_TRACE_PROPERTIES);
+
+        wcscpy_s((WCHAR*)((BYTE*)pSessionProperties + pSessionProperties->LoggerNameOffset),
+                 m_sessionName.size() + 1, m_sessionName.c_str());
+
+        ULONG status = StartTrace(&m_sessionHandle, m_sessionName.c_str(), pSessionProperties);
+        if (status != ERROR_SUCCESS) {
+            free(pSessionProperties);
+            return false;
+        }
+
+        EVENT_TRACE_PROVIDER properties;
+        ZeroMemory(&properties, sizeof(properties));
+        properties.Guid = SystemTraceControlGuid;
+
+        status = EnableTraceEx2(m_sessionHandle, 
+                               &SystemTraceControlGuid,
+                               EVENT_CONTROL_CODE_ENABLE_PROVIDER,
+                               TRACE_LEVEL_INFORMATION,
+                               keywords,
+                               0,
+                               0,
+                               &properties);
+
+        free(pSessionProperties);
+        return status == ERROR_SUCCESS;
+    }
+
+    void SetProcessStartCallback(std::function<void(const std::wstring&)> callback) {
+        m_processStartCallback = callback;
+    }
+
+    void StartProcessing() {
+        m_processingThread = std::thread(&TraceEventSession::ProcessEvents, this);
+    }
+
+    void Stop() {
+        m_stopping = true;
+        
+        if (m_processingThread.joinable()) {
+            m_processingThread.join();
+        }
+
+        if (m_sessionHandle) {
+            ControlTrace(m_sessionHandle, NULL, (PEVENT_TRACE_PROPERTIES)&m_sessionHandle, EVENT_TRACE_CONTROL_STOP);
+            m_sessionHandle = 0;
+        }
+    }
+};
+
+// Example usage:
+class StateManager {
+public:
+    static void OnXBoxLaunched() {
+        std::wcout << L"XBox app launched!" << std::endl;
+        // Your implementation here
+    }
+
+    static void OnStart() {
+        std::wcout << L"Monitoring started!" << std::endl;
+        // Your implementation here
+    }
+};
+
+int main() {
+    TraceEventSession session(L"KernelProcessMonitorSession");
+
+    // Enable process events (Process Create = 0x10)
+    if (!session.EnableKernelProvider(0x10)) {
+        std::wcerr << L"Failed to enable kernel provider" << std::endl;
+        return 1;
+    }
+
+    std::wcout << L"ETW monitoring started for process creation events." << std::endl;
+
+    // Subscribe to process start events
+    // session.SetProcessStartCallback([](const std::wstring& imageFileName) {
+    //     std::wstring xboxAppName = L"xboxapp.exe"; // Replace with your actual app name
+    //     if (_wcsicmp(imageFileName.c_str(), xboxAppName.c_str()) == 0) {
+    //         StateManager::OnXBoxLaunched();
+    //     }
+    // });
+
+    StateManager::OnStart();
+    
+    // Start processing events
+    session.StartProcessing();
+
+    // Wait for user input to stop
+    std::wcout << L"Press Enter to stop monitoring..." << std::endl;
+    std::cin.get();
+
+    session.Stop();
+    return 0;
+}

@@ -1,0 +1,54 @@
+{
+    "version": "2.0.0",
+    "windows": {
+        "options": {
+            "shell": {
+                "executable": "cmd.exe",
+                "args": [
+                    "/C",
+                    // The path to VsDevCmd.bat depends on the version of Visual Studio you have installed.
+                    "\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\Tools\\VsDevCmd.bat\"",
+                    "&&"
+                ]
+            }
+        }
+    },
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Build debug project",
+            "command": "msbuild.exe",
+            "args": [
+                "AnyFSE.vcxproj",
+                "-property:Configuration=Debug",
+                "-property:Platform=x64",
+                "-target:Clean;Build",
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "Build release project",
+            "command": "msbuild.exe",
+            "args": [
+                "AnyFSE.vcxproj",
+                "-property:Configuration=Release",
+                "-property:Platform=x64",
+                "-target:Clean;Build"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        }
+    ]
+}
