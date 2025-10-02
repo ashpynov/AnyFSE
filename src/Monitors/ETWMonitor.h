@@ -58,7 +58,7 @@ namespace AnyFSE::Monitors
         void StopRealtimeETW();
         static void WINAPI EventRecordCallback(EVENT_RECORD *eventRecord);
         void ParseWithTDH(PEVENT_RECORD pEvent);
-        void ExtractProperty(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo, LPCWSTR propertyName);
+        DWORD ExtractProperty(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo, int type, LPCWSTR propertyName);
         LPWSTR GetStringPropertyByName(PEVENT_RECORD pEvent, LPCWSTR propertyName);
         void PrintEventSchema(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo);
         static VOID WINAPI FastProcessEventCallback(PEVENT_TRACE pEvent);

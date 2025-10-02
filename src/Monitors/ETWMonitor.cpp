@@ -301,7 +301,7 @@ void ETWMonitor::ParseWithTDH(PEVENT_RECORD pEvent) {
         free(pInfo);
     }
     
-    void ETWMonitor::ExtractProperty(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo, LPCWSTR propertyName) {
+    DWORD ETWMonitor::ExtractProperty(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo, int type, LPCWSTR propertyName) {
         PROPERTY_DATA_DESCRIPTOR descriptors[1];
         DWORD propertySize = 0;
         DWORD status;
@@ -315,23 +315,16 @@ void ETWMonitor::ParseWithTDH(PEVENT_RECORD pEvent) {
             if (pData) {
                 status = TdhGetProperty(pEvent, 0, NULL, 1, descriptors, propertySize, pData);
                 if (status == ERROR_SUCCESS) {
-                    if (*(((char*)pData)+1) == '\0')
-                    {
-                        wprintf(L"%s: %s\n", propertyName, (LPWSTR)pData);
-                    }
-                    else
-                    {
-                        printf("%s: %s\n", Tools::to_string(propertyName).c_str(),(LPSTR)pData);
-                    }
-                    // Process the property data based on its type
-                    
-                    
 
-                    int a = 0;
+                    //else
+                    {
+                        printf(">> %ld bytes.\n", propertySize);
+                    }
                 }
                 free(pData);
             }
         }
+        return propertySize;
     }
 
     void ETWMonitor::PrintEventSchema(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo) {
@@ -355,21 +348,26 @@ void ETWMonitor::ParseWithTDH(PEVENT_RECORD pEvent) {
         ss << "Task: " << pInfo->TaskNameOffset << std::endl;
         log.Info("Event: %s", ss.str().c_str());
         // Print all properties
+        DWORD offset = 0;
          for (DWORD i = 0; i < pInfo->TopLevelPropertyCount; i++) {
             PEVENT_PROPERTY_INFO prop = &pInfo->EventPropertyInfoArray[i];
             PWSTR propName = (PWSTR)((PBYTE)pInfo + prop->NameOffset);
 
-            wprintf(L"[AnyFSE/ETWMonitor]      | Property %d: %s  %d %d\n",
-                    i, propName,
+            wprintf(L"[AnyFSE/ETWMonitor]      |[%ld]|Property %d: %s  %d %d ",
+                    offset, i, propName,
                     prop->nonStructType.InType,
                     prop->nonStructType.OutType
 
             );
-            if (prop->nonStructType.InType ==1 || prop->nonStructType.InType ==2)
-            {
-                ExtractProperty(pEvent, pInfo, propName);
+            int type = prop->nonStructType.InType;
+            if (type == TDH_INTYPE_UNICODESTRING || type == TDH_INTYPE_ANSISTRING ) {
+                PBYTE pData = ((PBYTE)pEvent->UserData) + offset;
+                printf(" >> %s ", type == TDH_INTYPE_UNICODESTRING ? Tools::to_string((LPWSTR)pData).c_str() : (LPSTR)pData);
             }
+            offset += ExtractProperty(pEvent, pInfo, prop->nonStructType.InType, propName);
+
         }
+        fflush(stdout);
         
     }
     
