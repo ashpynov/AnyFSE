@@ -1,14 +1,11 @@
 
 #include <tchar.h>
 #include <windows.h>
-// #include <uxtheme.h>
-// #include <Vsstyle.h>
-// #include <vssym32.h>
 #include "resource.h"
-#include "MainWindow.h"
-#include "Logging/LogManager.h"
-#include "Configuration/Config.h"
-#include "Tools/Tools.h"
+#include "MainWindow.hpp"
+#include "Logging/LogManager.hpp"
+#include "Configuration/Config.hpp"
+#include "Tools/Tools.hpp"
 
 #include <gdiplus.h>
 #pragma comment(lib, "gdiplus.lib")
@@ -278,8 +275,9 @@ namespace AnyFSE::Window
     {
         if (timerId == zoomTimerId)
         {
-            currentZoom += zoomStep;
-            if (abs(currentZoom - 1) > zoomDelta)
+            currentZoom += (zoomStep > 0 ? zoomStep * 5 : zoomStep);
+            if (currentZoom > 1 + zoomDelta && zoomStep > 0 
+                || (currentZoom < 1 - zoomDelta && zoomStep < 0))
             {
                 zoomStep = -zoomStep;
             }

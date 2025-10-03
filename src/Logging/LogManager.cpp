@@ -4,8 +4,8 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
-#include "Logger.h"
-#include "LogManager.h"
+#include "Logger.hpp"
+#include "LogManager.hpp"
 #include <iomanip>
 #include <cstdarg>
 #include <vector>
@@ -134,8 +134,9 @@ namespace AnyFSE::Logging
 
             for (const auto &line : lines)
             {
-                cout << left << setw(45) << consolePrefix << "| " << line << endl;
+                cout << left << setw(48) << consolePrefix << "| " << line << endl;
             }
+            std::cout.flush(); 
         }
     }
 

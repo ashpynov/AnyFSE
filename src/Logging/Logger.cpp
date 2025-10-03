@@ -5,8 +5,8 @@
 #include <exception>
 #include <Windows.h>
 
-#include "Logger.h"
-#include "LogManager.h"
+#include "Logger.hpp"
+#include "LogManager.hpp"
 
 namespace AnyFSE::Logging
 {

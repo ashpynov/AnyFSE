@@ -1,5 +1,5 @@
 #include <filesystem>
-#include "Config.h"
+#include "Config.hpp"
 
 namespace AnyFSE::Configuration
 {
@@ -37,7 +37,7 @@ namespace AnyFSE::Configuration
         LauncherStartCommand = L"C:\\Tools\\Playnite\\Playnite.FullscreenApp.exe";
         LauncherStartCommandArgs = L"";
 
-        XBoxProcessName = L"XBoxPCApp.exe";
+        XBoxProcessName = L"XboxPcApp.exe";
 
         ShowLogo = true;
         ShowText = true;

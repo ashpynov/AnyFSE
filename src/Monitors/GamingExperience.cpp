@@ -1,8 +1,8 @@
 
 #include <apiquery2.h>
 #include <gamingexperience.h>
-#include "Logging/LogManager.h"
-#include "GamingExperience.h"
+#include "Logging/LogManager.hpp"
+#include "GamingExperience.hpp"
 
 #pragma comment(lib, "windowsapp.lib")
 #pragma comment(lib, "onecore.lib")

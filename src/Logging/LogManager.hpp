@@ -4,7 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
-#include "Logger.h"
+#include "Logger.hpp"
 
 namespace AnyFSE::Logging
 {

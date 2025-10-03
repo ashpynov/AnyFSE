@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 #include <locale>
-#include "Logging/LogManager.h"
-#include "Tools.h"
+#include "Logging/LogManager.hpp"
+#include "Tools.hpp"
 
 namespace AnyFSE::Tools
 {
@@ -46,42 +46,25 @@ namespace AnyFSE::Tools
         
         return hIcon;
     }
-    std::wstring to_wstring(const std::string &str)
+    std::string to_string(const std::wstring& wstr)
     {
-        return std::wstring();
-    }
-    std::string to_string(const std::wstring &wstr)
-    {
-        if (wstr.empty()) return "";
+        int len = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, nullptr, 0, nullptr, nullptr);
+        if (len <= 0) return "";
         
         std::string result;
-        result.reserve(wstr.size() * 3); // Reserve space for worst-case UTF-8
+        result.resize(len - 1); // Exact size needed
+        WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, &result[0], len, nullptr, nullptr);
+        return result;
+    }
+
+    std::wstring to_wstring(const std::string& str)
+    {
+        int len = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, nullptr, 0);
+        if (len <= 0) return L"";
         
-        for (wchar_t wc : wstr) {
-            if (wc <= 0x7F) {
-                // ASCII character
-                result += static_cast<char>(wc);
-            }
-            else if (wc <= 0x7FF) {
-                // 2-byte UTF-8
-                result += static_cast<char>(0xC0 | ((wc >> 6) & 0x1F));
-                result += static_cast<char>(0x80 | (wc & 0x3F));
-            }
-            else if (wc <= 0xFFFF) {
-                // 3-byte UTF-8 (most common for BMP)
-                result += static_cast<char>(0xE0 | ((wc >> 12) & 0x0F));
-                result += static_cast<char>(0x80 | ((wc >> 6) & 0x3F));
-                result += static_cast<char>(0x80 | (wc & 0x3F));
-            }
-            else {
-                // 4-byte UTF-8 (surrogate pairs would need special handling)
-                #pragma warning(suppress: 4333)
-                result += static_cast<char>(0xF0 | ((wc >> 18) & 0x07));
-                result += static_cast<char>(0x80 | ((wc >> 12) & 0x3F));
-                result += static_cast<char>(0x80 | ((wc >> 6) & 0x3F));
-                result += static_cast<char>(0x80 | (wc & 0x3F));
-            }
-        }
+        std::wstring result;
+        result.resize(len - 1); // Exact size needed
+        MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, &result[0], len);
         return result;
     }
 }

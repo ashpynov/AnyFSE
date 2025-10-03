@@ -2,7 +2,7 @@
 #include <vector>
 #include <functional>
 #include <gamingexperience.h>
-#include "Event.h"
+#include "Event.hpp"
 
 namespace AnyFSE::Monitors
 {

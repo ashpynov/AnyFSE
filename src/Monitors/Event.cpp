@@ -1,5 +1,5 @@
-#include "Event.h"
-#include "Logging/LogManager.h"
+#include "Event.hpp"
+#include "Logging/LogManager.hpp"
 
 namespace AnyFSE::Monitors
 {
