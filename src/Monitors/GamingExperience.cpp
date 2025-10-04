@@ -1,5 +1,6 @@
-
 #include <apiquery2.h>
+#include <libloaderapi.h>
+#include <libloaderapi2.h>
 #include <gamingexperience.h>
 #include "Logging/LogManager.hpp"
 #include "GamingExperience.hpp"
@@ -11,17 +12,28 @@ namespace AnyFSE::Monitors
 {
     static Logger log = LogManager::GetLogger("GamingExperience");
 
-    bool GamingExperience::ApiIsImplemented = IsApiSetImplemented("api-ms-win-gaming-experience-l1-1-0");
+    bool isApiSetImplemented( const std::string& api )
+    {
+        return  ::IsApiSetImplemented(api.c_str())
+            && QueryOptionalDelayLoadedAPI(
+                GetModuleHandle(NULL),
+                (api + ".dll").c_str(),
+                "RegisterGamingFullScreenExperienceChangeNotification",
+                0
+            );
+    }
+
+    bool GamingExperience::ApiIsAvailable = isApiSetImplemented("api-ms-win-gaming-experience-l1-1-0");
 
     bool GamingExperience::IsActive()
     {
-        return ApiIsImplemented && IsGamingFullScreenExperienceActive();
+        return ApiIsAvailable && IsGamingFullScreenExperienceActive();
     }
 
     GamingExperience::GamingExperience()
     {
         fseHandle = nullptr;
-        if (ApiIsImplemented)
+        if (ApiIsAvailable)
         {
             RegisterGamingFullScreenExperienceChangeNotification((VOID(CALLBACK *)(LPVOID))Callback, this, &fseHandle);
             if (fseHandle != nullptr)
@@ -38,15 +50,15 @@ namespace AnyFSE::Monitors
             }
         }
     }
-    //static 
+    //static
     void GamingExperience::Callback(GamingExperience * This)
     {
         This->OnExperienseChanged.Notify();
     }
-    
+
     GamingExperience::~GamingExperience()
     {
-        if (fseHandle != nullptr && ApiIsImplemented)
+        if (fseHandle != nullptr && ApiIsAvailable)
         {
             UnregisterGamingFullScreenExperienceChangeNotification(fseHandle);
         }

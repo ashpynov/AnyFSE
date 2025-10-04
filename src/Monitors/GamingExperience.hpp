@@ -14,7 +14,7 @@ namespace AnyFSE::Monitors
         static void Callback(GamingExperience * This);
 
     public:
-        static bool ApiIsImplemented;
+        static bool ApiIsAvailable;
         static bool IsActive();
         GamingExperience();
         ~GamingExperience();

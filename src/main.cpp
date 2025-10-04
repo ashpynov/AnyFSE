@@ -57,17 +57,25 @@ BOOL isRunningAsAdministrator()
 BOOL RequestAdminElevation() {
     wchar_t modulePath[MAX_PATH];
     GetModuleFileName(NULL, modulePath, MAX_PATH);
-    
+
     SHELLEXECUTEINFO sei = { sizeof(sei) };
     sei.lpVerb = L"runas";  // Request UAC elevation
     sei.lpFile = modulePath;
     sei.nShow = SW_NORMAL;
-    
-    if (ShellExecuteEx(&sei)) 
+
+    if (ShellExecuteEx(&sei))
     {
         exit(0);
     }
     return false;
+}
+
+void InitCustomControls()
+{
+    INITCOMMONCONTROLSEX icex;
+    icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    icex.dwICC = ICC_STANDARD_CLASSES;
+    ::InitCommonControlsEx(&icex);
 }
 
 int WINAPI WinMain(HINSTANCE hInstance,
@@ -94,38 +102,33 @@ int WINAPI WinMain(HINSTANCE hInstance,
     }
 
     // Initialize common controls
-    INITCOMMONCONTROLSEX icex;
-    icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    icex.dwICC = ICC_STANDARD_CLASSES;
-    InitCommonControlsEx(&icex);
+
+    if (!GamingExperience::ApiIsAvailable)
+    {
+        log.Critical("Fullscreen Gaming API is not detected, exiting\n");
+        InitCustomControls();
+        TaskDialog(NULL, hInstance,
+                   L"Error",
+                   L"Gaming Fullscreen Experiense API is not detected",
+                   L"Fullscreen expiriense is not available on your version of windows.\n"
+                   L"It is supported since Windows 25H2 version for Handheld Devices",
+                   TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
+        return -1;
+    }
 
     if (!isRunningAsAdministrator())
     {
         log.Critical("Application should be executed as Adminisrator, exiting\n");
-
+        InitCustomControls();
         TaskDialog(NULL, hInstance,
-            L"Insufficient permissons",
-            L"Please run AnyFSE as Administrator",
-            L"Escalated privileges is required to monitor XBox application execution "
-            L"or instaling application as schedulled autorun task.\n\n",
-            TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL 
-        );
+                   L"Insufficient permissons",
+                   L"Please run AnyFSE as Administrator",
+                   L"Escalated privileges is required to monitor XBox application execution "
+                   L"or instaling application as schedulled autorun task.\n\n",
+                   TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
         return -1;
     }
 
-    if (!GamingExperience::ApiIsImplemented)
-    {
-        log.Critical("Fullscreen Gaming API is not detected, exiting\n");
-
-        TaskDialog(NULL, hInstance,
-            L"Error",
-            L"Gaming Fullscreen Experiense API is not detected",
-            L"Fullscreen expiriense is not available on your version of windows.\n"
-            L"It is supported since Windows 25H2 version for Handheld Devices",
-            TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL 
-        );
-        return -1;
-    }
     {
         MainWindow mainWindow;
 
@@ -137,21 +140,21 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
         GamingExperience fseMonitor;
 
-        fseMonitor.OnExperienseChanged += ([&log]() 
+        fseMonitor.OnExperienseChanged += ([&log]()
         {
             log.Info(
                 "Mode is changed to %s\n",
                 GamingExperience::IsActive() ? "Fullscreeen expirience" : "Windows Desktop"
             );
         });
-        
+
         ETWMonitor etwMonitor(Config::XBoxProcessName);
-        etwMonitor.OnProcessExecuted += ([&log]() 
+        etwMonitor.OnProcessExecuted += ([&log]()
         {
             log.Info("Xbox process execution is detected\n" );
         });
-        
-        etwMonitor.OnFailure += ([]() 
+
+        etwMonitor.OnFailure += ([]()
         {
             PostQuitMessage(-1);
         });
@@ -160,14 +163,14 @@ int WINAPI WinMain(HINSTANCE hInstance,
         etwMonitor.Run(cancelToken);
 
         log.Info("Run window loop.");
-        
+
         exitCode = MainWindow::RunLoop();
 
         log.Info("Loop finished. Time to exit");
-        
+
         etwMonitor.Stop();
     }
-    
+
     if (exitCode)
     {
         log.Warn(log.APIError(exitCode),"Exiting with code: (%d) error", exitCode);
@@ -176,6 +179,6 @@ int WINAPI WinMain(HINSTANCE hInstance,
     {
         log.Info("Job is done!");
     }
-        
+
     return (int) exitCode;
 }
