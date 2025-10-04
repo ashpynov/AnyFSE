@@ -18,9 +18,9 @@ namespace AnyFSE::Window
         UINT_PTR zoomTimerId = 1;
         int ZOOM_INTERVAL_MS = 20;
         
-        float currentZoom = 1.0f;
-        float zoomStep = 0.004f;
-        float zoomDelta = 0.07f;
+        float currentZoom = 0.96f;
+        float zoomStep = 0.002f;
+        float zoomDelta = 0.06f;
         UINT_PTR hTimer = NULL;
 
         static WNDCLASS stWC;
