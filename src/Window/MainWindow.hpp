@@ -1,8 +1,8 @@
 #pragma once
-#include <Windows.h>
+#include <windows.h>
 #include <string>
+#define byte ::byte
 #include <gdiplus.h>
-
 namespace AnyFSE::Window
 {
     class MainWindow
@@ -58,6 +58,7 @@ namespace AnyFSE::Window
 
         bool Show(int mode = SW_SHOW);
         bool Hide();
+        bool IsVisible();
     };
  
 }

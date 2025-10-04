@@ -7,6 +7,7 @@
 #include "Configuration/Config.hpp"
 #include "Tools/Tools.hpp"
 
+#define byte ::byte
 #include <gdiplus.h>
 #pragma comment(lib, "gdiplus.lib")
 // #pragma comment(lib, "uxtheme.lib")
@@ -87,7 +88,7 @@ namespace AnyFSE::Window
             return false;
         }
 
-        hWnd = CreateWindow((LPCTSTR)aClass, windowName, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 500, 500, NULL, NULL, hInstance, this);
+        hWnd = CreateWindow((LPCTSTR)aClass, windowName, WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, NULL, NULL, hInstance, this);
 
         if (!IsWindow(hWnd))
         {
@@ -104,8 +105,8 @@ namespace AnyFSE::Window
         bool res = false;
         if (IsWindow(hWnd))
         {
-            res = ShowWindow(hWnd, mode);
-            UpdateWindow(hWnd);
+            //res = ShowWindow(hWnd, mode);
+            res = AnimateWindow(hWnd, 200, AW_BLEND);
             if (mode)
             {
                 StartAnimation();
@@ -117,7 +118,12 @@ namespace AnyFSE::Window
     bool MainWindow::Hide()
     {
         StopAnimation();
-        return !IsWindow(hWnd) || Show(SW_HIDE);
+        return !IsWindow(hWnd) || AnimateWindow(hWnd, 200, AW_BLEND|AW_HIDE);
+    }
+
+    bool MainWindow::IsVisible()
+    {
+        return IsWindowVisible(hWnd);
     }
 
     // static
