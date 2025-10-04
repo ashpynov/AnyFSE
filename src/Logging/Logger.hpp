@@ -1,8 +1,7 @@
 ﻿#pragma once
 #include <string>
-#include <minwindef.h>
+#include <windows.h>
 #include <exception>
-
 
 namespace AnyFSE::Logging
 {

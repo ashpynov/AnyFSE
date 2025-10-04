@@ -8,7 +8,7 @@ namespace AnyFSE::Process
     HRESULT Kill(const std::wstring& processName);
     HRESULT Kill(DWORD processId);
     DWORD Start(const std::wstring &command, const std::wstring &arguments);
-    HWND  FindWindow(DWORD processId, const std::string& title);
+    HWND  GetWindow(DWORD processId, const std::wstring& title);
 }
 
 namespace Process = AnyFSE::Process;

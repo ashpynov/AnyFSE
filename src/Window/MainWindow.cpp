@@ -25,8 +25,6 @@ namespace AnyFSE::Window
     }
     MainWindow::~MainWindow()
     {
-        FreeTheme();
-
         if (stWC.hIcon)
         {
             DestroyIcon(stWC.hIcon);
@@ -44,41 +42,17 @@ namespace AnyFSE::Window
         }
     }
 
-    void MainWindow::LoadTheme(LPCWSTR className)
-    {
-        // TO DO apply mica theme or other hTheme stuff
-        themeBackgroundColor.SetFromCOLORREF(Config::BackgroundColor);
-        hThemeBackgroundBrush = CreateSolidBrush(Config::BackgroundColor);
-    }
 
-    void MainWindow::FreeTheme()
-    {
-        DeleteObject(hThemeBackgroundBrush);
-    }
-
-    BOOL MainWindow::LoadLogoImage(const std::wstring& filename)
-    {
-        if (!Config::ShowLogo)
-        {
-            return FALSE;
-        }
-
-        pLogoImage = new Gdiplus::Image(filename.c_str());
-        return (pLogoImage && pLogoImage->GetLastStatus() == Gdiplus::Status::Ok);
-    }
 
     bool MainWindow::Create(LPCWSTR className, HINSTANCE hIstance, LPCTSTR windowName)
     {
-        LoadTheme(className);
-        Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-        GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-        LoadLogoImage(Config::LauncherLogoPath);
+
 
         stWC.lpszClassName = className;
         stWC.hInstance = hInstance;
         stWC.lpfnWndProc = MainWndProc;
         stWC.hIcon = Tools::LoadIcon(Config::LauncherIcon);
-        stWC.hbrBackground = hThemeBackgroundBrush;
+        //stWC.hbrBackground = NULL_BRUSH;
         stWC.style = CS_HREDRAW | CS_VREDRAW;
 
         aClass = RegisterClass(&stWC);
@@ -100,24 +74,13 @@ namespace AnyFSE::Window
         return true;
     };
 
-    bool MainWindow::Show(int mode)
+    bool MainWindow::Show()
     {
-        bool res = false;
-        if (IsWindow(hWnd))
-        {
-            //res = ShowWindow(hWnd, mode);
-            res = AnimateWindow(hWnd, 200, AW_BLEND);
-            if (mode)
-            {
-                StartAnimation();
-            }
-        }
-        return res;
+        return IsWindow(hWnd) && AnimateWindow(hWnd, 200, AW_BLEND);
     }
 
     bool MainWindow::Hide()
     {
-        StopAnimation();
         return !IsWindow(hWnd) || AnimateWindow(hWnd, 200, AW_BLEND|AW_HIDE);
     }
 
@@ -174,9 +137,6 @@ namespace AnyFSE::Window
         case WM_PAINT:
             OnPaint();
             break;
-        case WM_TIMER:
-            OnTimer(wParam);
-            break;
         case WM_DESTROY:
             OnDestroy();
             break;
@@ -223,74 +183,7 @@ namespace AnyFSE::Window
     {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
-
-        RECT clientRect;
-        GetClientRect(hWnd, &clientRect);
-        int clientWidth = clientRect.right - clientRect.left;
-        int clientHeight = clientRect.bottom - clientRect.top;
-
-        // Double buffering
-        HDC hdcMem = CreateCompatibleDC(hdc);
-        HBITMAP hbmMem = CreateCompatibleBitmap(hdc, clientWidth, clientHeight);
-        HBITMAP hbmOld = (HBITMAP)SelectObject(hdcMem, hbmMem);
-
-        Gdiplus::Graphics graphics(hdcMem);
-
-        // Fill background
-        Gdiplus::SolidBrush backgroundBrush(themeBackgroundColor);
-        graphics.FillRectangle(&backgroundBrush, 0, 0, clientWidth, clientHeight);
-
-        if (Config::ShowLogo && pLogoImage && pLogoImage->GetLastStatus() == Gdiplus::Ok)
-        {
-            Gdiplus::REAL imageWidth = pLogoImage->GetWidth() * currentZoom;
-            Gdiplus::REAL imageHeight = pLogoImage->GetHeight() * currentZoom;
-            Gdiplus::REAL xPos = (clientWidth - imageWidth) / 2;
-            Gdiplus::REAL yPos = (clientHeight - imageHeight) / 2;
-
-            // Draw centered image
-            graphics.DrawImage(pLogoImage, xPos, yPos, imageWidth, imageHeight);
-        }
-
-        if (Config::ShowText)
-        {
-            // Display text
-            Gdiplus::Font font(L"Arial", 16);
-            Gdiplus::SolidBrush textBrush(Gdiplus::Color::White);
-            std::wstring name = wstring(L"Launching ") + Config::LauncherName;
-
-            // Use StringFormat for precise centering
-            Gdiplus::StringFormat format;
-            format.SetAlignment(Gdiplus::StringAlignmentCenter);
-            format.SetLineAlignment(Gdiplus::StringAlignmentCenter);
-            Gdiplus::RectF textArea(0, (Gdiplus::REAL)clientHeight * 0.8f, (Gdiplus::REAL)clientWidth, 40); // Bottom 80 pixels
-            graphics.DrawString(name.c_str(), -1, &font, textArea, &format, &textBrush);
-        }
-
-        // Copy to screen
-        BitBlt(hdc, 0, 0, clientWidth, clientHeight, hdcMem, 0, 0, SRCCOPY);
-
-        // Cleanup
-        SelectObject(hdcMem, hbmOld);
-        DeleteObject(hbmMem);
-        DeleteDC(hdcMem);
-
         EndPaint(hWnd, &ps);
-    }
-
-    void MainWindow::OnTimer(UINT_PTR timerId)
-    {
-        if (timerId == zoomTimerId)
-        {
-            currentZoom += (zoomStep > 0 ? zoomStep * 5 : zoomStep);
-            if (currentZoom > 1 + zoomDelta && zoomStep > 0 
-                || (currentZoom < 1 - zoomDelta && zoomStep < 0))
-            {
-                zoomStep = -zoomStep;
-            }
-
-            // Force repaint
-            InvalidateRect(hWnd, NULL, FALSE);
-        }
     }
 
     void MainWindow::OnTray(LPARAM message)
@@ -298,7 +191,7 @@ namespace AnyFSE::Window
         switch (message)
         {
         case WM_LBUTTONDBLCLK:
-            SendMessage(hWnd, WM_COMMAND, ID_SHOW, 0);
+            SendMessage(hWnd, WM_COMMAND, ID_CONFIGURE, 0);
             break;
 
         case WM_RBUTTONDOWN:
@@ -341,30 +234,6 @@ namespace AnyFSE::Window
         stData.hWnd = hWnd;
         Shell_NotifyIcon(NIM_DELETE, &stData);
 
-        if (pLogoImage)
-        {
-            delete pLogoImage;
-            pLogoImage = NULL;
-        }
-        Gdiplus::GdiplusShutdown(gdiplusToken);
         PostQuitMessage(0);
-    }
-
-    BOOL MainWindow::StartAnimation()
-    {
-        if (Config::ShowAnimation && Config::ShowLogo && !hTimer && pLogoImage)
-        {
-            hTimer = SetTimer(hWnd, zoomTimerId, ZOOM_INTERVAL_MS, NULL);
-        }
-        return TRUE;
-    }
-    BOOL MainWindow::StopAnimation()
-    {
-        if (hTimer)
-        {
-            KillTimer(hWnd, zoomTimerId);
-            hTimer = NULL;
-        }
-        return TRUE;
     }
 }

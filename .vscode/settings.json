@@ -80,6 +80,9 @@
         "forward_list": "cpp",
         "unordered_map": "cpp",
         "xhash": "cpp",
-        "*.c_pp": "cpp"
+        "*.c_pp": "cpp",
+        "condition_variable": "cpp",
+        "deque": "cpp",
+        "queue": "cpp"
     }
 }

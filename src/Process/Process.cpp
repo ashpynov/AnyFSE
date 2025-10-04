@@ -129,7 +129,7 @@ namespace AnyFSE::Process
     struct WindowSearchData
     {
         DWORD processId;
-        std::string windowTitle;
+        std::wstring windowTitle;
         HWND foundWindow;
     };
 
@@ -153,12 +153,12 @@ namespace AnyFSE::Process
                 }
 
                 // Get window title
-                char title[256];
-                int titleLength = GetWindowTextA(hwnd, title, sizeof(title));
+                wchar_t title[256];
+                int titleLength = GetWindowTextW(hwnd, title, sizeof(title));
 
                 if (titleLength > 0)
                 {
-                    std::string currentTitle(title, titleLength);
+                    std::wstring currentTitle(title, titleLength);
 
                     // Compare titles (case-sensitive)
                     if (currentTitle == searchData->windowTitle)
@@ -173,7 +173,7 @@ namespace AnyFSE::Process
         return TRUE; // Continue enumeration
     }
 
-    HWND FindWindow(DWORD processId, const std::string &windowTitle)
+    HWND GetWindow(DWORD processId, const std::wstring &windowTitle)
     {
         if (processId == 0)
         {

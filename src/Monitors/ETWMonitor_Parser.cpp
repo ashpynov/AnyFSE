@@ -12,7 +12,7 @@
 namespace AnyFSE::Monitors
 {
 
-    static Logger log = LogManager::GetLogger("ETWMonitor_Parser");  
+    static Logger log = LogManager::GetLogger("ETWMonitor/Parser");  
    
     template<class T>
     PBYTE DataAt(T data, ULONG offset)

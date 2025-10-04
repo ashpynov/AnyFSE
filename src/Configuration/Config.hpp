@@ -19,7 +19,6 @@ namespace AnyFSE::Configuration
             
             static wstring LauncherName;
             static wstring LauncherWindowName;
-            static wstring LauncherLogoPath;
             static wstring LauncherIcon;
             static wstring LauncherProcessName;
             static wstring LauncherStartCommand;
@@ -27,11 +26,6 @@ namespace AnyFSE::Configuration
 
             static wstring XBoxProcessName;
 
-            static bool ShowLogo;
-            static bool ShowText;
-            static bool ShowAnimation;
-            static COLORREF BackgroundColor;
-            
             static bool SilentMode;
     };
 }

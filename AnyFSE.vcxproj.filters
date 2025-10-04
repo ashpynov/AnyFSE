@@ -36,7 +36,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="src\AnyFSEIcon.ico">
+    <Image Include="media\AnyFSEIcon.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

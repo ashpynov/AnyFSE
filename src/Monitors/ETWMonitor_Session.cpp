@@ -11,7 +11,7 @@
 namespace AnyFSE::Monitors
 {
 
-    static Logger log = LogManager::GetLogger("ETWMonitor_Session");
+    static Logger log = LogManager::GetLogger("ETWMonitor/Session");
     
     // Process Provider GUID for real-time process monitoring
     // {22FB2CD6-0E7B-422B-A0C7-2FAD1FD0E716} - Microsoft-Windows-Kernel-Process

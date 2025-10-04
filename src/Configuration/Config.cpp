@@ -7,16 +7,11 @@ namespace AnyFSE::Configuration
     
     wstring Config::LauncherName;
     wstring Config::LauncherWindowName;
-    wstring Config::LauncherLogoPath;
     wstring Config::LauncherIcon;
     wstring Config::LauncherProcessName;
     wstring Config::LauncherStartCommand;
     wstring Config::LauncherStartCommandArgs;
     wstring Config::XBoxProcessName;
-    bool Config::ShowLogo = true;
-    bool Config::ShowText = true;
-    bool Config::ShowAnimation = true;
-    COLORREF Config::BackgroundColor;
     bool Config::SilentMode = false;
 
     wstring Config::GetFilename()
@@ -31,7 +26,6 @@ namespace AnyFSE::Configuration
     {
         LauncherName = L"Playnite";
         LauncherWindowName = L"Playnite";
-        LauncherLogoPath = L"C:\\Users\\Admin\\source\\repos\\ashpynov\\AnyFSE\\media\\playnite-logo-white-150.png";
         LauncherIcon = L"C:\\Tools\\Playnite\\Playnite.FullscreenApp.exe";        
         LauncherProcessName = L"Playnite.FullscreenApp.exe";
         LauncherStartCommand = L"C:\\Tools\\Playnite\\Playnite.FullscreenApp.exe";
@@ -39,11 +33,6 @@ namespace AnyFSE::Configuration
 
         XBoxProcessName = L"XboxPcApp.exe";
 
-        ShowLogo = true;
-        ShowText = true;
-        ShowAnimation = true;
-        BackgroundColor = RGB(32, 32, 32);
-        
         SilentMode = false;
     }
 

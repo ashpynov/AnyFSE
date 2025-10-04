@@ -1,8 +1,7 @@
 #pragma once
 #include <windows.h>
 #include <string>
-#define byte ::byte
-#include <gdiplus.h>
+
 namespace AnyFSE::Window
 {
     class MainWindow
@@ -12,43 +11,20 @@ namespace AnyFSE::Window
     private:
         HICON hIcon = NULL;
         HWND hWnd;
-        HINSTANCE hInstance;        
-        ATOM aClass;           
-
-        UINT_PTR zoomTimerId = 1;
-        int ZOOM_INTERVAL_MS = 20;
-        
-        float currentZoom = 0.96f;
-        float zoomStep = 0.002f;
-        float zoomDelta = 0.06f;
-        UINT_PTR hTimer = NULL;
+        HINSTANCE hInstance;
+        ATOM aClass;
 
         static WNDCLASS stWC;
         static LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);   
         static void LoadStringSafe(UINT nStrID, LPTSTR szBuf, UINT nBufLen);
         void OnCreate();
         void OnPaint();
-        void OnTimer(UINT_PTR timerId);
+
         void OnTray(LPARAM message);
         BOOL OnCommand(WORD command);
         void OnDestroy();
-        BOOL StartAnimation();
-        BOOL StopAnimation();
+
         LRESULT CALLBACK HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-        HBRUSH hThemeBackgroundBrush;
-        Gdiplus::Color themeBackgroundColor;
-        void LoadTheme(LPCWSTR className);
-        void FreeTheme();
-
-        // Global variables
-        Gdiplus::Image* pLogoImage = nullptr;
-
-        // Initialize GDI+
-        ULONG_PTR gdiplusToken;
-
-        // Function to load PNG image
-        BOOL LoadLogoImage(const std::wstring& filename);
 
     public:
         MainWindow();
@@ -56,7 +32,7 @@ namespace AnyFSE::Window
         bool Create(LPCWSTR className, HINSTANCE hInstance, LPCTSTR windowName);
         static int RunLoop();
 
-        bool Show(int mode = SW_SHOW);
+        bool Show();
         bool Hide();
         bool IsVisible();
     };

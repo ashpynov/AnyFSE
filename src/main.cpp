@@ -23,6 +23,7 @@
 #include "Monitors/GamingExperience.hpp"
 #include "Monitors/ETWMonitor.hpp"
 #include "Window/MainWindow.hpp"
+#include "Manager/ManagerState.hpp"
 #include "Configuration/Config.hpp"
 
 #pragma comment(lib, "comctl32.lib")
@@ -101,8 +102,6 @@ int WINAPI WinMain(HINSTANCE hInstance,
         return 0;
     }
 
-    // Initialize common controls
-
     if (!GamingExperience::ApiIsAvailable)
     {
         log.Critical("Fullscreen Gaming API is not detected, exiting\n");
@@ -129,47 +128,63 @@ int WINAPI WinMain(HINSTANCE hInstance,
         return -1;
     }
 
+    MainWindow mainWindow;
+
+
+    if (!mainWindow.Create(className, hInstance, (Config::LauncherName + L" is launching").c_str()))
     {
-        MainWindow mainWindow;
-
-        if (!mainWindow.Create(className, hInstance, className))
-        {
-            return (int)GetLastError();
-        }
-        mainWindow.Show();
-
-        GamingExperience fseMonitor;
-
-        fseMonitor.OnExperienseChanged += ([&log]()
-        {
-            log.Info(
-                "Mode is changed to %s\n",
-                GamingExperience::IsActive() ? "Fullscreeen expirience" : "Windows Desktop"
-            );
-        });
-
-        ETWMonitor etwMonitor(Config::XBoxProcessName);
-        etwMonitor.OnProcessExecuted += ([&log]()
-        {
-            log.Info("Xbox process execution is detected\n" );
-        });
-
-        etwMonitor.OnFailure += ([]()
-        {
-            PostQuitMessage(-1);
-        });
-
-        bool cancelToken = false;
-        etwMonitor.Run(cancelToken);
-
-        log.Info("Run window loop.");
-
-        exitCode = MainWindow::RunLoop();
-
-        log.Info("Loop finished. Time to exit");
-
-        etwMonitor.Stop();
+        return (int)GetLastError();
     }
+    if (GamingExperience::IsActive())
+    {
+        mainWindow.Show();
+    }
+    else
+    {
+        mainWindow.Hide();
+    }
+
+    ManagerState managerState(mainWindow);
+
+    managerState.Notify(StateEvent::START);
+
+    GamingExperience fseMonitor;
+
+    fseMonitor.OnExperienseChanged += ([&log, &managerState]()
+    {
+        log.Info(
+            "Mode is changed to %s\n",
+            GamingExperience::IsActive() ? "Fullscreeen expirience" : "Windows Desktop"
+        );
+        managerState.Notify(StateEvent::GAMEMODE_ENTER);
+    });
+
+    ETWMonitor etwMonitor(Config::XBoxProcessName);
+    etwMonitor.OnProcessExecuted += ([&log, &managerState]()
+    {
+        log.Info("Xbox process execution is detected\n" );
+        managerState.Notify(StateEvent::XBOX_DETECTED);
+    });
+
+    etwMonitor.OnFailure += ([]()
+    {
+        PostQuitMessage(-1);
+    });
+
+    bool cancelToken = false;
+    etwMonitor.Run(cancelToken);
+
+    log.Info("Run window loop.");
+
+    managerState.Start();
+
+    exitCode = MainWindow::RunLoop();
+
+    managerState.Stop();
+
+    log.Info("Loop finished. Time to exit");
+
+    etwMonitor.Stop();
 
     if (exitCode)
     {

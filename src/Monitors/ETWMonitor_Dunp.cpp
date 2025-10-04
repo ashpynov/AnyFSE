@@ -11,7 +11,7 @@
 
 namespace AnyFSE::Monitors
 {
-    static Logger log = LogManager::GetLogger("ETWMonitor_Dump");  
+    static Logger log = LogManager::GetLogger("ETWMonitor/Dump");  
 
     void ETWMonitor::ParseWithTDH(PEVENT_RECORD pEvent, size_t count) {
         DWORD status = ERROR_SUCCESS;
