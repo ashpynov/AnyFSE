@@ -11,7 +11,6 @@ namespace AnyFSE::Window
     private:
         HICON hIcon = NULL;
         HWND hWnd;
-        HINSTANCE hInstance;
         ATOM aClass;
 
         static WNDCLASS stWC;

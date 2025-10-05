@@ -7,11 +7,20 @@ namespace AnyFSE::Configuration
 {
     class Config
     {
+            enum LauncherType {
+                PlayniteFullscreen = 0,
+                PlayniteDesktop,
+                ArmoryCrate,
+                Steam
+            };
+            static const wstring root;
+
             Config() {};
 
             static wstring GetFilename();
             static void SetDefault();
         
+            static wstring GetLauncher();
         public:
 
             static void Load();
@@ -26,6 +35,7 @@ namespace AnyFSE::Configuration
 
             static wstring XBoxProcessName;
 
+            static bool AggressiveMode;
             static bool SilentMode;
     };
 }

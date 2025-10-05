@@ -7,10 +7,12 @@
 #include "Configuration/Config.hpp"
 #include "Tools/Tools.hpp"
 
-#define byte ::byte
-#include <gdiplus.h>
-#pragma comment(lib, "gdiplus.lib")
+// #define byte ::byte
+// #include <gdiplus.h>
+// #pragma comment(lib, "gdiplus.lib")
 // #pragma comment(lib, "uxtheme.lib")
+
+#include "Settings/SettingsDialog.hpp"
 
 namespace AnyFSE::Window
 {
@@ -18,7 +20,6 @@ namespace AnyFSE::Window
     WNDCLASS MainWindow::stWC;
 
     MainWindow::MainWindow() : hWnd(NULL),
-                               hInstance(NULL),
                                aClass(NULL)
     {
         ZeroMemory(&stWC, sizeof(stWC));
@@ -44,7 +45,7 @@ namespace AnyFSE::Window
 
 
 
-    bool MainWindow::Create(LPCWSTR className, HINSTANCE hIstance, LPCTSTR windowName)
+    bool MainWindow::Create(LPCWSTR className, HINSTANCE hInstance, LPCTSTR windowName)
     {
 
 
@@ -215,10 +216,19 @@ namespace AnyFSE::Window
         }
     }
 
+
+
     BOOL MainWindow::OnCommand(WORD command)
     {
         switch (command)
         {
+        case ID_CONFIGURE:
+            {
+                SettingsDialog dialog;
+                INT_PTR result = dialog.Show(stWC.hInstance);
+            }
+
+            return FALSE;
         case ID_QUIT:
             PostQuitMessage(0);
             return TRUE;

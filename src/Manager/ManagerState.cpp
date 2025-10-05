@@ -47,9 +47,9 @@ namespace AnyFSE::Manager::State
 
     void ManagerState::OnXboxDetected()
     {
-        if (IsInFSEMode())
+        if (IsInFSEMode() || Config::AggressiveMode)
         {
-            log.Info("XBoxStartDetected in FSE Mode");
+            log.Info("XBoxStartDetected in %s Mode", Config::AggressiveMode ? "Aggressive" : "FSE");
 
             if (IsSplashActive() || IsPreventIsActive())
             {
@@ -61,6 +61,12 @@ namespace AnyFSE::Manager::State
                 KillXbox();
                 StartLauncher();
                 WaitLauncher();
+            }
+            else if (Config::AggressiveMode)
+            {
+                KillXbox();
+                PreventTimeout();
+                FocusLauncher();
             }
         } 
     }
