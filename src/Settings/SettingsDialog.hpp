@@ -60,12 +60,14 @@ namespace AnyFSE::Settings
         void OnLauncherChanged(HWND hwnd);
         void OnOk(HWND hwnd);
         void OnCustomChanged(HWND hwnd);
+        void OnAggressiveChanged(HWND hwnd);
         void UpdateCustom();
 
         HINSTANCE m_hInstance;
         HWND m_hDialog;
 
         bool m_isCustom;
+        bool m_isAgressive;
         LauncherConfig config;
         std::wstring current;
         std::list<std::wstring> launchers;

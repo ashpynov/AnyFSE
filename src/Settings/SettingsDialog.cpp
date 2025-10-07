@@ -104,6 +104,12 @@ namespace AnyFSE::Settings
                     OnCustomChanged(hwnd);
                 }
                 break;
+            case IDC_NOT_AGGRESSIVE_MODE:
+                if (HIWORD(wParam) == BN_CLICKED)
+                {
+                    OnAggressiveChanged(hwnd);
+                }
+                break;
             case IDC_BROWSE:
                 OnBrowseLauncher(hwnd, IDC_LAUNCHER);
                 break;
@@ -132,6 +138,7 @@ namespace AnyFSE::Settings
         UpdateCombo();
         Config::GetLauncherSettings(current, config);
         m_isCustom = config.isCustom && config.Type != LauncherType::Xbox || config.Type == LauncherType::Custom;
+        m_isAgressive = Config::AggressiveMode && config.Type != LauncherType::Xbox;
         UpdateCustom();
         UpdateCustomSettings();
 
@@ -293,6 +300,12 @@ namespace AnyFSE::Settings
         UpdateCustom();
     }
 
+    void SettingsDialog::OnAggressiveChanged(HWND hwnd)
+    {
+        m_isAgressive = BST_CHECKED != SendDlgItemMessage(m_hDialog, IDC_NOT_AGGRESSIVE_MODE, BM_GETCHECK, 0, 0);
+        UpdateCustom();
+    }
+
     void SettingsDialog::UpdateCustom()
     {
         LauncherConfig defaults;
@@ -383,6 +396,9 @@ namespace AnyFSE::Settings
         SetDlgItemText(m_hDialog, IDC_PROCESS_NAME_ALT, config.ProcessNameAlt.c_str());
         SetDlgItemText(m_hDialog, IDC_TITLE,            config.WindowTitle.c_str());
         SetDlgItemText(m_hDialog, IDC_TITLE_ALT,        config.WindowTitleAlt.c_str());
+
+        SendDlgItemMessage(m_hDialog, IDC_NOT_AGGRESSIVE_MODE, BM_SETCHECK, (WPARAM)(m_isAgressive && config.Type != LauncherType::Xbox) ? BST_UNCHECKED : BST_CHECKED, 0 );
+        EnableWindow(GetDlgItem(m_hDialog, IDC_NOT_AGGRESSIVE_MODE), config.Type != LauncherType::Xbox);
     }
     void SettingsDialog::SaveSettings()
     {}
