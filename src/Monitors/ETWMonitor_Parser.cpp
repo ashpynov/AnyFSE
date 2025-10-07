@@ -7,7 +7,7 @@
 #include <string>
 
 #pragma comment(lib, "advapi32.lib")
-#pragma comment(lib, "tdh.lib")
+//#pragma comment(lib, "tdh.lib")
 
 namespace AnyFSE::Monitors
 {
@@ -19,6 +19,7 @@ namespace AnyFSE::Monitors
     {
         return ((PBYTE)data) + offset;
     }
+
     template<class T>
     uint32_t UInt32At(T data, ULONG offset)
     {
@@ -50,6 +51,17 @@ namespace AnyFSE::Monitors
         return offset + sizeof(uint32_t) + 8 + 4 * count;                               
     }
 
+    ULONG SkipUnicode(EVENT_RECORD *eventRecord, ULONG offset)
+    {
+        for (
+            wchar_t * data = (wchar_t *)DataAt(eventRecord->UserData, offset); 
+            *data !=0; 
+            data++, offset++ 
+        );
+
+        return offset + 2;
+    }
+
     ULONG GetImageNameOffset(EVENT_RECORD *eventRecord)
     {
         return SkipSID(eventRecord, GetSidOffset(eventRecord));
@@ -65,33 +77,68 @@ namespace AnyFSE::Monitors
             && eventRecord->EventHeader.EventDescriptor.Id == 1
             /*&& IsEqualGUID(eventRecord->EventHeader.ProviderId, ProcessProviderGuid)*/)
         {
-            int offset = GetImageNameOffset(eventRecord);
-            PWSTR processFullName = wCharAt(eventRecord->UserData, offset);
-            
-            PWSTR pFileName = NULL;
-                
-            for (PWSTR p = processFullName; *p; p++) {
-                if (*p == L'\\') {
-                    pFileName = p;
-                }
-            }
-        
-            pFileName = pFileName ? (pFileName + 1) : processFullName;
-
-            //log.Info("Process filename = %s", Tools::to_string(pFileName).c_str());
-            if (std::wstring(pFileName)==m_processName)
-            {
-                LARGE_INTEGER timestamp = eventRecord->EventHeader.TimeStamp;
-                LARGE_INTEGER currentTime;
-                QueryPerformanceCounter((LARGE_INTEGER*)&currentTime);
-            
-                // Calculate latency (rough approximation)
-                LONGLONG latency = (currentTime.QuadPart - timestamp.QuadPart) / 10000; // Convert to milliseconds
-                log.Info("Process %s is detected, Latency: %lldms", Tools::to_string(pFileName).c_str(), latency);
-                OnProcessExecuted.Notify();
-            }                
+            HandleStartProcessEvent(eventRecord);
         } 
-
+        else if (eventRecord->EventHeader.EventDescriptor.Opcode == 38  // QueryValueKey
+            && eventRecord->EventHeader.EventDescriptor.Task == 0       // 
+            && eventRecord->EventHeader.EventDescriptor.Id == 7
+            && IsEqualGUID(eventRecord->EventHeader.ProviderId, RegistryProviderGuid)
+        )
+        {
+            HandleRegistryQueryValueEvent(eventRecord);
+        }
         return;
     }
+    void ETWMonitor::HandleStartProcessEvent(EVENT_RECORD *eventRecord)
+    {
+        int offset = GetImageNameOffset(eventRecord);
+        PWSTR processFullName = wCharAt(eventRecord->UserData, offset);
+        
+        PWSTR pFileName = NULL;
+            
+        for (PWSTR p = processFullName; *p; p++) {
+            if (*p == L'\\') {
+                pFileName = p;
+            }
+        }
+    
+        pFileName = pFileName ? (pFileName + 1) : processFullName;
+
+        if (_wcsicmp(pFileName, m_processName.c_str()) == 0)
+        {
+            LARGE_INTEGER timestamp = eventRecord->EventHeader.TimeStamp;
+            LARGE_INTEGER currentTime;
+            QueryPerformanceCounter((LARGE_INTEGER*)&currentTime);
+        
+            // Calculate latency (rough approximation)
+            LONGLONG latency = (currentTime.QuadPart - timestamp.QuadPart) / 10000; // Convert to milliseconds
+            log.Info("Process %s is detected, Latency: %lldms", Tools::to_string(pFileName).c_str(), latency);
+            OnProcessExecuted.Notify();
+        }
+        else if (_wcsicmp(pFileName, L"explorer.exe") ==0)
+        {
+            m_explorerProcessId = eventRecord->EventHeader.ProcessId;
+            log.Info("Explorer.exe was started with pid %d", m_explorerProcessId);
+        }
+    }
+    
+    void ETWMonitor::HandleRegistryQueryValueEvent(EVENT_RECORD *eventRecord)
+    {
+        wchar_t * valueName = wCharAtSafe(eventRecord->UserData, SkipUnicode(eventRecord, 20));
+
+        if(_wcsicmp(valueName, L"GamingHomeApp") == 0)
+        {
+
+            if (IsExploredPid(eventRecord->EventHeader.ProcessId))
+            {
+                log.Info("Explorre has accessed to %s registry value", Tools::to_string(valueName).c_str());
+            }
+            else
+            {
+                log.Info("Unknown pid %u has accessed to %s registry value", eventRecord->EventHeader.ProcessId, Tools::to_string(valueName).c_str());
+            }
+            OnHomeAppTouched.Notify();
+        }
+    }
+
 } // namespace AnyFSE::Monitors

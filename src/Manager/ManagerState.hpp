@@ -12,6 +12,7 @@ namespace AnyFSE::Manager::State
             MainWindow &m_splash;
             std::uint64_t m_preventTimer;
             std::uint64_t m_waitLauncherTimer;
+            LONGLONG m_xboxAge;
 
 
         public:
@@ -23,6 +24,7 @@ namespace AnyFSE::Manager::State
             void OnStart();
             void OnXboxDetected();
             void OnGameModeEnter();
+            void OnOpenHome();
             void OnLauncherTimer();
             void OnPreventTimer();
             
@@ -31,7 +33,8 @@ namespace AnyFSE::Manager::State
             bool IsLauncherProcess();
             bool IsSplashActive();
             bool IsPreventIsActive();
-            
+            bool IsYoungXbox();
+
             void ShowSplash();
             void KillXbox();
             void StartLauncher();

@@ -64,7 +64,7 @@ namespace AnyFSE::Configuration
 
     wstring Config::GetCurrentLauncher()
     {
-        wstring launcher = Registry::ReadString(Config::root, L"LauncherPath");
+        wstring launcher = Registry::ReadString(Config::root, L"LauncherPath", L"C:\\Tools\\Playnite\\Playnite.FullscreenApp.exe");
         if (launcher.empty())
         {
             list<wstring> launchers;
@@ -73,7 +73,7 @@ namespace AnyFSE::Configuration
                 return launchers.front();
             }
         }
-        return wstring();
+        return launcher;
     }
 
     bool Config::FindLaunchers(list<wstring>& found)

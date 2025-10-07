@@ -88,7 +88,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
     int exitCode = -1;
 
-    AnyFSE::Logging::LogManager::Initialize("AnyFSE", LogLevel::Trace);
+    AnyFSE::Logging::LogManager::Initialize("AnyFSE", LogLevel::Trace, "C:\\Tools\\AnyFSE.logs");
     Logger log = LogManager::GetLogger("Main");
     log.Info("Application is started (hInstance=%08x)", hInstance);
 
@@ -98,9 +98,9 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 
     /// DEBUG
-    SettingsDialog dialog;
-    INT_PTR result = dialog.Show(hInstance);
-    exit(0);
+    // SettingsDialog dialog;
+    // INT_PTR result = dialog.Show(hInstance);
+    // exit(0);
 
     HWND hAppWnd = FindWindow(className, NULL);
     if (hAppWnd)
@@ -172,6 +172,12 @@ int WINAPI WinMain(HINSTANCE hInstance,
     {
         log.Info("Xbox process execution is detected\n" );
         managerState.Notify(StateEvent::XBOX_DETECTED);
+    });
+
+    etwMonitor.OnHomeAppTouched += ([&log, &managerState]()
+    {
+        log.Info("Attempt to open Home App detected!\n" );
+        managerState.Notify(StateEvent::OPEN_HOME);
     });
 
     etwMonitor.OnFailure += ([]()

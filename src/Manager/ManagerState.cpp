@@ -30,6 +30,7 @@ namespace AnyFSE::Manager::State
             case StateEvent::START:             return OnStart();
             case StateEvent::XBOX_DETECTED:     return OnXboxDetected();
             case StateEvent::GAMEMODE_ENTER:    return OnGameModeEnter();
+            case StateEvent::OPEN_HOME:         return OnOpenHome();
             default: break;
         }
     }
@@ -47,9 +48,9 @@ namespace AnyFSE::Manager::State
 
     void ManagerState::OnXboxDetected()
     {
-        if (IsInFSEMode() || Config::AggressiveMode)
+        //if (IsInFSEMode() || Config::AggressiveMode)
         {
-            log.Info("XBoxStartDetected in %s Mode", Config::AggressiveMode ? "Aggressive" : "FSE");
+            log.Info("XBoxStartDetected in %s Mode", IsInFSEMode() ? "FSE Dektop" : "FSE");
 
             if (IsSplashActive() || IsPreventIsActive())
             {
@@ -68,7 +69,8 @@ namespace AnyFSE::Manager::State
                 PreventTimeout();
                 FocusLauncher();
             }
-        } 
+        }
+        m_xboxAge = GetTickCount64();
     }
 
     void ManagerState::OnGameModeEnter()
@@ -90,6 +92,25 @@ namespace AnyFSE::Manager::State
         }
     }
 
+    void ManagerState::OnOpenHome()
+    {
+        if (IsYoungXbox())
+        {
+            KillXbox();
+        }
+
+        if (IsLauncherActive())
+        {
+            PreventTimeout();
+            FocusLauncher();
+        }
+        else
+        {
+            StartLauncher();
+            WaitLauncher();
+        }
+    }
+
     void ManagerState::OnLauncherTimer()
     {
         log.Info("Launcher check");
@@ -98,6 +119,7 @@ namespace AnyFSE::Manager::State
             log.Info("Launcher activated");
             ManagerCycle::CancelTimer(m_waitLauncherTimer);
             m_waitLauncherTimer = 0;
+            FocusLauncher();
             PreventTimeout();
             CloseSplash();
         }
@@ -117,6 +139,7 @@ namespace AnyFSE::Manager::State
 
     bool ManagerState::IsLauncherActive()
     {
+        wstring pName = Config::LauncherProcessName;
         DWORD processId = Process::FindByName(Config::LauncherProcessName);
         return processId && Process::GetWindow(processId, Config::LauncherWindowName);
     }
@@ -134,6 +157,11 @@ namespace AnyFSE::Manager::State
     bool ManagerState::IsPreventIsActive()
     {
         return 0 != m_preventTimer;
+    }
+    
+    bool ManagerState::IsYoungXbox()
+    {
+        return (GetTickCount64() - m_xboxAge) < 2000;
     }
 
     // Actions
@@ -197,9 +225,17 @@ namespace AnyFSE::Manager::State
             HWND launcher = Process::GetWindow(processId, Config::LauncherWindowName);
             if (launcher)
             {
-                ShowWindow(launcher, SW_SHOWMAXIMIZED);
+                ShowWindow(launcher, SW_RESTORE);
+                SetWindowPos(launcher, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
                 SetForegroundWindow(launcher);
+                SetFocus(launcher);
             }
         }
+    }
+
+    void SuppressXboxActivation()
+    {
+        //Window -> Class ApplicationFrameWindow, Name Xbox
+
     }
 }

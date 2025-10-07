@@ -1,10 +1,12 @@
 #include "ETWMonitor.hpp"
 #include "Logging/LogManager.hpp"
+#include "Process/Process.hpp"
 #include "Tools/Tools.hpp"
 #include <tdh.h>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <tlhelp32.h>
 
 #pragma comment(lib, "advapi32.lib")
 
@@ -19,7 +21,8 @@ namespace AnyFSE::Monitors
           m_threadHandle(NULL),
           m_sessionHandle(NULL),
           m_consumerHandle(NULL),
-          m_traceProperties(nullptr)
+          m_traceProperties(nullptr),
+          m_explorerProcessId(Process::FindByName(L"explorer.exe"))
     {
         ZeroMemory(&m_logFile, sizeof(m_logFile));
         m_processName = processName;
@@ -49,6 +52,43 @@ namespace AnyFSE::Monitors
 
         log.Info("Started thread for monitoring for process: %s", Tools::to_string(m_processName).c_str());
         return m_threadHandle;
+    }
+
+    DWORD ETWMonitor::IsExploredPid(DWORD processId)
+    {
+        if (processId == m_explorerProcessId)
+        {
+            return true;
+        }
+        
+        HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
+        if (!hProcess) return false;
+        
+        WCHAR processPath[MAX_PATH] = {0};
+        DWORD size = MAX_PATH;
+        std::wstring result;
+        
+        if (QueryFullProcessImageNameW(hProcess, 0, processPath, &size)) 
+        {
+            std::wstring fullPath = processPath;
+            size_t lastBackslash = fullPath.find_last_of(L'\\');
+            WCHAR * processName = processPath;
+            if (lastBackslash != std::wstring::npos) 
+            {
+                processName = processPath + (lastBackslash + 1);
+            }
+            if (_wcsicmp(processName, L"explorer.exe") == 0)
+            {
+                CloseHandle(hProcess);
+                m_explorerProcessId = processId;
+                return true;
+            }
+            
+        }
+        
+        CloseHandle(hProcess);
+        return false;
+
     }
 
     void ETWMonitor::MonitoringThread(bool &cancelToken)

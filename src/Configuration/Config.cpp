@@ -56,7 +56,7 @@ namespace AnyFSE::Configuration
         GetLauncherSettings(launcher, config);
         LauncherName = config.Name;
         LauncherWindowName = config.WindowTitle;
-        LauncherProcessName = config.ProcessNameAlt;
+        LauncherProcessName = config.ProcessName;
         LauncherStartCommand = config.StartCommand;
         LauncherStartCommandArgs = config.StartArg;
         LauncherIcon = config.IconFile;

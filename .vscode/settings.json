@@ -83,6 +83,7 @@
         "*.c_pp": "cpp",
         "condition_variable": "cpp",
         "deque": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "set": "cpp"
     }
 }

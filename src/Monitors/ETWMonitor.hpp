@@ -11,6 +11,9 @@ namespace AnyFSE::Monitors
 {
     class ETWMonitor
     {
+        static const GUID ProcessProviderGuid;
+        static const GUID RegistryProviderGuid;
+
     public:
         explicit ETWMonitor(const std::wstring &processName);
         ~ETWMonitor();
@@ -19,6 +22,7 @@ namespace AnyFSE::Monitors
         void Stop();
         HANDLE StopAsync();
         Event OnProcessExecuted;
+        Event OnHomeAppTouched;
         Event OnFailure;
 
     private:
@@ -39,7 +43,8 @@ namespace AnyFSE::Monitors
         void SetTraceProperties();
         ULONG StopSession();
         ULONG StartSession();
-        ULONG EnableProvider();
+        ULONG EnableProcessProvider();
+        ULONG EnableRegistryProvider();
         ULONG OpenConsumer();
         void StartRealtimeETW();
         void StopRealtimeETW();
@@ -48,6 +53,10 @@ namespace AnyFSE::Monitors
         void ParseWithTDH(PEVENT_RECORD pEvent, size_t count);
         DWORD GetPropertySizeTDH(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo, int type, LPCWSTR propertyName);
         void DumpEventTDH(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo, size_t count);
+        DWORD FindExploredPid();
+        DWORD IsExploredPid(DWORD pid);
+        DWORD GetExploredPid();
+        bool IsExplorerProcessId(LONG pid);
 
         void ProcessEvent(EVENT_RECORD *eventRecord);
 
@@ -64,6 +73,10 @@ namespace AnyFSE::Monitors
         TRACEHANDLE m_consumerHandle;
         EVENT_TRACE_LOGFILEW m_logFile;
         EVENT_TRACE_PROPERTIES *m_traceProperties;
+
+        LONG m_explorerProcessId;
+        void HandleStartProcessEvent(EVENT_RECORD *eventRecord);
+        void HandleRegistryQueryValueEvent(EVENT_RECORD *eventRecord);
     };
 
 } // namespace AnyFSE::Monitors
