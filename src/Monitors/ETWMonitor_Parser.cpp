@@ -126,18 +126,19 @@ namespace AnyFSE::Monitors
     {
         wchar_t * valueName = wCharAtSafe(eventRecord->UserData, SkipUnicode(eventRecord, 20));
 
-        if(_wcsicmp(valueName, L"GamingHomeApp") == 0)
+        bool isGamingApp = (_wcsicmp(valueName, L"GamingHomeApp") == 0);
+        bool isDeviceForm = !isGamingApp && (_wcsicmp(valueName, L"DeviceForm") == 0);
+        bool isExplorer = (isGamingApp || isDeviceForm) && IsExploredPid(eventRecord->EventHeader.ProcessId);
+        
+        if (isGamingApp && isExplorer)
         {
-
-            if (IsExploredPid(eventRecord->EventHeader.ProcessId))
-            {
-                log.Info("Explorre has accessed to %s registry value", Tools::to_string(valueName).c_str());
-            }
-            else
-            {
-                log.Info("Unknown pid %u has accessed to %s registry value", eventRecord->EventHeader.ProcessId, Tools::to_string(valueName).c_str());
-            }
+            log.Info("Explorer has accessed to %s registry value", Tools::to_string(valueName).c_str());
             OnHomeAppTouched.Notify();
+        }
+        else if (isDeviceForm && isExplorer)
+        {
+            log.Info("Explorer has accessed to %s registry value", Tools::to_string(valueName).c_str());
+            OnDeviceFormTouched.Notify();
         }
     }
 

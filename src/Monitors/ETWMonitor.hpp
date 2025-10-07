@@ -23,6 +23,7 @@ namespace AnyFSE::Monitors
         HANDLE StopAsync();
         Event OnProcessExecuted;
         Event OnHomeAppTouched;
+        Event OnDeviceFormTouched;
         Event OnFailure;
 
     private:

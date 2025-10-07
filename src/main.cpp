@@ -180,6 +180,12 @@ int WINAPI WinMain(HINSTANCE hInstance,
         managerState.Notify(StateEvent::OPEN_HOME);
     });
 
+    etwMonitor.OnDeviceFormTouched += ([&log, &managerState]()
+    {
+        log.Info("Just DeviceForm detected!\n" );
+        managerState.Notify(StateEvent::OPEN_DEVICE_FORM);
+    });
+
     etwMonitor.OnFailure += ([]()
     {
         PostQuitMessage(-1);

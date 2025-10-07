@@ -9,7 +9,8 @@ namespace AnyFSE::Manager
         XBOX_DETECTED,
         PLAYNITE_LAUNCHED,
         GAMEMODE_ENTER,
-        OPEN_HOME
+        OPEN_HOME,
+        OPEN_DEVICE_FORM
     };
 }
 

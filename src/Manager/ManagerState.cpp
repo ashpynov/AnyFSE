@@ -31,6 +31,7 @@ namespace AnyFSE::Manager::State
             case StateEvent::XBOX_DETECTED:     return OnXboxDetected();
             case StateEvent::GAMEMODE_ENTER:    return OnGameModeEnter();
             case StateEvent::OPEN_HOME:         return OnOpenHome();
+            case StateEvent::OPEN_DEVICE_FORM:  return OnDeviceForm();
             default: break;
         }
     }
@@ -92,22 +93,36 @@ namespace AnyFSE::Manager::State
         }
     }
 
+    void ManagerState::OnDeviceForm()
+    {
+        m_deviceFormAge = GetTickCount64();
+    }
+
     void ManagerState::OnOpenHome()
     {
-        if (IsYoungXbox())
+        if (!IsOnTaskSwitcher())
         {
-            KillXbox();
-        }
+            log.Info("Home App id Detected");
 
-        if (IsLauncherActive())
-        {
-            PreventTimeout();
-            FocusLauncher();
+            if (IsYoungXbox())
+            {
+                KillXbox();
+            }
+
+            if (IsLauncherActive())
+            {
+                PreventTimeout();
+                FocusLauncher();
+            }
+            else
+            {
+                StartLauncher();
+                WaitLauncher();
+            }
         }
-        else
+        else 
         {
-            StartLauncher();
-            WaitLauncher();
+            log.Info("Home App id Detected in Task switcher case (%d) ms", GetTickCount64() - m_deviceFormAge);
         }
     }
 
@@ -162,6 +177,11 @@ namespace AnyFSE::Manager::State
     bool ManagerState::IsYoungXbox()
     {
         return (GetTickCount64() - m_xboxAge) < 2000;
+    }
+
+    bool ManagerState::IsOnTaskSwitcher()
+    {
+        return (GetTickCount64() - m_deviceFormAge) < 50;
     }
 
     // Actions
