@@ -7,11 +7,6 @@
 #include "Configuration/Config.hpp"
 #include "Tools/Tools.hpp"
 
-// #define byte ::byte
-// #include <gdiplus.h>
-// #pragma comment(lib, "gdiplus.lib")
-// #pragma comment(lib, "uxtheme.lib")
-
 #include "Settings/SettingsDialog.hpp"
 
 namespace AnyFSE::Window

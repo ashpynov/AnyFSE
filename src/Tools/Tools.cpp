@@ -5,6 +5,7 @@
 #include <locale>
 #include "Logging/LogManager.hpp"
 #include "Tools.hpp"
+#include <algorithm>
 
 namespace AnyFSE::Tools
 {
@@ -67,4 +68,12 @@ namespace AnyFSE::Tools
         MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, &result[0], len);
         return result;
     }
+    std::wstring to_lower(const std::wstring &str)
+    {
+        std::wstring wstr = str;
+        std::transform(wstr.begin(), wstr.end(), wstr.begin(), ::towlower);
+        return wstr;
+    }
+
+
 }

@@ -25,6 +25,7 @@
 #include "Window/MainWindow.hpp"
 #include "Manager/ManagerState.hpp"
 #include "Configuration/Config.hpp"
+#include "Settings/SettingsDialog.hpp"
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -84,6 +85,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
                    LPSTR lpCmdLine,
                    int nCmdShow)
 {
+    SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
     int exitCode = -1;
 
     AnyFSE::Logging::LogManager::Initialize("AnyFSE", LogLevel::Trace);
@@ -93,6 +95,12 @@ int WINAPI WinMain(HINSTANCE hInstance,
     Config::Load();
 
     LPCTSTR className = _T("AnyFSE");
+
+
+    /// DEBUG
+    SettingsDialog dialog;
+    INT_PTR result = dialog.Show(hInstance);
+    exit(0);
 
     HWND hAppWnd = FindWindow(className, NULL);
     if (hAppWnd)

@@ -1,13 +1,14 @@
 #include <filesystem>
 #include "Config.hpp"
 #include "Tools/Registry.hpp"
+#include "Tools/Tools.hpp"
 
 namespace AnyFSE::Configuration
 {
-
     const wstring Config::root = L"Software\\AnyFSE\\Settings";
+
     namespace fs = std::filesystem;
-    
+
     wstring Config::LauncherName;
     wstring Config::LauncherWindowName;
     wstring Config::LauncherIcon;
@@ -19,16 +20,14 @@ namespace AnyFSE::Configuration
     bool Config::AggressiveMode = false;
     bool Config::SilentMode = false;
 
-        wstring Config::GetFilename()
+    wstring Config::GetModulePath()
     {
-        char path[MAX_PATH];
-        GetModuleFileNameA(NULL, path, MAX_PATH);
+        wchar_t path[MAX_PATH];
+        GetModuleFileNameW(NULL, path, MAX_PATH);
         fs::path binary = path;
-        return binary.replace_extension(".ini").wstring();
+        return binary.parent_path().wstring();
     }
 
-
-    
     wstring Config::GetFilename()
     {
         char path[MAX_PATH];
@@ -39,38 +38,32 @@ namespace AnyFSE::Configuration
 
     void Config::SetDefault()
     {
-        LauncherName = L"Playnite";
-        LauncherWindowName = L"Playnite";
-        //LauncherIcon = L"C:\\Tools\\Playnite\\Playnite.FullscreenApp.exe";
-        LauncherIcon = L"C:\\Users\\Admin\\source\\repos\\ashpynov\\AnyFSE\\media\\Tray.ico";
-        LauncherProcessName = L"Playnite.FullscreenApp.exe";
-        LauncherStartCommand = L"C:\\Tools\\Playnite\\Playnite.FullscreenApp.exe";
-        LauncherStartCommandArgs = L"";
-
-        XBoxProcessName = L"XboxPcApp.exe";
-
+        XBoxProcessName = Registry::ReadString(Config::root, L"XBoxProcessName", L"XboxPcApp.exe");
+        AggressiveMode = Registry::ReadBool(Config::root, L"AggressiveMode", false);
         SilentMode = false;
-        AggressiveMode = false;
     }
-
-    wstring Config::GetLauncher()
-    {
-        wstring launcher = Registry::ReadString(Config::root, L"LauncherPath");
-        if (launcher.empty())
-        {
-
-        }
-        return wstring();
-    }
-
-    static wstring GetLauncher();
 
     void Config::Load()
     {
-        Config::SetDefault();
+        SetDefault();
+
+        wstring launcher = GetCurrentLauncher();
+        if (launcher.empty())
+        {
+            return;
+        }
+        LauncherConfig config;
+        GetLauncherSettings(launcher, config);
+        LauncherName = config.Name;
+        LauncherWindowName = config.WindowTitle;
+        LauncherProcessName = config.ProcessNameAlt;
+        LauncherStartCommand = config.StartCommand;
+        LauncherStartCommandArgs = config.StartArg;
+        LauncherIcon = config.IconFile;
     }
 
     void Config::Dump()
     {
     }
+
 }
