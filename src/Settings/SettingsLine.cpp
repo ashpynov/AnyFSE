@@ -1,4 +1,5 @@
 #include "SettingsLine.hpp"
+#include "SettingsDialog.hpp"
 #include "Logging/LogManager.hpp"
 #include <commctrl.h>
 #include <uxtheme.h>
@@ -14,6 +15,11 @@ namespace AnyFSE::Settings
     // Window class registration
     static const wchar_t *SETTINGS_LINE_CLASS = L"SettingsLineClass";
     static bool s_classRegistered = false;
+
+    static int DpiScale(int value)
+    {
+        return MulDiv(value, SettingsDialog::DPI, 96);
+    }
 
     SettingsLine::SettingsLine(HWND hParent,
                                const std::wstring &name,
@@ -114,14 +120,20 @@ namespace AnyFSE::Settings
         // Create name font (slightly larger/bolder)
         m_hNameFont = CreateFontIndirect(&ncm.lfMessageFont);
         LOGFONT nameFont = ncm.lfMessageFont;
-        nameFont.lfHeight = (LONG)(ncm.lfMessageFont.lfHeight * 1.1);
+        nameFont.lfHeight = (LONG)(DpiScale(-nameHeight));
         nameFont.lfWeight = FW_NORMAL;
         m_hNameFont = CreateFontIndirect(&nameFont);
 
         // Create description font (slightly smaller, normal weight)
         LOGFONT descFont = ncm.lfMessageFont;
-        descFont.lfHeight = (LONG)(ncm.lfMessageFont.lfHeight * 0.9);
+        descFont.lfHeight = (LONG)(DpiScale(-descHeight));
         m_hDescFont = CreateFontIndirect(&descFont);
+
+        m_hGlyphFont = CreateFont(
+            DpiScale(-10), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+            CLEARTYPE_QUALITY, DEFAULT_PITCH,
+            L"Segoe MDL2 Assets");
     }
 
     void SettingsLine::UpdateBrushes()
@@ -131,7 +143,17 @@ namespace AnyFSE::Settings
         m_hBackgroundBrush = CreateSolidBrush(m_backgroundColor);
 
         if (m_hHoverBrush) DeleteObject(m_hHoverBrush);
-        m_hHoverBrush = CreateSolidBrush(m_hoverColor); // Light gray hover
+        m_hHoverBrush = CreateSolidBrush(m_hoverColor);
+
+        if (m_hControlBrush) DeleteObject(m_hControlBrush);
+        m_hControlBrush = CreateSolidBrush(m_controlColor);
+
+        if (m_hControlHoveredBrush) DeleteObject(m_hControlHoveredBrush);
+        m_hControlHoveredBrush = CreateSolidBrush(m_controlHoveredColor);
+
+        if (m_hControlPressedBrush) DeleteObject(m_hControlPressedBrush);
+        m_hControlPressedBrush = CreateSolidBrush(m_controlPressedColor);
+
     }
 
     void SettingsLine::UpdateColors()
@@ -139,8 +161,15 @@ namespace AnyFSE::Settings
         m_nameColor = RGB(240, 240, 240);
         m_descColor = RGB(200, 200, 200);
         m_disabledColor = GetSysColor(COLOR_GRAYTEXT);
-        m_backgroundColor = RGB(55, 55, 55);
-        m_hoverColor = RGB(55, 55, 55);
+        m_backgroundColor = RGB(43, 43, 43);
+        m_hoverColor = RGB(43, 43, 43);
+
+
+
+        m_darkColor = RGB(38, 38, 38);
+        m_controlColor = RGB(55, 55, 55);
+        m_controlHoveredColor = RGB(61, 61, 61);
+        m_controlPressedColor = RGB(50, 50, 50);
 
         UpdateBrushes();
     }
@@ -204,6 +233,8 @@ namespace AnyFSE::Settings
         case WM_COMMAND:
             return OnCommand(m_hChildControl, message, wParam, lParam);
             break;
+        case WM_DRAWITEM:
+            return OnDrawItem(m_hChildControl, (LPDRAWITEMSTRUCT)lParam);
 
         case WM_CTLCOLORSTATIC:
         case WM_CTLCOLOREDIT:
@@ -260,27 +291,33 @@ namespace AnyFSE::Settings
         SetBkMode(hdc, TRANSPARENT);
 
         // Draw name
-        rect.left += 10;   // Margin
-        rect.right -= 160; // Space for child control
+        rect.left += DpiScale(leftMargin);   // Margin
+        //rect.right -= 160; // Space for child control
 
         SelectObject(hdc, m_hNameFont);
         SetTextColor(hdc, textColor);
 
-        RECT nameRect = rect;
-        nameRect.top += 8;
-        nameRect.bottom = nameRect.top + 20;
+        int height = DpiScale(nameHeight);
+        if (!m_description.empty())
+        {
+            height += DpiScale(linePadding + descHeight);
+        }
 
-        ::DrawText(hdc, m_name.c_str(), -1, &nameRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        RECT nameRect = rect;
+        nameRect.top = (rect.bottom - rect.top - height) / 2;
+        nameRect.bottom = nameRect.top + DpiScale(nameHeight);
+
+        ::DrawText(hdc, m_name.c_str(), -1, &nameRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
 
         // Draw description
         SelectObject(hdc, m_hDescFont);
         SetTextColor(hdc, descColor);
 
         RECT descRect = rect;
-        descRect.top += 30;
-        descRect.bottom = descRect.top + 16;
+        descRect.top = nameRect.bottom + DpiScale(linePadding);
+        descRect.bottom = descRect.top + DpiScale(descHeight);
 
-        ::DrawText(hdc, m_description.c_str(), -1, &descRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        ::DrawText(hdc, m_description.c_str(), -1, &descRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE| DT_NOCLIP);
     }
 
     void SettingsLine::OnSize(int width, int height)
@@ -348,7 +385,7 @@ namespace AnyFSE::Settings
         int controlY = (m_height - controlHeight) / 2;
 
         SetWindowPos(m_hChildControl, NULL,
-                     m_width - controlWidth - 10,
+                     m_width - controlWidth - 20,
                      controlY,
                      0, 0,
                      SWP_NOZORDER | SWP_SHOWWINDOW | SWP_NOSIZE);

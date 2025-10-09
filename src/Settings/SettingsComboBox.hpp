@@ -5,6 +5,7 @@
 #include <functional>
 #include "SettingsLine.hpp"
 #include "Tools/Event.hpp"
+#include "FluentDesign/Theme.hpp"
 
 namespace AnyFSE::Settings::Controls
 {
@@ -19,24 +20,40 @@ namespace AnyFSE::Settings::Controls
         };
 
     private:
+        static const int itemHeight = 38;
+        static const int imageSize = 20;
+        static const int leftMargin = 12;
+        static const int iconMargin = 8;
+        static const int chevronMargin = 16;
+        static const int cornerRadius = 8;
+
+
         HWND hCombo;
-        HIMAGELIST g_hImageList = NULL;
-        std::list<ComboItem> comboItems;
+        HIMAGELIST m_hImageList = NULL;
+
+        std::vector<ComboItem> comboItems;
+
+        bool buttonPressed;
+        bool buttonMouseOver;
         virtual HWND CreateControl(HWND hWnd);
         virtual bool ApplyTheme(bool isDark);
+
 
 
         static LRESULT CALLBACK ComboBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
                                               UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
-        BOOL OnMeasureItem(MEASUREITEMSTRUCT *mis);
+        void HandleMouse(HWND hWnd, UINT uMsg);
+        void DrawComboBackground(HWND hWnd, HDC hdc, RECT rc);
+        void DrawComboItem(HWND hWnd, HDC hdc, RECT rect, int itemId);
+        void DrawComboChevron(HWND hWnd, HDC hdc, RECT rect);
 
-        BOOL OnDrawItem(DRAWITEMSTRUCT *dis);
-
-        void DrawComboBox(DRAWITEMSTRUCT *dis);
+        FluentDesign::Theme &m_theme;
 
     public:
-        SettingsComboBox(HWND hParent,
+        SettingsComboBox(
+            FluentDesign::Theme& theme,
+            HWND hParent,
             const std::wstring &name,
             const std::wstring &description,
             int x, int y, int width, int height);
@@ -50,5 +67,22 @@ namespace AnyFSE::Settings::Controls
 
         Event OnChanged;
 
+
+        // Listbox part
+        HWND m_hPopupList;     // Single popup listbox window (no separate popup container)
+        bool m_popupVisible;
+        int m_selectedIndex;
+        int m_hoveredIndex;
+
+        void ShowPopup();
+        void HidePopup();
+        void DrawPopupBackground(HWND hWnd, HDC hdc, RECT rect);
+        void DrawPopupItem(HWND hWnd, HDC hdc, RECT rect, int itemId);
+        void HandleListClick(int index);
+
+        void CreatePopupList();
+
+        // Single popup listbox procedure
+        static LRESULT CALLBACK PopupListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
     };
 }

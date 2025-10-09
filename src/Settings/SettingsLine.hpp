@@ -7,6 +7,11 @@ namespace AnyFSE::Settings
 {
     class SettingsLine
     {
+        static const int nameHeight = 14;
+        static const int descHeight = 11;
+        static const int linePadding= 4;
+        static const int leftMargin = 16;
+
     protected:
         HWND m_hWnd;
         HWND m_hParent;
@@ -20,23 +25,36 @@ namespace AnyFSE::Settings
         bool m_enabled;
         bool m_hovered;
 
+    private:
         HFONT m_hNameFont;
         HFONT m_hDescFont;
+        HFONT m_hGlyphFont;
 
         // Drawing resources
         HBRUSH m_hBackgroundBrush;
         HBRUSH m_hHoverBrush;
 
+        HBRUSH m_hControlBrush;
+        HBRUSH m_hControlHoveredBrush;
+        HBRUSH m_hControlPressedBrush;
+
         COLORREF m_nameColor;
         COLORREF m_descColor;
         COLORREF m_disabledColor;
+        COLORREF m_darkColor;
+
         COLORREF m_backgroundColor;
         COLORREF m_hoverColor;
+
+        COLORREF m_controlColor;
+        COLORREF m_controlHoveredColor;
+        COLORREF m_controlPressedColor;
 
     private:
         virtual HWND CreateControl(HWND hWnd) = 0;
         virtual bool ApplyTheme(bool isDark) = 0;
         virtual LPARAM OnCommand(HWND hwnd, int msg, WPARAM wParam, LPARAM lParam) { return 0; };
+        virtual LPARAM OnDrawItem(HWND hwnd, LPDRAWITEMSTRUCT dis) { return 0; };
 
     public:
         SettingsLine(HWND hParent,

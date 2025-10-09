@@ -98,9 +98,9 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 
     /// DEBUG
-    // SettingsDialog dialog;
-    // INT_PTR result = dialog.Show(hInstance);
-    // exit(0);
+    SettingsDialog dialog;
+    INT_PTR result = dialog.Show(hInstance);
+    exit(0);
 
     HWND hAppWnd = FindWindow(className, NULL);
     if (hAppWnd)

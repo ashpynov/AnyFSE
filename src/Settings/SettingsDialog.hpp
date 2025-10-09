@@ -6,6 +6,8 @@
 #include <vector>
 
 #include "Configuration/Config.hpp"
+#include "SettingsComboBox.hpp"
+#include "FluentDesign/Theme.hpp"
 
 #pragma comment(linker, "\"/manifestdependency:type='win32' \
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
@@ -16,23 +18,12 @@ namespace AnyFSE::Settings
 {
     class SettingsDialog
     {
-        struct ComboItem
-        {
-            std::wstring name;
-            std::wstring iconPath;
-            std::wstring Path;
-            int iconIndex;
-        };
-
         struct ControlsGroup
         {
             bool visible;
             int height;
             std::vector<std::pair<int, int>> items;
         };
-
-        HIMAGELIST g_hImageList = NULL;
-        std::list<ComboItem> comboItems;
 
         std::vector<ControlsGroup> groups;
 
@@ -44,6 +35,7 @@ namespace AnyFSE::Settings
     public:
         INT_PTR Show(HINSTANCE hInstance);
         void CenterDialog(HWND hwnd);
+        static UINT DPI;
 
     private:
         static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -71,6 +63,10 @@ namespace AnyFSE::Settings
         LauncherConfig config;
         std::wstring current;
         std::list<std::wstring> launchers;
+
+        FluentDesign::Theme m_theme;
+        Controls::SettingsComboBox* pLauncherCombo;
+        Controls::SettingsComboBox* pEnterFullscreen;
 
 
     };

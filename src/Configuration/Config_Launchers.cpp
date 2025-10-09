@@ -9,7 +9,7 @@ namespace AnyFSE::Configuration
         {
             LauncherType::PlayniteFullscreen, {
                 LauncherType::PlayniteFullscreen,
-                L"Playnite Fulscreen",
+                L"Playnite Fullscreen",
                 L"Playnite.FullscreenApp.exe",
                 L"",
                 L"Playnite.FullscreenApp.exe",

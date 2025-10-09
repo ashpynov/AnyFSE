@@ -3,41 +3,49 @@
 #include <string>
 #include <functional>
 #include <Uxtheme.h>
+#include "SettingsDialog.hpp"
 #include "SettingsLine.hpp"
 #include "SettingsComboBox.hpp"
 #include "Tools/Tools.hpp"
+#include "FluentDesign/DoubleBufferedPaint.hpp"
 
 namespace AnyFSE::Settings::Controls
 {
     SettingsComboBox::SettingsComboBox(
+        FluentDesign::Theme& theme,
         HWND hParent,
         const std::wstring &name,
         const std::wstring &description,
         int x, int y,
         int width, int height)
             : SettingsLine(hParent, name, description, x,y, width, height)
+            , m_theme(theme)
+            , buttonMouseOver(false)
+            , buttonPressed(false)
+            , m_popupVisible(false)
+            , m_selectedIndex(-1)
+            , m_hoveredIndex(-1)
     {
         Create();
-        g_hImageList = ImageList_Create(32, 32, ILC_COLOR32 | ILC_MASK, 3, 1);
-        SendMessage(hCombo, CBEM_SETIMAGELIST, 0, (LPARAM)g_hImageList);
-
+        m_hImageList = ImageList_Create(
+            m_theme.DpiScale(imageSize), m_theme.DpiScale(imageSize),
+            ILC_COLOR32 | ILC_MASK, 3, 1);
+        SendMessage(hCombo, CBEM_SETIMAGELIST, 0, (LPARAM)m_hImageList);
     }
 
     SettingsComboBox::~SettingsComboBox()
     {
         SendMessage(hCombo, CBEM_SETIMAGELIST, 0, 0);
-        ImageList_RemoveAll(g_hImageList);
-        ImageList_Destroy(g_hImageList);
+        ImageList_RemoveAll(m_hImageList);
+        ImageList_Destroy(m_hImageList);
     }
 
     int SettingsComboBox::AddItem(const std::wstring &name, const std::wstring &icon, const std::wstring &value, int pos)
     {
-        comboItems.push_back(ComboItem {name, icon, value, -1});
-        ComboItem &cb = comboItems.back();
+        ComboItem &cb = *(comboItems.insert(pos != -1 ? comboItems.begin() + pos : comboItems.end(), ComboItem{name, icon, value, -1}));
 
         HICON hIcon = Tools::LoadIconW(cb.icon);
-        cb.iconIndex = hIcon ? ImageList_AddIcon(g_hImageList, hIcon) : -1;
-        comboItems.push_back(cb);
+        cb.iconIndex = hIcon ? ImageList_AddIcon(m_hImageList, hIcon) : -1;
 
         COMBOBOXEXITEM cbei = {0};
         cbei.mask = CBEIF_TEXT | CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_LPARAM;
@@ -53,35 +61,31 @@ namespace AnyFSE::Settings::Controls
     {
         SendMessage(hCombo, CB_RESETCONTENT, 0, 0);
         comboItems.clear();
-        ImageList_RemoveAll(g_hImageList);
+        ImageList_RemoveAll(m_hImageList);
         return 0;
     }
 
     void SettingsComboBox::SelectItem(int index)
     {
-
-        SendMessage(hCombo, CB_SETCURSEL, 0, (LPARAM) index);
+        if (index >=0 && index < comboItems.size())
+        {
+            m_selectedIndex = index;
+        }
     }
 
     std::wstring SettingsComboBox::GetCurentValue()
     {
-        int index = (int)SendMessage(hCombo, CB_GETCURSEL, 0, 0);
-        if (index >= 0)
-        {
-            ComboItem * item = (ComboItem*)SendMessage(hCombo, CB_GETITEMDATA, (WPARAM)index, (LPARAM)0);
-            if (item)
-            {
-                return item->value;
-            }
-        }
-        return L"";
+        return comboItems[m_selectedIndex].value;
     }
 
     HWND SettingsComboBox::CreateControl(HWND hWnd)
     {
-        hCombo = CreateWindow(L"ComboBoxEx32", NULL,
-            WS_VISIBLE | WS_CHILD | CBS_DROPDOWNLIST | CBS_AUTOHSCROLL,
-            0, 0, 250, 200, hWnd, NULL, GetModuleHandle(NULL), NULL);
+        hCombo = CreateWindow(
+            L"BUTTON",
+            L"",
+            WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+            0, 0, m_theme.DpiScale(250), m_theme.DpiScale(itemHeight),
+            hWnd, NULL, GetModuleHandle(NULL), NULL);
 
         SetWindowSubclass(hCombo, ComboBoxSubclassProc, 0, (DWORD_PTR)this);
         return hCombo;
@@ -90,124 +94,376 @@ namespace AnyFSE::Settings::Controls
     bool SettingsComboBox::ApplyTheme(bool isDark)
     {
         LPCWSTR theme = isDark ? L"DarkMode_CFD" : L"Explorer";
-        SetWindowTheme(hCombo, theme, NULL);
-        SetWindowTheme(GetWindow(hCombo, GW_CHILD), theme, NULL);
-        SetWindowTheme(GetWindow(hCombo, GW_ENABLEDPOPUP), theme, NULL);
+        //SetWindowTheme(hCombo, theme, NULL);
+        //SetWindowTheme(GetWindow(hCombo, GW_CHILD), theme, NULL);
+        //SetWindowTheme(GetWindow(hCombo, GW_ENABLEDPOPUP), theme, NULL);
         return false;
     }
 
     LRESULT SettingsComboBox::ComboBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
     {
 
-        SettingsComboBox * This = reinterpret_cast<SettingsComboBox*>(dwRefData);
-
+        SettingsComboBox *This = reinterpret_cast<SettingsComboBox *>(dwRefData);
         switch (uMsg)
         {
             case WM_MOUSEMOVE:
-                // Handle mouse movement
+            case WM_MOUSELEAVE:
+            case WM_LBUTTONDOWN:
+            case WM_LBUTTONUP:
+                This->HandleMouse(hWnd, uMsg);
                 break;
 
-            case WM_SIZE:
-                This->PositionChildControl();
-                break;
+        case WM_PAINT:
+            {
+                FluentDesign::DoubleBuferedPaint paint(hWnd);
 
-            // case WM_MEASUREITEM:
-            //     return This->OnMeasureItem((MEASUREITEMSTRUCT*)lParam);
+                RECT rect = paint.ClientRect();
+                This->DrawComboBackground(hWnd, paint.MemDC(), rect);
+                rect.right -= This->m_theme.DpiScale(chevronMargin);
+                This->DrawComboItem(hWnd, paint.MemDC(), rect, This->m_selectedIndex);
+                rect.right += This->m_theme.DpiScale(chevronMargin);
+                This->DrawComboChevron(hWnd, paint.MemDC(), rect);
+            }
+            return 0;
 
-            // case WM_DRAWITEM:
-            //     return This->OnDrawItem((DRAWITEMSTRUCT*)lParam);
-
-            case WM_COMMAND:
-                if (HIWORD(wParam) == CBN_SELCHANGE)
-                {
-                    This->OnChanged.Notify();
-                }
-                break;
-            case WM_NCDESTROY:
-                RemoveWindowSubclass(hWnd, ComboBoxSubclassProc, uIdSubclass);
-                break;
+        case WM_ERASEBKGND:
+            return 1;
+        case WM_NCDESTROY:
+            RemoveWindowSubclass(hWnd, ComboBoxSubclassProc, uIdSubclass);
+            break;
         }
 
         // Call original window procedure for default handling
         return DefSubclassProc(hWnd, uMsg, wParam, lParam);
-        }
+    }
 
-        BOOL SettingsComboBox::OnMeasureItem(MEASUREITEMSTRUCT *mis)
+    void SettingsComboBox::HandleMouse(HWND hWnd, UINT uMsg)
+    {
+        switch (uMsg)
         {
-            if (mis->CtlType == ODT_COMBOBOX)
+        case WM_MOUSEMOVE:
+            if (!buttonMouseOver)
             {
-                // Set item height
-                mis->itemHeight = 48; // Custom height for image + text
-                return TRUE;
+                buttonMouseOver = true;
+                InvalidateRect(hWnd, NULL, TRUE);
+
+                // Track mouse leave
+                TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT)};
+                tme.dwFlags = TME_LEAVE;
+                tme.hwndTrack = hWnd;
+                TrackMouseEvent(&tme);
             }
-            return FALSE;
+            break;
+
+        case WM_MOUSELEAVE:
+            buttonMouseOver = false;
+            buttonPressed = false;
+            InvalidateRect(hWnd, NULL, TRUE);
+            break;
+
+        case WM_LBUTTONDOWN:
+            buttonPressed = true;
+            InvalidateRect(hWnd, NULL, TRUE);
+            ShowPopup();
+            break;
+
+        case WM_LBUTTONUP:
+            buttonPressed = false;
+            InvalidateRect(hWnd, NULL, TRUE);
+            break;
         }
+        return;
+    }
+    void SettingsComboBox::DrawComboBackground(HWND hWnd, HDC hdc, RECT rect)
+    {
+            // Get button state
+            bool enabled = IsWindowEnabled(hWnd);
+            bool focused = (GetFocus() == hWnd);
 
-        BOOL SettingsComboBox::OnDrawItem(DRAWITEMSTRUCT *dis)
+            HBRUSH hBackgroundBrush = CreateSolidBrush(m_theme.BaseSecondaryColorBg());
+            FillRect(hdc, &rect, hBackgroundBrush);
+            DeleteObject(hBackgroundBrush);
+
+            // Draw button background
+            COLORREF color =
+                  !enabled ? m_theme.ControlColorBg()                       // TODO Disabled Color
+                : buttonPressed ? m_theme.PressedColorBg()
+                : buttonMouseOver ? m_theme.ControlColorBg()
+                : m_theme.ControlColorBg();
+
+            HPEN hBorderPen = CreatePen(PS_SOLID,  1, m_theme.ControlColorBg());
+            HBRUSH hBrush = CreateSolidBrush(color);
+            HPEN hOldPen = (HPEN)SelectObject(hdc, hBorderPen);
+            HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
+
+            RoundRect(hdc, rect.left, rect.top, rect.right, rect.bottom, m_theme.DpiScale(cornerRadius), m_theme.DpiScale(cornerRadius));
+
+            SelectObject(hdc, hOldPen);
+            SelectObject(hdc, hOldBrush);
+
+            DeleteObject(hBorderPen);
+            DeleteObject(hBrush);
+
+            return;
+    }
+    void SettingsComboBox::DrawComboItem(HWND hWnd, HDC hdc, RECT rect, int itemId)
+    {
+        if (itemId < 0)
         {
-            if (dis->CtlType == ODT_COMBOBOX)
-            {
-                //if (dis->itemID == -1)
-                {
-                    // Draw the main ComboBox control (when closed)
-                    DrawComboBox(dis);
-                }
-                //else
-                {
-                    // Draw individual items in the dropdown
-                    //DrawComboBoxItem(dis);
-                }
-                return TRUE;
-            }
-            return FALSE;
+            return;
         }
+        bool enabled = IsWindowEnabled(hWnd);
+        ComboItem &item = comboItems[itemId];
+        // Draw text
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, enabled ? m_theme.PrimaryColor() : m_theme.SecondaryColor());
 
-        void SettingsComboBox::DrawComboBox(DRAWITEMSTRUCT *dis)
-        {
-            HDC hdc = dis->hDC;
-            RECT rect = dis->rcItem;
+        HFONT hOldFont = (HFONT)SelectObject(hdc, m_theme.PrimaryFont());
 
-            bool disabled = (dis->itemState & ODS_DISABLED) != 0;
-            bool hasFocus = (dis->itemState & ODS_FOCUS) != 0;
+        rect.left += m_theme.DpiScale(leftMargin);
 
-            ComboItem *item = (ComboItem *)SendMessage(hCombo, CB_GETITEMDATA, (WPARAM)dis->itemID, (LPARAM)0);
+        int imageY = rect.top + (rect.bottom - rect.top - m_theme.DpiScale(imageSize)) / 2;
 
-            // Draw background
-            HBRUSH hBackground = this->m_hBackgroundBrush;
-            FillRect(hdc, &rect, hBackground);
+        ImageList_Draw(m_hImageList, item.iconIndex, hdc, rect.left, imageY, ILD_NORMAL);
 
-            // Draw border
-            if (hasFocus && !disabled)
-            {
-                HBRUSH hBorder = CreateSolidBrush(GetSysColor(COLOR_HIGHLIGHT));
-                FrameRect(hdc, &rect, hBorder);
-                DeleteObject(hBorder);
-            }
+        rect.left += m_theme.DpiScale(imageSize + iconMargin);
+        ::DrawText(hdc, item.name.c_str(), -1, &rect,
+                   DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        SelectObject(hdc, hOldFont);
+        return;
+    }
+    void SettingsComboBox::DrawComboChevron(HWND hWnd, HDC hdc, RECT rect)
+    {
+            rect.right -= m_theme.DpiScale(chevronMargin);
 
-            // Draw image if available
-            if (g_hImageList && item->iconIndex >= 0)
-            {
-                int imageSize = 32;
-                int imageY = rect.top + (rect.bottom - rect.top - imageSize) / 2;
+            HFONT hOldFont = (HFONT)SelectObject(hdc, m_theme.GlyphFont());
 
-                ImageList_Draw(g_hImageList, item->iconIndex, hdc,
-                               rect.left + 4, imageY,
-                               ILD_NORMAL);
-            }
-
-            // Draw text
-            SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, m_nameColor);
-
-            HFONT hOldFont = (HFONT)SelectObject(hdc, m_hNameFont);
-
-            RECT textRect = rect;
-            textRect.left += (item->iconIndex >= 0 ? 40 : 8);
-
-            ::DrawText(hdc, item->name.c_str(), -1, &textRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+            SetTextColor(hdc, m_theme.SecondaryColor());
+            ::DrawText(hdc, L"\xE70D", -1, &rect,
+                     DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
             SelectObject(hdc, hOldFont);
+    }
+
+    void SettingsComboBox::ShowPopup()
+    {
+        if (m_popupVisible)
+            return;
+
+        // Calculate popup position (below the button)
+        RECT buttonRect;
+        GetWindowRect(hCombo, &buttonRect);
+
+        int popupWidth = buttonRect.right - buttonRect.left;
+        int popupHeight = min(m_theme.DpiScale(400), (int)comboItems.size() * m_theme.DpiScale(itemHeight)); // Calculate height based on items
+
+        // Create popup listbox window
+        m_hPopupList = CreateWindowEx(
+            WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
+            L"LISTBOX",
+            L"",
+            WS_POPUP | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | CS_DROPSHADOW,
+            buttonRect.left,
+            buttonRect.bottom + 2,
+            popupWidth,
+            popupHeight,
+            GetParent(hCombo),
+            NULL,
+            GetModuleHandle(NULL),
+            NULL);
+
+        // Set transparency for shadow
+        SetLayeredWindowAttributes(m_hPopupList, 0, 255, LWA_COLORKEY);
+
+        // Add items to listbox (we'll use item data to store our ComboItem index)
+        for (int i = 0; i < (int)comboItems.size(); i++)
+        {
+            int lbIndex = (int)SendMessage(m_hPopupList, LB_ADDSTRING, 0, (LPARAM)comboItems[i].name.c_str());
+            SendMessage(m_hPopupList, LB_SETITEMDATA, lbIndex, (LPARAM)i); // Store index to our comboItems
         }
 
+        // Subclass the popup listbox
+        SetWindowSubclass(m_hPopupList, PopupListSubclassProc, 0, (DWORD_PTR)this);
 
+        // Set item height
+        SendMessage(m_hPopupList, LB_SETITEMHEIGHT, 0, (LPARAM)m_theme.DpiScale(itemHeight)); // Match your DrawComboItem height
+
+        ShowWindow(m_hPopupList, SW_SHOWNOACTIVATE);
+        m_popupVisible = true;
+
+        // Capture mouse to close when clicking outside
+        SetCapture(m_hPopupList);
+    }
+
+    void SettingsComboBox::HidePopup()
+    {
+        if (m_popupVisible && m_hPopupList)
+        {
+            ReleaseCapture();
+            DestroyWindow(m_hPopupList);
+            m_hPopupList = NULL;
+            m_popupVisible = false;
+            m_hoveredIndex = -1;
+            InvalidateRect(hCombo, NULL, TRUE); // Redraw main button
+        }
+    }
+
+    // Single popup listbox window procedure
+    LRESULT CALLBACK SettingsComboBox::PopupListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+    {
+        SettingsComboBox *This = reinterpret_cast<SettingsComboBox *>(dwRefData);
+
+        switch (uMsg)
+        {
+        case WM_ERASEBKGND:
+            return 1; // We handle background
+
+        case WM_PAINT:
+        {
+            FluentDesign::DoubleBuferedPaint paint(hWnd);
+
+            This->DrawPopupBackground(hWnd, paint.MemDC(), paint.ClientRect());
+
+            for (int i = 0; i < This->comboItems.size(); i++)
+            {
+                RECT itemRect;
+                SendMessage(hWnd, LB_GETITEMRECT, i, (LPARAM)&itemRect);
+
+                This->DrawPopupItem(hWnd, paint.MemDC(), itemRect, i);
+            }
+        }
+            return 0;
+
+        case WM_NCPAINT:
+            // Suppress non-client area painting
+            return 0;
+
+        case WM_MOUSEMOVE:
+        {
+            // Handle item hover
+            POINT pt = {LOWORD(lParam), HIWORD(lParam)};
+            int hoverIndex = (int)SendMessage(hWnd, LB_ITEMFROMPOINT, 0, MAKELPARAM(pt.x, pt.y));
+            if (hoverIndex >= 0 && hoverIndex < (int)SendMessage(hWnd, LB_GETCOUNT, 0, 0))
+            {
+                This->m_hoveredIndex = hoverIndex;
+                InvalidateRect(hWnd, NULL, TRUE);
+            }
+        }
+        break;
+
+        case WM_LBUTTONDOWN:
+        {
+            POINT pt = {LOWORD(lParam), HIWORD(lParam)};
+            int clickIndex = (int)SendMessage(hWnd, LB_ITEMFROMPOINT, 0, MAKELPARAM(pt.x, pt.y));
+            if (clickIndex >= 0 && clickIndex < (int)SendMessage(hWnd, LB_GETCOUNT, 0, 0))
+            {
+                // Get the actual ComboItem index from item data
+                int itemIndex = (int)SendMessage(hWnd, LB_GETITEMDATA, clickIndex, 0);
+                This->HandleListClick(itemIndex);
+                This->HidePopup();
+            }
+            else
+            {
+                // Clicked outside items, hide popup
+                This->HidePopup();
+            }
+        }
+            return 0;
+
+        case WM_CAPTURECHANGED:
+            // If we lose capture, hide the popup
+            if ((HWND)lParam != hWnd && (HWND)lParam != This->hCombo )
+            {
+                This->HidePopup();
+            }
+            else
+            {
+                SetCapture(hWnd);
+            }
+            break;
+
+        case WM_KEYDOWN:
+            if (wParam == VK_ESCAPE)
+            {
+                This->HidePopup();
+                return 0;
+            }
+            else if (wParam == VK_RETURN)
+            {
+                int selIndex = (int)SendMessage(hWnd, LB_GETCURSEL, 0, 0);
+                if (selIndex >= 0)
+                {
+                    int itemIndex = (int)SendMessage(hWnd, LB_GETITEMDATA, selIndex, 0);
+                    This->HandleListClick(itemIndex);
+                    This->HidePopup();
+                }
+                return 0;
+            }
+            break;
+
+        case WM_DESTROY:
+            RemoveWindowSubclass(hWnd, PopupListSubclassProc, uIdSubclass);
+            break;
+        }
+
+        return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+    }
+
+    void SettingsComboBox::DrawPopupBackground(HWND hWnd, HDC hdcMem, RECT rect)
+    {
+        // Draw popup background with rounded corners
+        HBRUSH hBgBrush = CreateSolidBrush(m_theme.PressedColorBg());
+        HRGN hRgn = CreateRoundRectRgn(rect.left, rect.top, rect.right, rect.bottom, 8, 8);
+        SelectClipRgn(hdcMem, hRgn);
+
+        FillRect(hdcMem, &rect, hBgBrush);
+
+        DeleteObject(hBgBrush);
+        DeleteObject(hRgn);
+    }
+
+    void SettingsComboBox::DrawPopupItem(HWND hWnd, HDC hdcMem, RECT itemRect, int itemId)
+    {
+        RECT backgroundRect = itemRect;
+        InflateRect(&backgroundRect, m_theme.DpiScale(-4), m_theme.DpiScale(-2));
+        if ( itemId == m_hoveredIndex || itemId == m_selectedIndex)
+        {
+            HBRUSH hHoverBrush = CreateSolidBrush(m_theme.HoveredColorBg());
+            HPEN hBorderPen = CreatePen(PS_SOLID,  1, m_theme.HoveredColorBg());
+            HPEN hOldPen = (HPEN)SelectObject(hdcMem, hBorderPen);
+            HBRUSH hPrevBrush = (HBRUSH)SelectObject(hdcMem, hHoverBrush);
+            RoundRect(hdcMem, backgroundRect.left,
+                backgroundRect.top, backgroundRect.right,
+                backgroundRect.bottom, m_theme.DpiScale(cornerRadius),
+                m_theme.DpiScale(cornerRadius));
+            SelectObject(hdcMem, hPrevBrush);
+            SelectObject(hdcMem, hOldPen);
+            DeleteObject(hHoverBrush);
+            DeleteObject(hBorderPen);
+        }
+        if ( itemId == m_selectedIndex)
+        {
+            HBRUSH hGripBrush = CreateSolidBrush(m_theme.DisabledColor());
+            RECT gripRect = backgroundRect;
+            gripRect.left += 1;
+            gripRect.right = gripRect.left + m_theme.DpiScale(3);
+            gripRect.top += (gripRect.bottom - gripRect.top - m_theme.DpiScale(14)) / 2;
+            gripRect.bottom = gripRect.top + m_theme.DpiScale(14);
+            FillRect(hdcMem, &gripRect, hGripBrush);
+            DeleteObject(hGripBrush);
+        }
+        DrawComboItem(hWnd, hdcMem, itemRect, itemId);
+    }
+
+    void SettingsComboBox::HandleListClick(int index)
+    {
+        if (index >= 0 && index < (int)comboItems.size())
+        {
+            m_selectedIndex = index;
+            // Update your main button display here
+            InvalidateRect(hCombo, NULL, TRUE);
+
+            OnChanged.Notify();
+        }
+    }
 }

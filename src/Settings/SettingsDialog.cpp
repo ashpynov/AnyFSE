@@ -8,6 +8,7 @@
 #include "Logging/LogManager.hpp"
 #include "SettingsDialog.hpp"
 #include "Configuration/Config.hpp"
+#include "SettingsComboBox.hpp"
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "dwmapi.lib")
@@ -16,6 +17,13 @@
 namespace AnyFSE::Settings
 {
     Logger log = LogManager::GetLogger("Settings");
+
+    UINT SettingsDialog::DPI = 96;
+
+    static int DpiScale(int value)
+    {
+        return MulDiv(value, SettingsDialog::DPI, 96);
+    }
 
     INT_PTR SettingsDialog::Show(HINSTANCE hInstance)
     {
@@ -30,6 +38,7 @@ namespace AnyFSE::Settings
         }
         return res;
     }
+
 
     void SettingsDialog::CenterDialog(HWND hwnd)
     {
@@ -51,24 +60,25 @@ namespace AnyFSE::Settings
     // Static dialog procedure - routes to instance method
     INT_PTR CALLBACK SettingsDialog::DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
-        SettingsDialog *pThis = nullptr;
+        SettingsDialog *This = nullptr;
 
         if (msg == WM_INITDIALOG)
         {
             // Store 'this' pointer in window user data
-            pThis = (SettingsDialog *)lParam;
-            SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pThis);
-            pThis->m_hDialog = hwnd;
+            This = (SettingsDialog *)lParam;
+            SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)This);
+            This->m_hDialog = hwnd;
+            DPI = GetDpiForWindow(hwnd);
         }
         else
         {
             // Get 'this' pointer from window user data
-            pThis = (SettingsDialog *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+            This = (SettingsDialog *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
         }
 
-        if (pThis)
+        if (This)
         {
-            return pThis->InstanceDialogProc(hwnd, msg, wParam, lParam);
+            return This->InstanceDialogProc(hwnd, msg, wParam, lParam);
         }
 
         return FALSE;
@@ -80,24 +90,24 @@ namespace AnyFSE::Settings
         switch (msg)
         {
         case WM_INITDIALOG:
+            m_theme.Attach(hwnd);
             OnInitDialog(hwnd);
             CenterDialog(hwnd);
             return TRUE;
 
+        case WM_CTLCOLORDLG:
+        {
+            // Return a black brush for dialog background
+            static HBRUSH hBlackBrush = CreateSolidBrush(RGB(32, 32, 32));
+            return (LRESULT)hBlackBrush;
+        }
         case WM_DESTROY:
-            ImageList_RemoveAll(g_hImageList);
-            ImageList_Destroy(g_hImageList);
+            delete pLauncherCombo;
             break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
-            case IDC_LAUNCHER:
-                if (HIWORD(wParam) == CBN_SELCHANGE)
-                {
-                    OnLauncherChanged(hwnd);
-                }
-                break;
             case IDC_CUSTOM:
                 if (HIWORD(wParam) == BN_CLICKED)
                 {
@@ -111,7 +121,7 @@ namespace AnyFSE::Settings
                 }
                 break;
             case IDC_BROWSE:
-                OnBrowseLauncher(hwnd, IDC_LAUNCHER);
+                OnBrowseLauncher(hwnd, 0);
                 break;
             case IDOK:
                 OnOk(hwnd);
@@ -129,10 +139,34 @@ namespace AnyFSE::Settings
 
     void SettingsDialog::OnInitDialog(HWND hwnd)
     {
+
+        RECT rect;
+        GetClientRect(hwnd, &rect);
+
+        ULONG top = DpiScale(45);
+        pLauncherCombo = new Controls::SettingsComboBox(
+            m_theme,
+            hwnd,
+            L"Choose home app",
+            L"Choose home application for full screen expirience",
+            DpiScale(32), top, rect.right - rect.left - DpiScale(64), DpiScale(67));
+
+        pLauncherCombo->OnChanged += [This = this]()
+        {
+            This->OnLauncherChanged(This->m_hDialog);
+        };
+
+        top += DpiScale(67 + 8);
+
+        pEnterFullscreen = new Controls::SettingsComboBox(
+            m_theme,
+            hwnd,
+            L"Enter full screen expitience on startup",
+            L"",
+            DpiScale(32), top, rect.right - rect.left - DpiScale(64), DpiScale(67));
+
         InitGroups();
-        g_hImageList = ImageList_Create(32, 32, ILC_COLOR32 | ILC_MASK, 3, 1);
-        SendDlgItemMessage(m_hDialog, IDC_LAUNCHER, CBEM_SETIMAGELIST, 0, (LPARAM)g_hImageList);
-        CheckDlgButton(m_hDialog, IDC_RUN_ON_STARTUP,   true ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(m_hDialog, IDC_RUN_ON_STARTUP, true ? BST_CHECKED : BST_UNCHECKED);
         current = Config::GetCurrentLauncher();
         Config::FindLaunchers(launchers);
         UpdateCombo();
@@ -329,44 +363,20 @@ namespace AnyFSE::Settings
 
     void SettingsDialog::OnLauncherChanged(HWND hwnd)
     {
-        int index = (int)SendDlgItemMessage(m_hDialog, IDC_LAUNCHER, CB_GETCURSEL, 0, 0);
-        if (index >= 0)
-        {
-            ComboItem * item = (ComboItem*)SendDlgItemMessage(m_hDialog, IDC_LAUNCHER, CB_GETITEMDATA, (WPARAM)index, (LPARAM)0);
-            if (item)
-            {
-                current = item->Path;
-            }
-            Config::GetLauncherSettings(current, config);
-            UpdateCustom();
-            UpdateCustomSettings();
-        }
+        current = pLauncherCombo->GetCurentValue();
+        Config::GetLauncherSettings(current, config);
+        UpdateCustom();
+        UpdateCustomSettings();
     }
 
     void SettingsDialog::AddComboItem(const wstring& name, const wstring& path, int pos)
     {
-        comboItems.push_back(SettingsDialog::ComboItem{name, path, path, -1});
-        SettingsDialog::ComboItem &cb = comboItems.back();
-
-        HICON hIcon = Tools::LoadIconW(cb.iconPath);
-        cb.iconIndex = hIcon ? ImageList_AddIcon(g_hImageList, hIcon) : -1;
-
-        comboItems.push_back(cb);
-
-        COMBOBOXEXITEM cbei = {0};
-        cbei.mask = CBEIF_TEXT | CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_LPARAM;
-        cbei.iItem = pos;
-        cbei.pszText = (LPWSTR)name.c_str();
-        cbei.iImage = cb.iconIndex;
-        cbei.iSelectedImage = cb.iconIndex;
-        cbei.lParam = (LPARAM)&cb;
-        SendDlgItemMessage(m_hDialog, IDC_LAUNCHER, CBEM_INSERTITEM, 0, (LPARAM)&cbei);
+        pLauncherCombo->AddItem(name, path, path, pos);
     }
 
     void SettingsDialog::UpdateCombo()
     {
-        SendDlgItemMessage(m_hDialog, IDC_LAUNCHER, CB_RESETCONTENT, 0, 0);
-        ImageList_RemoveAll(g_hImageList);
+        pLauncherCombo->Reset();
 
         for ( auto& launcher: launchers)
         {
@@ -384,13 +394,12 @@ namespace AnyFSE::Settings
             index = 0;
         }
 
-        SendDlgItemMessage(m_hDialog, IDC_LAUNCHER, CB_SETCURSEL, 0, (LPARAM) index);
+        pLauncherCombo->SelectItem((int)index);
     }
 
     void SettingsDialog::UpdateCustomSettings()
     {
         // Set values
-        //SetDlgItemText(m_hDialog, IDC_LAUNCHER,         config.StartCommand.c_str());
         SetDlgItemText(m_hDialog, IDC_ARGUMENTS,        config.StartArg.c_str());
         SetDlgItemText(m_hDialog, IDC_PROCESS_NAME,     config.ProcessName.c_str());
         SetDlgItemText(m_hDialog, IDC_PROCESS_NAME_ALT, config.ProcessNameAlt.c_str());
