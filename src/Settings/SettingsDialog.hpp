@@ -6,8 +6,11 @@
 #include <vector>
 
 #include "Configuration/Config.hpp"
-#include "SettingsComboBox.hpp"
 #include "FluentDesign/Theme.hpp"
+#include "FluentDesign/ComboBox.hpp"
+#include "FluentDesign/Toggle.hpp"
+#include "FluentDesign/SettingsLine.hpp"
+
 
 #pragma comment(linker, "\"/manifestdependency:type='win32' \
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
@@ -35,7 +38,12 @@ namespace AnyFSE::Settings
     public:
         INT_PTR Show(HINSTANCE hInstance);
         void CenterDialog(HWND hwnd);
-        static UINT DPI;
+        SettingsDialog()
+            : m_theme()
+            , launcherCombo(m_theme)
+            , enterFullscreen(m_theme)
+            , customSettings(m_theme)
+        {}
 
     private:
         static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -65,10 +73,11 @@ namespace AnyFSE::Settings
         std::list<std::wstring> launchers;
 
         FluentDesign::Theme m_theme;
-        Controls::SettingsComboBox* pLauncherCombo;
-        Controls::SettingsComboBox* pEnterFullscreen;
+        FluentDesign::ComboBox launcherCombo;
+        FluentDesign::Toggle enterFullscreen;
+        FluentDesign::Toggle customSettings;
 
-
+        std::list<FluentDesign::SettingsLine> settingLines;
     };
 }
 

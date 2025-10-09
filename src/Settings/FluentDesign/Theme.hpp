@@ -6,6 +6,7 @@ namespace FluentDesign
     class Theme
     {
         ULONG m_dpi;
+        ULONG_PTR gdiplusToken;
 
         HWND m_hParentWnd;
         HFONT m_hPrimaryFont;
@@ -39,6 +40,8 @@ namespace FluentDesign
         ~Theme();
 
         const int DpiScale(int designSize);
+        const float DpiScaleF(int designSize);
+        const float DpiScaleF(float designSize);
         const HFONT PrimaryFont() { return m_hPrimaryFont; }
         const HFONT SecondaryFont() { return m_hSecondaryFont; }
         const HFONT GlyphFont() { return m_hGlyphFont; }
@@ -47,6 +50,8 @@ namespace FluentDesign
         const COLORREF PrimaryColor() { return m_primaryColor; }
         const COLORREF SecondaryColor() { return m_secondaryColor; }
         const COLORREF DisabledColor() { return m_disabledColor; }
+
+        const COLORREF ThemeColor(BYTE lumen) { return RGB(lumen, lumen, lumen); }
 
         // Background
         const COLORREF BaseColorBg() { return m_baseColorBg; }

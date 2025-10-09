@@ -8,7 +8,7 @@
 #include "Logging/LogManager.hpp"
 #include "SettingsDialog.hpp"
 #include "Configuration/Config.hpp"
-#include "SettingsComboBox.hpp"
+
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "dwmapi.lib")
@@ -17,13 +17,6 @@
 namespace AnyFSE::Settings
 {
     Logger log = LogManager::GetLogger("Settings");
-
-    UINT SettingsDialog::DPI = 96;
-
-    static int DpiScale(int value)
-    {
-        return MulDiv(value, SettingsDialog::DPI, 96);
-    }
 
     INT_PTR SettingsDialog::Show(HINSTANCE hInstance)
     {
@@ -68,7 +61,6 @@ namespace AnyFSE::Settings
             This = (SettingsDialog *)lParam;
             SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)This);
             This->m_hDialog = hwnd;
-            DPI = GetDpiForWindow(hwnd);
         }
         else
         {
@@ -102,7 +94,7 @@ namespace AnyFSE::Settings
             return (LRESULT)hBlackBrush;
         }
         case WM_DESTROY:
-            delete pLauncherCombo;
+
             break;
 
         case WM_COMMAND:
@@ -143,27 +135,97 @@ namespace AnyFSE::Settings
         RECT rect;
         GetClientRect(hwnd, &rect);
 
-        ULONG top = DpiScale(45);
-        pLauncherCombo = new Controls::SettingsComboBox(
-            m_theme,
-            hwnd,
+        ULONG top = m_theme.DpiScale(45);
+
+        settingLines.emplace_back(
+            m_theme, hwnd,
             L"Choose home app",
             L"Choose home application for full screen expirience",
-            DpiScale(32), top, rect.right - rect.left - DpiScale(64), DpiScale(67));
+            m_theme.DpiScale(32), top,
+            rect.right - rect.left - m_theme.DpiScale(64), m_theme.DpiScale(67),
+            [&](HWND parent){ return launcherCombo.Create(parent, 0, 0, m_theme.DpiScale(250), m_theme.DpiScale(40)); }
+        );
 
-        pLauncherCombo->OnChanged += [This = this]()
+        top += m_theme.DpiScale(67 + 8);
+
+        settingLines.emplace_back(
+            m_theme, hwnd,
+            L"Enter full screen expirience on startup", L"",
+            m_theme.DpiScale(32), top,
+            rect.right - rect.left - m_theme.DpiScale(64), m_theme.DpiScale(67),
+            [&](HWND parent){ return enterFullscreen.Create(parent, 0, 0, m_theme.DpiScale(250), m_theme.DpiScale(40)); }
+        );
+
+        top += m_theme.DpiScale(67 + 8);
+
+        settingLines.emplace_back(
+            m_theme, hwnd,
+            L"Use custom settings",
+            L"Change monitoring and startups settings for selected home application",
+            m_theme.DpiScale(32), top,
+            rect.right - rect.left - m_theme.DpiScale(64), m_theme.DpiScale(67),
+            [&](HWND parent){ return customSettings.Create(parent, 0, 0, m_theme.DpiScale(250), m_theme.DpiScale(40)); }
+        );
+
+        launcherCombo.OnChanged += [This = this]()
         {
             This->OnLauncherChanged(This->m_hDialog);
         };
 
-        top += DpiScale(67 + 8);
+        customSettings.OnChanged += [This = this]()
+        {
+            This->OnLauncherChanged(This->m_hDialog);
+        };
 
-        pEnterFullscreen = new Controls::SettingsComboBox(
-            m_theme,
-            hwnd,
-            L"Enter full screen expitience on startup",
-            L"",
-            DpiScale(32), top, rect.right - rect.left - DpiScale(64), DpiScale(67));
+        top += m_theme.DpiScale(67 + 2);
+        settingLines.emplace_back(
+            m_theme, hwnd,
+            L"Additional arguments",
+            L"Command line arguments passed to application",
+            m_theme.DpiScale(32), top,
+            rect.right - rect.left - m_theme.DpiScale(64), m_theme.DpiScale(48)
+        );
+        settingLines.back().SetLeftMargin(40);
+
+        top += m_theme.DpiScale(48 + 2);
+        settingLines.emplace_back(
+            m_theme, hwnd,
+            L"Primary process name",
+            L"Name of home application process",
+            m_theme.DpiScale(32), top,
+            rect.right - rect.left - m_theme.DpiScale(64), m_theme.DpiScale(48)
+        );
+        settingLines.back().SetLeftMargin(40);
+
+        top += m_theme.DpiScale(48 + 2);
+        settingLines.emplace_back(
+            m_theme, hwnd,
+            L"Primary window title",
+            L"Title of app window when it have been activated",
+            m_theme.DpiScale(32), top,
+            rect.right - rect.left - m_theme.DpiScale(64), m_theme.DpiScale(48)
+        );
+        settingLines.back().SetLeftMargin(40);
+
+        top += m_theme.DpiScale(48 + 2);
+        settingLines.emplace_back(
+            m_theme, hwnd,
+            L"Secondary process name",
+            L"Name of app process for alternative mode",
+            m_theme.DpiScale(32), top,
+            rect.right - rect.left - m_theme.DpiScale(64), m_theme.DpiScale(48)
+        );
+        settingLines.back().SetLeftMargin(40);
+
+        top += m_theme.DpiScale(48 + 2);
+        settingLines.emplace_back(
+            m_theme, hwnd,
+            L"Secondary window title",
+            L"Title of app window when it alternative mode have been activated",
+            m_theme.DpiScale(32), top,
+            rect.right - rect.left - m_theme.DpiScale(64), m_theme.DpiScale(48)
+        );
+        settingLines.back().SetLeftMargin(40);
 
         InitGroups();
         CheckDlgButton(m_hDialog, IDC_RUN_ON_STARTUP, true ? BST_CHECKED : BST_UNCHECKED);
@@ -175,8 +237,6 @@ namespace AnyFSE::Settings
         m_isAgressive = Config::AggressiveMode && config.Type != LauncherType::Xbox;
         UpdateCustom();
         UpdateCustomSettings();
-
-        // ShowGroup(0, config.isCustom);
     }
 
     void SettingsDialog::InitGroups()
@@ -363,7 +423,7 @@ namespace AnyFSE::Settings
 
     void SettingsDialog::OnLauncherChanged(HWND hwnd)
     {
-        current = pLauncherCombo->GetCurentValue();
+        current = launcherCombo.GetCurentValue();
         Config::GetLauncherSettings(current, config);
         UpdateCustom();
         UpdateCustomSettings();
@@ -371,12 +431,12 @@ namespace AnyFSE::Settings
 
     void SettingsDialog::AddComboItem(const wstring& name, const wstring& path, int pos)
     {
-        pLauncherCombo->AddItem(name, path, path, pos);
+        launcherCombo.AddItem(name, path, path, pos);
     }
 
     void SettingsDialog::UpdateCombo()
     {
-        pLauncherCombo->Reset();
+        launcherCombo.Reset();
 
         for ( auto& launcher: launchers)
         {
@@ -394,7 +454,7 @@ namespace AnyFSE::Settings
             index = 0;
         }
 
-        pLauncherCombo->SelectItem((int)index);
+        launcherCombo.SelectItem((int)index);
     }
 
     void SettingsDialog::UpdateCustomSettings()

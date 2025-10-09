@@ -3,69 +3,79 @@
 #include <string>
 #include <functional>
 #include <Uxtheme.h>
-#include "SettingsDialog.hpp"
-#include "SettingsLine.hpp"
-#include "SettingsComboBox.hpp"
 #include "Tools/Tools.hpp"
-#include "FluentDesign/DoubleBufferedPaint.hpp"
+#include "ComboBox.hpp"
+#include "DoubleBufferedPaint.hpp"
 
-namespace AnyFSE::Settings::Controls
+namespace FluentDesign
 {
-    SettingsComboBox::SettingsComboBox(
+    ComboBox::ComboBox(FluentDesign::Theme &theme)
+        : m_theme(theme)
+        , buttonMouseOver(false)
+        , buttonPressed(false)
+        , m_popupVisible(false)
+        , m_selectedIndex(-1)
+        , m_hoveredIndex(-1)
+        , m_hImageList(NULL)
+    {
+
+    }
+
+    ComboBox::ComboBox(
         FluentDesign::Theme& theme,
         HWND hParent,
-        const std::wstring &name,
-        const std::wstring &description,
         int x, int y,
         int width, int height)
-            : SettingsLine(hParent, name, description, x,y, width, height)
-            , m_theme(theme)
-            , buttonMouseOver(false)
-            , buttonPressed(false)
-            , m_popupVisible(false)
-            , m_selectedIndex(-1)
-            , m_hoveredIndex(-1)
+            : ComboBox(theme)
     {
-        Create();
+        Create(hParent, x, y, width, height);
+    }
+
+    HWND ComboBox::Create(
+        HWND hParent,
+        int x, int y,
+        int width, int height
+    )
+    {
+        hCombo = CreateWindow(
+            L"BUTTON",
+            L"",
+            WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+            x, y, width, m_theme.DpiScale(itemHeight),
+            hParent, NULL, GetModuleHandle(NULL), NULL);
+
         m_hImageList = ImageList_Create(
             m_theme.DpiScale(imageSize), m_theme.DpiScale(imageSize),
             ILC_COLOR32 | ILC_MASK, 3, 1);
-        SendMessage(hCombo, CBEM_SETIMAGELIST, 0, (LPARAM)m_hImageList);
+
+        SetWindowSubclass(hCombo, ComboBoxSubclassProc, 0, (DWORD_PTR)this);
+        return hCombo;
     }
 
-    SettingsComboBox::~SettingsComboBox()
+    ComboBox::~ComboBox()
     {
-        SendMessage(hCombo, CBEM_SETIMAGELIST, 0, 0);
         ImageList_RemoveAll(m_hImageList);
         ImageList_Destroy(m_hImageList);
     }
 
-    int SettingsComboBox::AddItem(const std::wstring &name, const std::wstring &icon, const std::wstring &value, int pos)
+    int ComboBox::AddItem(const std::wstring &name, const std::wstring &icon, const std::wstring &value, int pos)
     {
         ComboItem &cb = *(comboItems.insert(pos != -1 ? comboItems.begin() + pos : comboItems.end(), ComboItem{name, icon, value, -1}));
 
         HICON hIcon = Tools::LoadIconW(cb.icon);
         cb.iconIndex = hIcon ? ImageList_AddIcon(m_hImageList, hIcon) : -1;
 
-        COMBOBOXEXITEM cbei = {0};
-        cbei.mask = CBEIF_TEXT | CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_LPARAM;
-        cbei.iItem = pos;
-        cbei.pszText = (LPWSTR)name.c_str();
-        cbei.iImage = cb.iconIndex;
-        cbei.iSelectedImage = cb.iconIndex;
-        cbei.lParam = (LPARAM)&cb;
-        return (int)SendMessage(hCombo, CBEM_INSERTITEM, 0, (LPARAM)&cbei);
+        return pos == -1 ? (int)comboItems.size() : pos;
     }
 
-    int SettingsComboBox::Reset()
+    int ComboBox::Reset()
     {
-        SendMessage(hCombo, CB_RESETCONTENT, 0, 0);
         comboItems.clear();
         ImageList_RemoveAll(m_hImageList);
         return 0;
     }
 
-    void SettingsComboBox::SelectItem(int index)
+    void ComboBox::SelectItem(int index)
     {
         if (index >=0 && index < comboItems.size())
         {
@@ -73,37 +83,15 @@ namespace AnyFSE::Settings::Controls
         }
     }
 
-    std::wstring SettingsComboBox::GetCurentValue()
+    std::wstring ComboBox::GetCurentValue()
     {
         return comboItems[m_selectedIndex].value;
     }
 
-    HWND SettingsComboBox::CreateControl(HWND hWnd)
-    {
-        hCombo = CreateWindow(
-            L"BUTTON",
-            L"",
-            WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-            0, 0, m_theme.DpiScale(250), m_theme.DpiScale(itemHeight),
-            hWnd, NULL, GetModuleHandle(NULL), NULL);
-
-        SetWindowSubclass(hCombo, ComboBoxSubclassProc, 0, (DWORD_PTR)this);
-        return hCombo;
-    }
-
-    bool SettingsComboBox::ApplyTheme(bool isDark)
-    {
-        LPCWSTR theme = isDark ? L"DarkMode_CFD" : L"Explorer";
-        //SetWindowTheme(hCombo, theme, NULL);
-        //SetWindowTheme(GetWindow(hCombo, GW_CHILD), theme, NULL);
-        //SetWindowTheme(GetWindow(hCombo, GW_ENABLEDPOPUP), theme, NULL);
-        return false;
-    }
-
-    LRESULT SettingsComboBox::ComboBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+    LRESULT ComboBox::ComboBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
     {
 
-        SettingsComboBox *This = reinterpret_cast<SettingsComboBox *>(dwRefData);
+        ComboBox *This = reinterpret_cast<ComboBox *>(dwRefData);
         switch (uMsg)
         {
             case WM_MOUSEMOVE:
@@ -137,7 +125,7 @@ namespace AnyFSE::Settings::Controls
         return DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }
 
-    void SettingsComboBox::HandleMouse(HWND hWnd, UINT uMsg)
+    void ComboBox::HandleMouse(HWND hWnd, UINT uMsg)
     {
         switch (uMsg)
         {
@@ -174,7 +162,7 @@ namespace AnyFSE::Settings::Controls
         }
         return;
     }
-    void SettingsComboBox::DrawComboBackground(HWND hWnd, HDC hdc, RECT rect)
+    void ComboBox::DrawComboBackground(HWND hWnd, HDC hdc, RECT rect)
     {
             // Get button state
             bool enabled = IsWindowEnabled(hWnd);
@@ -206,7 +194,7 @@ namespace AnyFSE::Settings::Controls
 
             return;
     }
-    void SettingsComboBox::DrawComboItem(HWND hWnd, HDC hdc, RECT rect, int itemId)
+    void ComboBox::DrawComboItem(HWND hWnd, HDC hdc, RECT rect, int itemId)
     {
         if (itemId < 0)
         {
@@ -232,7 +220,7 @@ namespace AnyFSE::Settings::Controls
         SelectObject(hdc, hOldFont);
         return;
     }
-    void SettingsComboBox::DrawComboChevron(HWND hWnd, HDC hdc, RECT rect)
+    void ComboBox::DrawComboChevron(HWND hWnd, HDC hdc, RECT rect)
     {
             rect.right -= m_theme.DpiScale(chevronMargin);
 
@@ -245,7 +233,7 @@ namespace AnyFSE::Settings::Controls
             SelectObject(hdc, hOldFont);
     }
 
-    void SettingsComboBox::ShowPopup()
+    void ComboBox::ShowPopup()
     {
         if (m_popupVisible)
             return;
@@ -295,7 +283,7 @@ namespace AnyFSE::Settings::Controls
         SetCapture(m_hPopupList);
     }
 
-    void SettingsComboBox::HidePopup()
+    void ComboBox::HidePopup()
     {
         if (m_popupVisible && m_hPopupList)
         {
@@ -309,9 +297,9 @@ namespace AnyFSE::Settings::Controls
     }
 
     // Single popup listbox window procedure
-    LRESULT CALLBACK SettingsComboBox::PopupListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+    LRESULT CALLBACK ComboBox::PopupListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
     {
-        SettingsComboBox *This = reinterpret_cast<SettingsComboBox *>(dwRefData);
+        ComboBox *This = reinterpret_cast<ComboBox *>(dwRefData);
 
         switch (uMsg)
         {
@@ -409,7 +397,7 @@ namespace AnyFSE::Settings::Controls
         return DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }
 
-    void SettingsComboBox::DrawPopupBackground(HWND hWnd, HDC hdcMem, RECT rect)
+    void ComboBox::DrawPopupBackground(HWND hWnd, HDC hdcMem, RECT rect)
     {
         // Draw popup background with rounded corners
         HBRUSH hBgBrush = CreateSolidBrush(m_theme.PressedColorBg());
@@ -422,7 +410,7 @@ namespace AnyFSE::Settings::Controls
         DeleteObject(hRgn);
     }
 
-    void SettingsComboBox::DrawPopupItem(HWND hWnd, HDC hdcMem, RECT itemRect, int itemId)
+    void ComboBox::DrawPopupItem(HWND hWnd, HDC hdcMem, RECT itemRect, int itemId)
     {
         RECT backgroundRect = itemRect;
         InflateRect(&backgroundRect, m_theme.DpiScale(-4), m_theme.DpiScale(-2));
@@ -455,7 +443,7 @@ namespace AnyFSE::Settings::Controls
         DrawComboItem(hWnd, hdcMem, itemRect, itemId);
     }
 
-    void SettingsComboBox::HandleListClick(int index)
+    void ComboBox::HandleListClick(int index)
     {
         if (index >= 0 && index < (int)comboItems.size())
         {

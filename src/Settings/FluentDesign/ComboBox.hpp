@@ -3,13 +3,12 @@
 #include <commctrl.h>
 #include <string>
 #include <functional>
-#include "SettingsLine.hpp"
 #include "Tools/Event.hpp"
-#include "FluentDesign/Theme.hpp"
+#include "Theme.hpp"
 
-namespace AnyFSE::Settings::Controls
+namespace FluentDesign
 {
-    class SettingsComboBox:private SettingsLine
+    class ComboBox
     {
         struct ComboItem
         {
@@ -27,7 +26,6 @@ namespace AnyFSE::Settings::Controls
         static const int chevronMargin = 16;
         static const int cornerRadius = 8;
 
-
         HWND hCombo;
         HIMAGELIST m_hImageList = NULL;
 
@@ -35,54 +33,49 @@ namespace AnyFSE::Settings::Controls
 
         bool buttonPressed;
         bool buttonMouseOver;
-        virtual HWND CreateControl(HWND hWnd);
-        virtual bool ApplyTheme(bool isDark);
 
 
+        // Listbox part
+        HWND m_hPopupList;
+        bool m_popupVisible;
+        int m_selectedIndex;
+        int m_hoveredIndex;
 
         static LRESULT CALLBACK ComboBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-                                              UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+            UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+
+        static LRESULT CALLBACK PopupListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+            UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
         void HandleMouse(HWND hWnd, UINT uMsg);
         void DrawComboBackground(HWND hWnd, HDC hdc, RECT rc);
         void DrawComboItem(HWND hWnd, HDC hdc, RECT rect, int itemId);
         void DrawComboChevron(HWND hWnd, HDC hdc, RECT rect);
+        void DrawPopupBackground(HWND hWnd, HDC hdc, RECT rect);
+        void DrawPopupItem(HWND hWnd, HDC hdc, RECT rect, int itemId);
+        void HandleListClick(int index);
 
         FluentDesign::Theme &m_theme;
 
     public:
-        SettingsComboBox(
+        ComboBox(FluentDesign::Theme& theme);
+        ComboBox(
             FluentDesign::Theme& theme,
             HWND hParent,
-            const std::wstring &name,
-            const std::wstring &description,
-            int x, int y, int width, int height);
+            int x, int y,
+            int width, int height);
 
-        ~SettingsComboBox();
+        HWND Create(HWND hParent, int x, int y, int width, int height);
+
+        ~ComboBox();
 
         int AddItem(const std::wstring &name, const std::wstring &icon, const std::wstring &value, int pos = -1);
         int Reset();
         void SelectItem(int index);
         std::wstring GetCurentValue();
-
         Event OnChanged;
-
-
-        // Listbox part
-        HWND m_hPopupList;     // Single popup listbox window (no separate popup container)
-        bool m_popupVisible;
-        int m_selectedIndex;
-        int m_hoveredIndex;
 
         void ShowPopup();
         void HidePopup();
-        void DrawPopupBackground(HWND hWnd, HDC hdc, RECT rect);
-        void DrawPopupItem(HWND hWnd, HDC hdc, RECT rect, int itemId);
-        void HandleListClick(int index);
-
-        void CreatePopupList();
-
-        // Single popup listbox procedure
-        static LRESULT CALLBACK PopupListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
     };
 }

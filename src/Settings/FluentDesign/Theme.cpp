@@ -1,4 +1,6 @@
 #include "Theme.hpp"
+#include <gdiplus.h>
+#pragma comment(lib, "Gdiplus.lib")
 
 namespace FluentDesign
 {
@@ -8,6 +10,8 @@ namespace FluentDesign
         , m_hPrimaryFont(NULL)
         , m_hSecondaryFont(NULL)
     {
+        Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+        Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
         LoadColors(true);
         if (hParentWnd)
         {
@@ -32,13 +36,14 @@ namespace FluentDesign
     {
         // TODO: unsubclass parent wnd
         FreeFonts();
+        Gdiplus::GdiplusShutdown(gdiplusToken);
     };
 
     void Theme::LoadColors(bool isDark)
     {
         if (isDark)
         {
-            m_primaryColor = RGB(200, 200, 200);
+            m_primaryColor = RGB(255, 255, 255);
             m_secondaryColor = RGB(200, 200, 200);
             m_disabledColor = RGB(128, 128, 128);
 
@@ -99,5 +104,14 @@ namespace FluentDesign
     const int Theme::DpiScale(int designSize)
     {
         return MulDiv(designSize, m_dpi, 96);
+    }
+    const float Theme::DpiScaleF(int designSize)
+    {
+        return DpiScaleF((float)designSize);
+    };
+
+    const float Theme::DpiScaleF(float designSize)
+    {
+        return designSize * m_dpi / 96;
     };
 }

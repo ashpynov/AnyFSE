@@ -2,15 +2,14 @@
 #include <windows.h>
 #include <string>
 #include <functional>
+#include "Theme.hpp"
 
-namespace AnyFSE::Settings
+namespace FluentDesign
 {
     class SettingsLine
     {
-        static const int nameHeight = 14;
-        static const int descHeight = 11;
-        static const int linePadding= 4;
-        static const int leftMargin = 16;
+        int linePadding;
+        int leftMargin;
 
     protected:
         HWND m_hWnd;
@@ -26,46 +25,29 @@ namespace AnyFSE::Settings
         bool m_hovered;
 
     private:
-        HFONT m_hNameFont;
-        HFONT m_hDescFont;
-        HFONT m_hGlyphFont;
-
-        // Drawing resources
-        HBRUSH m_hBackgroundBrush;
-        HBRUSH m_hHoverBrush;
-
-        HBRUSH m_hControlBrush;
-        HBRUSH m_hControlHoveredBrush;
-        HBRUSH m_hControlPressedBrush;
-
-        COLORREF m_nameColor;
-        COLORREF m_descColor;
-        COLORREF m_disabledColor;
-        COLORREF m_darkColor;
-
-        COLORREF m_backgroundColor;
-        COLORREF m_hoverColor;
-
-        COLORREF m_controlColor;
-        COLORREF m_controlHoveredColor;
-        COLORREF m_controlPressedColor;
-
-    private:
-        virtual HWND CreateControl(HWND hWnd) = 0;
-        virtual bool ApplyTheme(bool isDark) = 0;
         virtual LPARAM OnCommand(HWND hwnd, int msg, WPARAM wParam, LPARAM lParam) { return 0; };
         virtual LPARAM OnDrawItem(HWND hwnd, LPDRAWITEMSTRUCT dis) { return 0; };
 
+        FluentDesign::Theme &m_theme;
     public:
-        SettingsLine(HWND hParent,
-                     const std::wstring &name,
-                     const std::wstring &description,
-                     int x, int y, int width, int height);
+
+        explicit SettingsLine(FluentDesign::Theme &theme);
+
+        explicit SettingsLine(FluentDesign::Theme &theme, HWND hParent,
+            const std::wstring &name, const std::wstring &description,
+            int x, int y, int width, int height);
+
+        explicit SettingsLine(FluentDesign::Theme &theme, HWND hParent,
+            const std::wstring &name, const std::wstring &description,
+            int x, int y, int width, int height,
+             std::function<HWND(HWND)> createChild);
 
         ~SettingsLine();
 
-        // Window creation
-        bool Create();
+        HWND Create(HWND hParent, const std::wstring &name,
+            const std::wstring &description,
+            int x, int y, int width, int height);
+
         HWND GetHWnd() const { return m_hWnd; }
 
         // Child control management
@@ -85,7 +67,7 @@ namespace AnyFSE::Settings
 
         // Sizing
         void SetSize(int width, int height);
-        void GetSize(int &width, int &height) const;
+        void SetLeftMargin(int margin);
 
     protected:
         // Window procedure and message handlers

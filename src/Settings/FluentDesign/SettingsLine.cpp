@@ -1,5 +1,4 @@
 #include "SettingsLine.hpp"
-#include "SettingsDialog.hpp"
 #include "Logging/LogManager.hpp"
 #include <commctrl.h>
 #include <uxtheme.h>
@@ -9,56 +8,69 @@
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "uxtheme.lib")
 
-namespace AnyFSE::Settings
+namespace FluentDesign
 {
     static Logger log = LogManager::GetLogger("SettingsLine");
+
     // Window class registration
     static const wchar_t *SETTINGS_LINE_CLASS = L"SettingsLineClass";
     static bool s_classRegistered = false;
 
-    static int DpiScale(int value)
-    {
-        return MulDiv(value, SettingsDialog::DPI, 96);
-    }
-
-    SettingsLine::SettingsLine(HWND hParent,
-                               const std::wstring &name,
-                               const std::wstring &description,
-                               int x, int y, int width, int height)
-        : m_hWnd(NULL)
-        , m_hParent(hParent)
-        , m_hChildControl(NULL)
-        , m_name(name)
-        , m_description(description)
-        , m_left(x)
-        , m_top(y)
-        , m_width(width)
-        , m_height(height)
+    SettingsLine::SettingsLine(FluentDesign::Theme& theme)
+        : m_theme(theme)
         , m_enabled(true)
         , m_hovered(false)
-        , m_hNameFont(NULL)
-        , m_hDescFont(NULL)
-        , m_hBackgroundBrush(NULL)
-        , m_hHoverBrush(NULL)
+        , m_hWnd(NULL)
+        , linePadding(4)
+        , leftMargin(16)
     {
+    }
 
-        UpdateColors();
+    SettingsLine::SettingsLine(
+            FluentDesign::Theme& theme,
+            HWND hParent,
+            const std::wstring &name,
+            const std::wstring &description,
+            int x, int y, int width, int height)
+        : SettingsLine(theme)
+    {
+        Create(hParent, name, description, x, y, width, height);
+    }
+
+    SettingsLine::SettingsLine(
+            FluentDesign::Theme& theme,
+            HWND hParent,
+            const std::wstring &name,
+            const std::wstring &description,
+            int x, int y, int width, int height,
+            std::function<HWND(HWND)> createChild)
+        : SettingsLine(theme, hParent, name, description, x,y, width, height)
+    {
+        SetChildControl(createChild(GetHWnd()));
     }
 
     SettingsLine::~SettingsLine()
     {
-        if (m_hNameFont)
-            DeleteObject(m_hNameFont);
-        if (m_hDescFont)
-            DeleteObject(m_hDescFont);
-        if (m_hBackgroundBrush)
-            DeleteObject(m_hBackgroundBrush);
-        if (m_hHoverBrush)
-            DeleteObject(m_hHoverBrush);
+        log.Debug("SetingsLineDestroy");
     }
 
-    bool SettingsLine::Create()
+    HWND SettingsLine::Create(
+        HWND hParent,
+        const std::wstring &name,
+        const std::wstring &description,
+        int x, int y,
+        int width, int height
+    )
     {
+
+        m_hParent = hParent;
+        m_name = name;
+        m_description = description;
+        m_left = x;
+        m_top = y;
+        m_width = width;
+        m_height = height;
+
         // Register window class if needed
         if (!s_classRegistered)
         {
@@ -98,80 +110,10 @@ namespace AnyFSE::Settings
 
         if (!m_hWnd)
         {
-            return false;
+            return NULL;
         }
 
-        // Create fonts and brushes
-        CreateFonts();
-        UpdateBrushes();
-
-        SetChildControl(CreateControl(m_hWnd));
-
-        return true;
-    }
-
-    void SettingsLine::CreateFonts()
-    {
-        // Get system font
-        NONCLIENTMETRICS ncm = {};
-        ncm.cbSize = sizeof(NONCLIENTMETRICS);
-        SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0);
-
-        // Create name font (slightly larger/bolder)
-        m_hNameFont = CreateFontIndirect(&ncm.lfMessageFont);
-        LOGFONT nameFont = ncm.lfMessageFont;
-        nameFont.lfHeight = (LONG)(DpiScale(-nameHeight));
-        nameFont.lfWeight = FW_NORMAL;
-        m_hNameFont = CreateFontIndirect(&nameFont);
-
-        // Create description font (slightly smaller, normal weight)
-        LOGFONT descFont = ncm.lfMessageFont;
-        descFont.lfHeight = (LONG)(DpiScale(-descHeight));
-        m_hDescFont = CreateFontIndirect(&descFont);
-
-        m_hGlyphFont = CreateFont(
-            DpiScale(-10), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-            CLEARTYPE_QUALITY, DEFAULT_PITCH,
-            L"Segoe MDL2 Assets");
-    }
-
-    void SettingsLine::UpdateBrushes()
-    {
-        // Get system colors for modern appearance
-        if (m_hBackgroundBrush) DeleteObject(m_hBackgroundBrush);
-        m_hBackgroundBrush = CreateSolidBrush(m_backgroundColor);
-
-        if (m_hHoverBrush) DeleteObject(m_hHoverBrush);
-        m_hHoverBrush = CreateSolidBrush(m_hoverColor);
-
-        if (m_hControlBrush) DeleteObject(m_hControlBrush);
-        m_hControlBrush = CreateSolidBrush(m_controlColor);
-
-        if (m_hControlHoveredBrush) DeleteObject(m_hControlHoveredBrush);
-        m_hControlHoveredBrush = CreateSolidBrush(m_controlHoveredColor);
-
-        if (m_hControlPressedBrush) DeleteObject(m_hControlPressedBrush);
-        m_hControlPressedBrush = CreateSolidBrush(m_controlPressedColor);
-
-    }
-
-    void SettingsLine::UpdateColors()
-    {
-        m_nameColor = RGB(240, 240, 240);
-        m_descColor = RGB(200, 200, 200);
-        m_disabledColor = GetSysColor(COLOR_GRAYTEXT);
-        m_backgroundColor = RGB(43, 43, 43);
-        m_hoverColor = RGB(43, 43, 43);
-
-
-
-        m_darkColor = RGB(38, 38, 38);
-        m_controlColor = RGB(55, 55, 55);
-        m_controlHoveredColor = RGB(61, 61, 61);
-        m_controlPressedColor = RGB(50, 50, 50);
-
-        UpdateBrushes();
+        return m_hWnd;
     }
 
     // Window procedure
@@ -236,11 +178,6 @@ namespace AnyFSE::Settings
         case WM_DRAWITEM:
             return OnDrawItem(m_hChildControl, (LPDRAWITEMSTRUCT)lParam);
 
-        case WM_CTLCOLORSTATIC:
-        case WM_CTLCOLOREDIT:
-        case WM_CTLCOLORLISTBOX:
-            // Forward child control colors to parent for consistent theming
-            return (LRESULT)m_hBackgroundBrush;
         }
 
         return DefWindowProc(m_hWnd, message, wParam, lParam);
@@ -275,9 +212,10 @@ namespace AnyFSE::Settings
 
     void SettingsLine::DrawBackground(HDC hdc)
     {
-        HBRUSH hBrush = m_hovered ? m_hHoverBrush : m_hBackgroundBrush;
+        HBRUSH hBrush = CreateSolidBrush( m_hovered ? m_theme.BaseSecondaryColorBg(): m_theme.BaseSecondaryColorBg());
         RECT rect = {0, 0, m_width, m_height};
         FillRect(hdc, &rect, hBrush);
+        DeleteObject(hBrush);
     }
 
     void SettingsLine::DrawText(HDC hdc)
@@ -285,37 +223,37 @@ namespace AnyFSE::Settings
         RECT rect;
         GetClientRect(m_hWnd, &rect);
 
-        COLORREF textColor = m_enabled ? m_nameColor : m_disabledColor;
-        COLORREF descColor = m_enabled ? m_descColor : m_disabledColor;
+        COLORREF textColor = m_enabled ? m_theme.PrimaryColor() : m_theme.DisabledColor();
+        COLORREF descColor = m_enabled ? m_theme.SecondaryColor() : m_theme.DisabledColor();
 
         SetBkMode(hdc, TRANSPARENT);
 
         // Draw name
-        rect.left += DpiScale(leftMargin);   // Margin
+        rect.left += m_theme.DpiScale(leftMargin);   // Margin
         //rect.right -= 160; // Space for child control
 
-        SelectObject(hdc, m_hNameFont);
+        SelectObject(hdc, m_theme.PrimaryFont());
         SetTextColor(hdc, textColor);
 
-        int height = DpiScale(nameHeight);
+        int height = m_theme.PrimarySize();
         if (!m_description.empty())
         {
-            height += DpiScale(linePadding + descHeight);
+            height += m_theme.DpiScale(linePadding) + m_theme.SecondarySize();
         }
 
         RECT nameRect = rect;
         nameRect.top = (rect.bottom - rect.top - height) / 2;
-        nameRect.bottom = nameRect.top + DpiScale(nameHeight);
+        nameRect.bottom = nameRect.top + m_theme.PrimarySize();
 
         ::DrawText(hdc, m_name.c_str(), -1, &nameRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
 
         // Draw description
-        SelectObject(hdc, m_hDescFont);
+        SelectObject(hdc, m_theme.SecondaryFont());
         SetTextColor(hdc, descColor);
 
         RECT descRect = rect;
-        descRect.top = nameRect.bottom + DpiScale(linePadding);
-        descRect.bottom = descRect.top + DpiScale(descHeight);
+        descRect.top = nameRect.bottom + m_theme.DpiScale(linePadding);
+        descRect.bottom = descRect.top + m_theme.SecondarySize();
 
         ::DrawText(hdc, m_description.c_str(), -1, &descRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE| DT_NOCLIP);
     }
@@ -397,8 +335,8 @@ namespace AnyFSE::Settings
         m_hChildControl = hChildControl;
         SetParent(m_hChildControl, m_hWnd);
         PositionChildControl();
-        ApplyTheme( true );
         EnableWindow(m_hChildControl, m_enabled);
+        ShowWindow(m_hChildControl, SW_SHOWNOACTIVATE);
     }
 
     void SettingsLine::SetName(const std::wstring &name)
@@ -434,5 +372,10 @@ namespace AnyFSE::Settings
         m_width = width;
         m_height = height;
         SetWindowPos(m_hWnd, NULL, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
+    }
+    void SettingsLine::SetLeftMargin(int margin)
+    {
+        leftMargin = margin;
+        InvalidateRect(m_hWnd, NULL, TRUE);
     }
 }
