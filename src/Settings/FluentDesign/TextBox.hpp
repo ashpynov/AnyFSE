@@ -28,6 +28,8 @@ namespace FluentDesign
         bool m_hasFocus = false;
         bool m_mouseOver = false;
 
+        int m_designedWidth;
+
         // Text
         std::wstring m_placeholder;
         bool m_showPlaceholder = false;
@@ -54,12 +56,13 @@ namespace FluentDesign
 
         // Setters
         void SetText(const std::wstring &text);
+        void UpdateLayout();
         void SetPlaceholder(const std::wstring &placeholder);
         // Message handling
         LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam);
 
     private:
-        void UpdateLayout();
+        void OnSize();
         void UpdateTextBoxColors();
         void Invalidate();
         void DrawContainer(HDC hdc);

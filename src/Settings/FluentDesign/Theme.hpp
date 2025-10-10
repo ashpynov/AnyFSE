@@ -1,5 +1,7 @@
 #pragma once
 #include "windows.h"
+#include "Tools/Event.hpp"
+
 
 namespace FluentDesign
 {
@@ -41,10 +43,18 @@ namespace FluentDesign
             EditFocus = 31,
             EditAccentFocus = 64,   // accented color
             EditBorderFocus = 58,
+
+            Button = 55,
+            ButtonHover = 60,
+            ButtonPressed = 50,
+            ButtonBorder = 63,
+            ButtonBorderHover = 63,
+            ButtonBorderPressed = 58
         };
 
     private:
         ULONG m_dpi;
+        ULONG m_baseDpi;
         ULONG_PTR gdiplusToken;
 
         HWND m_hParentWnd;
@@ -60,11 +70,16 @@ namespace FluentDesign
         void CreateFonts();
         void FreeFonts();
 
+        static  LRESULT CALLBACK DialogSubclassProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+
     public:
         Theme(HWND hParentWnd = NULL);
         void Attach(HWND hParentWnd);
         ~Theme();
 
+        Event OnDPIChanged;
+
+        const int DpiUnscale(int scaledSize);
         const int DpiScale(int designSize);
         const float DpiScaleF(int designSize);
         const float DpiScaleF(float designSize);

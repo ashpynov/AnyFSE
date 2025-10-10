@@ -34,6 +34,7 @@ namespace FluentDesign
         bool buttonPressed;
         bool buttonMouseOver;
 
+        int m_designWidth;
 
         // Listbox part
         HWND m_hPopupList;
@@ -54,6 +55,8 @@ namespace FluentDesign
         void DrawPopupBackground(HWND hWnd, HDC hdc, RECT rect);
         void DrawPopupItem(HWND hWnd, HDC hdc, RECT rect, int itemId);
         void HandleListClick(int index);
+
+        void UpdateLayout();
 
         FluentDesign::Theme &m_theme;
 

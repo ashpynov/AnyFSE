@@ -18,7 +18,7 @@ namespace FluentDesign
         , m_hoveredIndex(-1)
         , m_hImageList(NULL)
     {
-
+        theme.OnDPIChanged += [This = this]() { This->UpdateLayout(); };
     }
 
     ComboBox::ComboBox(
@@ -37,6 +37,8 @@ namespace FluentDesign
         int width, int height
     )
     {
+        m_designWidth = m_theme.DpiUnscale(width);
+
         hCombo = CreateWindow(
             L"BUTTON",
             L"",
@@ -213,11 +215,13 @@ namespace FluentDesign
 
         rect.left += m_theme.DpiScale(leftMargin);
 
-        int imageY = rect.top + (rect.bottom - rect.top - m_theme.DpiScale(imageSize)) / 2;
+        if (item.iconIndex != -1)
+        {
+            int imageY = rect.top + (rect.bottom - rect.top - m_theme.DpiScale(imageSize)) / 2;
+            ImageList_Draw(m_hImageList, item.iconIndex, hdc, rect.left, imageY, ILD_NORMAL);
+            rect.left += m_theme.DpiScale(imageSize + iconMargin);
+        }
 
-        ImageList_Draw(m_hImageList, item.iconIndex, hdc, rect.left, imageY, ILD_NORMAL);
-
-        rect.left += m_theme.DpiScale(imageSize + iconMargin);
         ::DrawText(hdc, item.name.c_str(), -1, &rect,
                    DT_LEFT | DT_VCENTER | DT_SINGLELINE);
         SelectObject(hdc, hOldFont);
@@ -457,6 +461,29 @@ namespace FluentDesign
             InvalidateRect(hCombo, NULL, TRUE);
 
             OnChanged.Notify();
+        }
+    }
+    void ComboBox::UpdateLayout()
+    {
+        SetWindowPos(hCombo, 0, 0, 0,
+                     m_theme.DpiScale(m_designWidth),
+                     m_theme.DpiScale(itemHeight + 1),
+                     SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
+
+        ImageList_RemoveAll(m_hImageList);
+        ImageList_Destroy(m_hImageList);
+
+        m_hImageList = ImageList_Create(
+            m_theme.DpiScale(imageSize), m_theme.DpiScale(imageSize),
+            ILC_COLOR32 | ILC_MASK, 3, 1);
+
+        for(auto& item: comboItems)
+        {
+            if (item.iconIndex != -1 && !item.icon.empty())
+            {
+                HICON hIcon = Tools::LoadIconW(item.icon);
+                item.iconIndex = hIcon ? ImageList_AddIcon(m_hImageList, hIcon) : -1;
+            }
         }
     }
 }

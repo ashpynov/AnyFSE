@@ -13,6 +13,11 @@ namespace AnyFSE::Tools
 
     HICON LoadIcon(const std::wstring &icon)
     {
+        if ( icon[0] == L'#')
+        {
+            return 0;
+        }
+
         int index = 0;
         std::filesystem::path path(icon);
 

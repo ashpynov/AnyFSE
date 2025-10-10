@@ -82,6 +82,7 @@ namespace AnyFSE::Settings
         switch (msg)
         {
         case WM_INITDIALOG:
+            SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
             m_theme.Attach(hwnd);
             OnInitDialog(hwnd);
             CenterDialog(hwnd);
@@ -132,7 +133,7 @@ namespace AnyFSE::Settings
     template<class T>
     void SettingsDialog::AddSettingsLine(
         ULONG &top, const wstring& name, const wstring& desc, T& control,
-        int height, int padding, int contentMargin)
+        int height, int padding, int contentMargin, int contentWidth, int contentHeight )
     {
         RECT rect;
         GetClientRect(m_hDialog, &rect);
@@ -140,7 +141,8 @@ namespace AnyFSE::Settings
 
         settingLines.emplace_back(
             m_theme, m_hDialog, name, desc, m_theme.DpiScale(32), top, width, m_theme.DpiScale(height),
-            [&](HWND parent) { return control.Create(parent, 0, 0, m_theme.DpiScale(250), m_theme.DpiScale(40)); });
+            [&](HWND parent) { return control.Create(parent, 0, 0,
+                m_theme.DpiScale(contentWidth), m_theme.DpiScale(contentHeight)); });
 
         top += m_theme.DpiScale(height + padding);
         if (contentMargin)
@@ -157,7 +159,13 @@ namespace AnyFSE::Settings
             L"Choose home app",
             L"Choose home application for full screen expirience",
             launcherCombo,
-            67, 8, 0);
+            67, -12, 0, 280 );
+
+        AddSettingsLine(top,
+            L"",
+            L"",
+            browse,
+            57, 8, 0, 130, 32);
 
         AddSettingsLine(top,
             L"Enter full screen expirience on startup",
@@ -209,6 +217,12 @@ namespace AnyFSE::Settings
         customSettings.OnChanged += [This = this]()
         {
             This->OnCustomChanged(This->m_hDialog);
+        };
+
+        browse.SetText(L"Browse");
+        browse.OnChanged += [This = this]()
+        {
+            This->OnBrowseLauncher(This->m_hDialog, 0);
         };
 
         CheckDlgButton(m_hDialog, IDC_RUN_ON_STARTUP, true ? BST_CHECKED : BST_UNCHECKED);
@@ -291,28 +305,24 @@ namespace AnyFSE::Settings
 
     void SettingsDialog::OnLauncherChanged(HWND hwnd)
     {
-        current = launcherCombo.GetCurentValue();
+        current = launcherCombo.GetCurentValue();;
         Config::GetLauncherSettings(current, config);
         UpdateCustom();
         UpdateCustomSettings();
     }
 
-    void SettingsDialog::AddComboItem(const wstring& name, const wstring& path, int pos)
-    {
-        launcherCombo.AddItem(name, path, path, pos);
-    }
 
     void SettingsDialog::UpdateCombo()
     {
         launcherCombo.Reset();
 
-        AddComboItem(L"None", L"");
+        launcherCombo.AddItem(L"None", L"", L"");
 
         for ( auto& launcher: launchers)
         {
             LauncherConfig info;
             Config::GetLauncherDefaults(launcher, info);
-            AddComboItem(info.Name, info.StartCommand);
+            launcherCombo.AddItem(info.Name, info.IconFile, info.StartCommand);
         }
         size_t index = Tools::index_of(launchers, current);
 
@@ -320,11 +330,9 @@ namespace AnyFSE::Settings
         {
             LauncherConfig info;
             Config::GetLauncherDefaults(current, info);
-            AddComboItem(info.Name, info.StartCommand, 1);
+            launcherCombo.AddItem(info.Name, info.IconFile, info.StartCommand, 1);
             index = 1;
         }
-
-        AddComboItem(L"Browse", L"");
 
         launcherCombo.SelectItem((int)index);
     }

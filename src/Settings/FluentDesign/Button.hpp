@@ -8,26 +8,21 @@
 
 namespace FluentDesign
 {
-    class Toggle
+    class Button
     {
 
     private:
-        static const int itemHeight = 20;
-        static const int itemWidth = 40;
-        static const int textWidth = 32;
+        int m_designWidth;
+        int m_designHeight;
 
-
-        HWND hToggle;
+        HWND hButton;
 
         bool buttonPressed;
         bool buttonMouseOver;
-        int  pressedPos;
-        int  thumbShift;
-        int pressedPath;
+        int m_cornerRadius = 8;
+        std::wstring m_text;
 
-        bool isChecked;
-
-        static LRESULT CALLBACK ToggleSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+        static LRESULT CALLBACK ButtonSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
             UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
         void HandleMouse(HWND hWnd, UINT uMsg, LPARAM lParam);
@@ -38,8 +33,8 @@ namespace FluentDesign
         FluentDesign::Theme &m_theme;
 
     public:
-        Toggle(FluentDesign::Theme& theme);
-        Toggle(
+        Button(FluentDesign::Theme& theme);
+        Button(
             FluentDesign::Theme& theme,
             HWND hParent,
             int x, int y,
@@ -47,10 +42,10 @@ namespace FluentDesign
 
         HWND Create(HWND hParent, int x, int y, int width, int height);
 
-        ~Toggle();
+        void SetText(const std::wstring& text);
 
-        void SetCheck(bool isChecked);
-        bool GetCheck();
+        ~Button();
+
         Event OnChanged;
     };
 }

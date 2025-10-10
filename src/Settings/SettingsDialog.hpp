@@ -10,6 +10,7 @@
 #include "FluentDesign/ComboBox.hpp"
 #include "FluentDesign/Toggle.hpp"
 #include "FluentDesign/TextBox.hpp"
+#include "FluentDesign/Button.hpp"
 #include "FluentDesign/SettingsLine.hpp"
 
 
@@ -46,6 +47,9 @@ namespace AnyFSE::Settings
             , title(m_theme)
             , processNameAlt(m_theme)
             , titleAlt(m_theme)
+            , browse(m_theme)
+            , buttonOK(m_theme)
+            , buttonClose(m_theme)
         {}
 
     private:
@@ -55,8 +59,6 @@ namespace AnyFSE::Settings
         void UpdateCombo();
         void UpdateCustomSettings();
         void SaveSettings();
-
-        void AddComboItem(const wstring &name, const wstring &path, int pos =-1);
 
         void OnInitDialog(HWND hwnd);
         void OnBrowseLauncher(HWND hwnd, int editId);
@@ -84,10 +86,15 @@ namespace AnyFSE::Settings
         FluentDesign::TextBox title;
         FluentDesign::TextBox processNameAlt;
         FluentDesign::TextBox titleAlt;
+        FluentDesign::Button browse;
+        FluentDesign::Button buttonOK;
+        FluentDesign::Button buttonClose;
 
         std::list<FluentDesign::SettingsLine> settingLines;
         template <class T>
-        void AddSettingsLine(ULONG &top, const wstring &name, const wstring &desc, T &control, int height, int padding, int contentMargin);
+        void AddSettingsLine(ULONG &top, const wstring &name, const wstring &desc,
+             T &control, int height, int padding, int contentMargin,
+             int contentWidth = 260, int contentHeight = 40);
     };
 }
 

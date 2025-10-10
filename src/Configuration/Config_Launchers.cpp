@@ -125,11 +125,22 @@ namespace AnyFSE::Configuration
 
     void Config::FindXbox(list<wstring>& found)
     {
-        wstring XboxPath = L"C:\\Program Files\\WindowsApps\\Microsoft.GamingApp_2510.1001.36.0_x64__8wekyb3d8bbwe\\XboxPcApp.exe";
+        std::wstring searchDirectory = L"C:\\Program Files\\WindowsApps\\";
+        std::wstring name = L"Microsoft.GamingApp_";
+        std::wstring vendor = L"__8wekyb3d8bbwe";
 
-        if (fs::exists(fs::path(XboxPath)))
-        {
-            found.push_back(XboxPath);
+        for (const auto& entry : std::filesystem::directory_iterator(searchDirectory)) {
+            std::wstring filename = entry.path().filename().wstring();
+            if (filename.find(name) == 0
+                && filename.find(vendor) == filename.size() - vendor.size())
+            {
+                wstring XboxPath = searchDirectory + filename + L"\\XboxPcApp.exe";
+                if (fs::exists(fs::path(XboxPath)))
+                {
+                    found.push_back(XboxPath);
+                    return;
+                }
+            }
         }
     }
 

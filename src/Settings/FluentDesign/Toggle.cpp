@@ -11,7 +11,6 @@
 #include "GdiPlus.hpp"
 #pragma comment(lib, "Gdiplus.lib")
 
-ULONG_PTR gdiplusToken;
 using namespace Gdiplus;
 
 namespace FluentDesign
@@ -22,7 +21,7 @@ namespace FluentDesign
         , buttonPressed(false)
         , isChecked(false)
     {
-
+        theme.OnDPIChanged += [This = this]() { This->UpdateLayout(); };
     }
 
     Toggle::Toggle(
@@ -254,5 +253,12 @@ namespace FluentDesign
         graphics.DrawString(text, -1, &font, textRect, &format, &textBrush);
 
         return;
+    }
+    void Toggle::UpdateLayout()
+    {
+        SetWindowPos(hToggle, 0, 0, 0,
+                     m_theme.DpiScale(itemWidth + textWidth),
+                     m_theme.DpiScale(itemHeight + 1),
+                     SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
     }
 }

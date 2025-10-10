@@ -1,5 +1,7 @@
 #include "Theme.hpp"
 #include <gdiplus.h>
+#include <commctrl.h>
+
 #pragma comment(lib, "Gdiplus.lib")
 
 namespace FluentDesign
@@ -29,8 +31,30 @@ namespace FluentDesign
         m_dpi = GetDpiForWindow(m_hParentWnd);
         CreateFonts();
 
-        // TODO: subclass parent wnd
+        SetWindowSubclass(hParentWnd, DialogSubclassProc, 0, (DWORD_PTR)this);
+
     }
+
+    LRESULT CALLBACK Theme::DialogSubclassProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+    {
+        Theme *This = reinterpret_cast<Theme *>(dwRefData);
+
+        switch (msg)
+        {
+            case WM_DPICHANGED:
+                {
+                    This->m_dpi = HIWORD(wParam);
+                    This->CreateFonts();
+                    This->OnDPIChanged.Notify();
+                }
+                break;
+            case WM_DESTROY:
+                RemoveWindowSubclass(hWnd, DialogSubclassProc, uIdSubclass);
+                break;
+        }
+        return DefSubclassProc(hWnd, msg, wParam, lParam);
+    }
+
 
     Theme::~Theme()
     {
@@ -89,6 +113,11 @@ namespace FluentDesign
         m_hPrimaryFont = NULL;
         m_hSecondaryFont = NULL;
         m_hGlyphFont = NULL;
+    }
+
+    const int Theme::DpiUnscale(int scaledSize)
+    {
+        return MulDiv(scaledSize, 96, m_dpi);
     }
 
     const int Theme::DpiScale(int designSize)

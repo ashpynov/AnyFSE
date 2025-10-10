@@ -12,7 +12,9 @@ namespace FluentDesign
 
     TextBox::TextBox(FluentDesign::Theme& theme)
     : m_theme(theme)
-    {}
+    {
+        theme.OnDPIChanged += [This = this]() { This->UpdateLayout(); };
+    }
 
     TextBox::TextBox(FluentDesign::Theme &theme, HWND hParent, int x, int y, int width, int height)
     :TextBox(theme)
@@ -28,6 +30,7 @@ namespace FluentDesign
     HWND TextBox::Create(HWND hParent, int x, int y, int width, int height)
     {
         m_hParent = hParent;
+        m_designedWidth = m_theme.DpiUnscale(width);
 
         m_hContainer = CreateWindowEx(
             0,
@@ -68,18 +71,7 @@ namespace FluentDesign
             return NULL;
         }
 
-        SendMessage(m_hTextBox, WM_SETFONT, (WPARAM)m_theme.GetFont_Text(), TRUE);
-
-        RECT tbRect;
-        SendMessage(m_hTextBox, EM_GETRECT, 0, (LPARAM) &tbRect);
-
-        int tbHeight = tbRect.bottom - tbRect.top;
-
-        SetWindowPos(m_hContainer, 0, 0, 0, width,
-                    tbHeight + m_theme.DpiScale(
-                        m_marginTop + m_marginBottom
-                    ),
-                    SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+        UpdateLayout();
 
         // Subclass the TextBox for custom behavior
         SetWindowSubclass(m_hTextBox, TextBoxSubclassProc, 0, (DWORD_PTR)this);
@@ -131,6 +123,32 @@ namespace FluentDesign
 
     void TextBox::UpdateLayout()
     {
+        SendMessage(m_hTextBox, WM_SETFONT, (WPARAM)m_theme.GetFont_Text(), TRUE);
+
+        SetWindowPos(m_hTextBox, 0, 0, 0,
+            m_theme.DpiScale(m_designedWidth),
+            m_theme.GetSize_Text() * 2 + m_theme.DpiScale(
+                m_marginTop + m_marginBottom
+            ),
+            SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREDRAW);
+
+        RECT tbRect;
+        SendMessage(m_hTextBox, EM_GETRECT, 0, (LPARAM) &tbRect);
+
+        int tbHeight = tbRect.bottom - tbRect.top;
+
+        SetWindowPos(m_hContainer, 0, 0, 0,
+                    m_theme.DpiScale(m_designedWidth),
+                    tbHeight + m_theme.DpiScale(
+                        m_marginTop + m_marginBottom
+                    ),
+                    SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+
+        OnSize();
+    }
+
+    void TextBox::OnSize()
+    {
         if (!m_hContainer || !m_hTextBox)
             return;
 
@@ -169,7 +187,7 @@ namespace FluentDesign
         switch (msg)
         {
         case WM_SIZE:
-            UpdateLayout();
+            OnSize();
             break;
 
         case WM_SETFOCUS:
@@ -217,7 +235,7 @@ namespace FluentDesign
                 break;
 
             case WM_SIZE:
-                This->UpdateLayout();
+                This->OnSize();
                 break;
 
             case WM_COMMAND:
