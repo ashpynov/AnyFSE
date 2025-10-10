@@ -97,6 +97,11 @@ namespace FluentDesign
             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
             CLEARTYPE_QUALITY, DEFAULT_PITCH,
             L"Segoe MDL2 Assets");
+
+        LOGFONT titleFont = ncm.lfMessageFont;
+        titleFont.lfHeight = (LONG)(-GetSize_Title());
+        titleFont.lfWeight = FW_BOLD;
+        m_hTitleFont = CreateFontIndirect(&titleFont);
     }
 
     void Theme::FreeFonts()
@@ -110,9 +115,13 @@ namespace FluentDesign
         if (m_hGlyphFont)
             DeleteObject(m_hGlyphFont);
 
+        if (m_hTitleFont)
+            DeleteObject(m_hTitleFont);
+
         m_hPrimaryFont = NULL;
         m_hSecondaryFont = NULL;
         m_hGlyphFont = NULL;
+        m_hTitleFont = NULL;
     }
 
     const int Theme::DpiUnscale(int scaledSize)

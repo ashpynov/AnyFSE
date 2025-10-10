@@ -33,6 +33,7 @@ namespace FluentDesign
             ComboHover = 61,
             ComboPressed = 50,
             ComboPopup = 38,
+            ComboPopupBorder = 1,
             ComboPopupSelected = 61,
             ComboPopupSelectedMark = 89,  // accented color
             ComboPopupHover = 61,
@@ -61,10 +62,13 @@ namespace FluentDesign
         HFONT m_hPrimaryFont;
         HFONT m_hSecondaryFont;
         HFONT m_hGlyphFont;
+        HFONT m_hTitleFont;
 
         static const int m_primarySize = 14;
         static const int m_secondarySize = 11;
         static const int m_glyphSize = 10;
+        static const int m_titleSize = 28;
+        static const int m_cornerSize = 8;
 
         void LoadColors(bool isDark);
         void CreateFonts();
@@ -87,6 +91,7 @@ namespace FluentDesign
         const HFONT GetFont_Text() { return m_hPrimaryFont; }
         const HFONT GetFont_TextSecondary() { return m_hSecondaryFont; }
         const HFONT GetFont_Glyph() { return m_hGlyphFont; }
+        const HFONT GetFont_Title() { return m_hTitleFont; }
 
         const DWORD GetColor(Colors code) { return RGB((BYTE)code, (BYTE)code, (BYTE)code) | 0xFF000000; }
         const COLORREF GetColorRef(Colors code) { return RGB((BYTE)code, (BYTE)code, (BYTE)code); }
@@ -95,5 +100,7 @@ namespace FluentDesign
         const int GetSize_Text() { return DpiScale(m_primarySize); }
         const int GetSize_TextSecondary() { return DpiScale(m_secondarySize); }
         const int GetSize_Glyph() { return DpiScale(m_glyphSize); }
+        const int GetSize_Title() { return DpiScale(m_titleSize); }
+        const int GetSize_Corner() { return DpiScale(m_cornerSize); }
     };
 }

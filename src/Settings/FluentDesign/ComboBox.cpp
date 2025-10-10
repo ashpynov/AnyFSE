@@ -407,20 +407,31 @@ namespace FluentDesign
     void ComboBox::DrawPopupBackground(HWND hWnd, HDC hdcMem, RECT rect)
     {
         // Draw popup background with rounded corners
-        HBRUSH hBgBrush = CreateSolidBrush( m_theme.GetColorRef(Theme::Colors::ComboPressed));
-        HRGN hRgn = CreateRoundRectRgn(rect.left, rect.top, rect.right, rect.bottom, 8, 8);
-        SelectClipRgn(hdcMem, hRgn);
+        HBRUSH hNilBrush = CreateSolidBrush(RGB(0,0,0));
+        FillRect(hdcMem, &rect, hNilBrush);
 
-        FillRect(hdcMem, &rect, hBgBrush);
+        HPEN hBgPen = CreatePen(PS_SOLID, m_theme.DpiScale(1),  m_theme.GetColorRef(Theme::Colors::ComboPopupBorder));
+        HBRUSH hBgBrush = CreateSolidBrush( m_theme.GetColorRef(Theme::Colors::ComboPressed));
+
+        HGDIOBJ hOldBrush = SelectObject(hdcMem, hBgBrush);
+        HGDIOBJ hOldPen = SelectObject(hdcMem, hBgPen);
+
+        InflateRect(&rect, -1, -1);
+        RoundRect(hdcMem, rect.left, rect.top, rect.right, rect.bottom, m_theme.GetSize_Corner(), m_theme.GetSize_Corner());
+
+        SelectObject(hdcMem, hOldBrush);
+        SelectObject(hdcMem, hOldPen);
 
         DeleteObject(hBgBrush);
-        DeleteObject(hRgn);
+        DeleteObject(hNilBrush);
+        DeleteObject(hBgPen);
+
     }
 
     void ComboBox::DrawPopupItem(HWND hWnd, HDC hdcMem, RECT itemRect, int itemId)
     {
         RECT backgroundRect = itemRect;
-        InflateRect(&backgroundRect, m_theme.DpiScale(-4), m_theme.DpiScale(-2));
+        InflateRect(&backgroundRect, m_theme.DpiScale(-leftMargin/4), m_theme.DpiScale(-2));
         if ( itemId == m_hoveredIndex || itemId == m_selectedIndex)
         {
             COLORREF color = (itemId == m_hoveredIndex) ? m_theme.GetColorRef(Theme::Colors::ComboPopupHover)

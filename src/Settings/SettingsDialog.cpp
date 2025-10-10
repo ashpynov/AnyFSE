@@ -8,6 +8,8 @@
 #include "Logging/LogManager.hpp"
 #include "SettingsDialog.hpp"
 #include "Configuration/Config.hpp"
+#include "FluentDesign/Theme.hpp"
+#include "FluentDesign/DoubleBufferedPaint.hpp"
 
 
 #pragma comment(lib, "comctl32.lib")
@@ -82,16 +84,49 @@ namespace AnyFSE::Settings
         switch (msg)
         {
         case WM_INITDIALOG:
-            SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-            m_theme.Attach(hwnd);
-            OnInitDialog(hwnd);
-            CenterDialog(hwnd);
+            {   // To enable immersive dark mode (for a dark title bar)
+                BOOL USE_DARK_MODE = TRUE;
+                DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &USE_DARK_MODE, sizeof(USE_DARK_MODE));
+                COLORREF MY_CAPTION_COLOR = m_theme.GetColorRef(FluentDesign::Theme::Colors::Dialog);
+                DwmSetWindowAttribute(hwnd, DWMWA_CAPTION_COLOR, &MY_CAPTION_COLOR, sizeof(MY_CAPTION_COLOR));
+                SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+                m_theme.Attach(hwnd);
+                OnInitDialog(hwnd);
+                CenterDialog(hwnd);
+            }
             return TRUE;
+
+        case WM_PAINT:
+            {
+                FluentDesign::DoubleBuferedPaint paint(hwnd);
+                HBRUSH back = CreateSolidBrush(m_theme.GetColorRef(FluentDesign::Theme::Colors::Dialog));
+                RECT r = paint.ClientRect();
+                FillRect(paint.MemDC(), &r, back);
+                DeleteObject(back);
+
+                r.left += m_theme.DpiScale(32);
+
+                WCHAR *text1 = L"Gaming > ";
+                WCHAR *text2 = L"Any Full Screen Experience";
+                SetTextColor(paint.MemDC(), m_theme.GetColorRef(FluentDesign::Theme::Colors::TextSecondary));
+                SetBkMode(paint.MemDC(), TRANSPARENT);
+                HGDIOBJ oldFont = SelectFont(paint.MemDC(), m_theme.GetFont_Title());
+                ::DrawText(paint.MemDC(), text1, -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP | DT_CALCRECT);
+                ::DrawText(paint.MemDC(), text1, -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
+
+                r.left = r.right;
+                r.right = paint.ClientRect().right;
+                SetTextColor(paint.MemDC(), m_theme.GetColorRef(FluentDesign::Theme::Colors::Text));
+                ::DrawText(paint.MemDC(), text2, -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
+
+                SelectObject(paint.MemDC(), oldFont);
+            }
+            return FALSE;
 
         case WM_CTLCOLORDLG:
         {
             // Return a black brush for dialog background
-            static HBRUSH hBlackBrush = CreateSolidBrush(RGB(32, 32, 32));
+            static HBRUSH hBlackBrush = CreateSolidBrush(m_theme.GetColorRef(FluentDesign::Theme::Colors::Dialog));
             return (LRESULT)hBlackBrush;
         }
         case WM_DESTROY:
@@ -153,7 +188,7 @@ namespace AnyFSE::Settings
 
     void SettingsDialog::OnInitDialog(HWND hwnd)
     {
-        ULONG top = m_theme.DpiScale(45);
+        ULONG top = m_theme.DpiScale(60);
 
         AddSettingsLine(top,
             L"Choose home app",

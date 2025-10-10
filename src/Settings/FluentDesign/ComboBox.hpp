@@ -21,7 +21,7 @@ namespace FluentDesign
     private:
         static const int itemHeight = 38;
         static const int imageSize = 20;
-        static const int leftMargin = 12;
+        static const int leftMargin = 16;
         static const int iconMargin = 8;
         static const int chevronMargin = 16;
         static const int cornerRadius = 8;
