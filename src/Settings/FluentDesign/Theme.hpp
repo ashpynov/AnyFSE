@@ -5,6 +5,45 @@ namespace FluentDesign
 {
     class Theme
     {
+    public:
+        enum Colors
+        {
+            Text = 255,
+            TextSecondary = 200,
+            TextDisabled = 128,
+
+            Panel = 43,
+            PanelHover = 43,
+
+            Dialog = 32,
+
+            ToggleBorderOn = 89,
+            ToggleBorderOff = 207,
+            ToggleTrackOn = 89,             // accented color
+            ToggleTrackOnPressed = 84,      // accented color darker
+            ToggleTrackOff = 39,
+            ToggleTrackOffHover = 52,
+            ToggleThumbOn = 0,
+            ToggleThumbOff = 207,
+
+            Combo = 55,
+            ComboDisabled = 50,
+            ComboHover = 61,
+            ComboPressed = 50,
+            ComboPopup = 38,
+            ComboPopupSelected = 61,
+            ComboPopupSelectedMark = 89,  // accented color
+            ComboPopupHover = 61,
+
+            Edit = 55,
+            EditHover = 61,
+            EditAccent = 154,
+            EditFocus = 31,
+            EditAccentFocus = 64,   // accented color
+            EditBorderFocus = 58,
+        };
+
+    private:
         ULONG m_dpi;
         ULONG_PTR gdiplusToken;
 
@@ -12,19 +51,6 @@ namespace FluentDesign
         HFONT m_hPrimaryFont;
         HFONT m_hSecondaryFont;
         HFONT m_hGlyphFont;
-
-        // Foreground
-        COLORREF m_primaryColor;
-        COLORREF m_secondaryColor;
-        COLORREF m_disabledColor;
-
-        // Background
-        COLORREF m_baseColorBg;
-        COLORREF m_baseSecondaryColorBg;
-        COLORREF m_controlColorBg;
-        COLORREF m_pressedColorBg;
-        COLORREF m_hoveredColorBg;
-        COLORREF m_popupColorBg;
 
         static const int m_primarySize = 14;
         static const int m_secondarySize = 11;
@@ -42,28 +68,17 @@ namespace FluentDesign
         const int DpiScale(int designSize);
         const float DpiScaleF(int designSize);
         const float DpiScaleF(float designSize);
-        const HFONT PrimaryFont() { return m_hPrimaryFont; }
-        const HFONT SecondaryFont() { return m_hSecondaryFont; }
-        const HFONT GlyphFont() { return m_hGlyphFont; }
 
-        // Foreground
-        const COLORREF PrimaryColor() { return m_primaryColor; }
-        const COLORREF SecondaryColor() { return m_secondaryColor; }
-        const COLORREF DisabledColor() { return m_disabledColor; }
+        const HFONT GetFont_Text() { return m_hPrimaryFont; }
+        const HFONT GetFont_TextSecondary() { return m_hSecondaryFont; }
+        const HFONT GetFont_Glyph() { return m_hGlyphFont; }
 
-        const COLORREF ThemeColor(BYTE lumen) { return RGB(lumen, lumen, lumen); }
-
-        // Background
-        const COLORREF BaseColorBg() { return m_baseColorBg; }
-        const COLORREF BaseSecondaryColorBg() { return m_baseSecondaryColorBg; }
-        const COLORREF ControlColorBg() { return m_controlColorBg; }
-        const COLORREF PressedColorBg() { return m_pressedColorBg; }
-        const COLORREF HoveredColorBg() { return m_hoveredColorBg; }
-        const COLORREF PopupColorBg() { return m_popupColorBg; }
+        const DWORD GetColor(Colors code) { return RGB((BYTE)code, (BYTE)code, (BYTE)code) | 0xFF000000; }
+        const COLORREF GetColorRef(Colors code) { return RGB((BYTE)code, (BYTE)code, (BYTE)code); }
 
         // Constants
-        const int PrimarySize() { return DpiScale(m_primarySize); }
-        const int SecondarySize() { return DpiScale(m_secondarySize); }
-        const int GlyphSize() { return DpiScale(m_glyphSize); }
+        const int GetSize_Text() { return DpiScale(m_primarySize); }
+        const int GetSize_TextSecondary() { return DpiScale(m_secondarySize); }
+        const int GetSize_Glyph() { return DpiScale(m_glyphSize); }
     };
 }

@@ -177,12 +177,6 @@ namespace FluentDesign
                     (REAL)(rect.right - rect.left),
                     (REAL)(rect.bottom - rect.top+1));
 
-        // Create color objects and set from COLORREF
-        Color bgColor;
-        bgColor.SetFromCOLORREF(m_theme.BaseSecondaryColorBg());
-        SolidBrush backgroundBrush(bgColor);
-        graphics.FillRectangle(&backgroundBrush, gdiRect);
-
         // Calculate button rectangle using GDI+ RectF
         RectF br = gdiRect;
 
@@ -194,28 +188,24 @@ namespace FluentDesign
         br.Inflate(-m_theme.DpiScaleF(1), -m_theme.DpiScaleF(1));
 
         // Determine colors based on state
-        COLORREF border = isChecked ? m_theme.ThemeColor(89) : m_theme.ThemeColor(207);
-        COLORREF back =
-            (isChecked && buttonPressed)      ? m_theme.ThemeColor(84)
-            : (isChecked && !buttonPressed)   ? m_theme.ThemeColor(89)
-            : (!isChecked && buttonMouseOver) ? m_theme.ThemeColor(52)
-                                              : m_theme.ThemeColor(39);
+        Color borderColor(
+            isChecked ? m_theme.GetColor(Theme::Colors::ToggleBorderOn)
+                      : m_theme.GetColor(Theme::Colors::ToggleBorderOff)
+        );
 
-        COLORREF thumb = isChecked ? m_theme.ThemeColor(0) : m_theme.ThemeColor(207);
-        COLORREF thumbCircle = (buttonPressed || buttonMouseOver) ? thumb : back;
+        Color backColor(
+              (isChecked && buttonPressed)    ? m_theme.GetColor(Theme::Colors::ToggleTrackOnPressed)
+            : (isChecked)                     ? m_theme.GetColor(Theme::Colors::ToggleTrackOn)
+            : (!isChecked && buttonMouseOver) ? m_theme.GetColor(Theme::Colors::ToggleTrackOffHover)
+                                              : m_theme.GetColor(Theme::Colors::ToggleTrackOff)
+        );
 
-        // Convert COLORREF to GDI+ Color using SetFromCOLORREF
-        Color borderColor;
-        borderColor.SetFromCOLORREF(border);
+        Color thumbColor(
+            isChecked ? m_theme.GetColor(Theme::Colors::ToggleThumbOn)
+                      : m_theme.GetColor(Theme::Colors::ToggleThumbOff)
+        );
 
-        Color backColor;
-        backColor.SetFromCOLORREF(back);
-
-        Color thumbColor;
-        thumbColor.SetFromCOLORREF(thumb);
-
-        Color thumbCircleColor;
-        thumbCircleColor.SetFromCOLORREF(thumbCircle);
+        Color thumbCircleColor = (buttonPressed || buttonMouseOver) ? thumbColor : backColor;
 
         // Draw outer rounded rectangle (track)
         Pen borderPen(borderColor, (REAL)m_theme.DpiScale(1));
@@ -253,11 +243,8 @@ namespace FluentDesign
         textRect.Width = m_theme.DpiScaleF(itemWidth);
 
         // Create the font and brush
-        Font font(hdc, m_theme.PrimaryFont());
-
-        Color primaryColor;
-        primaryColor.SetFromCOLORREF(m_theme.PrimaryColor());
-        SolidBrush textBrush(primaryColor);
+        Font font(hdc, m_theme.GetFont_Text());
+        SolidBrush textBrush(Color(m_theme.GetColor(Theme::Colors::Text)));
 
         WCHAR *text = isChecked ? L"On" : L"Off";
         StringFormat format;

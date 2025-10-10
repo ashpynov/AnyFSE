@@ -129,43 +129,77 @@ namespace AnyFSE::Settings
         return FALSE;
     }
 
+    template<class T>
+    void SettingsDialog::AddSettingsLine(
+        ULONG &top, const wstring& name, const wstring& desc, T& control,
+        int height, int padding, int contentMargin)
+    {
+        RECT rect;
+        GetClientRect(m_hDialog, &rect);
+        int width = rect.right - rect.left - m_theme.DpiScale(64);
+
+        settingLines.emplace_back(
+            m_theme, m_hDialog, name, desc, m_theme.DpiScale(32), top, width, m_theme.DpiScale(height),
+            [&](HWND parent) { return control.Create(parent, 0, 0, m_theme.DpiScale(250), m_theme.DpiScale(40)); });
+
+        top += m_theme.DpiScale(height + padding);
+        if (contentMargin)
+        {
+            settingLines.back().SetLeftMargin(m_theme.DpiScale(contentMargin));
+        }
+    }
+
     void SettingsDialog::OnInitDialog(HWND hwnd)
     {
-
-        RECT rect;
-        GetClientRect(hwnd, &rect);
-
         ULONG top = m_theme.DpiScale(45);
 
-        settingLines.emplace_back(
-            m_theme, hwnd,
+        AddSettingsLine(top,
             L"Choose home app",
             L"Choose home application for full screen expirience",
-            m_theme.DpiScale(32), top,
-            rect.right - rect.left - m_theme.DpiScale(64), m_theme.DpiScale(67),
-            [&](HWND parent){ return launcherCombo.Create(parent, 0, 0, m_theme.DpiScale(250), m_theme.DpiScale(40)); }
-        );
+            launcherCombo,
+            67, 8, 0);
 
-        top += m_theme.DpiScale(67 + 8);
+        AddSettingsLine(top,
+            L"Enter full screen expirience on startup",
+            L"",
+            enterFullscreen,
+            67, 8, 0);
 
-        settingLines.emplace_back(
-            m_theme, hwnd,
-            L"Enter full screen expirience on startup", L"",
-            m_theme.DpiScale(32), top,
-            rect.right - rect.left - m_theme.DpiScale(64), m_theme.DpiScale(67),
-            [&](HWND parent){ return enterFullscreen.Create(parent, 0, 0, m_theme.DpiScale(250), m_theme.DpiScale(40)); }
-        );
-
-        top += m_theme.DpiScale(67 + 8);
-
-        settingLines.emplace_back(
-            m_theme, hwnd,
+        AddSettingsLine(top,
             L"Use custom settings",
             L"Change monitoring and startups settings for selected home application",
-            m_theme.DpiScale(32), top,
-            rect.right - rect.left - m_theme.DpiScale(64), m_theme.DpiScale(67),
-            [&](HWND parent){ return customSettings.Create(parent, 0, 0, m_theme.DpiScale(250), m_theme.DpiScale(40)); }
-        );
+            customSettings,
+            67, 2, 0);
+
+        AddSettingsLine(top,
+            L"Additional arguments",
+            L"Command line arguments passed to application",
+            additionalArguments,
+            48, 2, 20);
+
+        AddSettingsLine(top,
+            L"Primary process name",
+            L"Name of home application process",
+            processName,
+            48, 2, 20);
+
+        AddSettingsLine(top,
+            L"Primary window title",
+            L"Title of app window when it have been activated",
+            title,
+            48, 2, 20);
+
+        AddSettingsLine(top,
+            L"Secondary process name",
+            L"Name of app process for alternative mode",
+            processNameAlt,
+            48, 2, 20);
+
+        AddSettingsLine(top,
+            L"Secondary window title",
+            L"Title of app window when it alternative mode have been activated",
+            titleAlt,
+            48, 2, 20);
 
         launcherCombo.OnChanged += [This = this]()
         {
@@ -174,60 +208,9 @@ namespace AnyFSE::Settings
 
         customSettings.OnChanged += [This = this]()
         {
-            This->OnLauncherChanged(This->m_hDialog);
+            This->OnCustomChanged(This->m_hDialog);
         };
 
-        top += m_theme.DpiScale(67 + 2);
-        settingLines.emplace_back(
-            m_theme, hwnd,
-            L"Additional arguments",
-            L"Command line arguments passed to application",
-            m_theme.DpiScale(32), top,
-            rect.right - rect.left - m_theme.DpiScale(64), m_theme.DpiScale(48)
-        );
-        settingLines.back().SetLeftMargin(40);
-
-        top += m_theme.DpiScale(48 + 2);
-        settingLines.emplace_back(
-            m_theme, hwnd,
-            L"Primary process name",
-            L"Name of home application process",
-            m_theme.DpiScale(32), top,
-            rect.right - rect.left - m_theme.DpiScale(64), m_theme.DpiScale(48)
-        );
-        settingLines.back().SetLeftMargin(40);
-
-        top += m_theme.DpiScale(48 + 2);
-        settingLines.emplace_back(
-            m_theme, hwnd,
-            L"Primary window title",
-            L"Title of app window when it have been activated",
-            m_theme.DpiScale(32), top,
-            rect.right - rect.left - m_theme.DpiScale(64), m_theme.DpiScale(48)
-        );
-        settingLines.back().SetLeftMargin(40);
-
-        top += m_theme.DpiScale(48 + 2);
-        settingLines.emplace_back(
-            m_theme, hwnd,
-            L"Secondary process name",
-            L"Name of app process for alternative mode",
-            m_theme.DpiScale(32), top,
-            rect.right - rect.left - m_theme.DpiScale(64), m_theme.DpiScale(48)
-        );
-        settingLines.back().SetLeftMargin(40);
-
-        top += m_theme.DpiScale(48 + 2);
-        settingLines.emplace_back(
-            m_theme, hwnd,
-            L"Secondary window title",
-            L"Title of app window when it alternative mode have been activated",
-            m_theme.DpiScale(32), top,
-            rect.right - rect.left - m_theme.DpiScale(64), m_theme.DpiScale(48)
-        );
-        settingLines.back().SetLeftMargin(40);
-
-        InitGroups();
         CheckDlgButton(m_hDialog, IDC_RUN_ON_STARTUP, true ? BST_CHECKED : BST_UNCHECKED);
         current = Config::GetCurrentLauncher();
         Config::FindLaunchers(launchers);
@@ -239,110 +222,9 @@ namespace AnyFSE::Settings
         UpdateCustomSettings();
     }
 
-    void SettingsDialog::InitGroups()
-    {
-        groups = std::vector<ControlsGroup>{
-            {
-                true, 0, {
-                    { IDC_GROUP_SIZER, 0 },
-                    { IDC_GROUP_FRAME, 0 },
-                    { IDC_ARGUMENTS_STATIC ,0 },
-                    { IDC_ARGUMENTS ,0 },
-                    { IDC_PROCESS_NAME_STATIC, 0 },
-                    { IDC_PROCESS_NAME, 0 },
-                    { IDC_TITLE_STATIC, 0 },
-                    { IDC_TITLE, 0 },
-                    { IDC_PROCESS_NAME_ALT_STATIC, 0 },
-                    { IDC_PROCESS_NAME_ALT, 0 },
-                    { IDC_TITLE_ALT_STATIC, 0 },
-                    { IDC_TITLE_ALT, 0 }
-                }
-            },
-            {
-                true, 0, {
-                    {IDC_NOT_AGGRESSIVE_MODE, 0},
-                    {IDC_RUN_ON_STARTUP, 0},
-                    {IDOK, 0},
-                    {IDCANCEL, 0}
-                }
-            }
-        };
-
-        for (auto& group : groups )
-        {
-            group.visible = true;
-            for (auto& g : group.items)
-            {
-                RECT rect;
-                GetWindowRect(GetDlgItem(m_hDialog, g.first), &rect);
-                MapWindowPoints(HWND_DESKTOP, m_hDialog, (LPPOINT)&rect, 2);
-                g.second = rect.top;
-
-                if (g.first == group.items[0].first)
-                {
-                    group.height = rect.bottom - rect.top;
-                }
-            }
-        }
-        RECT rect;
-        GetWindowRect(m_hDialog, &rect);
-        designHeight = rect.bottom - rect.top;
-    }
-
-    void SettingsDialog::MoveGroupItem(int id, int original, int offset )
-    {
-        RECT rect;
-        GetWindowRect(GetDlgItem(m_hDialog, id), &rect);
-        MapWindowPoints(HWND_DESKTOP, m_hDialog, (LPPOINT)&rect, 2);
-        int h = rect.bottom-rect.top;
-
-        MoveWindow(GetDlgItem(m_hDialog, id), rect.left, original - offset, rect.right - rect.left, h, FALSE);
-    }
-
     void SettingsDialog::ShowGroup(int groupIdx, bool show)
     {
-        int offset = 0;
-        for (int i = 0; i < groupIdx; ++i)
-        {
-            if (!groups[i].visible)
-            {
-                offset += groups[i].height;
-            }
-        }
-        ControlsGroup &group = groups[groupIdx];
-        for (auto& g : group.items)
-        {
-            ShowWindow(GetDlgItem(m_hDialog, g.first), show ? SW_SHOW : SW_HIDE);
-            if (show)
-            {
-                MoveGroupItem(g.first, g.second, offset);
-            }
-        }
-        group.visible = show;
-        if (!show)
-        {
-            offset += group.height;
-        }
-        for (int i = groupIdx + 1; i < groups.size(); ++i)
-        {
-            if(groups[i].visible)
-            {
-                for (auto& g: groups[i].items)
-                {
-                    MoveGroupItem(g.first, g.second, offset);
-                }
-            }
-            else
-            {
-                offset += groups[i].height;
-            }
-        }
-        RECT rect;
-        GetWindowRect(m_hDialog, &rect);
-        int h = rect.bottom-rect.top;
-
-        SetWindowPos(m_hDialog, NULL, rect.left, rect.top, rect.right - rect.left, designHeight - offset, SWP_NOACTIVATE | SWP_NOZORDER);
-        //MoveWindow(m_hDialog, rect.left, rect.top, rect.right - rect.left, rect.top + designHeight - offset, TRUE);
+        // To do
     }
 
     void SettingsDialog::OnBrowseLauncher(HWND hwnd, int editId)
@@ -374,30 +256,17 @@ namespace AnyFSE::Settings
     void SettingsDialog::OnOk(HWND hwnd)
     {
         // Save values from controls
-        // WCHAR buffer[MAX_PATH];
-
-        // GetDlgItemText(hwnd, IDC_EDIT1, buffer, MAX_PATH);
-        // m_settings.filePath1 = buffer;
-
-        // GetDlgItemText(hwnd, IDC_EDIT2, buffer, MAX_PATH);
-        // m_settings.filePath2 = buffer;
-
-        // GetDlgItemText(hwnd, IDC_EDIT3, buffer, MAX_PATH);
-        // m_settings.filePath3 = buffer;
-
-        // m_settings.checkbox1 = IsDlgButtonChecked(hwnd, IDC_CHECKBOX1) == BST_CHECKED;
-        // m_settings.checkbox2 = IsDlgButtonChecked(hwnd, IDC_CHECKBOX2) == BST_CHECKED;
     }
     void SettingsDialog::OnCustomChanged(HWND hwnd)
     {
-        m_isCustom = BST_CHECKED == SendDlgItemMessage(m_hDialog, IDC_CUSTOM, BM_GETCHECK, 0, 0);
+        m_isCustom = customSettings.GetCheck();
         UpdateCustom();
     }
 
     void SettingsDialog::OnAggressiveChanged(HWND hwnd)
     {
-        m_isAgressive = BST_CHECKED != SendDlgItemMessage(m_hDialog, IDC_NOT_AGGRESSIVE_MODE, BM_GETCHECK, 0, 0);
-        UpdateCustom();
+        // m_isAgressive = BST_CHECKED != SendDlgItemMessage(m_hDialog, IDC_NOT_AGGRESSIVE_MODE, BM_GETCHECK, 0, 0);
+        // UpdateCustom();
     }
 
     void SettingsDialog::UpdateCustom()
@@ -410,10 +279,9 @@ namespace AnyFSE::Settings
         bool setCheck = m_isCustom && !isXbox || isCustom;
         bool enableCheck = !isCustom && !isXbox;
 
-        SendDlgItemMessage(m_hDialog, IDC_CUSTOM, BM_SETCHECK, (WPARAM)setCheck ? BST_CHECKED : BST_UNCHECKED, 0 );
-        EnableWindow(GetDlgItem(m_hDialog, IDC_CUSTOM), enableCheck);
-
-        ShowGroup(0, setCheck);
+        customSettings.SetCheck(setCheck);
+        // customSettings.Enable(enableCheck); // TODO
+        // ShowGroup(0, setCheck);
         if (!setCheck)
         {
             config = defaults;
@@ -438,6 +306,8 @@ namespace AnyFSE::Settings
     {
         launcherCombo.Reset();
 
+        AddComboItem(L"None", L"");
+
         for ( auto& launcher: launchers)
         {
             LauncherConfig info;
@@ -450,9 +320,11 @@ namespace AnyFSE::Settings
         {
             LauncherConfig info;
             Config::GetLauncherDefaults(current, info);
-            AddComboItem(info.Name, info.StartCommand, 0);
-            index = 0;
+            AddComboItem(info.Name, info.StartCommand, 1);
+            index = 1;
         }
+
+        AddComboItem(L"Browse", L"");
 
         launcherCombo.SelectItem((int)index);
     }
@@ -460,14 +332,14 @@ namespace AnyFSE::Settings
     void SettingsDialog::UpdateCustomSettings()
     {
         // Set values
-        SetDlgItemText(m_hDialog, IDC_ARGUMENTS,        config.StartArg.c_str());
-        SetDlgItemText(m_hDialog, IDC_PROCESS_NAME,     config.ProcessName.c_str());
-        SetDlgItemText(m_hDialog, IDC_PROCESS_NAME_ALT, config.ProcessNameAlt.c_str());
-        SetDlgItemText(m_hDialog, IDC_TITLE,            config.WindowTitle.c_str());
-        SetDlgItemText(m_hDialog, IDC_TITLE_ALT,        config.WindowTitleAlt.c_str());
+        additionalArguments.SetText(config.StartArg);
+        processName.SetText(config.ProcessName);
+        processNameAlt.SetText(config.ProcessNameAlt);
+        title.SetText(config.WindowTitle);
+        titleAlt.SetText(config.WindowTitleAlt);
 
-        SendDlgItemMessage(m_hDialog, IDC_NOT_AGGRESSIVE_MODE, BM_SETCHECK, (WPARAM)(m_isAgressive && config.Type != LauncherType::Xbox) ? BST_UNCHECKED : BST_CHECKED, 0 );
-        EnableWindow(GetDlgItem(m_hDialog, IDC_NOT_AGGRESSIVE_MODE), config.Type != LauncherType::Xbox);
+        // SendDlgItemMessage(m_hDialog, IDC_NOT_AGGRESSIVE_MODE, BM_SETCHECK, (WPARAM)(m_isAgressive && config.Type != LauncherType::Xbox) ? BST_UNCHECKED : BST_CHECKED, 0 );
+        // EnableWindow(GetDlgItem(m_hDialog, IDC_NOT_AGGRESSIVE_MODE), config.Type != LauncherType::Xbox);
     }
     void SettingsDialog::SaveSettings()
     {}

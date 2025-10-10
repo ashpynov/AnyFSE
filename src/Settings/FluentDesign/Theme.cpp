@@ -43,16 +43,6 @@ namespace FluentDesign
     {
         if (isDark)
         {
-            m_primaryColor = RGB(255, 255, 255);
-            m_secondaryColor = RGB(200, 200, 200);
-            m_disabledColor = RGB(128, 128, 128);
-
-            m_baseColorBg = RGB(32, 32, 32);
-            m_baseSecondaryColorBg = RGB(43, 43, 43);
-            m_popupColorBg = RGB(38, 38, 38);
-            m_pressedColorBg = RGB(50, 50, 50);
-            m_controlColorBg = RGB(55, 55, 55);
-            m_hoveredColorBg = RGB(61, 61, 61);
         }
     }
 
@@ -69,17 +59,17 @@ namespace FluentDesign
         //m_hPrimaryFont = CreateFontIndirect(&ncm.lfMessageFont);
 
         LOGFONT primaryFont = ncm.lfMessageFont;
-        primaryFont.lfHeight = (LONG)(-PrimarySize());
+        primaryFont.lfHeight = (LONG)(-GetSize_Text());
         primaryFont.lfWeight = FW_NORMAL;
         m_hPrimaryFont = CreateFontIndirect(&primaryFont);
 
         // Create description font (slightly smaller, normal weight)
         LOGFONT secondaryFont = ncm.lfMessageFont;
-        secondaryFont.lfHeight = (LONG)(-SecondarySize());
+        secondaryFont.lfHeight = (LONG)(-GetSize_TextSecondary());
         m_hSecondaryFont = CreateFontIndirect(&secondaryFont);
 
         m_hGlyphFont = CreateFont(
-            GlyphSize(), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+            GetSize_Glyph(), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
             CLEARTYPE_QUALITY, DEFAULT_PITCH,
             L"Segoe MDL2 Assets");

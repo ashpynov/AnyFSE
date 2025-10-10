@@ -21,7 +21,6 @@ namespace FluentDesign
         {
             hdc = BeginPaint(hWnd, &ps);
             GetClientRect(hWnd, &rect);
-
             width = rect.right - rect.left;
             height = rect.bottom - rect.top;
 
@@ -29,6 +28,12 @@ namespace FluentDesign
             hdcMem = CreateCompatibleDC(hdc);
             hbmMem = CreateCompatibleBitmap(hdc, width, height);
             hOldBitmap = (HBITMAP)SelectObject(hdcMem, hbmMem);
+
+            HWND parent = GetParent(hWnd);
+            if (parent)
+            {
+                SendMessage(parent, WM_ERASEBKGND, (WPARAM)hdcMem, (LPARAM)hWnd);
+            }
         }
 
         HDC MemDC()

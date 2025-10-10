@@ -170,6 +170,14 @@ namespace FluentDesign
             return 0;
 
         case WM_ERASEBKGND:
+            {
+                if(lParam)
+                {
+                    RECT childRect;
+                    GetClientRect((HWND)lParam, &childRect);
+                    DrawBackground((HDC)wParam, childRect);
+                }
+            }
             return 1; // We handle background in WM_PAINT
 
         case WM_COMMAND:
@@ -192,9 +200,9 @@ namespace FluentDesign
         HDC hdcMem = CreateCompatibleDC(hdc);
         HBITMAP hBitmap = CreateCompatibleBitmap(hdc, m_width, m_height);
         HBITMAP hOldBitmap = (HBITMAP)SelectObject(hdcMem, hBitmap);
-
+        RECT rect = {0, 0, m_width, m_height};
         // Draw background
-        DrawBackground(hdcMem);
+        DrawBackground(hdcMem, rect);
 
         // Draw text
         DrawText(hdcMem);
@@ -210,10 +218,12 @@ namespace FluentDesign
         EndPaint(m_hWnd, &ps);
     }
 
-    void SettingsLine::DrawBackground(HDC hdc)
+    void SettingsLine::DrawBackground(HDC hdc, const RECT &rect)
     {
-        HBRUSH hBrush = CreateSolidBrush( m_hovered ? m_theme.BaseSecondaryColorBg(): m_theme.BaseSecondaryColorBg());
-        RECT rect = {0, 0, m_width, m_height};
+        HBRUSH hBrush = CreateSolidBrush( m_hovered ? m_theme.GetColorRef(Theme::Colors::Panel)
+                                                    : m_theme.GetColorRef(Theme::Colors::PanelHover)
+        );
+
         FillRect(hdc, &rect, hBrush);
         DeleteObject(hBrush);
     }
@@ -223,8 +233,11 @@ namespace FluentDesign
         RECT rect;
         GetClientRect(m_hWnd, &rect);
 
-        COLORREF textColor = m_enabled ? m_theme.PrimaryColor() : m_theme.DisabledColor();
-        COLORREF descColor = m_enabled ? m_theme.SecondaryColor() : m_theme.DisabledColor();
+        COLORREF textColor = m_enabled ? m_theme.GetColorRef(Theme::Colors::Text)
+                                       : m_theme.GetColorRef(Theme::Colors::TextDisabled);
+
+        COLORREF descColor = m_enabled ? m_theme.GetColorRef(Theme::Colors::TextSecondary)
+                                       : m_theme.GetColorRef(Theme::Colors::TextDisabled);
 
         SetBkMode(hdc, TRANSPARENT);
 
@@ -232,28 +245,28 @@ namespace FluentDesign
         rect.left += m_theme.DpiScale(leftMargin);   // Margin
         //rect.right -= 160; // Space for child control
 
-        SelectObject(hdc, m_theme.PrimaryFont());
+        SelectObject(hdc, m_theme.GetFont_Text());
         SetTextColor(hdc, textColor);
 
-        int height = m_theme.PrimarySize();
+        int height = m_theme.GetSize_Text();
         if (!m_description.empty())
         {
-            height += m_theme.DpiScale(linePadding) + m_theme.SecondarySize();
+            height += m_theme.DpiScale(linePadding) + m_theme.GetSize_TextSecondary();
         }
 
         RECT nameRect = rect;
         nameRect.top = (rect.bottom - rect.top - height) / 2;
-        nameRect.bottom = nameRect.top + m_theme.PrimarySize();
+        nameRect.bottom = nameRect.top + m_theme.GetSize_Text();
 
         ::DrawText(hdc, m_name.c_str(), -1, &nameRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
 
         // Draw description
-        SelectObject(hdc, m_theme.SecondaryFont());
+        SelectObject(hdc, m_theme.GetFont_TextSecondary());
         SetTextColor(hdc, descColor);
 
         RECT descRect = rect;
         descRect.top = nameRect.bottom + m_theme.DpiScale(linePadding);
-        descRect.bottom = descRect.top + m_theme.SecondarySize();
+        descRect.bottom = descRect.top + m_theme.GetSize_TextSecondary();
 
         ::DrawText(hdc, m_description.c_str(), -1, &descRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE| DT_NOCLIP);
     }

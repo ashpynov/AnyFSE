@@ -168,18 +168,18 @@ namespace FluentDesign
             bool enabled = IsWindowEnabled(hWnd);
             bool focused = (GetFocus() == hWnd);
 
-            HBRUSH hBackgroundBrush = CreateSolidBrush(m_theme.BaseSecondaryColorBg());
+            HBRUSH hBackgroundBrush = CreateSolidBrush(m_theme.GetColorRef(Theme::Colors::Panel));  // TODO use helper
             FillRect(hdc, &rect, hBackgroundBrush);
             DeleteObject(hBackgroundBrush);
 
             // Draw button background
             COLORREF color =
-                  !enabled ? m_theme.ControlColorBg()                       // TODO Disabled Color
-                : buttonPressed ? m_theme.PressedColorBg()
-                : buttonMouseOver ? m_theme.ControlColorBg()
-                : m_theme.ControlColorBg();
+                  !enabled          ? m_theme.GetColorRef(Theme::Colors::ComboDisabled)                       // TODO Disabled Color
+                : buttonPressed     ? m_theme.GetColorRef(Theme::Colors::ComboPressed)
+                : buttonMouseOver   ? m_theme.GetColorRef(Theme::Colors::ComboHover)
+                : m_theme.GetColorRef(Theme::Colors::Combo);
 
-            HPEN hBorderPen = CreatePen(PS_SOLID,  1, m_theme.ControlColorBg());
+            HPEN hBorderPen = CreatePen(PS_SOLID,  1,  m_theme.GetColorRef(Theme::Colors::Combo));
             HBRUSH hBrush = CreateSolidBrush(color);
             HPEN hOldPen = (HPEN)SelectObject(hdc, hBorderPen);
             HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
@@ -204,9 +204,12 @@ namespace FluentDesign
         ComboItem &item = comboItems[itemId];
         // Draw text
         SetBkMode(hdc, TRANSPARENT);
-        SetTextColor(hdc, enabled ? m_theme.PrimaryColor() : m_theme.SecondaryColor());
+        SetTextColor(hdc, enabled
+            ? m_theme.GetColorRef(Theme::Colors::Text)
+            : m_theme.GetColorRef(Theme::Colors::TextSecondary)
+        );
 
-        HFONT hOldFont = (HFONT)SelectObject(hdc, m_theme.PrimaryFont());
+        HFONT hOldFont = (HFONT)SelectObject(hdc, m_theme.GetFont_Text());
 
         rect.left += m_theme.DpiScale(leftMargin);
 
@@ -224,9 +227,9 @@ namespace FluentDesign
     {
             rect.right -= m_theme.DpiScale(chevronMargin);
 
-            HFONT hOldFont = (HFONT)SelectObject(hdc, m_theme.GlyphFont());
+            HFONT hOldFont = (HFONT)SelectObject(hdc, m_theme.GetFont_Glyph());
 
-            SetTextColor(hdc, m_theme.SecondaryColor());
+            SetTextColor(hdc, m_theme.GetColorRef(Theme::Colors::Text));
             ::DrawText(hdc, L"\xE70D", -1, &rect,
                      DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
@@ -400,7 +403,7 @@ namespace FluentDesign
     void ComboBox::DrawPopupBackground(HWND hWnd, HDC hdcMem, RECT rect)
     {
         // Draw popup background with rounded corners
-        HBRUSH hBgBrush = CreateSolidBrush(m_theme.PressedColorBg());
+        HBRUSH hBgBrush = CreateSolidBrush( m_theme.GetColorRef(Theme::Colors::ComboPressed));
         HRGN hRgn = CreateRoundRectRgn(rect.left, rect.top, rect.right, rect.bottom, 8, 8);
         SelectClipRgn(hdcMem, hRgn);
 
@@ -416,8 +419,10 @@ namespace FluentDesign
         InflateRect(&backgroundRect, m_theme.DpiScale(-4), m_theme.DpiScale(-2));
         if ( itemId == m_hoveredIndex || itemId == m_selectedIndex)
         {
-            HBRUSH hHoverBrush = CreateSolidBrush(m_theme.HoveredColorBg());
-            HPEN hBorderPen = CreatePen(PS_SOLID,  1, m_theme.HoveredColorBg());
+            COLORREF color = (itemId == m_hoveredIndex) ? m_theme.GetColorRef(Theme::Colors::ComboPopupHover)
+                                                        : m_theme.GetColorRef(Theme::Colors::ComboPopupSelected);
+            HBRUSH hHoverBrush = CreateSolidBrush(color);
+            HPEN hBorderPen = CreatePen(PS_SOLID,  1, color);
             HPEN hOldPen = (HPEN)SelectObject(hdcMem, hBorderPen);
             HBRUSH hPrevBrush = (HBRUSH)SelectObject(hdcMem, hHoverBrush);
             RoundRect(hdcMem, backgroundRect.left,
@@ -431,7 +436,7 @@ namespace FluentDesign
         }
         if ( itemId == m_selectedIndex)
         {
-            HBRUSH hGripBrush = CreateSolidBrush(m_theme.DisabledColor());
+            HBRUSH hGripBrush = CreateSolidBrush(m_theme.GetColorRef(Theme::Colors::ComboPopupSelectedMark));
             RECT gripRect = backgroundRect;
             gripRect.left += 1;
             gripRect.right = gripRect.left + m_theme.DpiScale(3);

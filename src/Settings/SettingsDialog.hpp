@@ -9,6 +9,7 @@
 #include "FluentDesign/Theme.hpp"
 #include "FluentDesign/ComboBox.hpp"
 #include "FluentDesign/Toggle.hpp"
+#include "FluentDesign/TextBox.hpp"
 #include "FluentDesign/SettingsLine.hpp"
 
 
@@ -30,10 +31,7 @@ namespace AnyFSE::Settings
 
         std::vector<ControlsGroup> groups;
 
-        int designHeight;
-        void InitGroups();
         void ShowGroup(int groupIdx, bool show);
-        void MoveGroupItem(int id, int original, int offset);
 
     public:
         INT_PTR Show(HINSTANCE hInstance);
@@ -43,6 +41,11 @@ namespace AnyFSE::Settings
             , launcherCombo(m_theme)
             , enterFullscreen(m_theme)
             , customSettings(m_theme)
+            , additionalArguments(m_theme)
+            , processName(m_theme)
+            , title(m_theme)
+            , processNameAlt(m_theme)
+            , titleAlt(m_theme)
         {}
 
     private:
@@ -76,8 +79,15 @@ namespace AnyFSE::Settings
         FluentDesign::ComboBox launcherCombo;
         FluentDesign::Toggle enterFullscreen;
         FluentDesign::Toggle customSettings;
+        FluentDesign::TextBox additionalArguments;
+        FluentDesign::TextBox processName;
+        FluentDesign::TextBox title;
+        FluentDesign::TextBox processNameAlt;
+        FluentDesign::TextBox titleAlt;
 
         std::list<FluentDesign::SettingsLine> settingLines;
+        template <class T>
+        void AddSettingsLine(ULONG &top, const wstring &name, const wstring &desc, T &control, int height, int padding, int contentMargin);
     };
 }
 
