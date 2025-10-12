@@ -143,7 +143,7 @@ namespace AnyFSE::Settings
                 OnBrowseLauncher(hwnd, 0);
                 break;
             case IDOK:
-                OnOk(hwnd);
+                OnOk();
                 EndDialog(hwnd, IDOK);
                 return TRUE;
             case IDCANCEL:
@@ -270,7 +270,18 @@ namespace AnyFSE::Settings
             rect.right - m_theme.DpiScale(Layout_CloseWidth),
             rect.top,
             m_theme.DpiScale(Layout_CloseWidth),
-             m_theme.DpiScale(Layout_ButtonHeight));
+            m_theme.DpiScale(Layout_ButtonHeight));
+
+        buttonClose.OnChanged += [This = this]()
+        {
+            EndDialog(This->m_hDialog, IDCANCEL);
+        };
+
+        buttonOK.OnChanged += [This = this]()
+        {
+            This->OnOk();
+        };
+
 
         buttonClose.SetText(L"Discard and Close");
 
@@ -340,10 +351,12 @@ namespace AnyFSE::Settings
         }
     }
 
-    void SettingsDialog::OnOk(HWND hwnd)
+    void SettingsDialog::OnOk()
     {
-        // Save values from controls
+        // Save settings
+        EndDialog(m_hDialog, IDOK);
     }
+
     void SettingsDialog::OnCustomChanged(HWND hwnd)
     {
         m_isCustom = customSettings.GetCheck();

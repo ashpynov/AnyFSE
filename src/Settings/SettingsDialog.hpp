@@ -80,7 +80,7 @@ namespace AnyFSE::Settings
         void OnInitDialog(HWND hwnd);
         void OnBrowseLauncher(HWND hwnd, int editId);
         void OnLauncherChanged(HWND hwnd);
-        void OnOk(HWND hwnd);
+        void OnOk();
         void OnCustomChanged(HWND hwnd);
         void OnAggressiveChanged(HWND hwnd);
         void UpdateControls();
