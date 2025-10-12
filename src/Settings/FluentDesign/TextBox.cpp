@@ -48,6 +48,8 @@ namespace FluentDesign
         {
             return NULL;
         }
+
+        m_theme.RegisterChild(m_hContainer);
         SetWindowSubclass(m_hContainer, ContainerSubclassProc, 0, (DWORD_PTR)this);
 
         // Create the actual TextBox control
@@ -74,6 +76,7 @@ namespace FluentDesign
         UpdateLayout();
 
         // Subclass the TextBox for custom behavior
+        m_theme.RegisterChild(m_hTextBox);
         SetWindowSubclass(m_hTextBox, TextBoxSubclassProc, 0, (DWORD_PTR)this);
         UpdateTextBoxColors();
 
@@ -341,11 +344,11 @@ namespace FluentDesign
 
         Pen accentPen(accent, 0*m_theme.DpiScaleF(m_borderWidth));
         SolidBrush accentBrush(accent);
-        RoundRect(graphics, accentRect, m_theme.DpiScaleF(m_cornerRadius), accentBrush, accentPen);
+        RoundRect(graphics, accentRect, m_theme.DpiScaleF(m_cornerRadius), &accentBrush, accentPen);
 
         Pen borderPen(border, m_theme.DpiScaleF(m_borderWidth));
         SolidBrush controlBrush(back);
-        RoundRect(graphics, clientRect, m_theme.DpiScaleF(m_cornerRadius), controlBrush, borderPen);
+        RoundRect(graphics, clientRect, m_theme.DpiScaleF(m_cornerRadius), &controlBrush, borderPen);
 
     }
 

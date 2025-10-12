@@ -6,6 +6,7 @@
 #include "Tools/Tools.hpp"
 #include "ComboBox.hpp"
 #include "DoubleBufferedPaint.hpp"
+#include "GdiPlus.hpp"
 
 namespace FluentDesign
 {
@@ -50,6 +51,8 @@ namespace FluentDesign
             m_theme.DpiScale(imageSize), m_theme.DpiScale(imageSize),
             ILC_COLOR32 | ILC_MASK, 3, 1);
 
+
+        m_theme.RegisterChild(hCombo);
         SetWindowSubclass(hCombo, ComboBoxSubclassProc, 0, (DWORD_PTR)this);
         return hCombo;
     }
@@ -105,25 +108,74 @@ namespace FluentDesign
                 This->HandleMouse(hWnd, uMsg);
                 break;
 
-        case WM_PAINT:
-            {
-                FluentDesign::DoubleBuferedPaint paint(hWnd);
+            case WM_GETDLGCODE:
+                // if (This->m_theme.IsKeyboardFocused() && wParam == VK_UP || wParam == VK_DOWN)
+                // {
+                //     return DLGC_WANTARROWS;
+                // }
+                break;
 
-                RECT rect = paint.ClientRect();
-                This->DrawComboBackground(hWnd, paint.MemDC(), rect);
-                rect.right -= This->m_theme.DpiScale(chevronMargin);
-                This->DrawComboItem(hWnd, paint.MemDC(), rect, This->m_selectedIndex);
-                rect.right += This->m_theme.DpiScale(chevronMargin);
-                This->DrawComboChevron(hWnd, paint.MemDC(), rect);
+            case WM_KEYDOWN:
+                if (This->m_theme.IsKeyboardFocused())
+                {
+                    if (wParam == VK_SPACE || wParam == VK_GAMEPAD_A)
+                    {
+                        This->buttonPressed = true;
+                        InvalidateRect(hWnd, NULL, TRUE);
+                        This->ShowPopup();
+                        return 0;
+                    }
+                    // else if (wParam == VK_UP || wParam == VK_GAMEPAD_DPAD_UP)
+                    // {
+                    //     if (This->m_selectedIndex >0 )
+                    //     {
+                    //         This->m_selectedIndex -= 1;
+                    //         InvalidateRect(This->hCombo, NULL, TRUE);
+                    //         This->m_theme.SetKeyboardFocused(This->hCombo);
+                    //         This->OnChanged.Notify();
+                    //         return 0;
+                    //     }
+                    // }
+                    // else if (wParam == VK_DOWN || wParam == VK_GAMEPAD_DPAD_DOWN)
+                    // {
+                    //     if (This->m_selectedIndex < This->comboItems.size() - 1 )
+                    //     {
+                    //         This->m_selectedIndex += 1;
+                    //         InvalidateRect(This->hCombo, NULL, TRUE);
+                    //         This->m_theme.SetKeyboardFocused(This->hCombo);
+                    //         This->OnChanged.Notify();
+                    //         return 0;
+                    //     }
+                    // }
+                }
+                break;
+            case WM_SETFOCUS:
+                if ( This->m_popupVisible )
+                {
+                    SetFocus(This->m_hPopupList);
+                }
+                break;
+
+
+            case WM_PAINT:
+                {
+                    FluentDesign::DoubleBuferedPaint paint(hWnd);
+
+                    RECT rect = paint.ClientRect();
+                    This->DrawComboBackground(hWnd, paint.MemDC(), rect);
+                    rect.right -= This->m_theme.DpiScale(chevronMargin);
+                    This->DrawComboItem(hWnd, paint.MemDC(), rect, This->m_selectedIndex);
+                    rect.right += This->m_theme.DpiScale(chevronMargin);
+                    This->DrawComboChevron(hWnd, paint.MemDC(), rect);
+                }
+                return 0;
+
+            case WM_ERASEBKGND:
+                return 1;
+            case WM_NCDESTROY:
+                RemoveWindowSubclass(hWnd, ComboBoxSubclassProc, uIdSubclass);
+                break;
             }
-            return 0;
-
-        case WM_ERASEBKGND:
-            return 1;
-        case WM_NCDESTROY:
-            RemoveWindowSubclass(hWnd, ComboBoxSubclassProc, uIdSubclass);
-            break;
-        }
 
         // Call original window procedure for default handling
         return DefSubclassProc(hWnd, uMsg, wParam, lParam);
@@ -172,30 +224,24 @@ namespace FluentDesign
             bool enabled = IsWindowEnabled(hWnd);
             bool focused = (GetFocus() == hWnd);
 
-            HBRUSH hBackgroundBrush = CreateSolidBrush(m_theme.GetColorRef(Theme::Colors::Panel));  // TODO use helper
-            FillRect(hdc, &rect, hBackgroundBrush);
-            DeleteObject(hBackgroundBrush);
+            using namespace Gdiplus;
+            Graphics graphics(hdc);
+
+            // Enable anti-aliasing for smooth edges
+            graphics.SetSmoothingMode(SmoothingModeAntiAlias);
 
             // Draw button background
-            COLORREF color =
-                  !enabled          ? m_theme.GetColorRef(Theme::Colors::ComboDisabled)                       // TODO Disabled Color
-                : buttonPressed     ? m_theme.GetColorRef(Theme::Colors::ComboPressed)
-                : buttonMouseOver   ? m_theme.GetColorRef(Theme::Colors::ComboHover)
-                : m_theme.GetColorRef(Theme::Colors::Combo);
+            Color color = m_theme.GetColor(
+                  !enabled          ? Theme::Colors::ComboDisabled                       // TODO Disabled Color
+                : buttonPressed     ? Theme::Colors::ComboPressed
+                : buttonMouseOver   ? Theme::Colors::ComboHover
+                : Theme::Colors::Combo
+            );
 
-            HPEN hBorderPen = CreatePen(PS_SOLID,  1,  m_theme.GetColorRef(Theme::Colors::Combo));
-            HBRUSH hBrush = CreateSolidBrush(color);
-            HPEN hOldPen = (HPEN)SelectObject(hdc, hBorderPen);
-            HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
-
-            RoundRect(hdc, rect.left, rect.top, rect.right, rect.bottom, m_theme.DpiScale(cornerRadius), m_theme.DpiScale(cornerRadius));
-
-            SelectObject(hdc, hOldPen);
-            SelectObject(hdc, hOldBrush);
-
-            DeleteObject(hBorderPen);
-            DeleteObject(hBrush);
-
+            RectF clientRect = FromRECT(rect);
+            Pen pen(m_theme.GetColor(Theme::Colors::Combo), 1.0f);
+            SolidBrush brush(color);
+            Gdiplus::RoundRect(graphics, clientRect, (REAL)m_theme.GetSize_FocusCornerSize(), &brush, pen);
             return;
     }
     void ComboBox::DrawComboItem(HWND hWnd, HDC hdc, RECT rect, int itemId)
@@ -256,15 +302,15 @@ namespace FluentDesign
 
         // Create popup listbox window
         m_hPopupList = CreateWindowEx(
-            WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
+            WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
             L"LISTBOX",
             L"",
-            WS_POPUP | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | CS_DROPSHADOW,
+            WS_CHILD | WS_POPUP | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | CS_DROPSHADOW | WS_TABSTOP,
             buttonRect.left,
             buttonRect.bottom + 2,
             popupWidth,
             popupHeight,
-            GetParent(hCombo),
+            hCombo,//GetParent(hCombo),
             NULL,
             GetModuleHandle(NULL),
             NULL);
@@ -277,7 +323,12 @@ namespace FluentDesign
         {
             int lbIndex = (int)SendMessage(m_hPopupList, LB_ADDSTRING, 0, (LPARAM)comboItems[i].name.c_str());
             SendMessage(m_hPopupList, LB_SETITEMDATA, lbIndex, (LPARAM)i); // Store index to our comboItems
+            if (lbIndex == m_selectedIndex)
+            {
+                SendMessage(m_hPopupList, LB_SETCURSEL, m_selectedIndex, 0);  // ListBox
+            }
         }
+        m_originalIndex = m_selectedIndex;
 
         // Subclass the popup listbox
         SetWindowSubclass(m_hPopupList, PopupListSubclassProc, 0, (DWORD_PTR)this);
@@ -285,10 +336,11 @@ namespace FluentDesign
         // Set item height
         SendMessage(m_hPopupList, LB_SETITEMHEIGHT, 0, (LPARAM)m_theme.DpiScale(itemHeight)); // Match your DrawComboItem height
 
-        ShowWindow(m_hPopupList, SW_SHOWNOACTIVATE);
+        ShowWindow(m_hPopupList, SW_SHOW);
         m_popupVisible = true;
 
         // Capture mouse to close when clicking outside
+        SetFocus(m_hPopupList);
         SetCapture(m_hPopupList);
     }
 
@@ -301,6 +353,7 @@ namespace FluentDesign
             m_hPopupList = NULL;
             m_popupVisible = false;
             m_hoveredIndex = -1;
+            SetFocus(hCombo);
             InvalidateRect(hCombo, NULL, TRUE); // Redraw main button
         }
     }
@@ -327,6 +380,13 @@ namespace FluentDesign
                 SendMessage(hWnd, LB_GETITEMRECT, i, (LPARAM)&itemRect);
 
                 This->DrawPopupItem(hWnd, paint.MemDC(), itemRect, i);
+            }
+            if (This->m_theme.IsKeyboardFocused())
+            {
+                RECT itemRect;
+                SendMessage(hWnd, LB_GETITEMRECT, This->m_selectedIndex, (LPARAM)&itemRect);
+                InflateRect(&itemRect, This->m_theme.DpiScale(-leftMargin/4), This->m_theme.DpiScale(-2));
+                This->m_theme.DrawFocusFrame(paint.MemDC(), itemRect, 0);
             }
         }
             return 0;
@@ -362,10 +422,12 @@ namespace FluentDesign
             else
             {
                 // Clicked outside items, hide popup
+                This->m_selectedIndex = This->m_originalIndex;
                 This->HidePopup();
             }
+            This->m_theme.SetKeyboardFocused(NULL);
         }
-            return 0;
+        return 0;
 
         case WM_CAPTURECHANGED:
             // If we lose capture, hide the popup
@@ -378,25 +440,39 @@ namespace FluentDesign
                 SetCapture(hWnd);
             }
             break;
-
         case WM_KEYDOWN:
-            if (wParam == VK_ESCAPE)
+            if (wParam == VK_ESCAPE || wParam == VK_GAMEPAD_B)
             {
+                This->m_selectedIndex = This->m_originalIndex;
                 This->HidePopup();
                 return 0;
             }
-            else if (wParam == VK_RETURN)
+            else if (wParam == VK_RETURN || wParam == VK_SPACE || wParam == VK_GAMEPAD_A)
             {
-                int selIndex = (int)SendMessage(hWnd, LB_GETCURSEL, 0, 0);
-                if (selIndex >= 0)
-                {
-                    int itemIndex = (int)SendMessage(hWnd, LB_GETITEMDATA, selIndex, 0);
-                    This->HandleListClick(itemIndex);
-                    This->HidePopup();
-                }
+                This->HandleListClick(This->m_selectedIndex);
+                This->HidePopup();
                 return 0;
             }
-            break;
+            else if (wParam == VK_UP || wParam == VK_GAMEPAD_DPAD_UP)
+            {
+                if (This->m_selectedIndex >0 )
+                {
+                    This->m_selectedIndex -= 1;
+                    InvalidateRect(This->m_hPopupList, NULL, TRUE);
+                    InvalidateRect(This->hCombo, NULL, TRUE);
+                }
+            }
+            else if (wParam == VK_DOWN || wParam == VK_GAMEPAD_DPAD_DOWN)
+            {
+                if (This->m_selectedIndex < This->comboItems.size() - 1 )
+                {
+                    This->m_selectedIndex += 1;
+                    InvalidateRect(This->m_hPopupList, NULL, TRUE);
+                    InvalidateRect(This->hCombo, NULL, TRUE);
+                }
+            }
+            This->m_theme.SetKeyboardFocused(This->m_hPopupList);
+            return 0;
 
         case WM_DESTROY:
             RemoveWindowSubclass(hWnd, PopupListSubclassProc, uIdSubclass);
@@ -438,6 +514,7 @@ namespace FluentDesign
         {
             COLORREF color = (itemId == m_hoveredIndex) ? m_theme.GetColorRef(Theme::Colors::ComboPopupHover)
                                                         : m_theme.GetColorRef(Theme::Colors::ComboPopupSelected);
+
             HBRUSH hHoverBrush = CreateSolidBrush(color);
             HPEN hBorderPen = CreatePen(PS_SOLID,  1, color);
             HPEN hOldPen = (HPEN)SelectObject(hdcMem, hBorderPen);

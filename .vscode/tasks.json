@@ -22,7 +22,7 @@
                 "AnyFSE.vcxproj",
                 "-property:Configuration=Debug",
                 "-property:Platform=x64",
-                "-target:Clean;Build",
+                "-target:Build"
             ],
             "problemMatcher": [
                 "$msCompile"

@@ -1,5 +1,6 @@
 #include "Theme.hpp"
-#include <gdiplus.h>
+#include "GdiPlus.hpp"
+#include "Logging/LogManager.hpp"
 #include <dwmapi.h>
 #include <commctrl.h>
 #pragma comment(lib, "dwmapi.lib")
@@ -7,12 +8,13 @@
 
 namespace FluentDesign
 {
+    static Logger log = LogManager::GetLogger("Theme");
+
     Theme::Theme(HWND hParentWnd)
         : m_hParentWnd(NULL)
         , m_dpi(96)
-        , m_hPrimaryFont(NULL)
-        , m_hSecondaryFont(NULL)
         , m_isDark(true)
+        , m_isKeyboardFocus(false)
     {
         Gdiplus::GdiplusStartupInput gdiplusStartupInput;
         Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
@@ -29,6 +31,8 @@ namespace FluentDesign
 
     void Theme::Attach(HWND hHostWnd)
     {
+        m_lastFocused = GetFocus();
+        m_isKeyboardFocus = false;
         m_isDark = true;
         m_hParentWnd = hHostWnd;
         m_dpi = GetDpiForWindow(m_hParentWnd);
@@ -43,6 +47,98 @@ namespace FluentDesign
 
         SetWindowSubclass(hHostWnd, DialogSubclassProc, 0, (DWORD_PTR)this);
 
+    }
+
+    void Theme::RegisterChild(HWND hChild)
+    {
+        childs.push_back(hChild);
+        SetWindowSubclass(hChild, ControlSublassProc, 0, (DWORD_PTR)this);
+        SetWindowSubclass(GetParent(hChild), ControlParentSublassProc, 0, (DWORD_PTR)this);
+    }
+
+    static void Invalidate(HWND hwnd, BOOL bErase = FALSE)
+    {
+        InvalidateRect(GetParent(hwnd), NULL, bErase);
+        InvalidateRect(hwnd, NULL, bErase);
+    }
+
+    LRESULT CALLBACK Theme::ControlParentSublassProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+    {
+        Theme *This = reinterpret_cast<Theme *>(dwRefData);
+
+        switch (msg)
+        {
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONDBLCLK:
+            {
+                if (This->m_isKeyboardFocus)
+                {
+                    This->m_isKeyboardFocus = false;
+                    for( auto &c : This->childs)
+                    {
+                        Invalidate(c, FALSE);
+                    }
+                }
+                break;
+            }
+        case WM_DESTROY:
+            RemoveWindowSubclass(hWnd, ControlParentSublassProc, uIdSubclass);
+            break;
+        }
+        return DefSubclassProc(hWnd, msg, wParam, lParam);
+    }
+
+    LRESULT CALLBACK Theme::ControlSublassProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+    {
+        Theme *This = reinterpret_cast<Theme *>(dwRefData);
+
+        switch (msg)
+        {
+        case WM_SETFOCUS:
+            {
+                HWND last = This->m_lastFocused;
+                HWND next = hWnd;
+                HWND prev = (HWND) wParam;
+
+                if (last && last != next && !This->m_isKeyboardFocus)
+                {
+                    This->m_isKeyboardFocus = true;
+                    SetFocus(last);
+                    Invalidate(last);
+                }
+                else
+                if (last && last != next)
+                {
+                    This->m_isKeyboardFocus = true;
+                    This->m_lastFocused = next;
+                }
+                else if (GetParent(next) != prev || !last)
+                {
+                    This->m_lastFocused = next;
+                }
+                Invalidate(next);
+            }
+            break;
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONDBLCLK:
+            {
+                This->m_lastFocused = hWnd;
+                This->m_isKeyboardFocus = false;
+                SetFocus(hWnd);
+                Invalidate(hWnd);
+                return 0;
+            }
+            // fall down
+        case WM_KILLFOCUS:
+            {
+                Invalidate(hWnd, TRUE);
+            }
+            break;
+        case WM_DESTROY:
+            RemoveWindowSubclass(hWnd, ControlSublassProc, uIdSubclass);
+            break;
+        }
+        return DefSubclassProc(hWnd, msg, wParam, lParam);
     }
 
     LRESULT CALLBACK Theme::DialogSubclassProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
@@ -63,6 +159,25 @@ namespace FluentDesign
                 static HBRUSH hBlackBrush = CreateSolidBrush(This->GetColorRef(FluentDesign::Theme::Colors::Dialog));
                 return (LRESULT)hBlackBrush;
             }
+            case WM_ERASEBKGND:
+            {
+                HWND child = (HWND)lParam;
+                if(child)
+                {
+
+                    RECT childRect;
+                    GetClientRect(child, &childRect);
+                    HBRUSH hBrush = CreateSolidBrush(This->GetColorRef(Theme::Colors::Dialog));
+                    FillRect((HDC)wParam, &childRect, hBrush);
+                    DeleteObject(hBrush);
+
+                    if ( child == GetFocus())
+                    {
+                        This->DrawChildFocus((HDC)wParam, child, child);
+                    }
+                }
+            }
+            return 1;
             case WM_DESTROY:
                 RemoveWindowSubclass(hWnd, DialogSubclassProc, uIdSubclass);
                 break;
@@ -70,6 +185,20 @@ namespace FluentDesign
         return DefSubclassProc(hWnd, msg, wParam, lParam);
     }
 
+    bool Theme::SetKeyboardFocused(HWND hwnd)
+    {
+        if (hwnd && !m_isKeyboardFocus)
+        {
+            m_isKeyboardFocus = true;
+            Invalidate(hwnd, FALSE);
+        }
+        else if (!hwnd && m_isKeyboardFocus)
+        {
+            m_isKeyboardFocus = false;
+            Invalidate(hwnd, FALSE);
+        }
+        return false;
+    }
 
     Theme::~Theme()
     {
@@ -77,6 +206,64 @@ namespace FluentDesign
         FreeFonts();
         Gdiplus::GdiplusShutdown(gdiplusToken);
     };
+
+    float Theme::FocusOffsetByWndClass(HWND hWnd)
+    {
+        WCHAR className[MAX_PATH + 1];
+        GetClassNameW(hWnd, className, MAX_PATH);
+        if (!_wcsicmp(className, L"STATIC") || !_wcsicmp(className, L"EDIT"))
+        {
+            return -1;
+        }
+        else if (!_wcsicmp(className, L"BUTTON"))
+        {
+            WCHAR name[MAX_PATH + 1];
+            GetWindowTextW(hWnd, name, MAX_PATH);
+            if (!_wcsicmp(name, L"TOGGLE"))
+            {
+                return DpiScaleF(m_focusToggleMargins);
+            }
+        }
+
+        return (float)GetSize_FocusMargins();
+    }
+
+    void Theme::DrawFocusFrame(HDC hdc, const RECT &clientRect, float offset)
+    {
+        if (!m_isKeyboardFocus)
+            return;
+
+        using namespace Gdiplus;
+        Graphics graphics(hdc);
+
+        // Enable anti-aliasing for smooth edges
+        graphics.SetSmoothingMode(SmoothingModeAntiAlias);
+
+        RectF focusRect = FromRECT(clientRect);
+        focusRect.Inflate(offset, offset);
+
+        Pen borderPen(GetColor(FluentDesign::Theme::Colors::FocusFrame), (REAL)GetSize_FocusWidth());
+
+        // For rounded rectangles in GDI+, we need to use GraphicsPath
+        Gdiplus::RoundRect(graphics, focusRect, (REAL)GetSize_FocusCornerSize() + offset, nullptr, borderPen);
+
+        log.Info("Focus frame");
+    }
+
+    void Theme::DrawChildFocus(HDC hdc, HWND parent, HWND child)
+    {
+        if (!child || !m_isKeyboardFocus || GetFocus() != child) return;
+
+        float offset = FocusOffsetByWndClass(child);
+        if (offset < 0 ) return;
+
+        RECT clientRect;
+        GetClientRect(child, &clientRect);
+        MapWindowPoints(child, parent, (LPPOINT)&clientRect, 2);
+
+        DrawFocusFrame(hdc, clientRect, offset);
+    }
+
 
     DWORD Theme::GetGrey(BYTE lumen)
     {
@@ -89,6 +276,8 @@ namespace FluentDesign
             m_colors[Text] = GetGrey(255);
             m_colors[TextSecondary] = GetGrey(200);
             m_colors[TextDisabled] = GetGrey(128);
+
+            m_colors[FocusFrame] = GetGrey(200);
 
             m_colors[Panel] = GetGrey(43);
             m_colors[PanelHover] = GetGrey(50);
@@ -135,7 +324,6 @@ namespace FluentDesign
             m_colors[ButtonBorder] = GetGrey(63);
             m_colors[ButtonBorderHover] = GetGrey(63);
             m_colors[ButtonBorderPressed] = GetGrey(58);
-            m_colors[Max] = GetGrey(20);
         }
     }
 

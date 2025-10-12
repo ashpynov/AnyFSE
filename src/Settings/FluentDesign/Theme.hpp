@@ -10,9 +10,11 @@ namespace FluentDesign
     public:
         enum Colors
         {
-            Text,
+            Text = 0 ,
             TextSecondary,
             TextDisabled,
+
+            FocusFrame,
 
             Panel,
             PanelHover,
@@ -74,13 +76,21 @@ namespace FluentDesign
         HFONT m_hTitleFont;
         HFONT m_hGlyphNormalFont;
 
-        COLORREF m_colors[Colors::Max];
+        COLORREF m_colors[Colors::Max + 1];
 
         static const int m_primarySize = 14;
         static const int m_secondarySize = 11;
         static const int m_glyphSize = 10;
         static const int m_titleSize = 28;
         static const int m_cornerSize = 8;
+        static const int m_focusWidth = 2;
+        static const int m_focusMargins = 1;
+        static const int m_focusToggleMargins = 8;
+        static const int m_focusCornerSize = 10;
+
+        bool m_isKeyboardFocus;
+        HWND m_lastFocused;
+        std::list<HWND> childs;
 
         DWORD GetGrey(BYTE lumen);
 
@@ -88,12 +98,29 @@ namespace FluentDesign
         void CreateFonts();
         void FreeFonts();
 
-        static  LRESULT CALLBACK DialogSubclassProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+        static LRESULT CALLBACK DialogSubclassProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+        static LRESULT ControlParentSublassProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+        static LRESULT ControlSublassProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
     public:
         Theme(HWND hParentWnd = NULL);
         void Attach(HWND hParentWnd);
+
+        void RegisterChild(HWND hChild);
+
+        bool IsKeyboardFocused()
+        {
+            return m_isKeyboardFocus;
+        }
+        bool SetKeyboardFocused(HWND hwnd);
+
         ~Theme();
+
+        float FocusOffsetByWndClass(HWND hwnd);
+
+        void DrawFocusFrame(HDC hdc, const RECT &clientRect, float offset);
+
+        void DrawChildFocus(HDC hdc, HWND parent, HWND child);
 
         Event OnDPIChanged;
 
@@ -120,5 +147,10 @@ namespace FluentDesign
         const int GetSize_Glyph() { return DpiScale(m_glyphSize); }
         const int GetSize_Title() { return DpiScale(m_titleSize); }
         const int GetSize_Corner() { return DpiScale(m_cornerSize); }
+
+        const int GetSize_FocusWidth() { return DpiScale(m_focusWidth); }
+        const int GetSize_FocusCornerSize() { return DpiScale(m_focusCornerSize); }
+        const int GetSize_FocusMargins() { return DpiScale(m_focusMargins); }
     };
+
 }

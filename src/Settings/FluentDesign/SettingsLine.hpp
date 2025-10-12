@@ -36,6 +36,7 @@ namespace FluentDesign
 
         bool m_enabled;
         bool m_hovered;
+        bool m_childFocused;
 
         State m_state;
 
@@ -116,9 +117,6 @@ namespace FluentDesign
         void DrawBackground(HDC hdc, const RECT &rect);
         void DrawText(HDC hdc);
         void DrawChevron(HDC hdc);
-        void UpdateColors();
-        void CreateFonts();
-        void UpdateBrushes();
 
         // Layout management
         void UpdateLayout();

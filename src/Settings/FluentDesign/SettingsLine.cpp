@@ -24,6 +24,7 @@ namespace FluentDesign
         , linePadding(4)
         , leftMargin(16)
         , m_state(State::Normal)
+        , m_childFocused(false)
     {
     }
 
@@ -102,7 +103,7 @@ namespace FluentDesign
             0,
             SETTINGS_LINE_CLASS,
             L"",
-            WS_VISIBLE | WS_CHILD | WS_CLIPCHILDREN,
+            WS_VISIBLE | WS_CHILD | WS_CLIPCHILDREN | WS_TABSTOP,
             m_left, m_top, m_width, m_height,
             m_hParent,
             NULL,
@@ -178,13 +179,21 @@ namespace FluentDesign
                     RECT childRect;
                     GetClientRect((HWND)lParam, &childRect);
                     DrawBackground((HDC)wParam, childRect);
+                    if (GetFocus() == m_hChildControl)
+                    {
+                        m_theme.DrawChildFocus((HDC)wParam, m_hChildControl, m_hChildControl);
+                    }
                 }
             }
             return 1; // We handle background in WM_PAINT
 
-        case WM_COMMAND:
-            return OnCommand(m_hChildControl, message, wParam, lParam);
+        case WM_SETFOCUS:
+            {
+                SetFocus(m_hChildControl);
+                Invalidate();
+            }
             break;
+
         case WM_DRAWITEM:
             return OnDrawItem(m_hChildControl, (LPDRAWITEMSTRUCT)lParam);
 
@@ -220,6 +229,11 @@ namespace FluentDesign
         if (m_state != Normal)
         {
             DrawChevron(hdcMem);
+        }
+
+        if (GetFocus() == m_hChildControl)
+        {
+            m_theme.DrawChildFocus(hdcMem, m_hWnd, m_hChildControl);
         }
 
         // Copy to screen
@@ -371,7 +385,10 @@ namespace FluentDesign
         m_enabled = enabled;
         if (m_hChildControl)
         {
+            SendMessage(m_hChildControl, WM_SETREDRAW, FALSE, 0);
             EnableWindow(m_hChildControl, enabled);
+            SendMessage(m_hChildControl, WM_SETREDRAW, TRUE, 0);
+
         }
         Invalidate();
     }
@@ -384,6 +401,8 @@ namespace FluentDesign
             SetState(m_state == State::Closed ?  State::Opened : State::Closed);
             OnChanged.Notify();
         }
+        m_childFocused = false;
+        Invalidate();
     }
 
     void SettingsLine::UpdateLayout()

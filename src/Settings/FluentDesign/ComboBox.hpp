@@ -40,6 +40,7 @@ namespace FluentDesign
         HWND m_hPopupList;
         bool m_popupVisible;
         int m_selectedIndex;
+        int m_originalIndex;
         int m_hoveredIndex;
 
         static LRESULT CALLBACK ComboBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,

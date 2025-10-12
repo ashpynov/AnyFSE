@@ -23,6 +23,32 @@ namespace AnyFSE::Settings
 {
     class SettingsDialog
     {
+        static const int Layout_OKWidth = 100;
+        static const int Layout_CloseWidth = 150;
+
+        static const int Layout_BrowseWidth = 130;
+        static const int Layout_BrowseHeight = 32;
+
+        static const int Layout_MarginLeft = 32;
+        static const int Layout_MarginTop = 60;
+        static const int Layout_MarginRight = 32;
+        static const int Layout_MarginBottom = 32;
+        static const int Layout_ButtonPadding = 16;
+        static const int Layout_ButtonHeight = 32;
+
+        static const int Layout_LineHeight = 67;
+        static const int Layout_LinePadding = 8;
+        static const int Layout_LineHeightSmall = 45;
+        static const int Layout_LinePaddingSmall = 1;
+        static const int Layout_LineSmallMargin = 40;
+
+        static const int Layout_CustomSettingsWidth = 220;
+        static const int Layout_Layout_CustomSettingsHeight = 40;
+
+        static const int Layout_LauncherComboWidth = 280;
+        static const int Layout_LauncherBrowsePadding = -10;
+        static const int Layout_LauncherBrowseLineHeight = 57;
+
         void ShowGroup(int groupIdx, bool show);
 
     public:
@@ -84,11 +110,16 @@ namespace AnyFSE::Settings
         FluentDesign::Button buttonOK;
         FluentDesign::Button buttonClose;
 
+        HWND m_hButtonOk;
+        HWND m_hButtonClose;
+
         std::list<FluentDesign::SettingsLine> settingLines;
         template <class T>
-        FluentDesign::SettingsLine& AddSettingsLine(ULONG &top, const wstring &name, const wstring &desc,
-             T &control, int height, int padding, int contentMargin,
-             int contentWidth = 260, int contentHeight = 40);
+        FluentDesign::SettingsLine& AddSettingsLine(
+            ULONG &top, const wstring &name, const wstring &desc,
+            T &control, int height, int padding, int contentMargin,
+            int contentWidth = Layout_CustomSettingsWidth,
+            int contentHeight = Layout_Layout_CustomSettingsHeight);
 
         FluentDesign::SettingsLine * fseOnStartup;
         FluentDesign::SettingsLine * customSettingsGroup;

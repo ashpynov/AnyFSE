@@ -3,7 +3,7 @@
 
 namespace Gdiplus
 {
-    static void RoundRect(Graphics& graphics, const RectF& rect, REAL cornerRadius, const Brush &brush, const Pen &pen)
+    static void RoundRect(Graphics& graphics, const RectF& rect, REAL cornerRadius, const Brush *brush, const Pen &pen)
     {
         REAL radius = min(min(rect.Height, rect.Width), cornerRadius);
         GraphicsPath path;
@@ -14,7 +14,14 @@ namespace Gdiplus
         path.AddArc(rect.X, rect.Y, radius, radius, 180, 90);
         path.CloseFigure();
 
-        graphics.FillPath(&brush, &path);
+        if (brush) graphics.FillPath(brush, &path);
         graphics.DrawPath(&pen, &path);
+    }
+
+    static RectF FromRECT(const RECT &rect)
+    {
+        return RectF((REAL)rect.left, (REAL)rect.top,
+                    (REAL)(rect.right - rect.left),
+                    (REAL)(rect.bottom - rect.top));
     }
 }

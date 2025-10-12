@@ -98,7 +98,7 @@ namespace AnyFSE::Settings
                 FillRect(paint.MemDC(), &r, back);
                 DeleteObject(back);
 
-                r.left += m_theme.DpiScale(32);
+                r.left += m_theme.DpiScale(Layout_MarginLeft);
 
                 WCHAR *text1 = L"Gaming > ";
                 WCHAR *text2 = L"Any Full Screen Experience";
@@ -112,6 +112,9 @@ namespace AnyFSE::Settings
                 r.right = paint.ClientRect().right;
                 SetTextColor(paint.MemDC(), m_theme.GetColorRef(FluentDesign::Theme::Colors::Text));
                 ::DrawText(paint.MemDC(), text2, -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
+
+                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_hButtonOk);
+                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_hButtonClose);
 
                 SelectObject(paint.MemDC(), oldFont);
             }
@@ -160,10 +163,15 @@ namespace AnyFSE::Settings
     {
         RECT rect;
         GetClientRect(m_hDialog, &rect);
-        int width = rect.right - rect.left - m_theme.DpiScale(64);
+        int width = rect.right - rect.left
+            - m_theme.DpiScale(Layout_MarginLeft)
+            - m_theme.DpiScale(Layout_MarginRight);
 
         settingLines.emplace_back(
-            m_theme, m_hDialog, name, desc, m_theme.DpiScale(32), top, width, m_theme.DpiScale(height),
+            m_theme, m_hDialog, name, desc,
+                m_theme.DpiScale(Layout_MarginLeft),
+                top, width,
+                m_theme.DpiScale(height),
             [&](HWND parent) { return control.Create(parent, 0, 0,
                 m_theme.DpiScale(contentWidth), m_theme.DpiScale(contentHeight)); });
 
@@ -178,61 +186,93 @@ namespace AnyFSE::Settings
 
     void SettingsDialog::OnInitDialog(HWND hwnd)
     {
-        ULONG top = m_theme.DpiScale(60);
+        ULONG top = m_theme.DpiScale(Layout_MarginTop);
 
         AddSettingsLine(top,
             L"Choose home app",
             L"Choose home application for full screen expirience",
             launcherCombo,
-            67, -12, 0, 280 );
+            Layout_LineHeight, Layout_LauncherBrowsePadding, 0,
+            Layout_LauncherComboWidth );
 
         AddSettingsLine(top,
             L"",
             L"",
             browse,
-            57, 8, 0, 130, 32);
+            Layout_LauncherBrowseLineHeight, Layout_LinePadding, 0,
+            Layout_BrowseWidth, Layout_BrowseHeight);
 
         fseOnStartup = &AddSettingsLine(top,
             L"Enter full screen expirience on startup",
             L"",
             enterFullscreen,
-            67, 8, 0);
+            Layout_LineHeight, Layout_LinePadding, 0);
 
         customSettingsGroup = &AddSettingsLine(top,
             L"Use custom settings",
             L"Change monitoring and startups settings for selected home application",
             customSettings,
-            67, 2, 0);
+            Layout_LineHeight, Layout_LinePaddingSmall, 0);
 
         customSettingsGroup->AddGroupItem(&AddSettingsLine(top,
             L"Additional arguments",
             L"Command line arguments passed to application",
             additionalArguments,
-            48, 2, 40));
+            Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
 
         customSettingsGroup->AddGroupItem(&AddSettingsLine(top,
             L"Primary process name",
             L"Name of home application process",
             processName,
-            48, 2, 40));
+            Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
 
         customSettingsGroup->AddGroupItem(&AddSettingsLine(top,
             L"Primary window title",
             L"Title of app window when it have been activated",
             title,
-            48, 2, 40));
+            Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
 
         customSettingsGroup->AddGroupItem(&AddSettingsLine(top,
             L"Secondary process name",
             L"Name of app process for alternative mode",
             processNameAlt,
-            48, 2, 40));
+            Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
 
         customSettingsGroup->AddGroupItem(&AddSettingsLine(top,
             L"Secondary window title",
             L"Title of app window when it alternative mode have been activated",
             titleAlt,
-            48, 2, 40));
+            Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
+
+        RECT rect;
+
+
+
+        GetClientRect(m_hDialog, &rect);
+        rect.top = rect.bottom
+            - m_theme.DpiScale(Layout_MarginBottom)
+            - m_theme.DpiScale(Layout_ButtonHeight);
+
+        rect.right -= m_theme.DpiScale(Layout_MarginRight);
+
+        m_hButtonOk = buttonOK.Create(m_hDialog,
+            rect.right
+                - m_theme.DpiScale(Layout_OKWidth)
+                - m_theme.DpiScale(Layout_ButtonPadding)
+                - m_theme.DpiScale(Layout_CloseWidth),
+            rect.top,
+            m_theme.DpiScale(Layout_OKWidth),
+            m_theme.DpiScale(Layout_ButtonHeight));
+
+        buttonOK.SetText(L"Save");
+
+        m_hButtonClose = buttonClose.Create(m_hDialog,
+            rect.right - m_theme.DpiScale(Layout_CloseWidth),
+            rect.top,
+            m_theme.DpiScale(Layout_CloseWidth),
+             m_theme.DpiScale(Layout_ButtonHeight));
+
+        buttonClose.SetText(L"Discard and Close");
 
         launcherCombo.OnChanged += [This = this]()
         {

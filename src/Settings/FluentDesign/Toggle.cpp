@@ -42,12 +42,14 @@ namespace FluentDesign
     {
         hToggle = CreateWindow(
             L"BUTTON",
-            L"",
+            L"TOGGLE",
             WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
             x, y, m_theme.DpiScale(itemWidth + textWidth), m_theme.DpiScale(itemHeight+1),
             hParent, NULL, GetModuleHandle(NULL), NULL);
 
+        m_theme.RegisterChild(hToggle);
         SetWindowSubclass(hToggle, ToggleSubclassProc, 0, (DWORD_PTR)this);
+
         return hToggle;
     }
 
@@ -72,14 +74,23 @@ namespace FluentDesign
         Toggle *This = reinterpret_cast<Toggle *>(dwRefData);
         switch (uMsg)
         {
-            case WM_MOUSEMOVE:
-            case WM_MOUSELEAVE:
-            case WM_LBUTTONDOWN:
-            case WM_LBUTTONUP:
+        case WM_MOUSEMOVE:
+        case WM_MOUSELEAVE:
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:
+        case WM_LBUTTONDBLCLK:
+            This->HandleMouse(hWnd, uMsg, lParam);
+            break;
+
+        case WM_KEYDOWN:
+            if ( This->m_theme.IsKeyboardFocused() && wParam == VK_SPACE || wParam == VK_GAMEPAD_A)
             {
-                This->HandleMouse(hWnd, uMsg, lParam);
+                This->isChecked = !This->isChecked;
+                InvalidateRect(hWnd, NULL, TRUE);
+                This->OnChanged.Notify();
             }
             break;
+
         case WM_PAINT:
             {
                 FluentDesign::DoubleBuferedPaint paint(hWnd);
@@ -88,7 +99,6 @@ namespace FluentDesign
                 This->DrawButton(hWnd, paint.MemDC(), rect);
             }
             return 0;
-
         case WM_ERASEBKGND:
             return 1;
         case WM_NCDESTROY:
@@ -146,14 +156,17 @@ namespace FluentDesign
             break;
 
         case WM_LBUTTONUP:
-            buttonPressed = false;
-            ReleaseCapture();
-            int treshhold = m_theme.DpiScale(itemWidth - itemHeight - 1) / 2;
-            if (pressedPath < treshhold || abs(thumbShift) > treshhold)
+            if (buttonPressed)
             {
-                isChecked = !isChecked;
-                InvalidateRect(hWnd, NULL, TRUE);
-                OnChanged.Notify();
+                buttonPressed = false;
+                ReleaseCapture();
+                int treshhold = m_theme.DpiScale(itemWidth - itemHeight - 1) / 2;
+                if (pressedPath < treshhold || abs(thumbShift) > treshhold)
+                {
+                    isChecked = !isChecked;
+                    InvalidateRect(hWnd, NULL, TRUE);
+                    OnChanged.Notify();
+                }
             }
 
             break;
@@ -190,7 +203,7 @@ namespace FluentDesign
         // Determine colors based on state
         Color borderColor(m_theme.GetColor(
             isChecked ? ( enabled ? Theme::Colors::ToggleBorderOn : Theme::Colors::ToggleBorderOnDisabled)
-                      : ( enabled ? Theme::Colors::ToggleBorderOff : Theme::Colors::ToggleBorderOffDisabled)
+                        : ( enabled ? Theme::Colors::ToggleBorderOff : Theme::Colors::ToggleBorderOffDisabled)
         ));
 
         Color backColor(m_theme.GetColor(
@@ -214,7 +227,7 @@ namespace FluentDesign
         SolidBrush backBrush(backColor);
 
         // For rounded rectangles in GDI+, we need to use GraphicsPath
-        Gdiplus::RoundRect(graphics, br, m_theme.DpiScaleF(itemHeight), backBrush, borderPen);
+        Gdiplus::RoundRect(graphics, br, m_theme.DpiScaleF(itemHeight), &backBrush, borderPen);
 
         // Calculate thumb rectangle
         RectF tr = br;

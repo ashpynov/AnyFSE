@@ -45,10 +45,11 @@ namespace FluentDesign
         hButton = CreateWindow(
             L"BUTTON",
             L"",
-            WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+            WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP,
             x, y, width, height,
             hParent, NULL, GetModuleHandle(NULL), NULL);
 
+        m_theme.RegisterChild(hButton);
         SetWindowSubclass(hButton, ButtonSubclassProc, 0, (DWORD_PTR)this);
         return hButton;
     }
@@ -76,6 +77,12 @@ namespace FluentDesign
                 This->HandleMouse(hWnd, uMsg, lParam);
                 break;
 
+            case WM_KEYDOWN:
+                if (This->m_theme.IsKeyboardFocused() && wParam == VK_SPACE || wParam == VK_GAMEPAD_A)
+                {
+                    This->OnChanged.Notify();
+                }
+                break;
         case WM_PAINT:
             {
                 FluentDesign::DoubleBuferedPaint paint(hWnd);
@@ -187,7 +194,7 @@ namespace FluentDesign
         SolidBrush backBrush(backColor);
 
         // For rounded rectangles in GDI+, we need to use GraphicsPath
-        Gdiplus::RoundRect(graphics, br, m_theme.DpiScaleF(m_cornerRadius), backBrush, borderPen);
+        Gdiplus::RoundRect(graphics, br, m_theme.DpiScaleF(m_cornerRadius), &backBrush, borderPen);
 
         // Create the font and brush
         Font font(hdc, m_theme.GetFont_Text());

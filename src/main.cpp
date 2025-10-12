@@ -91,8 +91,14 @@ int WINAPI WinMain(HINSTANCE hInstance,
     AnyFSE::Logging::LogManager::Initialize("AnyFSE", LogLevel::Trace, "C:\\Tools\\AnyFSE.logs");
     Logger log = LogManager::GetLogger("Main");
     log.Info("Application is started (hInstance=%08x)", hInstance);
-
-    Config::Load();
+    try
+    {
+        Config::Load();
+    }
+    catch (std::exception ex)
+    {
+        log.Error(ex, "Fail to load config:");
+    }
 
     LPCTSTR className = _T("AnyFSE");
 
