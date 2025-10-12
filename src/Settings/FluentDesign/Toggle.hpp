@@ -23,7 +23,7 @@ namespace FluentDesign
         bool buttonMouseOver;
         int  pressedPos;
         int  thumbShift;
-        int pressedPath;
+        int  pressedPath;
 
         bool isChecked;
 

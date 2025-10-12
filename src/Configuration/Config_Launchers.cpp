@@ -64,21 +64,29 @@ namespace AnyFSE::Configuration
 
     wstring Config::GetCurrentLauncher()
     {
-        wstring launcher = Registry::ReadString(Config::root, L"LauncherPath", L"C:\\Tools\\Playnite\\Playnite.FullscreenApp.exe");
-        if (launcher.empty())
+        wstring launcher = Registry::ReadString(Config::root, L"LauncherPath");
+
+        if (!launcher.empty())
         {
-            list<wstring> launchers;
-            if (FindLaunchers(launchers))
+            return launcher;
+        }
+
+        if (IsXboxConfigured())
+        {
+            list<wstring> xbox;
+            FindXbox(xbox);
+            if (xbox.size())
             {
-                return launchers.front();
+                return xbox.front();
             }
         }
-        return launcher;
+        return L"";
     }
 
     bool Config::FindLaunchers(list<wstring>& found)
     {
         size_t existed = found.size();
+        found.push_back(L"");
         FindLocal(found);
         FindInstalledLaunchers(found);
         return found.size() > existed;
@@ -152,6 +160,14 @@ namespace AnyFSE::Configuration
     bool Config::GetLauncherDefaults(const wstring& path, LauncherConfig& out)
     {
         out = LauncherConfig();
+
+        if (path.empty())
+        {
+            out.Type = None;
+            out.Name = L"None";
+            return true;
+        }
+
         const wstring exe = Tools::to_lower(fs::path(path).filename().wstring());
         for (auto it = Config::LauncherConfigs.begin(); it != Config::LauncherConfigs.end(); ++it)
         {
@@ -182,11 +198,8 @@ namespace AnyFSE::Configuration
             }
         }
 
-        out.Name = fs::path(path).parent_path().filename().wstring();
-        if (out.Name.empty() || out.Name == L"bin")
-        {
-            out.Name = fs::path(path).filename().replace_extension("").wstring();
-        }
+        out.Name = fs::path(path).filename().replace_extension("").wstring();
+        out.IconFile = path;
         out.StartCommand = path;
         out.ProcessName = fs::path(path).filename().wstring();
         out.isCustom = true;

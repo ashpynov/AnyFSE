@@ -23,15 +23,6 @@ namespace AnyFSE::Settings
 {
     class SettingsDialog
     {
-        struct ControlsGroup
-        {
-            bool visible;
-            int height;
-            std::vector<std::pair<int, int>> items;
-        };
-
-        std::vector<ControlsGroup> groups;
-
         void ShowGroup(int groupIdx, bool show);
 
     public:
@@ -66,18 +57,21 @@ namespace AnyFSE::Settings
         void OnOk(HWND hwnd);
         void OnCustomChanged(HWND hwnd);
         void OnAggressiveChanged(HWND hwnd);
-        void UpdateCustom();
+        void UpdateControls();
 
         HINSTANCE m_hInstance;
         HWND m_hDialog;
 
         bool m_isCustom;
         bool m_isAgressive;
+        bool m_enterOnStartup;
+
         LauncherConfig config;
         std::wstring current;
         std::list<std::wstring> launchers;
 
         FluentDesign::Theme m_theme;
+
         FluentDesign::ComboBox launcherCombo;
         FluentDesign::Toggle enterFullscreen;
         FluentDesign::Toggle customSettings;
@@ -92,9 +86,14 @@ namespace AnyFSE::Settings
 
         std::list<FluentDesign::SettingsLine> settingLines;
         template <class T>
-        void AddSettingsLine(ULONG &top, const wstring &name, const wstring &desc,
+        FluentDesign::SettingsLine& AddSettingsLine(ULONG &top, const wstring &name, const wstring &desc,
              T &control, int height, int padding, int contentMargin,
              int contentWidth = 260, int contentHeight = 40);
+
+        FluentDesign::SettingsLine * fseOnStartup;
+        FluentDesign::SettingsLine * customSettingsGroup;
+
+        FluentDesign::SettingsLine::State m_customSettingsState;
     };
 }
 

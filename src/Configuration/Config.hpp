@@ -10,7 +10,8 @@ namespace AnyFSE::Configuration
 {
     enum LauncherType
     {
-        Custom = 0,
+        None = 0,
+        Custom,
         PlayniteFullscreen,
         PlayniteDesktop,
         ArmoryCrate,
@@ -33,12 +34,8 @@ namespace AnyFSE::Configuration
         bool isPortable;
     };
 
-
-
     class Config
     {
-
-
             static const wstring root;
             static const map<LauncherType, LauncherConfig> LauncherConfigs;
 
@@ -47,6 +44,9 @@ namespace AnyFSE::Configuration
             static wstring GetFilename();
             static wstring GetModulePath();
             static void SetDefault();
+
+            static bool IsFseOnStartupConfigured();
+            static bool IsXboxConfigured();
 
             static void FindLocal(list<wstring>& found);
             static void FindPlaynite(list<wstring>& found);
@@ -65,6 +65,7 @@ namespace AnyFSE::Configuration
             static bool GetLauncherDefaults(const wstring& path, LauncherConfig& out);
             static bool GetLauncherSettings(const wstring& name, LauncherConfig& out);
 
+            static LauncherType Type;
             static wstring LauncherName;
             static wstring LauncherWindowName;
             static wstring LauncherIcon;
@@ -75,6 +76,7 @@ namespace AnyFSE::Configuration
             static wstring XBoxProcessName;
 
             static bool AggressiveMode;
+            static bool FseOnStartup;
             static bool SilentMode;
     };
 }

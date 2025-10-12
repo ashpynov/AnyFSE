@@ -67,6 +67,7 @@ namespace FluentDesign
         HICON hIcon = Tools::LoadIconW(cb.icon);
         cb.iconIndex = hIcon ? ImageList_AddIcon(m_hImageList, hIcon) : -1;
 
+        InvalidateRect(hCombo, NULL, FALSE);
         return pos == -1 ? (int)comboItems.size() : pos;
     }
 
@@ -74,6 +75,7 @@ namespace FluentDesign
     {
         comboItems.clear();
         ImageList_RemoveAll(m_hImageList);
+        InvalidateRect(hCombo, NULL, FALSE);
         return 0;
     }
 

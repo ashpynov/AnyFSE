@@ -10,47 +10,54 @@ namespace FluentDesign
     public:
         enum Colors
         {
-            Text = 255,
-            TextSecondary = 200,
-            TextDisabled = 128,
+            Text,
+            TextSecondary,
+            TextDisabled,
 
-            Panel = 43,
-            PanelHover = 43,
+            Panel,
+            PanelHover,
 
-            Dialog = 32,
+            Dialog,
 
-            ToggleBorderOn = 89,
-            ToggleBorderOff = 207,
-            ToggleTrackOn = 89,             // accented color
-            ToggleTrackOnPressed = 84,      // accented color darker
-            ToggleTrackOff = 39,
-            ToggleTrackOffHover = 52,
-            ToggleThumbOn = 0,
-            ToggleThumbOff = 207,
+            ToggleBorderOn,
+            ToggleBorderOff,
+            ToggleTrackOn,        // accented color
+            ToggleTrackOnPressed, // accented color darker
+            ToggleTrackOff,
+            ToggleTrackOffHover,
+            ToggleThumbOn,
+            ToggleThumbOff,
+            ToggleBorderOnDisabled,
+            ToggleTrackOnDisabled,
+            ToggleThumbOnDisabled,
+            ToggleBorderOffDisabled,
+            ToggleTrackOffDisabled,
+            ToggleThumbOffDisabled,
 
-            Combo = 55,
-            ComboDisabled = 50,
-            ComboHover = 61,
-            ComboPressed = 50,
-            ComboPopup = 38,
-            ComboPopupBorder = 1,
-            ComboPopupSelected = 61,
-            ComboPopupSelectedMark = 89,  // accented color
-            ComboPopupHover = 61,
+            Combo,
+            ComboDisabled,
+            ComboHover,
+            ComboPressed,
+            ComboPopup,
+            ComboPopupBorder,
+            ComboPopupSelected,
+            ComboPopupSelectedMark, // accented color
+            ComboPopupHover,
 
-            Edit = 55,
-            EditHover = 61,
-            EditAccent = 154,
-            EditFocus = 31,
-            EditAccentFocus = 64,   // accented color
-            EditBorderFocus = 58,
+            Edit,
+            EditHover,
+            EditAccent,
+            EditFocus,
+            EditAccentFocus, // accented color
+            EditBorderFocus,
 
-            Button = 55,
-            ButtonHover = 60,
-            ButtonPressed = 50,
-            ButtonBorder = 63,
-            ButtonBorderHover = 63,
-            ButtonBorderPressed = 58
+            Button,
+            ButtonHover,
+            ButtonPressed,
+            ButtonBorder,
+            ButtonBorderHover,
+            ButtonBorderPressed,
+            Max
         };
 
     private:
@@ -58,11 +65,16 @@ namespace FluentDesign
         ULONG m_baseDpi;
         ULONG_PTR gdiplusToken;
 
+        bool m_isDark;
+
         HWND m_hParentWnd;
         HFONT m_hPrimaryFont;
         HFONT m_hSecondaryFont;
         HFONT m_hGlyphFont;
         HFONT m_hTitleFont;
+        HFONT m_hGlyphNormalFont;
+
+        COLORREF m_colors[Colors::Max];
 
         static const int m_primarySize = 14;
         static const int m_secondarySize = 11;
@@ -70,7 +82,9 @@ namespace FluentDesign
         static const int m_titleSize = 28;
         static const int m_cornerSize = 8;
 
-        void LoadColors(bool isDark);
+        DWORD GetGrey(BYTE lumen);
+
+        void LoadColors();
         void CreateFonts();
         void FreeFonts();
 
@@ -83,6 +97,8 @@ namespace FluentDesign
 
         Event OnDPIChanged;
 
+        const bool IsDark() { return m_isDark; }
+
         const int DpiUnscale(int scaledSize);
         const int DpiScale(int designSize);
         const float DpiScaleF(int designSize);
@@ -91,10 +107,12 @@ namespace FluentDesign
         const HFONT GetFont_Text() { return m_hPrimaryFont; }
         const HFONT GetFont_TextSecondary() { return m_hSecondaryFont; }
         const HFONT GetFont_Glyph() { return m_hGlyphFont; }
+        const HFONT GetFont_GlyphNormal() { return m_hGlyphNormalFont; }
         const HFONT GetFont_Title() { return m_hTitleFont; }
 
-        const DWORD GetColor(Colors code) { return RGB((BYTE)code, (BYTE)code, (BYTE)code) | 0xFF000000; }
-        const COLORREF GetColorRef(Colors code) { return RGB((BYTE)code, (BYTE)code, (BYTE)code); }
+        // colors
+        const DWORD GetColor(Colors code) { return m_colors[code] | 0xFF000000; }
+        const COLORREF GetColorRef(Colors code) { return m_colors[code]; }
 
         // Constants
         const int GetSize_Text() { return DpiScale(m_primarySize); }

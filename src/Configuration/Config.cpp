@@ -9,6 +9,7 @@ namespace AnyFSE::Configuration
 
     namespace fs = std::filesystem;
 
+    LauncherType Config::Type;
     wstring Config::LauncherName;
     wstring Config::LauncherWindowName;
     wstring Config::LauncherIcon;
@@ -19,6 +20,7 @@ namespace AnyFSE::Configuration
 
     bool Config::AggressiveMode = false;
     bool Config::SilentMode = false;
+    bool Config::FseOnStartup = false;
 
     wstring Config::GetModulePath()
     {
@@ -43,17 +45,31 @@ namespace AnyFSE::Configuration
         SilentMode = false;
     }
 
+    bool Config::IsFseOnStartupConfigured()
+    {
+        return 1 == Registry::ReadDWORD(
+            L"Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration",
+            L"StartupToGamingHome"
+        );
+    }
+
+    bool Config::IsXboxConfigured()
+    {
+        return Registry::ReadString(
+            L"Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration",
+            L"GamingHomeApp") == L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";
+    }
     void Config::Load()
     {
         SetDefault();
 
+        FseOnStartup = IsXboxConfigured() && IsFseOnStartupConfigured();
+
         wstring launcher = GetCurrentLauncher();
-        if (launcher.empty())
-        {
-            return;
-        }
+
         LauncherConfig config;
         GetLauncherSettings(launcher, config);
+        Type = config.Type;
         LauncherName = config.Name;
         LauncherWindowName = config.WindowTitle;
         LauncherProcessName = config.ProcessName;

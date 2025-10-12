@@ -127,10 +127,23 @@ namespace FluentDesign
             break;
 
         case WM_LBUTTONUP:
-            buttonPressed = false;
-            ReleaseCapture();
-            InvalidateRect(hWnd, NULL, TRUE);
-            OnChanged.Notify();
+            if (buttonPressed)
+            {
+                buttonPressed = false;
+                ReleaseCapture();
+                InvalidateRect(hWnd, NULL, TRUE);
+
+                POINT pt;
+                GetCursorPos(&pt);
+                MapWindowPoints(NULL, hButton, &pt, 1);
+
+                RECT rc;
+                GetClientRect(hButton, &rc);
+                if (PtInRect(&rc, pt))
+                {
+                    OnChanged.Notify();
+                }
+            }
             break;
         }
         return;

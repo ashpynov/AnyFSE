@@ -2,7 +2,7 @@
 #include "SettingsDialog.hpp"
 #include "Resource.h"
 #include <commdlg.h>
-#include <dwmapi.h>
+
 #include <uxtheme.h>
 #include "Tools/Tools.hpp"
 #include "Logging/LogManager.hpp"
@@ -13,7 +13,6 @@
 
 
 #pragma comment(lib, "comctl32.lib")
-#pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "uxtheme.lib")
 
 namespace AnyFSE::Settings
@@ -85,11 +84,6 @@ namespace AnyFSE::Settings
         {
         case WM_INITDIALOG:
             {   // To enable immersive dark mode (for a dark title bar)
-                BOOL USE_DARK_MODE = TRUE;
-                DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &USE_DARK_MODE, sizeof(USE_DARK_MODE));
-                COLORREF MY_CAPTION_COLOR = m_theme.GetColorRef(FluentDesign::Theme::Colors::Dialog);
-                DwmSetWindowAttribute(hwnd, DWMWA_CAPTION_COLOR, &MY_CAPTION_COLOR, sizeof(MY_CAPTION_COLOR));
-                SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
                 m_theme.Attach(hwnd);
                 OnInitDialog(hwnd);
                 CenterDialog(hwnd);
@@ -123,14 +117,8 @@ namespace AnyFSE::Settings
             }
             return FALSE;
 
-        case WM_CTLCOLORDLG:
-        {
-            // Return a black brush for dialog background
-            static HBRUSH hBlackBrush = CreateSolidBrush(m_theme.GetColorRef(FluentDesign::Theme::Colors::Dialog));
-            return (LRESULT)hBlackBrush;
-        }
-        case WM_DESTROY:
 
+        case WM_DESTROY:
             break;
 
         case WM_COMMAND:
@@ -166,7 +154,7 @@ namespace AnyFSE::Settings
     }
 
     template<class T>
-    void SettingsDialog::AddSettingsLine(
+    FluentDesign::SettingsLine& SettingsDialog::AddSettingsLine(
         ULONG &top, const wstring& name, const wstring& desc, T& control,
         int height, int padding, int contentMargin, int contentWidth, int contentHeight )
     {
@@ -182,8 +170,10 @@ namespace AnyFSE::Settings
         top += m_theme.DpiScale(height + padding);
         if (contentMargin)
         {
-            settingLines.back().SetLeftMargin(m_theme.DpiScale(contentMargin));
+            settingLines.back().SetLeftMargin(contentMargin);
         }
+
+        return settingLines.back();
     }
 
     void SettingsDialog::OnInitDialog(HWND hwnd)
@@ -202,47 +192,47 @@ namespace AnyFSE::Settings
             browse,
             57, 8, 0, 130, 32);
 
-        AddSettingsLine(top,
+        fseOnStartup = &AddSettingsLine(top,
             L"Enter full screen expirience on startup",
             L"",
             enterFullscreen,
             67, 8, 0);
 
-        AddSettingsLine(top,
+        customSettingsGroup = &AddSettingsLine(top,
             L"Use custom settings",
             L"Change monitoring and startups settings for selected home application",
             customSettings,
             67, 2, 0);
 
-        AddSettingsLine(top,
+        customSettingsGroup->AddGroupItem(&AddSettingsLine(top,
             L"Additional arguments",
             L"Command line arguments passed to application",
             additionalArguments,
-            48, 2, 20);
+            48, 2, 40));
 
-        AddSettingsLine(top,
+        customSettingsGroup->AddGroupItem(&AddSettingsLine(top,
             L"Primary process name",
             L"Name of home application process",
             processName,
-            48, 2, 20);
+            48, 2, 40));
 
-        AddSettingsLine(top,
+        customSettingsGroup->AddGroupItem(&AddSettingsLine(top,
             L"Primary window title",
             L"Title of app window when it have been activated",
             title,
-            48, 2, 20);
+            48, 2, 40));
 
-        AddSettingsLine(top,
+        customSettingsGroup->AddGroupItem(&AddSettingsLine(top,
             L"Secondary process name",
             L"Name of app process for alternative mode",
             processNameAlt,
-            48, 2, 20);
+            48, 2, 40));
 
-        AddSettingsLine(top,
+        customSettingsGroup->AddGroupItem(&AddSettingsLine(top,
             L"Secondary window title",
             L"Title of app window when it alternative mode have been activated",
             titleAlt,
-            48, 2, 20);
+            48, 2, 40));
 
         launcherCombo.OnChanged += [This = this]()
         {
@@ -252,6 +242,11 @@ namespace AnyFSE::Settings
         customSettings.OnChanged += [This = this]()
         {
             This->OnCustomChanged(This->m_hDialog);
+        };
+
+        customSettingsGroup->OnChanged += [This = this]()
+        {
+            This->m_customSettingsState = This->customSettingsGroup->GetState();
         };
 
         browse.SetText(L"Browse");
@@ -267,8 +262,11 @@ namespace AnyFSE::Settings
         Config::GetLauncherSettings(current, config);
         m_isCustom = config.isCustom && config.Type != LauncherType::Xbox || config.Type == LauncherType::Custom;
         m_isAgressive = Config::AggressiveMode && config.Type != LauncherType::Xbox;
-        UpdateCustom();
+        UpdateControls();
         UpdateCustomSettings();
+        m_customSettingsState = customSettingsGroup->GetState() != FluentDesign::SettingsLine::Normal
+                                ? customSettingsGroup->GetState()
+                                : FluentDesign::SettingsLine::Opened;
     }
 
     void SettingsDialog::ShowGroup(int groupIdx, bool show)
@@ -296,7 +294,7 @@ namespace AnyFSE::Settings
                 current = szFile;
                 Config::GetLauncherSettings(current, config);
                 UpdateCombo();
-                UpdateCustom();
+                UpdateControls();
                 UpdateCustomSettings();
             }
         }
@@ -309,7 +307,7 @@ namespace AnyFSE::Settings
     void SettingsDialog::OnCustomChanged(HWND hwnd)
     {
         m_isCustom = customSettings.GetCheck();
-        UpdateCustom();
+        UpdateControls();
     }
 
     void SettingsDialog::OnAggressiveChanged(HWND hwnd)
@@ -318,20 +316,40 @@ namespace AnyFSE::Settings
         // UpdateCustom();
     }
 
-    void SettingsDialog::UpdateCustom()
+    void SettingsDialog::UpdateControls()
     {
         LauncherConfig defaults;
         Config::GetLauncherDefaults(current, defaults);
-        bool isCustom = defaults.Type==LauncherType::Custom;
-        bool isXbox = defaults.Type == LauncherType::Xbox;
 
-        bool setCheck = m_isCustom && !isXbox || isCustom;
-        bool enableCheck = !isCustom && !isXbox;
+        if (defaults.Type == LauncherType::None)
+        {
+            fseOnStartup->Enable(false);
+            enterFullscreen.SetCheck(false);
+        }
+        else
+        {
+            fseOnStartup->Enable();
+            enterFullscreen.SetCheck(Config::FseOnStartup);
+        }
 
-        customSettings.SetCheck(setCheck);
-        // customSettings.Enable(enableCheck); // TODO
-        // ShowGroup(0, setCheck);
-        if (!setCheck)
+        bool alwaysSettings = defaults.Type==LauncherType::Custom;
+        bool noSettings = defaults.Type == LauncherType::Xbox || defaults.Type == LauncherType::None;
+
+        bool haveSettings = m_isCustom && !noSettings || alwaysSettings;
+        bool enableCheck = !alwaysSettings && !noSettings;
+
+        customSettings.SetCheck(haveSettings);
+
+        FluentDesign::SettingsLine::State state = haveSettings
+                ? alwaysSettings
+                    ? FluentDesign::SettingsLine::Opened
+                    : m_customSettingsState
+                : FluentDesign::SettingsLine::Normal;
+
+        customSettingsGroup->SetState(state);
+        customSettingsGroup->Enable(enableCheck);
+
+        if (!haveSettings)
         {
             config = defaults;
             UpdateCustomSettings();
@@ -342,7 +360,7 @@ namespace AnyFSE::Settings
     {
         current = launcherCombo.GetCurentValue();;
         Config::GetLauncherSettings(current, config);
-        UpdateCustom();
+        UpdateControls();
         UpdateCustomSettings();
     }
 
@@ -350,8 +368,6 @@ namespace AnyFSE::Settings
     void SettingsDialog::UpdateCombo()
     {
         launcherCombo.Reset();
-
-        launcherCombo.AddItem(L"None", L"", L"");
 
         for ( auto& launcher: launchers)
         {

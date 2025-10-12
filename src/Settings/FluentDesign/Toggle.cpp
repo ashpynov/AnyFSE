@@ -76,9 +76,10 @@ namespace FluentDesign
             case WM_MOUSELEAVE:
             case WM_LBUTTONDOWN:
             case WM_LBUTTONUP:
+            {
                 This->HandleMouse(hWnd, uMsg, lParam);
-                break;
-
+            }
+            break;
         case WM_PAINT:
             {
                 FluentDesign::DoubleBuferedPaint paint(hWnd);
@@ -131,7 +132,7 @@ namespace FluentDesign
 
         case WM_MOUSELEAVE:
             buttonMouseOver = false;
-            //buttonPressed = false;
+            SendMessage(GetParent(hWnd), WM_NCMOUSELEAVE, 0, 0);
             InvalidateRect(hWnd, NULL, TRUE);
             break;
 
@@ -187,22 +188,24 @@ namespace FluentDesign
         br.Inflate(-m_theme.DpiScaleF(1), -m_theme.DpiScaleF(1));
 
         // Determine colors based on state
-        Color borderColor(
-            isChecked ? m_theme.GetColor(Theme::Colors::ToggleBorderOn)
-                      : m_theme.GetColor(Theme::Colors::ToggleBorderOff)
-        );
+        Color borderColor(m_theme.GetColor(
+            isChecked ? ( enabled ? Theme::Colors::ToggleBorderOn : Theme::Colors::ToggleBorderOnDisabled)
+                      : ( enabled ? Theme::Colors::ToggleBorderOff : Theme::Colors::ToggleBorderOffDisabled)
+        ));
 
-        Color backColor(
-              (isChecked && buttonPressed)    ? m_theme.GetColor(Theme::Colors::ToggleTrackOnPressed)
-            : (isChecked)                     ? m_theme.GetColor(Theme::Colors::ToggleTrackOn)
-            : (!isChecked && buttonMouseOver) ? m_theme.GetColor(Theme::Colors::ToggleTrackOffHover)
-                                              : m_theme.GetColor(Theme::Colors::ToggleTrackOff)
-        );
+        Color backColor(m_theme.GetColor(
+              (isChecked && !enabled)         ? Theme::Colors::ToggleTrackOnDisabled
+            : (isChecked && buttonPressed)    ? Theme::Colors::ToggleTrackOnPressed
+            : (isChecked)                     ? Theme::Colors::ToggleTrackOn
+            : (!isChecked && !enabled)        ? Theme::Colors::ToggleTrackOffDisabled
+            : (!isChecked && buttonMouseOver) ? Theme::Colors::ToggleTrackOffHover
+                                              : Theme::Colors::ToggleTrackOff
+        ));
 
-        Color thumbColor(
-            isChecked ? m_theme.GetColor(Theme::Colors::ToggleThumbOn)
-                      : m_theme.GetColor(Theme::Colors::ToggleThumbOff)
-        );
+        Color thumbColor(m_theme.GetColor(
+            isChecked ? (enabled ? Theme::Colors::ToggleThumbOn : Theme::Colors::ToggleThumbOnDisabled)
+                      : (enabled ? Theme::Colors::ToggleThumbOff : Theme::Colors::ToggleThumbOffDisabled)
+        ));
 
         Color thumbCircleColor = (buttonPressed || buttonMouseOver) ? thumbColor : backColor;
 
@@ -243,7 +246,7 @@ namespace FluentDesign
 
         // Create the font and brush
         Font font(hdc, m_theme.GetFont_Text());
-        SolidBrush textBrush(Color(m_theme.GetColor(Theme::Colors::Text)));
+        SolidBrush textBrush(Color(m_theme.GetColor(enabled ? Theme::Colors::Text : Theme::Colors::TextDisabled)));
 
         WCHAR *text = isChecked ? L"On" : L"Off";
         StringFormat format;

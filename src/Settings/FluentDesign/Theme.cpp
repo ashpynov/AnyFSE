@@ -1,7 +1,8 @@
 #include "Theme.hpp"
 #include <gdiplus.h>
+#include <dwmapi.h>
 #include <commctrl.h>
-
+#pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "Gdiplus.lib")
 
 namespace FluentDesign
@@ -11,10 +12,11 @@ namespace FluentDesign
         , m_dpi(96)
         , m_hPrimaryFont(NULL)
         , m_hSecondaryFont(NULL)
+        , m_isDark(true)
     {
         Gdiplus::GdiplusStartupInput gdiplusStartupInput;
         Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-        LoadColors(true);
+        LoadColors();
         if (hParentWnd)
         {
             Attach(hParentWnd);
@@ -25,13 +27,21 @@ namespace FluentDesign
         }
     }
 
-    void Theme::Attach(HWND hParentWnd)
+    void Theme::Attach(HWND hHostWnd)
     {
-        m_hParentWnd = hParentWnd;
+        m_isDark = true;
+        m_hParentWnd = hHostWnd;
         m_dpi = GetDpiForWindow(m_hParentWnd);
+        LoadColors();
         CreateFonts();
+        BOOL useDarkMode = IsDark() ? TRUE : FALSE;
+        DwmSetWindowAttribute(hHostWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &useDarkMode, sizeof(useDarkMode));
 
-        SetWindowSubclass(hParentWnd, DialogSubclassProc, 0, (DWORD_PTR)this);
+        COLORREF captionColor = GetColorRef(FluentDesign::Theme::Colors::Dialog);
+        DwmSetWindowAttribute(hHostWnd, DWMWA_CAPTION_COLOR, &captionColor, sizeof(captionColor));
+        SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+
+        SetWindowSubclass(hHostWnd, DialogSubclassProc, 0, (DWORD_PTR)this);
 
     }
 
@@ -48,6 +58,11 @@ namespace FluentDesign
                     This->OnDPIChanged.Notify();
                 }
                 break;
+            case WM_CTLCOLORDLG:
+            {
+                static HBRUSH hBlackBrush = CreateSolidBrush(This->GetColorRef(FluentDesign::Theme::Colors::Dialog));
+                return (LRESULT)hBlackBrush;
+            }
             case WM_DESTROY:
                 RemoveWindowSubclass(hWnd, DialogSubclassProc, uIdSubclass);
                 break;
@@ -63,10 +78,64 @@ namespace FluentDesign
         Gdiplus::GdiplusShutdown(gdiplusToken);
     };
 
-    void Theme::LoadColors(bool isDark)
+    DWORD Theme::GetGrey(BYTE lumen)
     {
-        if (isDark)
+        return RGB(lumen, lumen, lumen);
+    }
+    void Theme::LoadColors()
+    {
+        if (m_isDark)
         {
+            m_colors[Text] = GetGrey(255);
+            m_colors[TextSecondary] = GetGrey(200);
+            m_colors[TextDisabled] = GetGrey(128);
+
+            m_colors[Panel] = GetGrey(43);
+            m_colors[PanelHover] = GetGrey(50);
+
+            m_colors[Dialog] = GetGrey(32);
+
+            m_colors[ToggleBorderOn] = GetGrey(89);
+            m_colors[ToggleBorderOff] = GetGrey(207);
+            m_colors[ToggleTrackOn] = GetGrey(89);           // accented color
+            m_colors[ToggleTrackOnPressed] = GetGrey(84);    // accented color darker
+            m_colors[ToggleTrackOnDisabled] = GetGrey(89);           // accented color
+            m_colors[ToggleTrackOff] = GetGrey(39);
+            m_colors[ToggleTrackOffHover] = GetGrey(52);
+            m_colors[ToggleThumbOn] = GetGrey(0);
+            m_colors[ToggleThumbOff] = GetGrey(207);
+
+            m_colors[ToggleBorderOnDisabled] = GetGrey(60);
+            m_colors[ToggleTrackOnDisabled] = GetGrey(60);
+            m_colors[ToggleThumbOnDisabled] = GetGrey(0);
+            m_colors[ToggleBorderOffDisabled] = GetGrey(60);
+            m_colors[ToggleTrackOffDisabled] = GetGrey(39);
+            m_colors[ToggleThumbOffDisabled] = GetGrey(60);
+
+
+            m_colors[Combo] = GetGrey(55);
+            m_colors[ComboDisabled] = GetGrey(50);
+            m_colors[ComboHover] = GetGrey(61);
+            m_colors[ComboPressed] = GetGrey(50);
+            m_colors[ComboPopup] = GetGrey(38);
+            m_colors[ComboPopupBorder] = GetGrey(1);
+            m_colors[ComboPopupSelected] = GetGrey(61);
+            m_colors[ComboPopupSelectedMark] = GetGrey(89);  // accented color
+            m_colors[ComboPopupHover] = GetGrey(61);
+
+            m_colors[Edit] = GetGrey(55);
+            m_colors[EditHover] = GetGrey(61);
+            m_colors[EditAccent] = GetGrey(154);
+            m_colors[EditFocus] = GetGrey(31);
+            m_colors[EditAccentFocus] = GetGrey(64);         // accented color
+            m_colors[EditBorderFocus] = GetGrey(58);
+            m_colors[Button] = GetGrey(55);
+            m_colors[ButtonHover] = GetGrey(60);
+            m_colors[ButtonPressed] = GetGrey(50);
+            m_colors[ButtonBorder] = GetGrey(63);
+            m_colors[ButtonBorderHover] = GetGrey(63);
+            m_colors[ButtonBorderPressed] = GetGrey(58);
+            m_colors[Max] = GetGrey(20);
         }
     }
 
@@ -98,6 +167,12 @@ namespace FluentDesign
             CLEARTYPE_QUALITY, DEFAULT_PITCH,
             L"Segoe MDL2 Assets");
 
+        m_hGlyphNormalFont = CreateFont(
+            GetSize_Text(), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+            CLEARTYPE_QUALITY, DEFAULT_PITCH,
+            L"Segoe MDL2 Assets");
+
         LOGFONT titleFont = ncm.lfMessageFont;
         titleFont.lfHeight = (LONG)(-GetSize_Title());
         titleFont.lfWeight = FW_BOLD;
@@ -115,6 +190,9 @@ namespace FluentDesign
         if (m_hGlyphFont)
             DeleteObject(m_hGlyphFont);
 
+        if (m_hGlyphNormalFont)
+            DeleteObject(m_hGlyphNormalFont);
+
         if (m_hTitleFont)
             DeleteObject(m_hTitleFont);
 
@@ -122,6 +200,7 @@ namespace FluentDesign
         m_hSecondaryFont = NULL;
         m_hGlyphFont = NULL;
         m_hTitleFont = NULL;
+        m_hGlyphNormalFont = NULL;
     }
 
     const int Theme::DpiUnscale(int scaledSize)

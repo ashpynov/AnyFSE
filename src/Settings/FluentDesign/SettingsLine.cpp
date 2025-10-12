@@ -23,6 +23,7 @@ namespace FluentDesign
         , m_hWnd(NULL)
         , linePadding(4)
         , leftMargin(16)
+        , m_state(State::Normal)
     {
     }
 
@@ -157,6 +158,7 @@ namespace FluentDesign
             OnMouseMove();
             return 0;
 
+        case WM_NCMOUSELEAVE:
         case WM_MOUSELEAVE:
             OnMouseLeave();
             return 0;
@@ -191,6 +193,15 @@ namespace FluentDesign
         return DefWindowProc(m_hWnd, message, wParam, lParam);
     }
 
+    void SettingsLine::Invalidate(BOOL bErase)
+    {
+        InvalidateRect(m_hWnd, NULL, bErase);
+        if (m_hChildControl)
+        {
+            InvalidateRect(m_hChildControl, NULL, bErase);
+        }
+    }
+
     void SettingsLine::OnPaint()
     {
         PAINTSTRUCT ps;
@@ -206,6 +217,10 @@ namespace FluentDesign
 
         // Draw text
         DrawText(hdcMem);
+        if (m_state != Normal)
+        {
+            DrawChevron(hdcMem);
+        }
 
         // Copy to screen
         BitBlt(hdc, 0, 0, m_width, m_height, hdcMem, 0, 0, SRCCOPY);
@@ -220,8 +235,8 @@ namespace FluentDesign
 
     void SettingsLine::DrawBackground(HDC hdc, const RECT &rect)
     {
-        HBRUSH hBrush = CreateSolidBrush( m_hovered ? m_theme.GetColorRef(Theme::Colors::Panel)
-                                                    : m_theme.GetColorRef(Theme::Colors::PanelHover)
+        HBRUSH hBrush = CreateSolidBrush( m_hovered ? m_theme.GetColorRef(Theme::Colors::PanelHover)
+                                                    : m_theme.GetColorRef(Theme::Colors::Panel)
         );
 
         FillRect(hdc, &rect, hBrush);
@@ -271,6 +286,40 @@ namespace FluentDesign
         ::DrawText(hdc, m_description.c_str(), -1, &descRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE| DT_NOCLIP);
     }
 
+    void SettingsLine::DrawChevron(HDC hdc)
+    {
+        RECT rect;
+        GetClientRect(m_hWnd, &rect);
+
+        rect.left = rect.right - m_theme.DpiScale(CHEVRON_SIZE + 20);
+        rect.right = rect.left + m_theme.DpiScale(CHEVRON_SIZE);
+        SetBkMode(hdc, TRANSPARENT);
+        SelectObject(hdc, m_theme.GetFont_GlyphNormal());
+        SetTextColor(hdc, m_theme.GetColorRef(m_enabled ? FluentDesign::Theme::Text : FluentDesign::Theme::TextDisabled));
+
+        rect.top = (rect.bottom - rect.top - m_theme.GetSize_Text()) / 2;
+        rect.bottom = rect.top + m_theme.GetSize_Text();
+
+        WCHAR *chevron = L"";
+        switch (m_state)
+        {
+            case State::Opened:
+                chevron = L"\xE70E";
+                break;
+            case State::Closed:
+                chevron = L"\xE70D";
+                break;
+            case State::Next:
+                chevron = L"\xE76c";
+                break;
+            case State::Link:
+                chevron = L"\xe8a7";
+                break;
+        }
+
+        ::DrawText(hdc, chevron, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
+    }
+
     void SettingsLine::OnSize(int width, int height)
     {
         m_width = width;
@@ -280,10 +329,10 @@ namespace FluentDesign
 
     void SettingsLine::OnMouseMove()
     {
-        if (!m_hovered)
+        if (!m_hovered && m_state != State::Normal)
         {
             m_hovered = true;
-            InvalidateRect(m_hWnd, NULL, FALSE);
+            Invalidate();
 
             // Track mouse leave
             TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT), TME_LEAVE, m_hWnd, 0};
@@ -293,8 +342,28 @@ namespace FluentDesign
 
     void SettingsLine::OnMouseLeave()
     {
-        m_hovered = false;
-        InvalidateRect(m_hWnd, NULL, FALSE);
+        if (m_hChildControl && m_state != State::Normal)
+        {
+            POINT pt;
+            GetCursorPos(&pt);
+            HWND hWndUnderCursor = WindowFromPoint(pt);
+
+            if (hWndUnderCursor == m_hWnd)
+            {
+                TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT), TME_LEAVE, m_hWnd, 0};
+                TrackMouseEvent(&tme);
+            }
+            else if (hWndUnderCursor != m_hChildControl)
+            {
+                Invalidate();
+                m_hovered = false;
+            }
+        }
+        else
+        {
+            Invalidate();
+            m_hovered = false;
+        }
     }
 
     void SettingsLine::OnEnable(bool enabled)
@@ -304,22 +373,32 @@ namespace FluentDesign
         {
             EnableWindow(m_hChildControl, enabled);
         }
-        InvalidateRect(m_hWnd, NULL, FALSE);
+        Invalidate();
     }
 
     void SettingsLine::OnLButtonDown()
     {
         // Focus the child control when clicked
-        if (m_hChildControl && m_enabled)
+        if (m_state == State::Opened || m_state == State::Closed )
         {
-            SetFocus(m_hChildControl);
+            SetState(m_state == State::Closed ?  State::Opened : State::Closed);
+            OnChanged.Notify();
         }
     }
 
     void SettingsLine::UpdateLayout()
     {
         PositionChildControl();
-        InvalidateRect(m_hWnd, NULL, TRUE);
+        if (m_groupItems.size() > 0)
+        {
+            bool bShow = m_state == State::Opened;
+
+            for (auto& gr : m_groupItems)
+            {
+                ShowWindow(gr->m_hWnd, bShow ? SW_SHOW : SW_HIDE);
+            }
+        }
+        Invalidate();
     }
 
     void SettingsLine::PositionChildControl()
@@ -335,8 +414,14 @@ namespace FluentDesign
         int controlHeight = rc.bottom - rc.top;
         int controlY = (m_height - controlHeight) / 2;
 
+        int marginRight = m_theme.DpiScale(20);
+        if( m_state != State::Normal )
+        {
+            marginRight += m_theme.DpiScale(CHEVRON_SIZE * 2);
+        }
+
         SetWindowPos(m_hChildControl, NULL,
-                     m_width - controlWidth - 20,
+                     m_width - controlWidth - marginRight,
                      controlY,
                      0, 0,
                      SWP_NOZORDER | SWP_SHOWWINDOW | SWP_NOSIZE);
@@ -355,13 +440,13 @@ namespace FluentDesign
     void SettingsLine::SetName(const std::wstring &name)
     {
         m_name = name;
-        InvalidateRect(m_hWnd, NULL, FALSE);
+        Invalidate();
     }
 
     void SettingsLine::SetDescription(const std::wstring &description)
     {
         m_description = description;
-        InvalidateRect(m_hWnd, NULL, FALSE);
+        Invalidate();
     }
 
     void SettingsLine::Enable(bool enable)
@@ -372,7 +457,7 @@ namespace FluentDesign
         {
             EnableWindow(m_hChildControl, enable);
         }
-        InvalidateRect(m_hWnd, NULL, FALSE);
+        Invalidate();
     }
 
     void SettingsLine::Disable()
@@ -389,6 +474,15 @@ namespace FluentDesign
     void SettingsLine::SetLeftMargin(int margin)
     {
         leftMargin = margin;
-        InvalidateRect(m_hWnd, NULL, TRUE);
+        Invalidate();
+    }
+    void SettingsLine::SetState(State state)
+    {
+        m_state = state;
+        UpdateLayout();
+    }
+    void SettingsLine::AddGroupItem(SettingsLine *groupItem)
+    {
+        m_groupItems.push_back(groupItem);
     }
 }
