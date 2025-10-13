@@ -249,7 +249,7 @@ namespace FluentDesign
         {
             br.Offset(-0.5, -0.5);
             Pen borderPen(m_theme.GetColor(Theme::Colors::PanelBorder),m_theme.DpiScaleF(1));
-            Gdiplus::RoundRect(graphics, br, m_theme.GetSize_Corner(), &backBrush, borderPen, m_frameFlags);
+            Gdiplus::RoundRect(graphics, br, (REAL)m_theme.GetSize_Corner(), &backBrush, borderPen, m_frameFlags);
         }
         else
         {

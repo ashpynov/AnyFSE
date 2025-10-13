@@ -20,7 +20,6 @@ namespace FluentDesign
         , buttonMouseOver(false)
         , buttonPressed(false)
     {
-        theme.OnDPIChanged += [This = this]() { This->UpdateLayout(); };
     }
 
     Button::Button(
@@ -49,6 +48,11 @@ namespace FluentDesign
             x, y, width, height,
             hParent, NULL, GetModuleHandle(NULL), NULL);
 
+
+        if (GetWindowLong(hParent, GWL_STYLE)& WS_CHILD)
+        {
+            m_theme.OnDPIChanged += [This = this]() { This->UpdateLayout(); };
+        }
         m_theme.RegisterChild(hButton);
         SetWindowSubclass(hButton, ButtonSubclassProc, 0, (DWORD_PTR)this);
         return hButton;
