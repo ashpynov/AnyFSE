@@ -107,6 +107,8 @@ namespace FluentDesign
         // Message handlers
         void OnPaint();
 
+        void DrawBackground(HDC hdc, const RECT &rect, bool frame=true);
+
         void OnSize(int width, int height);
         void OnMouseMove();
         void OnMouseLeave();
@@ -114,7 +116,6 @@ namespace FluentDesign
         void OnLButtonDown();
 
         // Drawing methods
-        void DrawBackground(HDC hdc, const RECT &rect);
         void DrawText(HDC hdc);
         void DrawChevron(HDC hdc);
 

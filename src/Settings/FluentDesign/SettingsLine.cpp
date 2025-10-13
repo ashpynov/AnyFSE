@@ -1,5 +1,7 @@
 #include "SettingsLine.hpp"
 #include "Logging/LogManager.hpp"
+#include "DoubleBufferedPaint.hpp"
+#include "GdiPlus.hpp"
 #include <commctrl.h>
 #include <uxtheme.h>
 #include <dwmapi.h>
@@ -178,7 +180,7 @@ namespace FluentDesign
                 {
                     RECT childRect;
                     GetClientRect((HWND)lParam, &childRect);
-                    DrawBackground((HDC)wParam, childRect);
+                    DrawBackground((HDC)wParam, childRect, false);
                     if (GetFocus() == m_hChildControl)
                     {
                         m_theme.DrawChildFocus((HDC)wParam, m_hChildControl, m_hChildControl);
@@ -213,48 +215,45 @@ namespace FluentDesign
 
     void SettingsLine::OnPaint()
     {
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(m_hWnd, &ps);
-
-        // Double buffering to prevent flicker
-        HDC hdcMem = CreateCompatibleDC(hdc);
-        HBITMAP hBitmap = CreateCompatibleBitmap(hdc, m_width, m_height);
-        HBITMAP hOldBitmap = (HBITMAP)SelectObject(hdcMem, hBitmap);
-        RECT rect = {0, 0, m_width, m_height};
+        FluentDesign::DoubleBuferedPaint paint(m_hWnd);
         // Draw background
-        DrawBackground(hdcMem, rect);
+
+        DrawBackground(paint.MemDC(), paint.ClientRect());
 
         // Draw text
-        DrawText(hdcMem);
+        DrawText(paint.MemDC());
         if (m_state != Normal)
         {
-            DrawChevron(hdcMem);
+            DrawChevron(paint.MemDC());
         }
 
         if (GetFocus() == m_hChildControl)
         {
-            m_theme.DrawChildFocus(hdcMem, m_hWnd, m_hChildControl);
+            m_theme.DrawChildFocus(paint.MemDC(), m_hWnd, m_hChildControl);
         }
-
-        // Copy to screen
-        BitBlt(hdc, 0, 0, m_width, m_height, hdcMem, 0, 0, SRCCOPY);
-
-        // Cleanup
-        SelectObject(hdcMem, hOldBitmap);
-        DeleteObject(hBitmap);
-        DeleteDC(hdcMem);
-
-        EndPaint(m_hWnd, &ps);
     }
 
-    void SettingsLine::DrawBackground(HDC hdc, const RECT &rect)
+    void SettingsLine::DrawBackground(HDC hdc, const RECT &rect, bool frame)
     {
-        HBRUSH hBrush = CreateSolidBrush( m_hovered ? m_theme.GetColorRef(Theme::Colors::PanelHover)
-                                                    : m_theme.GetColorRef(Theme::Colors::Panel)
-        );
+        using namespace Gdiplus;
+        Graphics graphics(hdc);
 
-        FillRect(hdc, &rect, hBrush);
-        DeleteObject(hBrush);
+        RectF br = FromRECT(rect);
+
+        graphics.SetSmoothingMode(SmoothingModeAntiAlias);
+
+        SolidBrush backBrush(m_theme.GetColor(m_hovered? Theme::Colors::PanelHover : Theme::Colors::Panel));
+        if (frame)
+        {
+            br.Inflate(-10, -10);
+            Pen borderPen(m_theme.GetColor(Theme::Colors::PanelBorder),m_theme.DpiScaleF(4));
+            Gdiplus::RoundRect(graphics, br, (REAL)m_theme.GetSize_Corner(), &backBrush, borderPen);
+        }
+        else
+        {
+            br.Inflate(1, 1);
+            graphics.FillRectangle(&backBrush, br);
+        }
     }
 
     void SettingsLine::DrawText(HDC hdc)

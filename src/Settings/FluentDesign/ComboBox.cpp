@@ -239,7 +239,9 @@ namespace FluentDesign
             );
 
             RectF clientRect = FromRECT(rect);
-            Pen pen(m_theme.GetColor(Theme::Colors::Combo), 1.0f);
+            clientRect.Height -= 1;
+            clientRect.Width -= 1;
+            Pen pen(m_theme.GetColor(Theme::Colors::ComboBorder), m_theme.DpiScaleF(1));
             SolidBrush brush(color);
             Gdiplus::RoundRect(graphics, clientRect, (REAL)m_theme.GetSize_FocusCornerSize(), &brush, pen);
             return;
@@ -489,7 +491,7 @@ namespace FluentDesign
         FillRect(hdcMem, &rect, hNilBrush);
 
         HPEN hBgPen = CreatePen(PS_SOLID, m_theme.DpiScale(1),  m_theme.GetColorRef(Theme::Colors::ComboPopupBorder));
-        HBRUSH hBgBrush = CreateSolidBrush( m_theme.GetColorRef(Theme::Colors::ComboPressed));
+        HBRUSH hBgBrush = CreateSolidBrush( m_theme.GetColorRef(Theme::Colors::ComboPopup));
 
         HGDIOBJ hOldBrush = SelectObject(hdcMem, hBgBrush);
         HGDIOBJ hOldPen = SelectObject(hdcMem, hBgPen);

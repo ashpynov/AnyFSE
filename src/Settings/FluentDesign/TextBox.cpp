@@ -325,10 +325,10 @@ namespace FluentDesign
 
         Color back(m_hasFocus ? m_theme.GetColor(Theme::Colors::EditFocus)
                 : m_mouseOver ? m_theme.GetColor(Theme::Colors::EditHover)
-                                : m_theme.GetColor(Theme::Colors::Edit)
+                              : m_theme.GetColor(Theme::Colors::Edit)
         );
 
-        Color border(m_hasFocus ? m_theme.GetColor(Theme::Colors::EditBorderFocus) : back);
+        Color border(m_theme.GetColor(m_hasFocus ? Theme::Colors::EditBorderFocus : Theme::Colors::EditBorder));
 
         RectF accentRect((REAL)rect.left, (REAL)rect.top,
                 ( REAL)(rect.right - rect.left),

@@ -18,6 +18,7 @@ namespace FluentDesign
 
             Panel,
             PanelHover,
+            PanelBorder,
 
             Dialog,
 
@@ -40,6 +41,7 @@ namespace FluentDesign
             ComboDisabled,
             ComboHover,
             ComboPressed,
+            ComboBorder,
             ComboPopup,
             ComboPopupBorder,
             ComboPopupSelected,
@@ -51,6 +53,7 @@ namespace FluentDesign
             EditAccent,
             EditFocus,
             EditAccentFocus, // accented color
+            EditBorder,
             EditBorderFocus,
 
             Button,
@@ -93,6 +96,8 @@ namespace FluentDesign
         std::list<HWND> childs;
 
         DWORD GetGrey(BYTE lumen);
+
+        DWORD GetAccent(BYTE lumen);
 
         void LoadColors();
         void CreateFonts();
