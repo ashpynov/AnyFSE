@@ -85,7 +85,7 @@ namespace FluentDesign
         static const int m_secondarySize = 11;
         static const int m_glyphSize = 10;
         static const int m_titleSize = 28;
-        static const int m_cornerSize = 8;
+        static const int m_cornerSize = 16;
         static const int m_focusWidth = 2;
         static const int m_focusMargins = 1;
         static const int m_focusToggleMargins = 8;

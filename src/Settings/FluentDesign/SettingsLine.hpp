@@ -38,6 +38,8 @@ namespace FluentDesign
         bool m_hovered;
         bool m_childFocused;
 
+        UINT m_frameFlags;
+
         State m_state;
 
         int CHEVRON_SIZE = 12;
@@ -85,6 +87,12 @@ namespace FluentDesign
         void Enable(bool enable = true);
         void Disable();
         bool IsEnabled() const { return m_enabled; }
+
+        void SetFrame(UINT flags)
+        {
+            m_frameFlags = flags;
+            InvalidateRect(m_hWnd, NULL, FALSE);
+        }
 
         // Sizing
         void SetSize(int width, int height);

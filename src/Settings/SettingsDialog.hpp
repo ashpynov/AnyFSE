@@ -39,14 +39,14 @@ namespace AnyFSE::Settings
         static const int Layout_LineHeight = 67;
         static const int Layout_LinePadding = 8;
         static const int Layout_LineHeightSmall = 45;
-        static const int Layout_LinePaddingSmall = 1;
+        static const int Layout_LinePaddingSmall = 0;
         static const int Layout_LineSmallMargin = 40;
 
         static const int Layout_CustomSettingsWidth = 220;
         static const int Layout_Layout_CustomSettingsHeight = 40;
 
         static const int Layout_LauncherComboWidth = 280;
-        static const int Layout_LauncherBrowsePadding = -10;
+        static const int Layout_LauncherBrowsePadding = 0;
         static const int Layout_LauncherBrowseLineHeight = 57;
 
         void ShowGroup(int groupIdx, bool show);
@@ -64,7 +64,7 @@ namespace AnyFSE::Settings
             , title(m_theme)
             , processNameAlt(m_theme)
             , titleAlt(m_theme)
-            , browse(m_theme)
+            , browseButton(m_theme)
             , buttonOK(m_theme)
             , buttonClose(m_theme)
         {}
@@ -106,7 +106,7 @@ namespace AnyFSE::Settings
         FluentDesign::TextBox title;
         FluentDesign::TextBox processNameAlt;
         FluentDesign::TextBox titleAlt;
-        FluentDesign::Button browse;
+        FluentDesign::Button browseButton;
         FluentDesign::Button buttonOK;
         FluentDesign::Button buttonClose;
 

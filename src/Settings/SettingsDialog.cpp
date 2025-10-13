@@ -11,6 +11,10 @@
 #include "FluentDesign/Theme.hpp"
 #include "FluentDesign/DoubleBufferedPaint.hpp"
 
+#define byte ::byte
+
+#include "FluentDesign/Gdiplus.hpp"
+
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "uxtheme.lib")
@@ -188,19 +192,23 @@ namespace AnyFSE::Settings
     {
         ULONG top = m_theme.DpiScale(Layout_MarginTop);
 
-        AddSettingsLine(top,
+        FluentDesign::SettingsLine &launcher = AddSettingsLine(top,
             L"Choose home app",
             L"Choose home application for full screen expirience",
             launcherCombo,
             Layout_LineHeight, Layout_LauncherBrowsePadding, 0,
             Layout_LauncherComboWidth );
 
-        AddSettingsLine(top,
+        launcher.SetFrame(Gdiplus::FrameFlags::SIDE_NO_BOTTOM | Gdiplus::FrameFlags::CORNER_TOP);
+
+        FluentDesign::SettingsLine &browse = AddSettingsLine(top,
             L"",
             L"",
-            browse,
+            browseButton,
             Layout_LauncherBrowseLineHeight, Layout_LinePadding, 0,
             Layout_BrowseWidth, Layout_BrowseHeight);
+
+        browse.SetFrame(Gdiplus::FrameFlags::SIDE_NO_TOP | Gdiplus::FrameFlags::CORNER_BOTTOM);
 
         fseOnStartup = &AddSettingsLine(top,
             L"Enter full screen expirience on startup",
@@ -300,8 +308,8 @@ namespace AnyFSE::Settings
             This->m_customSettingsState = This->customSettingsGroup->GetState();
         };
 
-        browse.SetText(L"Browse");
-        browse.OnChanged += [This = this]()
+        browseButton.SetText(L"Browse");
+        browseButton.OnChanged += [This = this]()
         {
             This->OnBrowseLauncher(This->m_hDialog, 0);
         };

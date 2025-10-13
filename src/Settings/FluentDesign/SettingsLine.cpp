@@ -27,6 +27,7 @@ namespace FluentDesign
         , leftMargin(16)
         , m_state(State::Normal)
         , m_childFocused(false)
+        , m_frameFlags(Gdiplus::FrameFlags::CORNER_ALL | Gdiplus::FrameFlags::SIDE_ALL)
     {
     }
 
@@ -241,13 +242,14 @@ namespace FluentDesign
         RectF br = FromRECT(rect);
 
         graphics.SetSmoothingMode(SmoothingModeAntiAlias);
+        graphics.SetPixelOffsetMode(PixelOffsetModeNone);
 
         SolidBrush backBrush(m_theme.GetColor(m_hovered? Theme::Colors::PanelHover : Theme::Colors::Panel));
         if (frame)
         {
-            br.Inflate(-10, -10);
-            Pen borderPen(m_theme.GetColor(Theme::Colors::PanelBorder),m_theme.DpiScaleF(4));
-            Gdiplus::RoundRect(graphics, br, (REAL)m_theme.GetSize_Corner(), &backBrush, borderPen);
+            br.Offset(-0.5, -0.5);
+            Pen borderPen(m_theme.GetColor(Theme::Colors::PanelBorder),m_theme.DpiScaleF(1));
+            Gdiplus::RoundRect(graphics, br, m_theme.GetSize_Corner(), &backBrush, borderPen, m_frameFlags);
         }
         else
         {
@@ -400,6 +402,8 @@ namespace FluentDesign
             SetState(m_state == State::Closed ?  State::Opened : State::Closed);
             OnChanged.Notify();
         }
+
+
         m_childFocused = false;
         Invalidate();
     }
@@ -497,10 +501,25 @@ namespace FluentDesign
     void SettingsLine::SetState(State state)
     {
         m_state = state;
+
+        if (m_state == State::Opened)
+        {
+            m_frameFlags = Gdiplus::FrameFlags::SIDE_ALL | Gdiplus::FrameFlags::CORNER_TOP;
+        }
+        else if (m_state == State::Closed)
+        {
+            m_frameFlags = Gdiplus::FrameFlags::SIDE_ALL | Gdiplus::FrameFlags::CORNER_ALL;
+        }
+
         UpdateLayout();
     }
     void SettingsLine::AddGroupItem(SettingsLine *groupItem)
     {
+        if (m_groupItems.size())
+        {
+            m_groupItems.back()->SetFrame(Gdiplus::FrameFlags::SIDE_NO_BOTTOM);
+        }
         m_groupItems.push_back(groupItem);
+        groupItem->SetFrame(Gdiplus::FrameFlags::SIDE_ALL | Gdiplus::FrameFlags::CORNER_BOTTOM);
     }
 }
