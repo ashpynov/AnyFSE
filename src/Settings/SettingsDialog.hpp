@@ -43,10 +43,10 @@ namespace AnyFSE::Settings
         static const int Layout_LineSmallMargin = 40;
 
         static const int Layout_CustomSettingsWidth = 220;
-        static const int Layout_Layout_CustomSettingsHeight = 40;
+        static const int Layout_Layout_CustomSettingsHeight = 44;
 
         static const int Layout_LauncherComboWidth = 280;
-        static const int Layout_LauncherBrowsePadding = 0;
+        static const int Layout_LauncherBrowsePadding = -12;
         static const int Layout_LauncherBrowseLineHeight = 57;
 
         void ShowGroup(int groupIdx, bool show);
