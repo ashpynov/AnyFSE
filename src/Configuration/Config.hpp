@@ -42,7 +42,7 @@ namespace AnyFSE::Configuration
             Config() {};
 
             static wstring GetFilename();
-            static wstring GetModulePath();
+
             static void SetDefault();
 
             static bool IsFseOnStartupConfigured();
@@ -56,6 +56,7 @@ namespace AnyFSE::Configuration
 
         public:
 
+            static wstring GetModulePath();
             static void Load();
             static void Dump();
 

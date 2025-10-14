@@ -57,16 +57,16 @@ namespace AnyFSE::Settings
         SettingsDialog()
             : m_theme()
             , launcherCombo(m_theme)
-            , enterFullscreen(m_theme)
-            , customSettings(m_theme)
-            , additionalArguments(m_theme)
-            , processName(m_theme)
-            , title(m_theme)
-            , processNameAlt(m_theme)
-            , titleAlt(m_theme)
+            , fseOnStartupToggle(m_theme)
+            , customSettingsToggle(m_theme)
+            , additionalArgumentsEdit(m_theme)
+            , processNameEdit(m_theme)
+            , titleEdit(m_theme)
+            , processNameAltEdit(m_theme)
+            , titleAltEdit(m_theme)
             , browseButton(m_theme)
-            , buttonOK(m_theme)
-            , buttonClose(m_theme)
+            , okButton(m_theme)
+            , closeButton(m_theme)
         {}
 
     private:
@@ -99,16 +99,16 @@ namespace AnyFSE::Settings
         FluentDesign::Theme m_theme;
 
         FluentDesign::ComboBox launcherCombo;
-        FluentDesign::Toggle enterFullscreen;
-        FluentDesign::Toggle customSettings;
-        FluentDesign::TextBox additionalArguments;
-        FluentDesign::TextBox processName;
-        FluentDesign::TextBox title;
-        FluentDesign::TextBox processNameAlt;
-        FluentDesign::TextBox titleAlt;
+        FluentDesign::Toggle fseOnStartupToggle;
+        FluentDesign::Toggle customSettingsToggle;
+        FluentDesign::TextBox additionalArgumentsEdit;
+        FluentDesign::TextBox processNameEdit;
+        FluentDesign::TextBox titleEdit;
+        FluentDesign::TextBox processNameAltEdit;
+        FluentDesign::TextBox titleAltEdit;
         FluentDesign::Button browseButton;
-        FluentDesign::Button buttonOK;
-        FluentDesign::Button buttonClose;
+        FluentDesign::Button okButton;
+        FluentDesign::Button closeButton;
 
         HWND m_hButtonOk;
         HWND m_hButtonClose;
@@ -121,8 +121,8 @@ namespace AnyFSE::Settings
             int contentWidth = Layout_CustomSettingsWidth,
             int contentHeight = Layout_Layout_CustomSettingsHeight);
 
-        FluentDesign::SettingsLine * fseOnStartup;
-        FluentDesign::SettingsLine * customSettingsGroup;
+        FluentDesign::SettingsLine * fseOnStartupLine;
+        FluentDesign::SettingsLine * customSettingsLine;
 
         FluentDesign::SettingsLine::State m_customSettingsState;
     };

@@ -115,7 +115,7 @@ namespace FluentDesign
 
             m_colors[Panel] = GetGrey(43);
             m_colors[PanelHover] = GetGrey(50);
-            m_colors[PanelBorder] = GetGrey(43);
+            m_colors[PanelBorder] = GetGrey(32);
 
             m_colors[Dialog] = GetGrey(32);
 

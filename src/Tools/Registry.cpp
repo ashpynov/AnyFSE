@@ -9,14 +9,46 @@
 namespace AnyFSE::Tools
 {
     namespace fs = std::filesystem;
+
+        HKEY Registry::GetRootKey(const std::wstring &subKey, std::wstring &actualPath)
+    {
+        // Extract root key from subKey (e.g., "HKEY_CURRENT_USER\\Software\\MyApp" -> HKEY_CURRENT_USER)
+        size_t pos = subKey.find('\\');
+        if (pos == std::wstring::npos)
+        {
+            actualPath = L"";
+            return HKEY_CURRENT_USER; // Default root
+        }
+
+        std::wstring root = subKey.substr(0, pos);
+        actualPath = subKey.substr(pos + 1);
+
+        if (root == L"HKEY_CURRENT_USER" || root == L"HKCU")
+            return HKEY_CURRENT_USER;
+        if (root == L"HKEY_LOCAL_MACHINE" || root == L"HKLM")
+            return HKEY_LOCAL_MACHINE;
+        if (root == L"HKEY_CLASSES_ROOT" || root == L"HKCR")
+            return HKEY_CLASSES_ROOT;
+        if (root == L"HKEY_USERS")
+            return HKEY_USERS;
+        if (root == L"HKEY_CURRENT_CONFIG")
+            return HKEY_CURRENT_CONFIG;
+
+        // Default to HKEY_CURRENT_USER
+        actualPath = subKey;
+        return HKEY_CURRENT_USER;
+    }
+
     // Read string from registry
     // static
     std::wstring Registry::ReadString(const std::wstring &subKey, const std::wstring &valueName, const std::wstring &defaultValue )
     {
         HKEY hOpenedKey;
         std::wstring result = defaultValue;
+        std::wstring actualPath;
+        HKEY rootKey = GetRootKey(subKey, actualPath);
 
-        if (RegOpenKeyEx(HKEY_CURRENT_USER, subKey.c_str(), 0, KEY_READ, &hOpenedKey) == ERROR_SUCCESS)
+        if (RegOpenKeyEx(rootKey, actualPath.c_str(), 0, KEY_READ, &hOpenedKey) == ERROR_SUCCESS)
         {
             DWORD size = 0;
             // Get required buffer size
@@ -42,7 +74,10 @@ namespace AnyFSE::Tools
         DWORD result = defaultValue;
         DWORD size = sizeof(DWORD);
 
-        if (RegOpenKeyEx(HKEY_CURRENT_USER, subKey.c_str(), 0, KEY_READ, &hOpenedKey) == ERROR_SUCCESS)
+        std::wstring actualPath;
+        HKEY rootKey = GetRootKey(subKey, actualPath);
+
+        if (RegOpenKeyEx(rootKey, actualPath.c_str(), 0, KEY_READ, &hOpenedKey) == ERROR_SUCCESS)
         {
             RegQueryValueEx(hOpenedKey, valueName.c_str(), NULL, NULL, (LPBYTE)&result, &size);
             RegCloseKey(hOpenedKey);
@@ -56,6 +91,91 @@ namespace AnyFSE::Tools
     {
         return ReadDWORD(subKey, valueName, defaultValue ? 1 : 0) != 0;
     }
+
+    bool Registry::WriteString(const std::wstring &subKey, const std::wstring &valueName, const std::wstring &value)
+    {
+        std::wstring actualPath;
+        HKEY rootKey = GetRootKey(subKey, actualPath);
+
+        HKEY hKey;
+        LONG result = RegCreateKeyExW(rootKey, actualPath.c_str(), 0, nullptr,
+                                      REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &hKey, nullptr);
+        if (result != ERROR_SUCCESS)
+            return false;
+
+        result = RegSetValueExW(hKey, valueName.c_str(), 0, REG_SZ,
+                                reinterpret_cast<const BYTE *>(value.c_str()),
+                                (DWORD)((value.size() + 1) * sizeof(wchar_t)));
+        RegCloseKey(hKey);
+
+        return (result == ERROR_SUCCESS);
+    }
+
+    bool Registry::WriteDWORD(const std::wstring &subKey, const std::wstring &valueName, DWORD value)
+    {
+        std::wstring actualPath;
+        HKEY rootKey = GetRootKey(subKey, actualPath);
+
+        HKEY hKey;
+        LONG result = RegCreateKeyExW(rootKey, actualPath.c_str(), 0, nullptr,
+                                      REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &hKey, nullptr);
+        if (result != ERROR_SUCCESS)
+            return false;
+
+        result = RegSetValueExW(hKey, valueName.c_str(), 0, REG_DWORD,
+                                reinterpret_cast<const BYTE *>(&value), sizeof(DWORD));
+        RegCloseKey(hKey);
+
+        return (result == ERROR_SUCCESS);
+    }
+
+    bool Registry::WriteBool(const std::wstring &subKey, const std::wstring &valueName, bool value)
+    {
+        return WriteDWORD(subKey, valueName, value ? 1 : 0);
+    }
+
+    bool Registry::WriteBinary(const std::wstring &subKey, const std::wstring &valueName, const BYTE *data, DWORD size)
+    {
+        std::wstring actualPath;
+        HKEY rootKey = GetRootKey(subKey, actualPath);
+
+        HKEY hKey;
+        LONG result = RegCreateKeyExW(rootKey, actualPath.c_str(), 0, nullptr,
+                                      REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &hKey, nullptr);
+        if (result != ERROR_SUCCESS)
+            return false;
+
+        result = RegSetValueExW(hKey, valueName.c_str(), 0, REG_BINARY, data, size);
+        RegCloseKey(hKey);
+
+        return (result == ERROR_SUCCESS);
+    }
+
+    bool Registry::DeleteValue(const std::wstring &subKey, const std::wstring &valueName)
+    {
+        std::wstring actualPath;
+        HKEY rootKey = GetRootKey(subKey, actualPath);
+
+        HKEY hKey;
+        LONG result = RegOpenKeyExW(rootKey, actualPath.c_str(), 0, KEY_WRITE, &hKey);
+        if (result != ERROR_SUCCESS)
+            return false;
+
+        result = RegDeleteValueW(hKey, valueName.c_str());
+        RegCloseKey(hKey);
+
+        return (result == ERROR_SUCCESS);
+    }
+
+    bool Registry::DeleteKey(const std::wstring &subKey)
+    {
+        std::wstring actualPath;
+        HKEY rootKey = GetRootKey(subKey, actualPath);
+
+        // Recursive delete for the key and all subkeys
+        return (RegDeleteTreeW(rootKey, actualPath.c_str()) == ERROR_SUCCESS);
+    }
+
 
     std::wstring GetPathFromCommand(const std::wstring &uninstallCommand)
     {
@@ -73,67 +193,64 @@ namespace AnyFSE::Tools
 
     std::wstring Registry::GetInstallPath(const std::wstring &displayName)
     {
-        std::vector<HKEY> registryRoots = {
-            HKEY_LOCAL_MACHINE,
-            HKEY_CURRENT_USER
-        };
-
         std::vector<std::wstring> registryPaths = {
-            L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
-            L"SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall"};
+            L"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+            L"HKCU\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+            L"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+            L"HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall"};
 
         std::wstring exactDisplayName = Tools::to_lower(displayName);
 
-        for (const auto &root : registryRoots)
+        for (const auto &path : registryPaths)
         {
-            for (const auto &path : registryPaths)
+            std::wstring actualPath;
+            HKEY root = GetRootKey(path, actualPath);
+
+            HKEY hKey;
+            if (RegOpenKeyExW(root, actualPath.c_str(), 0, KEY_READ, &hKey) != ERROR_SUCCESS)
             {
-                HKEY hKey;
-                if (RegOpenKeyExW(root, path.c_str(), 0, KEY_READ, &hKey) != ERROR_SUCCESS)
-                {
-                    continue;
-                }
-
-                DWORD subkeyIndex = 0;
-                WCHAR subkeyName[255];
-                DWORD subkeyNameSize = 255;
-
-                while (RegEnumKeyExW(hKey, subkeyIndex, subkeyName, &subkeyNameSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
-                {
-                    HKEY hSubKey;
-                    std::wstring subkeyPath = path + L"\\" + subkeyName;
-
-                    if (RegOpenKeyExW(root, subkeyPath.c_str(), 0, KEY_READ, &hSubKey) == ERROR_SUCCESS)
-                    {
-                        WCHAR displayName[1024];
-                        WCHAR uninstallString[1024];
-                        DWORD dataSize = sizeof(displayName);
-                        DWORD type;
-
-                        if (RegQueryValueExW(hSubKey, L"DisplayName", NULL, &type,
-                                            (LPBYTE)displayName, &dataSize) == ERROR_SUCCESS &&
-                            type == REG_SZ &&
-                            exactDisplayName == Tools::to_lower(displayName))
-                        {
-
-                            dataSize = sizeof(uninstallString);
-                            if (RegQueryValueExW(hSubKey, L"UninstallString", NULL, &type,
-                                                (LPBYTE)uninstallString, &dataSize) == ERROR_SUCCESS &&
-                                type == REG_SZ)
-                            {
-                                RegCloseKey(hSubKey);
-                                RegCloseKey(hKey);
-                                return GetPathFromCommand(uninstallString);
-                            }
-                        }
-                        RegCloseKey(hSubKey);
-                    }
-
-                    subkeyIndex++;
-                    subkeyNameSize = 255;
-                }
-                RegCloseKey(hKey);
+                continue;
             }
+
+            DWORD subkeyIndex = 0;
+            WCHAR subkeyName[255];
+            DWORD subkeyNameSize = 255;
+
+            while (RegEnumKeyExW(hKey, subkeyIndex, subkeyName, &subkeyNameSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+            {
+                HKEY hSubKey;
+                std::wstring subkeyPath = actualPath + L"\\" + subkeyName;
+
+                if (RegOpenKeyExW(root, subkeyPath.c_str(), 0, KEY_READ, &hSubKey) == ERROR_SUCCESS)
+                {
+                    WCHAR displayName[1024];
+                    WCHAR uninstallString[1024];
+                    DWORD dataSize = sizeof(displayName);
+                    DWORD type;
+
+                    if (RegQueryValueExW(hSubKey, L"DisplayName", NULL, &type,
+                                        (LPBYTE)displayName, &dataSize) == ERROR_SUCCESS &&
+                        type == REG_SZ &&
+                        exactDisplayName == Tools::to_lower(displayName))
+                    {
+
+                        dataSize = sizeof(uninstallString);
+                        if (RegQueryValueExW(hSubKey, L"UninstallString", NULL, &type,
+                                            (LPBYTE)uninstallString, &dataSize) == ERROR_SUCCESS &&
+                            type == REG_SZ)
+                        {
+                            RegCloseKey(hSubKey);
+                            RegCloseKey(hKey);
+                            return GetPathFromCommand(uninstallString);
+                        }
+                    }
+                    RegCloseKey(hSubKey);
+                }
+
+                subkeyIndex++;
+                subkeyNameSize = 255;
+            }
+            RegCloseKey(hKey);
         }
 
         return L"";

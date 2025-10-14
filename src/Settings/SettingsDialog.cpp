@@ -5,11 +5,13 @@
 
 #include <uxtheme.h>
 #include "Tools/Tools.hpp"
+#include "Tools/Registry.hpp"
 #include "Logging/LogManager.hpp"
 #include "SettingsDialog.hpp"
 #include "Configuration/Config.hpp"
 #include "FluentDesign/Theme.hpp"
 #include "FluentDesign/DoubleBufferedPaint.hpp"
+#include "TaskManager.hpp"
 
 #define byte ::byte
 
@@ -210,46 +212,46 @@ namespace AnyFSE::Settings
 
         browse.SetFrame(Gdiplus::FrameFlags::SIDE_NO_TOP | Gdiplus::FrameFlags::CORNER_BOTTOM);
 
-        fseOnStartup = &AddSettingsLine(top,
+        fseOnStartupLine = &AddSettingsLine(top,
             L"Enter full screen expirience on startup",
             L"",
-            enterFullscreen,
+            fseOnStartupToggle,
             Layout_LineHeight, Layout_LinePadding, 0);
 
-        customSettingsGroup = &AddSettingsLine(top,
+        customSettingsLine = &AddSettingsLine(top,
             L"Use custom settings",
             L"Change monitoring and startups settings for selected home application",
-            customSettings,
+            customSettingsToggle,
             Layout_LineHeight, Layout_LinePaddingSmall, 0);
 
-        customSettingsGroup->AddGroupItem(&AddSettingsLine(top,
+        customSettingsLine->AddGroupItem(&AddSettingsLine(top,
             L"Additional arguments",
             L"Command line arguments passed to application",
-            additionalArguments,
+            additionalArgumentsEdit,
             Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
 
-        customSettingsGroup->AddGroupItem(&AddSettingsLine(top,
+        customSettingsLine->AddGroupItem(&AddSettingsLine(top,
             L"Primary process name",
             L"Name of home application process",
-            processName,
+            processNameEdit,
             Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
 
-        customSettingsGroup->AddGroupItem(&AddSettingsLine(top,
+        customSettingsLine->AddGroupItem(&AddSettingsLine(top,
             L"Primary window title",
             L"Title of app window when it have been activated",
-            title,
+            titleEdit,
             Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
 
-        customSettingsGroup->AddGroupItem(&AddSettingsLine(top,
+        customSettingsLine->AddGroupItem(&AddSettingsLine(top,
             L"Secondary process name",
             L"Name of app process for alternative mode",
-            processNameAlt,
+            processNameAltEdit,
             Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
 
-        customSettingsGroup->AddGroupItem(&AddSettingsLine(top,
+        customSettingsLine->AddGroupItem(&AddSettingsLine(top,
             L"Secondary window title",
             L"Title of app window when it alternative mode have been activated",
-            titleAlt,
+            titleAltEdit,
             Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
 
         RECT rect;
@@ -263,7 +265,7 @@ namespace AnyFSE::Settings
 
         rect.right -= m_theme.DpiScale(Layout_MarginRight);
 
-        m_hButtonOk = buttonOK.Create(m_hDialog,
+        m_hButtonOk = okButton.Create(m_hDialog,
             rect.right
                 - m_theme.DpiScale(Layout_OKWidth)
                 - m_theme.DpiScale(Layout_ButtonPadding)
@@ -272,40 +274,40 @@ namespace AnyFSE::Settings
             m_theme.DpiScale(Layout_OKWidth),
             m_theme.DpiScale(Layout_ButtonHeight));
 
-        buttonOK.SetText(L"Save");
+        okButton.SetText(L"Save");
 
-        m_hButtonClose = buttonClose.Create(m_hDialog,
+        m_hButtonClose = closeButton.Create(m_hDialog,
             rect.right - m_theme.DpiScale(Layout_CloseWidth),
             rect.top,
             m_theme.DpiScale(Layout_CloseWidth),
             m_theme.DpiScale(Layout_ButtonHeight));
 
-        buttonClose.OnChanged += [This = this]()
+        closeButton.OnChanged += [This = this]()
         {
             EndDialog(This->m_hDialog, IDCANCEL);
         };
 
-        buttonOK.OnChanged += [This = this]()
+        okButton.OnChanged += [This = this]()
         {
             This->OnOk();
         };
 
 
-        buttonClose.SetText(L"Discard and Close");
+        closeButton.SetText(L"Discard and Close");
 
         launcherCombo.OnChanged += [This = this]()
         {
             This->OnLauncherChanged(This->m_hDialog);
         };
 
-        customSettings.OnChanged += [This = this]()
+        customSettingsToggle.OnChanged += [This = this]()
         {
             This->OnCustomChanged(This->m_hDialog);
         };
 
-        customSettingsGroup->OnChanged += [This = this]()
+        customSettingsLine->OnChanged += [This = this]()
         {
-            This->m_customSettingsState = This->customSettingsGroup->GetState();
+            This->m_customSettingsState = This->customSettingsLine->GetState();
         };
 
         browseButton.SetText(L"Browse");
@@ -323,8 +325,8 @@ namespace AnyFSE::Settings
         m_isAgressive = Config::AggressiveMode && config.Type != LauncherType::Xbox;
         UpdateControls();
         UpdateCustomSettings();
-        m_customSettingsState = customSettingsGroup->GetState() != FluentDesign::SettingsLine::Normal
-                                ? customSettingsGroup->GetState()
+        m_customSettingsState = customSettingsLine->GetState() != FluentDesign::SettingsLine::Normal
+                                ? customSettingsLine->GetState()
                                 : FluentDesign::SettingsLine::Opened;
     }
 
@@ -361,13 +363,13 @@ namespace AnyFSE::Settings
 
     void SettingsDialog::OnOk()
     {
-        // Save settings
+        SaveSettings();
         EndDialog(m_hDialog, IDOK);
     }
 
     void SettingsDialog::OnCustomChanged(HWND hwnd)
     {
-        m_isCustom = customSettings.GetCheck();
+        m_isCustom = customSettingsToggle.GetCheck();
         UpdateControls();
     }
 
@@ -384,13 +386,13 @@ namespace AnyFSE::Settings
 
         if (defaults.Type == LauncherType::None)
         {
-            fseOnStartup->Enable(false);
-            enterFullscreen.SetCheck(false);
+            fseOnStartupLine->Enable(false);
+            fseOnStartupToggle.SetCheck(false);
         }
         else
         {
-            fseOnStartup->Enable();
-            enterFullscreen.SetCheck(Config::FseOnStartup);
+            fseOnStartupLine->Enable();
+            fseOnStartupToggle.SetCheck(Config::FseOnStartup);
         }
 
         bool alwaysSettings = defaults.Type==LauncherType::Custom;
@@ -399,7 +401,7 @@ namespace AnyFSE::Settings
         bool haveSettings = m_isCustom && !noSettings || alwaysSettings;
         bool enableCheck = !alwaysSettings && !noSettings;
 
-        customSettings.SetCheck(haveSettings);
+        customSettingsToggle.SetCheck(haveSettings);
 
         FluentDesign::SettingsLine::State state = haveSettings
                 ? alwaysSettings
@@ -407,8 +409,8 @@ namespace AnyFSE::Settings
                     : m_customSettingsState
                 : FluentDesign::SettingsLine::Normal;
 
-        customSettingsGroup->SetState(state);
-        customSettingsGroup->Enable(enableCheck);
+        customSettingsLine->SetState(state);
+        customSettingsLine->Enable(enableCheck);
 
         if (!haveSettings)
         {
@@ -452,15 +454,64 @@ namespace AnyFSE::Settings
     void SettingsDialog::UpdateCustomSettings()
     {
         // Set values
-        additionalArguments.SetText(config.StartArg);
-        processName.SetText(config.ProcessName);
-        processNameAlt.SetText(config.ProcessNameAlt);
-        title.SetText(config.WindowTitle);
-        titleAlt.SetText(config.WindowTitleAlt);
+        additionalArgumentsEdit.SetText(config.StartArg);
+        processNameEdit.SetText(config.ProcessName);
+        processNameAltEdit.SetText(config.ProcessNameAlt);
+        titleEdit.SetText(config.WindowTitle);
+        titleAltEdit.SetText(config.WindowTitleAlt);
 
         // SendDlgItemMessage(m_hDialog, IDC_NOT_AGGRESSIVE_MODE, BM_SETCHECK, (WPARAM)(m_isAgressive && config.Type != LauncherType::Xbox) ? BST_UNCHECKED : BST_CHECKED, 0 );
         // EnableWindow(GetDlgItem(m_hDialog, IDC_NOT_AGGRESSIVE_MODE), config.Type != LauncherType::Xbox);
     }
     void SettingsDialog::SaveSettings()
-    {}
+    {
+        const std::wstring gamingConfiguration = L"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration";
+        const std::wstring startupToGamingHome = L"StartupToGamingHome";
+        const std::wstring gamingHomeApp = L"GamingHomeApp";
+        const std::wstring xboxApp = L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";
+        const std::wstring anyFSERoot = L"HKCU\\Software\\AnyFSE\\Settings";
+
+        bool removeAnyFSE = false;
+
+        if (config.Type == LauncherType::None)
+        {
+            Registry::DeleteValue(gamingConfiguration, gamingHomeApp);
+            Registry::WriteBool(gamingConfiguration, startupToGamingHome, false);
+            removeAnyFSE = true;
+        }
+        else
+        {
+            Registry::WriteBool(gamingConfiguration, startupToGamingHome, fseOnStartupToggle.GetCheck());
+            Registry::WriteString(gamingConfiguration, gamingHomeApp, xboxApp);
+
+            if (config.Type == LauncherType::Xbox)
+            {
+                removeAnyFSE = true;
+            }
+            else
+            {
+                // save FSE
+                Registry::WriteString(anyFSERoot, L"LauncherPath", config.StartCommand);
+
+                Registry::WriteBool(anyFSERoot, L"CustomSettings", customSettingsToggle.GetCheck());
+                Registry::WriteString(anyFSERoot, L"StartCommand", config.StartCommand);
+                Registry::WriteString(anyFSERoot, L"StartArg", additionalArgumentsEdit.GetText());
+                Registry::WriteString(anyFSERoot, L"ProcessName", processNameEdit.GetText());
+                Registry::WriteString(anyFSERoot, L"WindowTitle", titleEdit.GetText());
+                Registry::WriteString(anyFSERoot, L"ProcessNameAlt", processNameAltEdit.GetText());
+                Registry::WriteString(anyFSERoot, L"WindowTitleAlt", titleAltEdit.GetText());
+                Registry::WriteString(anyFSERoot, L"IconFile", config.IconFile);
+            }
+        }
+        if (removeAnyFSE)
+        {
+            Registry::DeleteKey(anyFSERoot);
+            // remove appstart
+        }
+        else
+        {
+            //create app start
+            TaskManager::CreateTask();
+        }
+    }
 }
