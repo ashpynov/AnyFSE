@@ -38,11 +38,8 @@ namespace FluentDesign
         m_dpi = GetDpiForWindow(m_hParentWnd);
         LoadColors();
         CreateFonts();
-        BOOL useDarkMode = IsDark() ? TRUE : FALSE;
-        DwmSetWindowAttribute(hHostWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &useDarkMode, sizeof(useDarkMode));
 
-        COLORREF captionColor = GetColorRef(FluentDesign::Theme::Colors::Dialog);
-        DwmSetWindowAttribute(hHostWnd, DWMWA_CAPTION_COLOR, &captionColor, sizeof(captionColor));
+
         SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
         SetWindowSubclass(hHostWnd, DialogSubclassProc, 0, (DWORD_PTR)this);
@@ -147,13 +144,28 @@ namespace FluentDesign
 
         switch (msg)
         {
-            case WM_DPICHANGED:
+            case WM_SETTINGCHANGE:
+            {
+                if (lParam != NULL && wcscmp(L"ImmersiveColorSet", (LPCWSTR)lParam) == 0)
                 {
-                    This->m_dpi = HIWORD(wParam);
-                    This->CreateFonts();
-                    This->OnDPIChanged.Notify();
+                    This->LoadColors();
+                    RedrawWindow(hWnd, NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE | RDW_UPDATENOW);
                 }
+            }
+            break;
+            case WM_DWMCOLORIZATIONCOLORCHANGED:
+            {
+                This->LoadColors();
+                RedrawWindow(hWnd, NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE | RDW_UPDATENOW);
                 break;
+            }
+            case WM_DPICHANGED:
+            {
+                This->m_dpi = HIWORD(wParam);
+                This->CreateFonts();
+                This->OnDPIChanged.Notify();
+            }
+            break;
             case WM_CTLCOLORDLG:
             {
                 static HBRUSH hBlackBrush = CreateSolidBrush(This->GetColorRef(FluentDesign::Theme::Colors::Dialog));
@@ -247,7 +259,6 @@ namespace FluentDesign
         // For rounded rectangles in GDI+, we need to use GraphicsPath
         Gdiplus::RoundRect(graphics, focusRect, (REAL)GetSize_FocusCornerSize() + offset, nullptr, borderPen);
 
-        log.Info("Focus frame");
     }
 
     void Theme::DrawChildFocus(HDC hdc, HWND parent, HWND child)
@@ -347,4 +358,5 @@ namespace FluentDesign
     {
         return designSize * m_dpi / 96;
     };
+
 }

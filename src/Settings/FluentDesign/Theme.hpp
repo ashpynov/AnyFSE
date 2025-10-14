@@ -71,6 +71,7 @@ namespace FluentDesign
         ULONG_PTR gdiplusToken;
 
         bool m_isDark;
+        COLORREF m_accentColor;
 
         HWND m_hParentWnd;
         HFONT m_hPrimaryFont;
@@ -136,6 +137,9 @@ namespace FluentDesign
         const float DpiScaleF(int designSize);
         const float DpiScaleF(float designSize);
 
+        bool IsDarkThemeEnabled();
+        COLORREF GetAccentColor();
+
         const HFONT GetFont_Text() { return m_hPrimaryFont; }
         const HFONT GetFont_TextSecondary() { return m_hSecondaryFont; }
         const HFONT GetFont_Glyph() { return m_hGlyphFont; }
@@ -143,7 +147,8 @@ namespace FluentDesign
         const HFONT GetFont_Title() { return m_hTitleFont; }
 
         // colors
-        const DWORD GetColor(Colors code) { return m_colors[code] | 0xFF000000; }
+        const DWORD ReverseRGB(DWORD rgb) { return RGB(rgb >> 16, rgb >> 8, rgb); }
+        const DWORD GetColor(Colors code) { return ReverseRGB(m_colors[code]) | 0xFF000000; }
         const COLORREF GetColorRef(Colors code) { return m_colors[code]; }
 
         // Constants

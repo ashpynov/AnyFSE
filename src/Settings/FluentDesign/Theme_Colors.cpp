@@ -3,11 +3,36 @@
 #include "Logging/LogManager.hpp"
 #include <dwmapi.h>
 #include <commctrl.h>
+#include <algorithm>
+#include "Tools/Registry.hpp"
+
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "Gdiplus.lib")
 
 namespace FluentDesign
 {
+    bool Theme::IsDarkThemeEnabled()
+    {
+        std::wstring root = L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
+        DWORD appLight = Registry::ReadDWORD(root, L"AppsUseLightTheme", Registry::ReadDWORD(root, L"SystemUsesLightTheme", 1));
+        return (appLight == 0);
+    }
+
+    COLORREF Theme::GetAccentColor()
+    {
+        BOOL dwmEnabled;
+        DWORD dwmColor;
+
+        if (SUCCEEDED(DwmIsCompositionEnabled(&dwmEnabled)) && dwmEnabled)
+        {
+            if (SUCCEEDED(DwmGetColorizationColor(&dwmColor, &dwmEnabled)))
+            {
+                return ReverseRGB(dwmColor) & 0xFFFFFF;
+            }
+        }
+        return RGB(215, 170, 170);
+    }
+
     DWORD Theme::GetGrey(BYTE lumen)
     {
         return RGB(lumen, lumen, lumen);
@@ -15,13 +40,71 @@ namespace FluentDesign
 
     DWORD Theme::GetAccent(BYTE lumen)
     {
-        return RGB(123, 20, 139);
+        // cast m_accent to HSV
+        double R = ((double)GetRValue(m_accentColor)) / 255;
+        double G = ((double)GetGValue(m_accentColor)) / 255;
+        double B = ((double)GetBValue(m_accentColor)) / 255;
+
+        double Cmax = max(R, max(G, B));
+        double Cmin = min(R, min(G, B));
+        double delta = (Cmax - Cmin);
+
+        double V = Cmax;
+        double S = Cmax == 0 ? 0 : delta / Cmax;
+
+        double H = 0;
+        if (delta != 0)
+        {
+            H =   Cmax == R ? (G - B) / delta + (G < B ? 6.0 : 0.0)
+                : Cmax == G ? (B - R) / delta + 2.0
+                            : (R - G) / delta + 4.0;
+        }
+
+        // change V
+        double Vmix = ((double)lumen / 255.0);
+
+        V = (Vmix <= 0.5)
+            ? 2.0 * Vmix * V
+            : 2.0 * (Vmix - 0.5) * (1.0 - V) + V;
+
+        S = S * 0.75;
+        // cast HSV to RGB:
+        if (S == 0)
+        {
+            R = G = B = V;
+        }
+        else
+        {
+            int i = (int)H;
+            double f = H - i;
+            double p = V * (1 - S);
+            double q = V * (1 - S * f);
+            double t = V * (1 - S * (1 - f));
+
+            switch (i)
+            {
+                case 0: R = V; G = t; B = p; break;
+                case 1: R = q; G = V; B = p; break;
+                case 2: R = p; G = V; B = t; break;
+                case 3: R = p; G = q; B = V; break;
+                case 4: R = t; G = p; B = V; break;
+                default: R = V; G = p; B = q; break;
+            }
+        }
+        return RGB(R * 255, G * 255, B * 255);
     }
-
-
 
     void Theme::LoadColors()
     {
+        m_isDark = IsDarkThemeEnabled();
+        m_accentColor = GetAccentColor();
+
+         BOOL useDarkMode = IsDark() ? TRUE : FALSE;
+        DwmSetWindowAttribute(m_hParentWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &useDarkMode, sizeof(useDarkMode));
+
+        COLORREF captionColor = GetColorRef(FluentDesign::Theme::Colors::Dialog);
+        DwmSetWindowAttribute(m_hParentWnd, DWMWA_CAPTION_COLOR, &captionColor, sizeof(captionColor));
+
         if (m_isDark)
         {
             m_colors[Text] = GetGrey(255);
@@ -36,11 +119,11 @@ namespace FluentDesign
 
             m_colors[Dialog] = GetGrey(32);
 
-            m_colors[ToggleBorderOn] = GetGrey(89);
+            m_colors[ToggleBorderOn] = GetAccent(204);          // accented color
             m_colors[ToggleBorderOff] = GetGrey(207);
-            m_colors[ToggleTrackOn] = GetAccent(89);           // accented color
-            m_colors[ToggleTrackOnPressed] = GetAccent(84);    // accented color darker
-            m_colors[ToggleTrackOnDisabled] = GetAccent(89);           // accented color
+            m_colors[ToggleTrackOn] = GetAccent(204);           // accented color
+            m_colors[ToggleTrackOnPressed] = GetAccent(196);    // accented color darker
+            m_colors[ToggleTrackOnDisabled] = GetAccent(204);   // accented color
             m_colors[ToggleTrackOff] = GetGrey(39);
             m_colors[ToggleTrackOffHover] = GetGrey(52);
             m_colors[ToggleThumbOn] = GetGrey(0);
@@ -62,14 +145,14 @@ namespace FluentDesign
             m_colors[ComboPopup] = GetGrey(38);
             m_colors[ComboPopupBorder] = GetGrey(1);
             m_colors[ComboPopupSelected] = GetGrey(61);
-            m_colors[ComboPopupSelectedMark] = GetAccent(89);  // accented color
+            m_colors[ComboPopupSelectedMark] = GetAccent(204);  // accented color
             m_colors[ComboPopupHover] = GetGrey(61);
 
             m_colors[Edit] = GetGrey(55);
             m_colors[EditHover] = GetGrey(61);
             m_colors[EditAccent] = GetGrey(154);
             m_colors[EditFocus] = GetGrey(31);
-            m_colors[EditAccentFocus] = GetAccent(64);         // accented color
+            m_colors[EditAccentFocus] = GetAccent(204);         // accented color
             m_colors[EditBorder] = GetGrey(55);
             m_colors[EditBorderFocus] = GetGrey(58);
 
@@ -94,11 +177,11 @@ namespace FluentDesign
 
             m_colors[Dialog] = GetGrey(243);
 
-            m_colors[ToggleBorderOn] = GetAccent(89);             // accented color
+            m_colors[ToggleBorderOn] = GetAccent(128);             // accented color
             m_colors[ToggleBorderOff] = GetGrey(135);
-            m_colors[ToggleTrackOn] = GetAccent(89);              // accented color
-            m_colors[ToggleTrackOnPressed] = GetAccent(84);       // accented color darker
-            m_colors[ToggleTrackOnDisabled] = GetAccent(89);      // accented color
+            m_colors[ToggleTrackOn] = GetAccent(128);              // accented color
+            m_colors[ToggleTrackOnPressed] = GetAccent(135);       // accented color darker
+            m_colors[ToggleTrackOnDisabled] = GetAccent(128);      // accented color
             m_colors[ToggleTrackOff] = GetGrey(245);
             m_colors[ToggleTrackOffHover] = GetGrey(236);
             m_colors[ToggleThumbOn] = GetGrey(255);
@@ -120,14 +203,14 @@ namespace FluentDesign
             m_colors[ComboPopup] = GetGrey(249);
             m_colors[ComboPopupBorder] = GetGrey(222);
             m_colors[ComboPopupSelected] = GetGrey(239);
-            m_colors[ComboPopupSelectedMark] = GetAccent(89);  // accented color
+            m_colors[ComboPopupSelectedMark] = GetAccent(128);  // accented color
             m_colors[ComboPopupHover] = GetGrey(240);
 
             m_colors[Edit] = GetGrey(251);
             m_colors[EditHover] = GetGrey(246);
             m_colors[EditAccent] = GetGrey(154);
             m_colors[EditFocus] = GetGrey(255);
-            m_colors[EditAccentFocus] = GetAccent(64);         // accented color
+            m_colors[EditAccentFocus] = GetAccent(128);         // accented color
             m_colors[EditBorder] = GetGrey(227);
             m_colors[EditBorderFocus] = GetGrey(227);
 

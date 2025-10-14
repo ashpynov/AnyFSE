@@ -534,10 +534,10 @@ namespace FluentDesign
         {
             HBRUSH hGripBrush = CreateSolidBrush(m_theme.GetColorRef(Theme::Colors::ComboPopupSelectedMark));
             RECT gripRect = backgroundRect;
-            gripRect.left += 1;
+            gripRect.left += 2;
             gripRect.right = gripRect.left + m_theme.DpiScale(3);
-            gripRect.top += (gripRect.bottom - gripRect.top - m_theme.DpiScale(14)) / 2;
-            gripRect.bottom = gripRect.top + m_theme.DpiScale(14);
+            gripRect.top += (gripRect.bottom - gripRect.top - m_theme.DpiScale(16)) / 2;
+            gripRect.bottom = gripRect.top + m_theme.DpiScale(16);
             FillRect(hdcMem, &gripRect, hGripBrush);
             DeleteObject(hGripBrush);
         }
