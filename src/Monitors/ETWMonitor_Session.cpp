@@ -12,7 +12,7 @@ namespace AnyFSE::Monitors
 {
 
     static Logger log = LogManager::GetLogger("ETWMonitor/Session");
-    
+
     // Process Provider GUID for real-time process monitoring
     // {22FB2CD6-0E7B-422B-A0C7-2FAD1FD0E716} - Microsoft-Windows-Kernel-Process
     const GUID ETWMonitor::ProcessProviderGuid =
@@ -20,14 +20,14 @@ namespace AnyFSE::Monitors
 
     // Registry Provider GUID
     // {0x70eb4f03-c1de-4f73-a051-33d13d5413bd} - Microsoft-Windows-Kernel-Registry
-    const GUID ETWMonitor::RegistryProviderGuid = 
+    const GUID ETWMonitor::RegistryProviderGuid =
         {0x70eb4f03, 0xc1de, 0x4f73, {0xa0, 0x51, 0x33, 0xd1, 0x3d, 0x54, 0x13, 0xbd}};
-        
+
     void ETWMonitor::SetTraceProperties()
     {
         size_t bufferSize = sizeof(EVENT_TRACE_PROPERTIES) + (m_sessionName.size() + 1) * sizeof(WCHAR)+ 4096;
-        if (m_traceProperties == nullptr) 
-        {            
+        if (m_traceProperties == nullptr)
+        {
             m_traceProperties = (EVENT_TRACE_PROPERTIES *)malloc(bufferSize);
             if (!m_traceProperties)
             {
@@ -55,7 +55,6 @@ namespace AnyFSE::Monitors
         wcscpy_s((WCHAR *)((BYTE *)m_traceProperties + m_traceProperties->LoggerNameOffset),
             m_sessionName.size() + 1, m_sessionName.c_str());
     }
-
 
     ULONG ETWMonitor::StopSession()
     {
@@ -121,7 +120,6 @@ namespace AnyFSE::Monitors
 
     ULONG ETWMonitor::EnableRegistryProvider()
     {
-        // Step 2: Enable the process provider on the session
         ENABLE_TRACE_PARAMETERS params = {0};
         params.SourceId = RegistryProviderGuid;
         params.Version = ENABLE_TRACE_PARAMETERS_VERSION_2;
@@ -129,19 +127,18 @@ namespace AnyFSE::Monitors
         params.ControlFlags = 0;
 
         if (EnableTraceEx2(
-                m_sessionHandle, // Use session handle, not consumer handle
+                m_sessionHandle,
                 &RegistryProviderGuid,
-                //&SystemTraceControlGuid,
                 EVENT_CONTROL_CODE_ENABLE_PROVIDER,
                 TRACE_LEVEL_VERBOSE,
                 0x400, 0, INFINITE, &params
             )
         )
         {
-            StopTrace(m_sessionHandle, m_sessionName.c_str(), m_traceProperties);
-            free(m_traceProperties);
-            m_traceProperties = nullptr;
-            m_sessionHandle = NULL;
+            // StopTrace(m_sessionHandle, m_sessionName.c_str(), m_traceProperties);
+            // free(m_traceProperties);
+            // m_traceProperties = nullptr;
+            // m_sessionHandle = NULL;
             throw log.APIError("Failed to enable registry provider: ");
         }
         return ERROR_SUCCESS;
@@ -168,12 +165,13 @@ namespace AnyFSE::Monitors
         }
         return ERROR_SUCCESS;
     }
-        void ETWMonitor::StartRealtimeETW()
+
+    void ETWMonitor::StartRealtimeETW()
     {
         SetTraceProperties();
         StartSession();
         EnableProcessProvider();
-        EnableRegistryProvider();
+        //EnableRegistryProvider();
         OpenConsumer();
 
         log.Info("Real-time ETW monitoring started successfully for process: %s", Tools::to_string(m_processName).c_str());
@@ -190,7 +188,7 @@ namespace AnyFSE::Monitors
         if (m_sessionHandle != NULL)
         {
             if (m_traceProperties)
-            { 
+            {
                 EnableTraceEx2(
                     m_sessionHandle,
                     &ProcessProviderGuid,
@@ -206,7 +204,7 @@ namespace AnyFSE::Monitors
                     0x0, 0, 0, NULL);
 
                 StopTrace(m_sessionHandle, m_sessionName.c_str(), m_traceProperties);
-                free(m_traceProperties);
+                if (m_traceProperties) free(m_traceProperties);
                 m_traceProperties = nullptr;
             }
             m_sessionHandle = NULL;

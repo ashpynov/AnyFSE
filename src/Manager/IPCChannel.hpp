@@ -81,7 +81,7 @@ namespace AnyFSE::Manager
         Message m_pendingMessage;
         Logger log;
 
-        static const DWORD BUFFER_SIZE = sizeof(Message);
+        static const DWORD BUFFER_SIZE = sizeof(Message)*100;
         static const DWORD CONNECT_TIMEOUT = 5000;
         static const DWORD WRITE_TIMEOUT = 3000;
     };

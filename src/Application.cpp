@@ -123,12 +123,6 @@ namespace AnyFSE
             return 0;
         }
 
-        // if (!GamingExperience::ApiIsAvailable)
-        // {
-        //     log.Critical("Fullscreen Gaming API is not detected, exiting\n");
-        //     return -1;
-        // }
-
         MainWindow mainWindow;
 
         if (!mainWindow.Create(className, hInstance, (Config::LauncherName + L" is launching").c_str()))
@@ -152,6 +146,14 @@ namespace AnyFSE
             return -1;
         }
 
+        if (false && !GamingExperience::ApiIsAvailable)
+        {
+            log.Critical("Fullscreen Gaming API is not detected, exiting\n");
+            managerState.NotifyRemote(StateEvent::EXIT_SERVICE);
+            return -1;
+        }
+
+        managerState.NotifyRemote(StateEvent::MONITOR_REGISTRY);
         managerState.Notify(StateEvent::START);
 
         GamingExperience fseMonitor;
@@ -170,6 +172,7 @@ namespace AnyFSE
         managerState.Start();
 
         exitCode = MainWindow::RunLoop();
+        managerState.NotifyRemote(StateEvent::EXIT_SERVICE);
 
         managerState.Stop();
 

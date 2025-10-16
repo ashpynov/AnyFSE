@@ -13,8 +13,10 @@ namespace AnyFSE::Manager::State
             ManagerService();
             ~ManagerService();
 
+            Event OnMonitorRegistry;
             Event OnXboxDeny;
             Event OnXboxAllow;
+            Event OnExit;
 
         private:
             virtual void ProcessEvent(StateEvent event);

@@ -26,6 +26,8 @@ namespace AnyFSE::Monitors
         Event OnDeviceFormTouched;
         Event OnFailure;
 
+        ULONG EnableRegistryProvider();
+
     private:
         template <class T>
         PWCHAR wCharAt(T data, ULONG offset)
@@ -45,7 +47,7 @@ namespace AnyFSE::Monitors
         ULONG StopSession();
         ULONG StartSession();
         ULONG EnableProcessProvider();
-        ULONG EnableRegistryProvider();
+
         ULONG OpenConsumer();
         void StartRealtimeETW();
         void StopRealtimeETW();

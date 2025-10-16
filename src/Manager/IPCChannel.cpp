@@ -1,15 +1,17 @@
 #ifdef _TRACE
-#define LOGTRACE(...) log.Trace(...)
+#define LOGTRACE log.Trace
 #else
 #define LOGTRACE(...)
 #endif
 
+#include <windows.h>
+#include <sddl.h>
 #include "IPCChannel.hpp"
 
 namespace AnyFSE::Manager
 {
     IPCChannel::IPCChannel(const std::wstring &name, bool isServer, HANDLE cancelEvent)
-        : m_pipeName(L"\\\\.\\pipe\\" + name)
+        : m_pipeName(L"\\\\.\\pipe\\Global\\" + name)
         , m_isServer(isServer)
         , m_pipeHandle(INVALID_HANDLE_VALUE)
         , m_cancelEvent(cancelEvent)
@@ -55,14 +57,17 @@ namespace AnyFSE::Manager
         if (m_connectOverlap.hEvent)
         {
             CloseHandle(m_connectOverlap.hEvent);
+            m_connectOverlap.hEvent = NULL;
         }
         if (m_readOverlap.hEvent)
         {
             CloseHandle(m_readOverlap.hEvent);
+            m_readOverlap.hEvent = NULL;
         }
         if (m_writeOverlap.hEvent)
         {
             CloseHandle(m_writeOverlap.hEvent);
+            m_writeOverlap.hEvent = NULL;
         }
         if (m_pipeHandle != INVALID_HANDLE_VALUE)
         {
@@ -71,10 +76,12 @@ namespace AnyFSE::Manager
                 DisconnectNamedPipe(m_pipeHandle);
             }
             CloseHandle(m_pipeHandle);
+            m_pipeHandle = NULL;
         }
 
         LOGTRACE("Channel destroyed");
     }
+
 
     // Connection state queries
     IPCChannel::ConnectionState IPCChannel::GetConnectionState() const
@@ -353,7 +360,12 @@ namespace AnyFSE::Manager
     {
         LOGTRACE("IPCChannel::CheckPendingReadCompletion: Checking with timeout=%lu", timeout);
 
-        DWORD result = WaitForSingleObject(m_readOverlap.hEvent, timeout);
+        HANDLE waitHandles[2] = {m_readOverlap.hEvent, m_cancelEvent};
+        DWORD handleCount = (m_cancelEvent != NULL) ? 2 : 1;
+
+        LOGTRACE("IPCChannel::AsyncWriteWithTimeout: Write pending, waiting for completion");
+        DWORD result = WaitForMultipleObjects(handleCount, waitHandles, FALSE, timeout);
+
         bool completed = (result == WAIT_OBJECT_0);
 
         LOGTRACE("IPCChannel::CheckPendingReadCompletion: Wait result=%lu, completed=%d", result, completed);
@@ -493,7 +505,7 @@ namespace AnyFSE::Manager
             if (bytesWritten == sizeof(Message))
             {
                 LOGTRACE("IPCChannel::AsyncWriteWithTimeout: Write completed immediately, bytes=%lu", bytesWritten);
-                FlushFileBuffers(m_pipeHandle);
+                // FlushFileBuffers(m_pipeHandle);
                 return true;
             }
             else
@@ -527,7 +539,7 @@ namespace AnyFSE::Manager
                         {
                             LOGTRACE("IPCChannel::AsyncWriteWithTimeout: Write completed successfully, bytes=%lu",
                                       bytesTransferred);
-                            FlushFileBuffers(m_pipeHandle);
+                            // FlushFileBuffers(m_pipeHandle);
                             return true;
                         }
                         else
@@ -597,6 +609,24 @@ namespace AnyFSE::Manager
         {
             if (m_isServer)
             {
+
+                SECURITY_ATTRIBUTES sa;
+                PSECURITY_DESCRIPTOR pSD = NULL;
+
+                // Create security descriptor allowing cross-session access
+                const char* szSDDL = "D:(A;OICI;GA;;;SY)(A;OICI;GA;;;AU)(A;OICI;GA;;;IU)";
+
+                if (!ConvertStringSecurityDescriptorToSecurityDescriptorA(
+                        szSDDL, SDDL_REVISION_1, &pSD, NULL))
+                {
+                    log.Error(log.APIError(), "ConvertStringSecurityDescriptor failed:");
+                    return false;
+                }
+
+                sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+                sa.lpSecurityDescriptor = pSD;
+                sa.bInheritHandle = FALSE;
+
                 m_pipeHandle = CreateNamedPipe(
                     m_pipeName.c_str(),
                     PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
@@ -605,7 +635,7 @@ namespace AnyFSE::Manager
                     BUFFER_SIZE,
                     BUFFER_SIZE,
                     CONNECT_TIMEOUT,
-                    NULL);
+                    &sa);
 
                 if (m_pipeHandle != INVALID_HANDLE_VALUE)
                 {
@@ -739,6 +769,7 @@ namespace AnyFSE::Manager
             default:
                 // Other error - connection failed
                 log.Error(log.APIError(), "IPCChannel::ServerWaitForConnection: ConnectNamedPipe failed");
+                m_pipeHandle = INVALID_HANDLE_VALUE;
                 m_connectionState = ConnectionState::Disconnected;
                 return false;
             }
@@ -749,7 +780,7 @@ namespace AnyFSE::Manager
         DWORD handleCount = (m_cancelEvent != NULL) ? 2 : 1;
 
         LOGTRACE("IPCChannel::ServerWaitForConnection: Waiting for connection completion");
-        DWORD result = WaitForMultipleObjects(handleCount, waitHandles, FALSE, timeout);
+        DWORD result = WaitForMultipleObjects(handleCount, waitHandles, FALSE, min(timeout, CONNECT_TIMEOUT));
 
         switch (result)
         {

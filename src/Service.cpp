@@ -23,7 +23,8 @@ namespace AnyFSE
 
     BOOL Service::ExitService()
     {
-        return CloseWindow(m_hwnd);
+        PostMessage(m_hwnd, WM_DESTROY, 0, 0);
+        return true;
     }
 
     BOOL Service::ShouldRunAsService(LPSTR lpCmdLine)
@@ -83,6 +84,7 @@ namespace AnyFSE
         {
             managerState.Stop();
             WTSUnRegisterSessionNotification(hwnd);
+            PostQuitMessage(0);
         }
         return DefWindowProc(hwnd, msg, wParam, lParam);
     }
@@ -90,7 +92,7 @@ namespace AnyFSE
     void Service::MonitorSessions()
     {
         MSG msg;
-        while (GetMessage(&msg, NULL, 0, 0))
+        while (GetMessage(&msg, NULL, 0, 0) > 0)
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
@@ -126,12 +128,19 @@ namespace AnyFSE
         wchar_t modulePath[MAX_PATH];
         GetModuleFileName(NULL, modulePath, MAX_PATH);
 
+        std::wstring fullCommand = std::wstring(L"\"") + modulePath + L"\" --application";
+
+        // Create writable buffer for command line
+        std::vector<wchar_t> cmdLine(MAX_PATH);
+        wcscpy_s(cmdLine.data(), MAX_PATH, fullCommand.c_str());
+
+
         log.Info(log.APIError(), "To CreateProcessAsUser...");
         // Create process with elevated token
         BOOL success = CreateProcessAsUser(
-            hUserToken,                      // Elevated token
+            hUserToken,                  // Elevated token
             NULL,                        // Application name
-            modulePath,                  // Command line
+            cmdLine.data(),              // Command line
             NULL,                        // Process attributes
             NULL,                        // Thread attributes
             FALSE,                       // Inherit handles
@@ -183,7 +192,19 @@ namespace AnyFSE
 
         etwMonitor.OnFailure += ([]()
         {
-            PostQuitMessage(-1);
+            ExitService();
+        });
+
+        managerState.OnMonitorRegistry += ([]()
+        {
+            log.Info("Monitor registry recieved!" );
+            etwMonitor.EnableRegistryProvider();
+        });
+
+        managerState.OnExit += ([]()
+        {
+            log.Info("Exiting!" );
+            ExitService();
         });
 
         managerState.OnXboxDeny += ([]()

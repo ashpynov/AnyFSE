@@ -99,7 +99,7 @@ namespace AnyFSE::Manager::Cycle
 
             std::unique_lock<std::mutex> lock(queueMutex);
 
-            if (eventQueue.empty() || false)
+            if (eventQueue.empty())
             {
                 DWORD timeoutMs = INFINITE;
                 if (nextTimeout.has_value())

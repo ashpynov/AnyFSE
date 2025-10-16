@@ -14,9 +14,12 @@ namespace AnyFSE::Window
     static Logger log = LogManager::GetLogger("MainWindow");
     WNDCLASS MainWindow::stWC;
 
-    MainWindow::MainWindow() : hWnd(NULL),
-                               aClass(NULL)
+    MainWindow::MainWindow()
+        : hWnd(NULL)
+        , aClass(NULL)
+        , WM_TASKBARCREATED(RegisterWindowMessage(L"TaskbarCreated"))
     {
+
         ZeroMemory(&stWC, sizeof(stWC));
     }
     MainWindow::~MainWindow()
@@ -37,8 +40,6 @@ namespace AnyFSE::Window
             UnregisterClass((LPCTSTR)aClass, stWC.hInstance);
         }
     }
-
-
 
     bool MainWindow::Create(LPCWSTR className, HINSTANCE hInstance, LPCTSTR windowName)
     {
@@ -108,6 +109,7 @@ namespace AnyFSE::Window
             pWindow = (MainWindow *)pCreate->lpCreateParams;
             pWindow->hWnd = hWnd;
             SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pWindow);
+
         }
         else
         {
@@ -124,7 +126,12 @@ namespace AnyFSE::Window
 
     LRESULT CALLBACK MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
-
+        if (uMsg == WM_TASKBARCREATED)
+        {
+            log.Info("Explorer start taskbar ready");
+            CreateTrayIcon();
+            return DefWindowProc(hWnd, uMsg, wParam, lParam);
+        }
         switch (uMsg)
         {
         case WM_CREATE:
@@ -159,6 +166,11 @@ namespace AnyFSE::Window
     }
 
     void MainWindow::OnCreate()
+    {
+        CreateTrayIcon();
+    }
+
+    void MainWindow::CreateTrayIcon()
     {
         NOTIFYICONDATA stData;
         ZeroMemory(&stData, sizeof(stData));

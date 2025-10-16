@@ -14,6 +14,8 @@ namespace AnyFSE::Manager
         OPEN_DEVICE_FORM,
         XBOX_DENY,
         XBOX_ALLOW,
+        MONITOR_REGISTRY,
+        EXIT_SERVICE,
     };
 }
 

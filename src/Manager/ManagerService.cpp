@@ -35,6 +35,12 @@ namespace AnyFSE::Manager::State
             case StateEvent::XBOX_ALLOW:
                 return OnXboxAllow.Notify();
 
+            case StateEvent::MONITOR_REGISTRY:
+                return OnMonitorRegistry.Notify();
+
+            case StateEvent::EXIT_SERVICE:
+                return OnExit.Notify();
+
             default:
                 log.Info("Recieved event by service %d", event);
         }
