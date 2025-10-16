@@ -24,6 +24,11 @@ namespace AnyFSE::Logging
 
     void LogManager::Initialize(const string &appName, LogLevel level, const string &filePath)
     {
+        if (!applicationName.empty())
+        {
+            return;
+        }
+
         logLevel = level;
         applicationName = appName;
         logToConsole = IsDebuggerPresent() != 0;
@@ -136,7 +141,7 @@ namespace AnyFSE::Logging
             {
                 cout << left << setw(48) << consolePrefix << "| " << line << endl;
             }
-            std::cout.flush(); 
+            std::cout.flush();
         }
     }
 

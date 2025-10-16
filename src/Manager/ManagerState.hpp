@@ -1,7 +1,8 @@
 #pragma once
-#include "Window/MainWindow.hpp"
 #include "ManagerCycle.hpp"
 #include "ManagerEvents.hpp"
+
+namespace AnyFSE::Window { class MainWindow; }
 
 namespace AnyFSE::Manager::State
 {
@@ -29,7 +30,7 @@ namespace AnyFSE::Manager::State
             void OnOpenHome();
             void OnLauncherTimer();
             void OnPreventTimer();
-            
+
             bool IsInFSEMode();
             bool IsLauncherActive();
             bool IsLauncherProcess();

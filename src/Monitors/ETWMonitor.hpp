@@ -18,7 +18,7 @@ namespace AnyFSE::Monitors
         explicit ETWMonitor(const std::wstring &processName);
         ~ETWMonitor();
 
-        HANDLE Run(bool &cancelToken);
+        HANDLE Start();
         void Stop();
         HANDLE StopAsync();
         Event OnProcessExecuted;
@@ -39,7 +39,7 @@ namespace AnyFSE::Monitors
             return offset ? (PWCHAR)((PBYTE)data + offset) : L"";
         }
 
-        void MonitoringThread(bool &cancelToken);
+        void MonitoringThread();
 
         void SetTraceProperties();
         ULONG StopSession();

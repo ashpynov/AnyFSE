@@ -9,7 +9,10 @@
 #include <map>
 #include <functional>
 #include <optional>
+#include <windows.h>
 
+#include "Logging/LogManager.hpp"
+#include "IPCChannel.hpp"
 #include "ManagerEvents.hpp"
 
 namespace AnyFSE::Manager::Cycle
@@ -18,10 +21,13 @@ namespace AnyFSE::Manager::Cycle
     class ManagerCycle
     {
         friend class ManagerState;
+        static const int MESSAGES_EOL = 5000;
+
     public:
         // Event enum - you can extend this as needed
 
-        ManagerCycle();
+        AnyFSE::Manager::IPCChannel ipcChannel;
+        ManagerCycle(bool isServer);
         virtual ~ManagerCycle();
 
         // Delete copy constructor and assignment operator
@@ -30,6 +36,7 @@ namespace AnyFSE::Manager::Cycle
 
         // Event management - public interface
         void Notify(StateEvent event);
+        bool NotifyRemote(StateEvent event, DWORD timeout = 5000);
 
         // Main control functions
         void Start();
@@ -47,8 +54,13 @@ namespace AnyFSE::Manager::Cycle
         // Thread-safe queue for events
         std::queue<StateEvent> eventQueue;
         std::mutex queueMutex;
-        std::condition_variable queueCondition;
 
+        HANDLE queueCondition;
+
+        HANDLE hReadPipe;
+        HANDLE hWritePipe;
+
+        Logger _log;
         // Timer management - only accessed from processing thread
         struct TimerInfo
         {

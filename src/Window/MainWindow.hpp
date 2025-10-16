@@ -14,7 +14,7 @@ namespace AnyFSE::Window
         ATOM aClass;
 
         static WNDCLASS stWC;
-        static LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);   
+        static LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
         static void LoadStringSafe(UINT nStrID, LPTSTR szBuf, UINT nBufLen);
         void OnCreate();
         void OnPaint();
@@ -35,7 +35,6 @@ namespace AnyFSE::Window
         bool Hide();
         bool IsVisible();
     };
- 
 }
 
 using namespace AnyFSE::Window;

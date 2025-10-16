@@ -12,8 +12,8 @@
 namespace AnyFSE::Monitors
 {
 
-    static Logger log = LogManager::GetLogger("ETWMonitor/Parser");  
-   
+    static Logger log = LogManager::GetLogger("ETWMonitor/Parser");
+
     template<class T>
     PBYTE DataAt(T data, ULONG offset)
     {
@@ -43,20 +43,21 @@ namespace AnyFSE::Monitors
     {
         // SID structure breakdown:
         // BYTE Revision; (1 byte)
-        // BYTE SubAuthorityCount; (1 byte) 
+        // BYTE SubAuthorityCount; (1 byte)
         // SID_IDENTIFIER_AUTHORITY IdentifierAuthority; (6 bytes)
         // DWORD SubAuthority[1]
         uint8_t revision = UInt8At(eventRecord->UserData, offset);  // should be 1
-        uint8_t count = UInt8At(eventRecord->UserData, offset);     // should be 1
-        return offset + sizeof(uint32_t) + 8 + 4 * count;                               
+        uint8_t count = 1;                                          // UInt8At(eventRecord->UserData, offset);     // should be 1
+        int result = offset + sizeof(uint32_t) + 8 + 4 * count;
+        return result;
     }
 
     ULONG SkipUnicode(EVENT_RECORD *eventRecord, ULONG offset)
     {
         for (
-            wchar_t * data = (wchar_t *)DataAt(eventRecord->UserData, offset); 
-            *data !=0; 
-            data++, offset++ 
+            wchar_t * data = (wchar_t *)DataAt(eventRecord->UserData, offset);
+            *data !=0;
+            data++, offset++
         );
 
         return offset + 2;
@@ -71,16 +72,16 @@ namespace AnyFSE::Monitors
     {
         static size_t count = 0;
         count++;
-                    
+
         if (eventRecord->EventHeader.EventDescriptor.Opcode == 1
             && eventRecord->EventHeader.EventDescriptor.Task == 1
             && eventRecord->EventHeader.EventDescriptor.Id == 1
             /*&& IsEqualGUID(eventRecord->EventHeader.ProviderId, ProcessProviderGuid)*/)
         {
             HandleStartProcessEvent(eventRecord);
-        } 
+        }
         else if (eventRecord->EventHeader.EventDescriptor.Opcode == 38  // QueryValueKey
-            && eventRecord->EventHeader.EventDescriptor.Task == 0       // 
+            && eventRecord->EventHeader.EventDescriptor.Task == 0       //
             && eventRecord->EventHeader.EventDescriptor.Id == 7
             && IsEqualGUID(eventRecord->EventHeader.ProviderId, RegistryProviderGuid)
         )
@@ -93,15 +94,15 @@ namespace AnyFSE::Monitors
     {
         int offset = GetImageNameOffset(eventRecord);
         PWSTR processFullName = wCharAt(eventRecord->UserData, offset);
-        
+
         PWSTR pFileName = NULL;
-            
+
         for (PWSTR p = processFullName; *p; p++) {
             if (*p == L'\\') {
                 pFileName = p;
             }
         }
-    
+
         pFileName = pFileName ? (pFileName + 1) : processFullName;
 
         if (_wcsicmp(pFileName, m_processName.c_str()) == 0)
@@ -109,7 +110,7 @@ namespace AnyFSE::Monitors
             LARGE_INTEGER timestamp = eventRecord->EventHeader.TimeStamp;
             LARGE_INTEGER currentTime;
             QueryPerformanceCounter((LARGE_INTEGER*)&currentTime);
-        
+
             // Calculate latency (rough approximation)
             LONGLONG latency = (currentTime.QuadPart - timestamp.QuadPart) / 10000; // Convert to milliseconds
             log.Info("Process %s is detected, Latency: %lldms", Tools::to_string(pFileName).c_str(), latency);
@@ -121,7 +122,7 @@ namespace AnyFSE::Monitors
             log.Info("Explorer.exe was started with pid %d", m_explorerProcessId);
         }
     }
-    
+
     void ETWMonitor::HandleRegistryQueryValueEvent(EVENT_RECORD *eventRecord)
     {
         wchar_t * valueName = wCharAtSafe(eventRecord->UserData, SkipUnicode(eventRecord, 20));
@@ -129,15 +130,15 @@ namespace AnyFSE::Monitors
         bool isGamingApp = (_wcsicmp(valueName, L"GamingHomeApp") == 0);
         bool isDeviceForm = !isGamingApp && (_wcsicmp(valueName, L"DeviceForm") == 0);
         bool isExplorer = (isGamingApp || isDeviceForm) && IsExploredPid(eventRecord->EventHeader.ProcessId);
-        
+
         if (isGamingApp && isExplorer)
         {
-            log.Info("Explorer has accessed to %s registry value", Tools::to_string(valueName).c_str());
+            //log.Info("Explorer has accessed to %s registry value", Tools::to_string(valueName).c_str());
             OnHomeAppTouched.Notify();
         }
         else if (isDeviceForm && isExplorer)
         {
-            log.Info("Explorer has accessed to %s registry value", Tools::to_string(valueName).c_str());
+            //log.Info("Explorer has accessed to %s registry value", Tools::to_string(valueName).c_str());
             OnDeviceFormTouched.Notify();
         }
     }

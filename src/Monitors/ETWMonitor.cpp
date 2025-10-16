@@ -14,7 +14,7 @@ namespace AnyFSE::Monitors
 {
 
     static Logger log = LogManager::GetLogger("ETWMonitor");
-    
+
     ETWMonitor::ETWMonitor(const std::wstring &processName)
         : m_isRunning(false),
           m_stopRequested(false),
@@ -35,9 +35,8 @@ namespace AnyFSE::Monitors
             Stop();
     }
 
-    HANDLE ETWMonitor::Run(bool &cancelToken)
+    HANDLE ETWMonitor::Start()
     {
-
         if (m_isRunning)
         {
             log.Info("Monitoring already running for process: %s", Tools::to_string(m_processName).c_str());
@@ -47,7 +46,7 @@ namespace AnyFSE::Monitors
         m_stopRequested = false;
         m_isRunning = true;
 
-        m_monitoringThread = std::thread(&ETWMonitor::MonitoringThread, this, std::ref(cancelToken));
+        m_monitoringThread = std::thread(&ETWMonitor::MonitoringThread, this);
         m_threadHandle = m_monitoringThread.native_handle();
 
         log.Info("Started thread for monitoring for process: %s", Tools::to_string(m_processName).c_str());
@@ -60,20 +59,20 @@ namespace AnyFSE::Monitors
         {
             return true;
         }
-        
+
         HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
         if (!hProcess) return false;
-        
+
         WCHAR processPath[MAX_PATH] = {0};
         DWORD size = MAX_PATH;
         std::wstring result;
-        
-        if (QueryFullProcessImageNameW(hProcess, 0, processPath, &size)) 
+
+        if (QueryFullProcessImageNameW(hProcess, 0, processPath, &size))
         {
             std::wstring fullPath = processPath;
             size_t lastBackslash = fullPath.find_last_of(L'\\');
             WCHAR * processName = processPath;
-            if (lastBackslash != std::wstring::npos) 
+            if (lastBackslash != std::wstring::npos)
             {
                 processName = processPath + (lastBackslash + 1);
             }
@@ -83,15 +82,15 @@ namespace AnyFSE::Monitors
                 m_explorerProcessId = processId;
                 return true;
             }
-            
+
         }
-        
+
         CloseHandle(hProcess);
         return false;
 
     }
 
-    void ETWMonitor::MonitoringThread(bool &cancelToken)
+    void ETWMonitor::MonitoringThread()
     {
         log.Info("Starting real-time ETW monitoring for process: %s", Tools::to_string(m_processName).c_str());
 
@@ -100,7 +99,7 @@ namespace AnyFSE::Monitors
             StartRealtimeETW();
 
             // Main monitoring loop - ETW callbacks will handle events
-            while (!cancelToken && !m_stopRequested)
+            while (!m_stopRequested)
             {
                 // ProcessTrace will block until events arrive or session stops
                 log.Info("Entering wait cycle for real-time ETW monitoring");

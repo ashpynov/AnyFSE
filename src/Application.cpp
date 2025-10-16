@@ -19,6 +19,7 @@
 #include <tchar.h>
 #include <commctrl.h>
 #include <strsafe.h>
+#include "Application.hpp"
 #include "Logging/LogManager.hpp"
 #include "Monitors/GamingExperience.hpp"
 #include "Monitors/ETWMonitor.hpp"
@@ -30,199 +31,160 @@
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
-namespace AnyFSE::Application
+namespace AnyFSE
 {
-BOOL RequestAdminElevation();
-
-BOOL isRunningAsAdministrator()
-{
-    BOOL fRet = FALSE;
-    HANDLE hToken = NULL;
-
-    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+    BOOL Application::IsRunningAsAdministrator(bool elevate)
     {
-        TOKEN_ELEVATION Elevation;
-        DWORD cbSize = sizeof(TOKEN_ELEVATION);
+        BOOL fRet = FALSE;
+        HANDLE hToken = NULL;
 
-        if (GetTokenInformation(hToken, TokenElevation, &Elevation, sizeof(Elevation), &cbSize))
+        if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
         {
-            fRet = Elevation.TokenIsElevated;
+            TOKEN_ELEVATION Elevation;
+            DWORD cbSize = sizeof(TOKEN_ELEVATION);
+
+            if (GetTokenInformation(hToken, TokenElevation, &Elevation, sizeof(Elevation), &cbSize))
+            {
+                fRet = Elevation.TokenIsElevated;
+            }
         }
+
+        if (hToken)
+        {
+            CloseHandle(hToken);
+        }
+
+        return fRet || (elevate && RequestAdminElevation());
     }
 
-    if (hToken)
-    {
-        CloseHandle(hToken);
+    BOOL Application::RequestAdminElevation() {
+        wchar_t modulePath[MAX_PATH];
+        GetModuleFileName(NULL, modulePath, MAX_PATH);
+
+        SHELLEXECUTEINFO sei = { sizeof(sei) };
+        sei.lpVerb = L"runas";  // Request UAC elevation
+        sei.lpFile = modulePath;
+        sei.nShow = SW_NORMAL;
+
+        if (ShellExecuteEx(&sei))
+        {
+            exit(0);
+        }
+        return false;
     }
 
-    return fRet || RequestAdminElevation();
-}
-
-BOOL RequestAdminElevation() {
-    wchar_t modulePath[MAX_PATH];
-    GetModuleFileName(NULL, modulePath, MAX_PATH);
-
-    SHELLEXECUTEINFO sei = { sizeof(sei) };
-    sei.lpVerb = L"runas";  // Request UAC elevation
-    sei.lpFile = modulePath;
-    sei.nShow = SW_NORMAL;
-
-    if (ShellExecuteEx(&sei))
+    void Application::InitCustomControls()
     {
-        exit(0);
-    }
-    return false;
-}
-
-void InitCustomControls()
-{
-    INITCOMMONCONTROLSEX icex;
-    icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    icex.dwICC = ICC_STANDARD_CLASSES;
-    ::InitCommonControlsEx(&icex);
-}
-
-int WINAPI WinMain(HINSTANCE hInstance,
-                   HINSTANCE hPrevInstance,
-                   LPSTR lpCmdLine,
-                   int nCmdShow)
-{
-    SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-    int exitCode = -1;
-
-    AnyFSE::Logging::LogManager::Initialize("AnyFSE", LogLevel::Trace, "C:\\Tools\\AnyFSE.logs");
-    Logger log = LogManager::GetLogger("Main");
-    log.Info("Application is started (hInstance=%08x)", hInstance);
-    try
-    {
-        Config::Load();
-    }
-    catch (std::exception ex)
-    {
-        log.Error(ex, "Fail to load config:");
+        INITCOMMONCONTROLSEX icex;
+        icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+        icex.dwICC = ICC_STANDARD_CLASSES;
+        ::InitCommonControlsEx(&icex);
     }
 
-    LPCTSTR className = _T("AnyFSE");
-
-
-    /// DEBUG
-    SettingsDialog dialog;
-    INT_PTR result = dialog.Show(hInstance);
-    exit(0);
-
-    HWND hAppWnd = FindWindow(className, NULL);
-    if (hAppWnd)
+    BOOL Application::ShouldRunAsApplication(LPSTR lpCmdLine)
     {
-        log.Info("Application is executed already, exiting\n");
-        PostMessage(hAppWnd, MainWindow::WM_TRAY, 0, WM_LBUTTONDBLCLK);
-        return 0;
+        return !_strcmpi(lpCmdLine, "--application");
     }
 
-    if (!GamingExperience::ApiIsAvailable)
+    int WINAPI Application::WinMain(HINSTANCE hInstance,
+                    HINSTANCE hPrevInstance,
+                    LPSTR lpCmdLine,
+                    int nCmdShow)
     {
-        log.Critical("Fullscreen Gaming API is not detected, exiting\n");
-        InitCustomControls();
-        TaskDialog(NULL, hInstance,
-                   L"Error",
-                   L"Gaming Fullscreen Experiense API is not detected",
-                   L"Fullscreen expiriense is not available on your version of windows.\n"
-                   L"It is supported since Windows 25H2 version for Handheld Devices",
-                   TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
-        return -1;
+        SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+        int exitCode = -1;
+
+        AnyFSE::Logging::LogManager::Initialize("AnyFSE", LogLevel::Trace, "C:\\Tools\\AnyFSE.log");
+        Logger log = LogManager::GetLogger("Main");
+
+        log.Info("Application is started (hInstance=%08x)", hInstance);
+        try
+        {
+            Config::Load();
+        }
+        catch (std::exception ex)
+        {
+            log.Error(ex, "Fail to load config:");
+        }
+
+        LPCTSTR className = _T("AnyFSE");
+
+
+        /// DEBUG
+        // SettingsDialog dialog;
+        // INT_PTR result = dialog.Show(hInstance);
+        // exit(0);
+
+        HWND hAppWnd = FindWindow(className, NULL);
+        if (hAppWnd)
+        {
+            log.Info("Application is executed already, exiting\n");
+            PostMessage(hAppWnd, MainWindow::WM_TRAY, 0, WM_LBUTTONDBLCLK);
+            return 0;
+        }
+
+        // if (!GamingExperience::ApiIsAvailable)
+        // {
+        //     log.Critical("Fullscreen Gaming API is not detected, exiting\n");
+        //     return -1;
+        // }
+
+        MainWindow mainWindow;
+
+        if (!mainWindow.Create(className, hInstance, (Config::LauncherName + L" is launching").c_str()))
+        {
+            return (int)GetLastError();
+        }
+
+        if (GamingExperience::IsActive())
+        {
+            mainWindow.Show();
+        }
+        else
+        {
+            mainWindow.Hide();
+        }
+
+        ManagerState managerState(mainWindow);
+        if (!managerState.NotifyRemote(StateEvent::CONNECT, 5000))
+        {
+            log.Error("Cant connect to service, exiting");
+            return -1;
+        }
+
+        managerState.Notify(StateEvent::START);
+
+        GamingExperience fseMonitor;
+
+        fseMonitor.OnExperienseChanged += ([&log, &managerState]()
+        {
+            log.Info(
+                "Mode is changed to %s\n",
+                GamingExperience::IsActive() ? "Fullscreeen expirience" : "Windows Desktop"
+            );
+            managerState.Notify(StateEvent::GAMEMODE_ENTER);
+        });
+
+        log.Info("Run window loop.");
+
+        managerState.Start();
+
+        exitCode = MainWindow::RunLoop();
+
+        managerState.Stop();
+
+        log.Info("Loop finished. Time to exit");
+
+
+        if (exitCode)
+        {
+            log.Warn(log.APIError(exitCode),"Exiting with code: (%d) error", exitCode);
+        }
+        else
+        {
+            log.Info("Job is done!");
+        }
+
+        return (int) exitCode;
     }
-
-    if (!isRunningAsAdministrator())
-    {
-        log.Critical("Application should be executed as Adminisrator, exiting\n");
-        InitCustomControls();
-        TaskDialog(NULL, hInstance,
-                   L"Insufficient permissons",
-                   L"Please run AnyFSE as Administrator",
-                   L"Escalated privileges is required to monitor XBox application execution "
-                   L"or instaling application as schedulled autorun task.\n\n",
-                   TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
-        return -1;
-    }
-
-    MainWindow mainWindow;
-
-
-    if (!mainWindow.Create(className, hInstance, (Config::LauncherName + L" is launching").c_str()))
-    {
-        return (int)GetLastError();
-    }
-    if (GamingExperience::IsActive())
-    {
-        mainWindow.Show();
-    }
-    else
-    {
-        mainWindow.Hide();
-    }
-
-    ManagerState managerState(mainWindow);
-
-    managerState.Notify(StateEvent::START);
-
-    GamingExperience fseMonitor;
-
-    fseMonitor.OnExperienseChanged += ([&log, &managerState]()
-    {
-        log.Info(
-            "Mode is changed to %s\n",
-            GamingExperience::IsActive() ? "Fullscreeen expirience" : "Windows Desktop"
-        );
-        managerState.Notify(StateEvent::GAMEMODE_ENTER);
-    });
-
-    ETWMonitor etwMonitor(Config::XBoxProcessName);
-    etwMonitor.OnProcessExecuted += ([&log, &managerState]()
-    {
-        log.Info("Xbox process execution is detected\n" );
-        managerState.Notify(StateEvent::XBOX_DETECTED);
-    });
-
-    etwMonitor.OnHomeAppTouched += ([&log, &managerState]()
-    {
-        log.Info("Attempt to open Home App detected!\n" );
-        managerState.Notify(StateEvent::OPEN_HOME);
-    });
-
-    etwMonitor.OnDeviceFormTouched += ([&log, &managerState]()
-    {
-        log.Info("Just DeviceForm detected!\n" );
-        managerState.Notify(StateEvent::OPEN_DEVICE_FORM);
-    });
-
-    etwMonitor.OnFailure += ([]()
-    {
-        PostQuitMessage(-1);
-    });
-
-    bool cancelToken = false;
-    etwMonitor.Run(cancelToken);
-
-    log.Info("Run window loop.");
-
-    managerState.Start();
-
-    exitCode = MainWindow::RunLoop();
-
-    managerState.Stop();
-
-    log.Info("Loop finished. Time to exit");
-
-    etwMonitor.Stop();
-
-    if (exitCode)
-    {
-        log.Warn(log.APIError(exitCode),"Exiting with code: (%d) error", exitCode);
-    }
-    else
-    {
-        log.Info("Job is done!");
-    }
-
-    return (int) exitCode;
-}
 };

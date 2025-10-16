@@ -10,9 +10,10 @@ namespace AnyFSE::Manager::State
     Logger log = LogManager::GetLogger("Manager/State");
 
     ManagerState::ManagerState(MainWindow &splash)
-        : m_splash(splash),
-        m_preventTimer(0),
-        m_waitLauncherTimer(0)
+        : ManagerCycle(false)
+        , m_splash(splash)
+        , m_preventTimer(0)
+        , m_waitLauncherTimer(0)
     {
 
     }
@@ -51,13 +52,13 @@ namespace AnyFSE::Manager::State
     {
         //if (IsInFSEMode() || Config::AggressiveMode)
         {
-            log.Info("XBoxStartDetected in %s Mode", IsInFSEMode() ? "FSE Dektop" : "FSE");
+            log.Info("XBoxStartDetected in %s Mode", IsInFSEMode() ? "Desktop" : "FSE");
 
             if (IsSplashActive() || IsPreventIsActive())
             {
                 KillXbox();
             }
-            else if (!IsLauncherActive()) 
+            else if (!IsLauncherActive())
             {
                 ShowSplash();
                 KillXbox();
@@ -120,7 +121,7 @@ namespace AnyFSE::Manager::State
                 WaitLauncher();
             }
         }
-        else 
+        else
         {
             log.Info("Home App id Detected in Task switcher case (%d) ms", GetTickCount64() - m_deviceFormAge);
         }
@@ -144,11 +145,12 @@ namespace AnyFSE::Manager::State
     {
         log.Info("Prevent Timer Completed");
         m_preventTimer = 0;
+        NotifyRemote(StateEvent::XBOX_ALLOW);
     }
 
     // State Checkers
-    bool ManagerState::IsInFSEMode() 
-    { 
+    bool ManagerState::IsInFSEMode()
+    {
         return GamingExperience::IsActive();
     }
 
@@ -173,7 +175,7 @@ namespace AnyFSE::Manager::State
     {
         return 0 != m_preventTimer;
     }
-    
+
     bool ManagerState::IsYoungXbox()
     {
         return (GetTickCount64() - m_xboxAge) < 2000;
@@ -190,14 +192,11 @@ namespace AnyFSE::Manager::State
         log.Info("Show Splash");
         m_splash.Show();
     }
-    
+
     void ManagerState::KillXbox()
     {
         log.Info("Killing Xbox");
-        if (ERROR_SUCCESS != Process::Kill(Config::XBoxProcessName))
-        {
-            log.Error(log.APIError(), "Can't Kill XBOX: ");
-        }
+        NotifyRemote(StateEvent::XBOX_DENY);
     }
 
     void ManagerState::StartLauncher()

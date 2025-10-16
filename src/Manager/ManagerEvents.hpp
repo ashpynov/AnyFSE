@@ -5,12 +5,15 @@ namespace AnyFSE::Manager
 {
     enum class StateEvent : int
     {
-        START = 0,
+        CONNECT = 0,
+        START,
         XBOX_DETECTED,
         PLAYNITE_LAUNCHED,
         GAMEMODE_ENTER,
         OPEN_HOME,
-        OPEN_DEVICE_FORM
+        OPEN_DEVICE_FORM,
+        XBOX_DENY,
+        XBOX_ALLOW,
     };
 }
 

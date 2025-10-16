@@ -1,18 +1,24 @@
 #include "ManagerCycle.hpp"
 #include "Logging/LogManager.hpp"
+#include "Tools/Tools.hpp"
 #undef max
 #include <chrono>
 
 namespace AnyFSE::Manager::Cycle
 {
 
-    Logger log = LogManager::GetLogger("Manager/State");
-
-    ManagerCycle::ManagerCycle() = default;
+    ManagerCycle::ManagerCycle(bool isServer)
+        : ipcChannel(L"AnyFSEPipe", isServer)
+        , _log(LogManager::GetLogger(isServer ? "Manager/SrvCycle" :  "Manager/AppCycle" ))
+    {
+        queueCondition = CreateEvent(NULL, FALSE, FALSE, NULL);
+        ipcChannel.SetCancelEvent(queueCondition);
+    }
 
     ManagerCycle::~ManagerCycle()
     {
         Stop();
+        DeleteObject(queueCondition);
     }
 
     void ManagerCycle::Notify(StateEvent event)
@@ -21,7 +27,15 @@ namespace AnyFSE::Manager::Cycle
             std::lock_guard<std::mutex> lock(queueMutex);
             eventQueue.push(event);
         }
-        queueCondition.notify_one();
+        SetEvent(queueCondition);
+    }
+
+    bool ManagerCycle::NotifyRemote(StateEvent event, DWORD timeout)
+    {
+        AnyFSE::Manager::Message message;
+        message.event = event;
+        message.ticks = GetTickCount();
+        return ipcChannel.Write(&message, timeout);
     }
 
     void ManagerCycle::Start()
@@ -41,7 +55,7 @@ namespace AnyFSE::Manager::Cycle
             return; // Already stopped
         }
 
-        queueCondition.notify_all();
+        SetEvent(queueCondition);
         if (processingThread.joinable())
         {
             processingThread.join();
@@ -61,7 +75,7 @@ namespace AnyFSE::Manager::Cycle
             recurring,
             timeout,
             false};
-        queueCondition.notify_one(); // Wake up to recalculate wait time
+        SetEvent(queueCondition);
         return id;
     }
 
@@ -71,12 +85,12 @@ namespace AnyFSE::Manager::Cycle
         TimerInfo& timer = timers[id];
         // do not delete here, mark as invalid
         timer.isInvalid = true;
-        queueCondition.notify_one(); // Wake up to recalculate wait time
+        SetEvent(queueCondition);
     }
 
     void ManagerCycle::ProcessingCycle()
     {
-        log.Info("Entering StateManager loop");
+        _log.Info("Entering StateManager loop");
 
         while (isRunning)
         {
@@ -85,19 +99,26 @@ namespace AnyFSE::Manager::Cycle
 
             std::unique_lock<std::mutex> lock(queueMutex);
 
-            if (eventQueue.empty())
+            if (eventQueue.empty() || false)
             {
-                // Wait for events or timer expiration
+                DWORD timeoutMs = INFINITE;
                 if (nextTimeout.has_value())
                 {
-                    // Wait with timeout for the next timer
-                    queueCondition.wait_until(lock, nextTimeout.value());
+                    auto now = std::chrono::steady_clock::now();
+                    if (nextTimeout.value() > now)
+                    {
+                        timeoutMs = (DWORD)std::chrono::duration_cast<std::chrono::milliseconds>(
+                                        nextTimeout.value() - now).count();
+                    }
+                    else
+                    {
+                        timeoutMs = 0; // Already expired
+                    }
                 }
-                else
-                {
-                    // Wait indefinitely for events
-                    queueCondition.wait(lock);
-                }
+                // Wait for events or timer expiration
+                lock.unlock();
+                ipcChannel.Wait(timeoutMs);
+                lock.lock();
             }
 
             // Process all available events
@@ -110,6 +131,19 @@ namespace AnyFSE::Manager::Cycle
                 lock.unlock();
                 ProcessEvent(event);
                 lock.lock();
+            }
+
+            AnyFSE::Manager::Message ipcMessage;
+            LONGLONG eol = GetTickCount64() - MESSAGES_EOL;
+            while (ipcChannel.Read(&ipcMessage))
+            {
+                if (ipcMessage.ticks > eol)
+                {
+                    lock.unlock();
+                    _log.Debug("Got message: %d (%ldms)", ipcMessage.event, GetTickCount64()-ipcMessage.ticks);
+                    ProcessEvent(ipcMessage.event);
+                    lock.lock();
+                }
             }
 
             // Check and process expired timers
@@ -131,7 +165,7 @@ namespace AnyFSE::Manager::Cycle
             {
                 it = timers.erase(it);
                 continue;
-            } 
+            }
             else if (it->second.expirationTime < next)
             {
                 next = it->second.expirationTime;
