@@ -146,14 +146,6 @@ namespace AnyFSE
             return -1;
         }
 
-
-        if (0)
-        {
-            SettingsDialog dialog;
-            INT_PTR result = dialog.Show(hInstance);
-            exit(0);
-        }
-
         MainWindow mainWindow;
 
         if (!mainWindow.Create(className, hInstance, (Config::LauncherName + L" is launching").c_str()))

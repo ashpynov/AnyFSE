@@ -251,7 +251,7 @@ namespace FluentDesign
         // Enable anti-aliasing for smooth edges
         graphics.SetSmoothingMode(SmoothingModeAntiAlias);
 
-        RectF focusRect = FromRECT(clientRect);
+        RectF focusRect = ToRectF(clientRect);
         focusRect.Inflate(offset, offset);
 
         Pen borderPen(GetColor(FluentDesign::Theme::Colors::FocusFrame), (REAL)GetSize_FocusWidth());

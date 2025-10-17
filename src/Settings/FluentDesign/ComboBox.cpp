@@ -238,7 +238,7 @@ namespace FluentDesign
                 : Theme::Colors::Combo
             );
 
-            RectF clientRect = FromRECT(rect);
+            RectF clientRect = ToRectF(rect);
             clientRect.Height -= 1;
             clientRect.Width -= 1;
             Pen pen(m_theme.GetColor(Theme::Colors::ComboBorder), m_theme.DpiScaleF(1));

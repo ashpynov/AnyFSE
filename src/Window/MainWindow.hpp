@@ -2,6 +2,8 @@
 #include <windows.h>
 #include <string>
 
+namespace Gdiplus { class Image; }
+
 namespace AnyFSE::Window
 {
     class MainWindow
@@ -30,12 +32,37 @@ namespace AnyFSE::Window
     public:
         MainWindow();
         ~MainWindow();
+        bool Show();
+        bool Hide();
         bool Create(LPCWSTR className, HINSTANCE hInstance, LPCTSTR windowName);
         static int RunLoop();
 
-        bool Show();
-        bool Hide();
         bool IsVisible();
+
+    private: // Animation
+
+        UINT_PTR animationTimerId = 1;
+        UINT_PTR hTimer = NULL;
+
+        int ZOOM_INTERVAL_MS = 20;
+
+        float currentZoom = 0.96f;
+        float zoomStep = 0.002f;
+        float zoomDelta = 0.06f;
+
+        ULONG_PTR gdiplusToken;
+
+        Gdiplus::Image * pLogoImage;
+        COLORREF themeBackgroundColor=RGB(22,22,22);
+
+
+        bool InitAnimationResources();
+        BOOL LoadLogoImage();
+        void OnPaintAnimated();
+        void OnTimer(UINT_PTR timerId);
+        BOOL FreeAnimationResources();
+        BOOL StartAnimation();
+        BOOL StopAnimation();
     };
 }
 

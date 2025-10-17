@@ -3,8 +3,10 @@
 // Used by Resource.rc
 //
 #define IDS_TIP                         1
+
 #define IDI_ICON                        101
 #define IDI_TRAYICON                    101
+#define IDI_LOGO                        102
 #define IDR_POPUP                       102
 #define IDD_SETTINGS                    106
 #define IDC_LAUNCHER                    1004

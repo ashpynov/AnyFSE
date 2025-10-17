@@ -22,6 +22,10 @@ namespace AnyFSE::Configuration
     bool Config::SilentMode = false;
     bool Config::FseOnStartup = false;
 
+    bool Config::ShowAnimation = true;
+    bool Config::ShowLogo = true;
+    bool Config::ShowText = true;
+
     wstring Config::GetModulePath()
     {
         wchar_t path[MAX_PATH];

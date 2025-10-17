@@ -60,7 +60,7 @@ namespace AnyFSE::Window
             return false;
         }
 
-        hWnd = CreateWindow((LPCTSTR)aClass, windowName, WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, NULL, NULL, hInstance, this);
+        hWnd = CreateWindow((LPCTSTR)aClass, windowName, WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, NULL, NULL, hInstance, this);
 
         if (!IsWindow(hWnd))
         {
@@ -74,12 +74,12 @@ namespace AnyFSE::Window
 
     bool MainWindow::Show()
     {
-        return IsWindow(hWnd) && AnimateWindow(hWnd, 200, AW_BLEND);
+        return IsWindow(hWnd) && StartAnimation() && AnimateWindow(hWnd, 200, AW_BLEND) ;
     }
 
     bool MainWindow::Hide()
     {
-        return !IsWindow(hWnd) || AnimateWindow(hWnd, 200, AW_BLEND|AW_HIDE);
+        return !IsWindow(hWnd) || StopAnimation() && AnimateWindow(hWnd, 200, AW_BLEND|AW_HIDE);
     }
 
     bool MainWindow::IsVisible()
@@ -147,6 +147,9 @@ namespace AnyFSE::Window
         case WM_TRAY:
             OnTray(lParam);
             return 0;
+        case WM_TIMER:
+            OnTimer(wParam);
+            return 0;
         case WM_COMMAND:
             if (OnCommand(LOWORD(wParam)))
             {
@@ -169,6 +172,7 @@ namespace AnyFSE::Window
     void MainWindow::OnCreate()
     {
         CreateTrayIcon();
+        InitAnimationResources();
     }
 
     void MainWindow::CreateTrayIcon()
@@ -190,9 +194,7 @@ namespace AnyFSE::Window
 
     void MainWindow::OnPaint()
     {
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hWnd, &ps);
-        EndPaint(hWnd, &ps);
+        OnPaintAnimated();
     }
 
     void MainWindow::OnTray(LPARAM message)
@@ -251,6 +253,7 @@ namespace AnyFSE::Window
         stData.cbSize = sizeof(stData);
         stData.hWnd = hWnd;
         Shell_NotifyIcon(NIM_DELETE, &stData);
+        FreeAnimationResources();
 
         PostQuitMessage(0);
     }

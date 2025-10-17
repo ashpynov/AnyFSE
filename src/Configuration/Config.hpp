@@ -79,6 +79,10 @@ namespace AnyFSE::Configuration
             static bool AggressiveMode;
             static bool FseOnStartup;
             static bool SilentMode;
+
+            static bool ShowAnimation;
+            static bool ShowLogo;
+            static bool ShowText;
     };
 }
 

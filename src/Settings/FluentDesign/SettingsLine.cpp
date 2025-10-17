@@ -236,7 +236,7 @@ namespace FluentDesign
         using namespace Gdiplus;
         Graphics graphics(hdc);
 
-        RectF br = FromRECT(rect);
+        RectF br = ToRectF(rect);
 
         graphics.SetSmoothingMode(SmoothingModeAntiAlias);
         graphics.SetPixelOffsetMode(PixelOffsetModeNone);
