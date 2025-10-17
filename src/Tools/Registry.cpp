@@ -5,6 +5,7 @@
 
 #include "Registry.hpp"
 #include "Tools.hpp"
+#include "Unicode.hpp"
 
 namespace AnyFSE::Tools
 {
@@ -199,7 +200,7 @@ namespace AnyFSE::Tools
             L"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
             L"HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall"};
 
-        std::wstring exactDisplayName = Tools::to_lower(displayName);
+        std::wstring exactDisplayName = Unicode::to_lower(displayName);
 
         for (const auto &path : registryPaths)
         {
@@ -231,7 +232,7 @@ namespace AnyFSE::Tools
                     if (RegQueryValueExW(hSubKey, L"DisplayName", NULL, &type,
                                         (LPBYTE)displayName, &dataSize) == ERROR_SUCCESS &&
                         type == REG_SZ &&
-                        exactDisplayName == Tools::to_lower(displayName))
+                        exactDisplayName == Unicode::to_lower(displayName))
                     {
 
                         dataSize = sizeof(uninstallString);

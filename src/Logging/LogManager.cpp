@@ -9,10 +9,13 @@
 #include <iomanip>
 #include <cstdarg>
 #include <vector>
+#include "Tools/Registry.hpp"
+#include "Tools/Unicode.hpp"
 
 using namespace std;
 
 using namespace AnyFSE::Logging;
+
 
 namespace AnyFSE::Logging
 {
@@ -22,20 +25,26 @@ namespace AnyFSE::Logging
     std::string LogManager::applicationName;
     bool LogManager::logToConsole;
 
-    void LogManager::Initialize(const string &appName, LogLevel level, const string &filePath)
+    void LogManager::Initialize(const string &appName)
     {
         if (!applicationName.empty())
         {
             return;
         }
 
-        logLevel = level;
-        applicationName = appName;
         logToConsole = IsDebuggerPresent() != 0;
+        applicationName = appName;
+        logLevel = LogLevel::Trace;
 
-        if (!filePath.empty())
+        if (!logToConsole)
         {
-            logWriter.open(filePath, ios::app | ios::out);
+            const wstring root = L"HKLM\\Software\\AnyFSE\\Logger\\" + Unicode::to_wstring(appName);
+            wstring filePath = Registry::ReadString(root, L"FilePath", L"");
+            logLevel = (LogLevel)Registry::ReadDWORD(root, L"Level", (DWORD)LogLevel::Error);
+            if (!filePath.empty())
+            {
+                logWriter.open(filePath, ios::app | ios::out);
+            }
         }
     }
 

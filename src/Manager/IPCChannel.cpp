@@ -1,7 +1,7 @@
 #ifdef _TRACE
-#define LOGTRACE log.Trace
+#define TRACE log.Trace
 #else
-#define LOGTRACE(...)
+#define TRACE(...)
 #endif
 
 #include <windows.h>
@@ -20,7 +20,7 @@ namespace AnyFSE::Manager
         , m_writePending(false)
         , log(LogManager::GetLogger(isServer ? "ServerIPC" : "ClientIPC"))
     {
-        LOGTRACE("Creating object");
+        TRACE("Creating object");
 
         ZeroMemory(&m_connectOverlap, sizeof(m_connectOverlap));
         m_connectOverlap.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -46,7 +46,7 @@ namespace AnyFSE::Manager
 
     IPCChannel::~IPCChannel()
     {
-        LOGTRACE("Destroying channel for pipe '%ls'", m_pipeName.c_str());
+        TRACE("Destroying channel for pipe '%ls'", m_pipeName.c_str());
 
         // Cancel any pending I/O since we're shutting down
         if (m_pipeHandle != INVALID_HANDLE_VALUE)
@@ -79,7 +79,7 @@ namespace AnyFSE::Manager
             m_pipeHandle = NULL;
         }
 
-        LOGTRACE("Channel destroyed");
+        TRACE("Channel destroyed");
     }
 
 
@@ -107,31 +107,31 @@ namespace AnyFSE::Manager
     // Async I/O operations
     bool IPCChannel::Wait(DWORD timeout)
     {
-        LOGTRACE("IPCChannel::Wait: Waiting for data, timeout=%lu", timeout);
+        TRACE("IPCChannel::Wait: Waiting for data, timeout=%lu", timeout);
 
         // Ensure pipe is ready and connected first
         if (!EnsurePipeReady(timeout))
         {
-            LOGTRACE("IPCChannel::Wait: Pipe not ready");
+            TRACE("IPCChannel::Wait: Pipe not ready");
             return false;
         }
 
         // If we have a pending read, check if it's completed
         if (m_readPending)
         {
-            LOGTRACE("IPCChannel::Wait: Checking pending read completion");
+            TRACE("IPCChannel::Wait: Checking pending read completion");
             return CheckPendingReadCompletion(timeout);
         }
 
         // No pending read - check if data is available immediately
         if (CheckDataAvailableImmediately())
         {
-            LOGTRACE("IPCChannel::Wait: Data available immediately");
+            TRACE("IPCChannel::Wait: Data available immediately");
             return true;
         }
 
         // Start an async read and wait for it
-        LOGTRACE("IPCChannel::Wait: Starting async read and wait");
+        TRACE("IPCChannel::Wait: Starting async read and wait");
         return StartAsyncReadAndWait(timeout);
     }
 
@@ -139,52 +139,52 @@ namespace AnyFSE::Manager
     {
         if (!message)
         {
-            LOGTRACE("IPCChannel::Read: Null message pointer");
+            TRACE("IPCChannel::Read: Null message pointer");
             return false;
         }
 
-        LOGTRACE("IPCChannel::Read: Attempting to read message");
+        TRACE("IPCChannel::Read: Attempting to read message");
 
         // Ensure pipe is ready and connected (non-blocking check)
         if (!EnsurePipeReady(0))
         {
-            LOGTRACE("IPCChannel::Read: Pipe not ready for reading");
+            TRACE("IPCChannel::Read: Pipe not ready for reading");
             return false;
         }
 
         // If we have a pending read, check if it completed
         if (m_readPending && CheckPendingReadCompletion(0))
         {
-            LOGTRACE("IPCChannel::Read: Completing pending read");
+            TRACE("IPCChannel::Read: Completing pending read");
             return CompletePendingRead(message);
         }
 
         // Check if data is available immediately for synchronous read
         if (CheckDataAvailableImmediately())
         {
-            LOGTRACE("IPCChannel::Read: Reading available data immediately");
+            TRACE("IPCChannel::Read: Reading available data immediately");
             return ReadAvailableData(message);
         }
 
         // No data available immediately and no completed pending read
-        LOGTRACE("IPCChannel::Read: No data available");
+        TRACE("IPCChannel::Read: No data available");
         return false;
     }
 
     bool IPCChannel::StartAsyncRead()
     {
-        LOGTRACE("IPCChannel::StartAsyncRead: Starting async read operation");
+        TRACE("IPCChannel::StartAsyncRead: Starting async read operation");
 
         if (!EnsurePipeReady(0))
         {
-            LOGTRACE("IPCChannel::StartAsyncRead: Pipe not ready");
+            TRACE("IPCChannel::StartAsyncRead: Pipe not ready");
             return false;
         }
 
         // Don't start a new read if one is already pending
         if (m_readPending)
         {
-            LOGTRACE("IPCChannel::StartAsyncRead: Read already pending");
+            TRACE("IPCChannel::StartAsyncRead: Read already pending");
             return true;
         }
 
@@ -201,7 +201,7 @@ namespace AnyFSE::Manager
         if (readResult)
         {
             // Read completed immediately
-            LOGTRACE("IPCChannel::StartAsyncRead: Read completed immediately, bytes=%lu", bytesRead);
+            TRACE("IPCChannel::StartAsyncRead: Read completed immediately, bytes=%lu", bytesRead);
             m_readPending = true;
             return true;
         }
@@ -210,7 +210,7 @@ namespace AnyFSE::Manager
         if (error == ERROR_IO_PENDING)
         {
             // Read is in progress
-            LOGTRACE("IPCChannel::StartAsyncRead: Read pending (async)");
+            TRACE("IPCChannel::StartAsyncRead: Read pending (async)");
             m_readPending = true;
             return true;
         }
@@ -221,7 +221,7 @@ namespace AnyFSE::Manager
             if (error == ERROR_BROKEN_PIPE || error == ERROR_PIPE_NOT_CONNECTED)
             {
                 m_connectionState = ConnectionState::Disconnected;
-                LOGTRACE("IPCChannel::StartAsyncRead: Pipe disconnected due to error");
+                TRACE("IPCChannel::StartAsyncRead: Pipe disconnected due to error");
             }
             return false;
         }
@@ -236,7 +236,7 @@ namespace AnyFSE::Manager
     {
         if (m_readPending && m_pipeHandle != INVALID_HANDLE_VALUE)
         {
-            LOGTRACE("IPCChannel::CancelRead: Canceling pending read");
+            TRACE("IPCChannel::CancelRead: Canceling pending read");
             CancelIo(m_pipeHandle);
             m_readPending = false;
         }
@@ -246,23 +246,23 @@ namespace AnyFSE::Manager
     {
         if (!message)
         {
-            LOGTRACE("IPCChannel::Write: Null message pointer");
+            TRACE("IPCChannel::Write: Null message pointer");
             return false;
         }
 
-        LOGTRACE("IPCChannel::Write: Attempting to write message, timeout=%lu", timeout);
+        TRACE("IPCChannel::Write: Attempting to write message, timeout=%lu", timeout);
 
         // Check if write is already in progress (non-reentrant)
         if (m_writePending)
         {
-            LOGTRACE("IPCChannel::Write: Write already in progress, dropping message");
+            TRACE("IPCChannel::Write: Write already in progress, dropping message");
             return false;
         }
 
         // Ensure pipe is ready and connected
         if (!EnsurePipeReady(timeout))
         {
-            LOGTRACE("IPCChannel::Write: Pipe not ready within timeout");
+            TRACE("IPCChannel::Write: Pipe not ready within timeout");
             return false;
         }
 
@@ -271,27 +271,27 @@ namespace AnyFSE::Manager
 
     void IPCChannel::SetCancelEvent(HANDLE cancelEvent)
     {
-        LOGTRACE("IPCChannel::SetCancelEvent: Setting cancel event");
+        TRACE("IPCChannel::SetCancelEvent: Setting cancel event");
         m_cancelEvent = cancelEvent;
     }
 
     void IPCChannel::ResetConnection()
     {
-        LOGTRACE("IPCChannel::ResetConnection: Resetting connection state");
+        TRACE("IPCChannel::ResetConnection: Resetting connection state");
 
         if (m_isServer && m_pipeHandle != INVALID_HANDLE_VALUE)
         {
             if (m_connectionState == ConnectionState::Connected)
             {
                 DisconnectNamedPipe(m_pipeHandle);
-                LOGTRACE("IPCChannel::ResetConnection: Disconnected named pipe");
+                TRACE("IPCChannel::ResetConnection: Disconnected named pipe");
             }
             m_connectionState = ConnectionState::Disconnected;
         }
         m_readPending = false;
         m_writePending = false;
 
-        LOGTRACE("IPCChannel::ResetConnection: Connection reset complete");
+        TRACE("IPCChannel::ResetConnection: Connection reset complete");
     }
 
     // Private implementation methods
@@ -315,7 +315,7 @@ namespace AnyFSE::Manager
         // Blocking: ensure pipe exists and is connected
         if (!EnsureNamedPipe(timeout))
         {
-            LOGTRACE("IPCChannel::EnsurePipeReady: Failed to ensure named pipe");
+            TRACE("IPCChannel::EnsurePipeReady: Failed to ensure named pipe");
             return false;
         }
 
@@ -324,7 +324,7 @@ namespace AnyFSE::Manager
         {
             if (!ServerWaitForConnection(timeout))
             {
-                LOGTRACE("IPCChannel::EnsurePipeReady: Server failed to wait for connection");
+                TRACE("IPCChannel::EnsurePipeReady: Server failed to wait for connection");
                 return false;
             }
         }
@@ -332,7 +332,7 @@ namespace AnyFSE::Manager
         bool ready = (m_pipeHandle != INVALID_HANDLE_VALUE &&
                       (!m_isServer || m_connectionState == ConnectionState::Connected));
 
-        LOGTRACE("IPCChannel::EnsurePipeReady: Pipe ready=%d", ready);
+        TRACE("IPCChannel::EnsurePipeReady: Pipe ready=%d", ready);
         return ready;
     }
 
@@ -344,37 +344,37 @@ namespace AnyFSE::Manager
             bool available = (bytesAvailable >= sizeof(Message));
             if (available)
             {
-                LOGTRACE("IPCChannel::CheckDataAvailableImmediately: Data available, bytes=%lu", bytesAvailable);
+                TRACE("IPCChannel::CheckDataAvailableImmediately: Data available, bytes=%lu", bytesAvailable);
             }
             return available;
         }
         else
         {
             DWORD error = GetLastError();
-            LOGTRACE("IPCChannel::CheckDataAvailableImmediately: PeekNamedPipe failed, error=%lu", error);
+            TRACE("IPCChannel::CheckDataAvailableImmediately: PeekNamedPipe failed, error=%lu", error);
             return false;
         }
     }
 
     bool IPCChannel::CheckPendingReadCompletion(DWORD timeout)
     {
-        LOGTRACE("IPCChannel::CheckPendingReadCompletion: Checking with timeout=%lu", timeout);
+        TRACE("IPCChannel::CheckPendingReadCompletion: Checking with timeout=%lu", timeout);
 
         HANDLE waitHandles[2] = {m_readOverlap.hEvent, m_cancelEvent};
         DWORD handleCount = (m_cancelEvent != NULL) ? 2 : 1;
 
-        LOGTRACE("IPCChannel::AsyncWriteWithTimeout: Write pending, waiting for completion");
+        TRACE("IPCChannel::AsyncWriteWithTimeout: Write pending, waiting for completion");
         DWORD result = WaitForMultipleObjects(handleCount, waitHandles, FALSE, timeout);
 
         bool completed = (result == WAIT_OBJECT_0);
 
-        LOGTRACE("IPCChannel::CheckPendingReadCompletion: Wait result=%lu, completed=%d", result, completed);
+        TRACE("IPCChannel::CheckPendingReadCompletion: Wait result=%lu, completed=%d", result, completed);
         return completed;
     }
 
     bool IPCChannel::StartAsyncReadAndWait(DWORD timeout)
     {
-        LOGTRACE("IPCChannel::StartAsyncReadAndWait: Starting async read with wait, timeout=%lu", timeout);
+        TRACE("IPCChannel::StartAsyncReadAndWait: Starting async read with wait, timeout=%lu", timeout);
 
         ResetEvent(m_readOverlap.hEvent);
 
@@ -389,7 +389,7 @@ namespace AnyFSE::Manager
         if (readResult)
         {
             // Read completed immediately
-            LOGTRACE("IPCChannel::StartAsyncReadAndWait: Read completed immediately, bytes=%lu", bytesRead);
+            TRACE("IPCChannel::StartAsyncReadAndWait: Read completed immediately, bytes=%lu", bytesRead);
             m_readPending = true;
             return true;
         }
@@ -398,7 +398,7 @@ namespace AnyFSE::Manager
         if (error == ERROR_IO_PENDING)
         {
             // Read is in progress
-            LOGTRACE("IPCChannel::StartAsyncReadAndWait: Read pending, waiting for completion");
+            TRACE("IPCChannel::StartAsyncReadAndWait: Read pending, waiting for completion");
             m_readPending = true;
             return CheckPendingReadCompletion(timeout);
         }
@@ -409,7 +409,7 @@ namespace AnyFSE::Manager
             if (error == ERROR_BROKEN_PIPE || error == ERROR_PIPE_NOT_CONNECTED)
             {
                 m_connectionState = ConnectionState::Disconnected;
-                LOGTRACE("IPCChannel::StartAsyncReadAndWait: Pipe disconnected due to error");
+                TRACE("IPCChannel::StartAsyncReadAndWait: Pipe disconnected due to error");
             }
             return false;
         }
@@ -417,7 +417,7 @@ namespace AnyFSE::Manager
 
     bool IPCChannel::CompletePendingRead(Message *message)
     {
-        LOGTRACE("IPCChannel::CompletePendingRead: Completing pending read operation");
+        TRACE("IPCChannel::CompletePendingRead: Completing pending read operation");
 
         DWORD bytesTransferred;
         if (GetOverlappedResult(m_pipeHandle, &m_readOverlap, &bytesTransferred, FALSE))
@@ -426,12 +426,12 @@ namespace AnyFSE::Manager
             {
                 *message = m_pendingMessage;
                 m_readPending = false;
-                LOGTRACE("IPCChannel::CompletePendingRead: Read completed successfully");
+                TRACE("IPCChannel::CompletePendingRead: Read completed successfully");
                 return true;
             }
             else
             {
-                LOGTRACE("IPCChannel::CompletePendingRead: Incomplete read, bytes=%lu, expected=%zu",
+                TRACE("IPCChannel::CompletePendingRead: Incomplete read, bytes=%lu, expected=%zu",
                           bytesTransferred, sizeof(Message));
             }
         }
@@ -446,14 +446,14 @@ namespace AnyFSE::Manager
         if (error == ERROR_BROKEN_PIPE || error == ERROR_PIPE_NOT_CONNECTED)
         {
             m_connectionState = ConnectionState::Disconnected;
-            LOGTRACE("IPCChannel::CompletePendingRead: Pipe disconnected due to error");
+            TRACE("IPCChannel::CompletePendingRead: Pipe disconnected due to error");
         }
         return false;
     }
 
     bool IPCChannel::ReadAvailableData(Message *message)
     {
-        LOGTRACE("IPCChannel::ReadAvailableData: Reading available data synchronously");
+        TRACE("IPCChannel::ReadAvailableData: Reading available data synchronously");
 
         DWORD bytesRead = 0;
         BOOL readResult = ReadFile(
@@ -465,7 +465,7 @@ namespace AnyFSE::Manager
 
         if (readResult && bytesRead == sizeof(Message))
         {
-            LOGTRACE("IPCChannel::ReadAvailableData: Read completed, bytes=%lu", bytesRead);
+            TRACE("IPCChannel::ReadAvailableData: Read completed, bytes=%lu", bytesRead);
             return true;
         }
 
@@ -475,14 +475,14 @@ namespace AnyFSE::Manager
         if (error == ERROR_BROKEN_PIPE || error == ERROR_PIPE_NOT_CONNECTED)
         {
             m_connectionState = ConnectionState::Disconnected;
-            LOGTRACE("IPCChannel::ReadAvailableData: Pipe disconnected due to error");
+            TRACE("IPCChannel::ReadAvailableData: Pipe disconnected due to error");
         }
         return false;
     }
 
     bool IPCChannel::AsyncWriteWithTimeout(const Message *message, DWORD timeout)
     {
-        LOGTRACE("IPCChannel::AsyncWriteWithTimeout: Starting async write, timeout=%lu", timeout);
+        TRACE("IPCChannel::AsyncWriteWithTimeout: Starting async write, timeout=%lu", timeout);
 
         // Mark write as pending (non-reentrant)
         m_writePending = true;
@@ -504,13 +504,13 @@ namespace AnyFSE::Manager
             m_writePending = false;
             if (bytesWritten == sizeof(Message))
             {
-                LOGTRACE("IPCChannel::AsyncWriteWithTimeout: Write completed immediately, bytes=%lu", bytesWritten);
+                TRACE("IPCChannel::AsyncWriteWithTimeout: Write completed immediately, bytes=%lu", bytesWritten);
                 // FlushFileBuffers(m_pipeHandle);
                 return true;
             }
             else
             {
-                LOGTRACE("IPCChannel::AsyncWriteWithTimeout: Incomplete write, bytes=%lu, expected=%zu",
+                TRACE("IPCChannel::AsyncWriteWithTimeout: Incomplete write, bytes=%lu, expected=%zu",
                           bytesWritten, sizeof(Message));
                 return false;
             }
@@ -523,7 +523,7 @@ namespace AnyFSE::Manager
             HANDLE waitHandles[2] = {m_writeOverlap.hEvent, m_cancelEvent};
             DWORD handleCount = (m_cancelEvent != NULL) ? 2 : 1;
 
-            LOGTRACE("IPCChannel::AsyncWriteWithTimeout: Write pending, waiting for completion");
+            TRACE("IPCChannel::AsyncWriteWithTimeout: Write pending, waiting for completion");
             DWORD result = WaitForMultipleObjects(handleCount, waitHandles, FALSE, timeout);
 
             switch (result)
@@ -537,14 +537,14 @@ namespace AnyFSE::Manager
                         m_writePending = false;
                         if (bytesTransferred == sizeof(Message))
                         {
-                            LOGTRACE("IPCChannel::AsyncWriteWithTimeout: Write completed successfully, bytes=%lu",
+                            TRACE("IPCChannel::AsyncWriteWithTimeout: Write completed successfully, bytes=%lu",
                                       bytesTransferred);
                             // FlushFileBuffers(m_pipeHandle);
                             return true;
                         }
                         else
                         {
-                            LOGTRACE("IPCChannel::AsyncWriteWithTimeout: Incomplete write after wait, bytes=%lu, expected=%zu",
+                            TRACE("IPCChannel::AsyncWriteWithTimeout: Incomplete write after wait, bytes=%lu, expected=%zu",
                                       bytesTransferred, sizeof(Message));
                         }
                     }
@@ -557,14 +557,14 @@ namespace AnyFSE::Manager
 
             case WAIT_OBJECT_0 + 1:
                 // Cancel event signaled
-                LOGTRACE("IPCChannel::AsyncWriteWithTimeout: Write canceled by cancel event");
+                TRACE("IPCChannel::AsyncWriteWithTimeout: Write canceled by cancel event");
                 CancelIo(m_pipeHandle);
                 m_writePending = false;
                 return false;
 
             case WAIT_TIMEOUT:
                 // Timeout occurred - drop the message
-                LOGTRACE("IPCChannel::AsyncWriteWithTimeout: Write timeout, dropping message");
+                TRACE("IPCChannel::AsyncWriteWithTimeout: Write timeout, dropping message");
                 CancelIo(m_pipeHandle);
                 m_writePending = false;
                 return false;
@@ -584,7 +584,7 @@ namespace AnyFSE::Manager
             if (error == ERROR_BROKEN_PIPE || error == ERROR_PIPE_NOT_CONNECTED)
             {
                 m_connectionState = ConnectionState::Disconnected;
-                LOGTRACE("IPCChannel::AsyncWriteWithTimeout: Pipe disconnected due to error");
+                TRACE("IPCChannel::AsyncWriteWithTimeout: Pipe disconnected due to error");
             }
             m_writePending = false;
             return false;
@@ -601,7 +601,7 @@ namespace AnyFSE::Manager
             return true;
         }
 
-        LOGTRACE("IPCChannel::EnsureNamedPipe: Creating named pipe, timeout=%lu", timeout);
+        TRACE("IPCChannel::EnsureNamedPipe: Creating named pipe, timeout=%lu", timeout);
 
         ULONGLONG startTime = GetTickCount64();
 
@@ -640,7 +640,7 @@ namespace AnyFSE::Manager
                 if (m_pipeHandle != INVALID_HANDLE_VALUE)
                 {
                     m_connectionState = ConnectionState::Disconnected;
-                    LOGTRACE("IPCChannel::EnsureNamedPipe: Server pipe created successfully");
+                    TRACE("IPCChannel::EnsureNamedPipe: Server pipe created successfully");
                 }
                 else
                 {
@@ -664,7 +664,7 @@ namespace AnyFSE::Manager
                     if (SetNamedPipeHandleState(m_pipeHandle, &mode, NULL, NULL))
                     {
                         m_connectionState = ConnectionState::Connected;
-                        LOGTRACE("IPCChannel::EnsureNamedPipe: Client pipe connected successfully");
+                        TRACE("IPCChannel::EnsureNamedPipe: Client pipe connected successfully");
                     }
                     else
                     {
@@ -698,14 +698,14 @@ namespace AnyFSE::Manager
             // Check for cancellation
             if (m_cancelEvent && WaitForSingleObject(m_cancelEvent, 0) == WAIT_OBJECT_0)
             {
-                LOGTRACE("IPCChannel::EnsureNamedPipe: Operation canceled");
+                TRACE("IPCChannel::EnsureNamedPipe: Operation canceled");
                 return false;
             }
 
             // Check timeout
             if ((GetTickCount64() - startTime) >= timeout)
             {
-                LOGTRACE("IPCChannel::EnsureNamedPipe: Timeout creating pipe");
+                TRACE("IPCChannel::EnsureNamedPipe: Timeout creating pipe");
                 return false;
             }
 
@@ -720,16 +720,16 @@ namespace AnyFSE::Manager
     {
         if (!m_isServer || m_pipeHandle == INVALID_HANDLE_VALUE)
         {
-            LOGTRACE("IPCChannel::ServerWaitForConnection: Invalid state for connection");
+            TRACE("IPCChannel::ServerWaitForConnection: Invalid state for connection");
             return false;
         }
 
-        LOGTRACE("IPCChannel::ServerWaitForConnection: Waiting for client connection, timeout=%lu", timeout);
+        TRACE("IPCChannel::ServerWaitForConnection: Waiting for client connection, timeout=%lu", timeout);
 
         // If we're already connected, return true
         if (m_connectionState == ConnectionState::Connected)
         {
-            LOGTRACE("IPCChannel::ServerWaitForConnection: Already connected");
+            TRACE("IPCChannel::ServerWaitForConnection: Already connected");
             return true;
         }
 
@@ -746,7 +746,7 @@ namespace AnyFSE::Manager
             if (connected)
             {
                 // Connected immediately (shouldn't happen with FILE_FLAG_OVERLAPPED)
-                LOGTRACE("IPCChannel::ServerWaitForConnection: Connected immediately");
+                TRACE("IPCChannel::ServerWaitForConnection: Connected immediately");
                 m_connectionState = ConnectionState::Connected;
                 return true;
             }
@@ -755,13 +755,13 @@ namespace AnyFSE::Manager
             {
             case ERROR_IO_PENDING:
                 // Connection is in progress
-                LOGTRACE("IPCChannel::ServerWaitForConnection: Connection pending (async)");
+                TRACE("IPCChannel::ServerWaitForConnection: Connection pending (async)");
                 m_connectionState = ConnectionState::Connecting;
                 break;
 
             case ERROR_PIPE_CONNECTED:
                 // Client already connected
-                LOGTRACE("IPCChannel::ServerWaitForConnection: Client already connected");
+                TRACE("IPCChannel::ServerWaitForConnection: Client already connected");
                 SetEvent(m_connectOverlap.hEvent);
                 m_connectionState = ConnectionState::Connected;
                 return true;
@@ -779,7 +779,7 @@ namespace AnyFSE::Manager
         HANDLE waitHandles[2] = {m_connectOverlap.hEvent, m_cancelEvent};
         DWORD handleCount = (m_cancelEvent != NULL) ? 2 : 1;
 
-        LOGTRACE("IPCChannel::ServerWaitForConnection: Waiting for connection completion");
+        TRACE("IPCChannel::ServerWaitForConnection: Waiting for connection completion");
         DWORD result = WaitForMultipleObjects(handleCount, waitHandles, FALSE, min(timeout, CONNECT_TIMEOUT));
 
         switch (result)
@@ -791,7 +791,7 @@ namespace AnyFSE::Manager
                 if (GetOverlappedResult(m_pipeHandle, &m_connectOverlap, &bytesTransferred, FALSE))
                 {
                     m_connectionState = ConnectionState::Connected;
-                    LOGTRACE("IPCChannel::ServerWaitForConnection: Connection established successfully");
+                    TRACE("IPCChannel::ServerWaitForConnection: Connection established successfully");
                     return true;
                 }
                 else
@@ -806,12 +806,12 @@ namespace AnyFSE::Manager
 
         case WAIT_OBJECT_0 + 1:
             // Cancel event signaled - don't cancel I/O, just return
-            LOGTRACE("IPCChannel::ServerWaitForConnection: Connection wait canceled");
+            TRACE("IPCChannel::ServerWaitForConnection: Connection wait canceled");
             return false;
 
         case WAIT_TIMEOUT:
             // Timeout occurred - don't cancel I/O, just return
-            LOGTRACE("IPCChannel::ServerWaitForConnection: Connection wait timeout");
+            TRACE("IPCChannel::ServerWaitForConnection: Connection wait timeout");
             return false;
 
         default:

@@ -27,6 +27,7 @@
 #include "Manager/ManagerState.hpp"
 #include "Configuration/Config.hpp"
 #include "Settings/SettingsDialog.hpp"
+#include "Tools/Process.hpp"
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -94,8 +95,20 @@ namespace AnyFSE
         SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
         int exitCode = -1;
 
-        AnyFSE::Logging::LogManager::Initialize("AnyFSE", LogLevel::Trace, "C:\\Tools\\AnyFSE.log");
+        AnyFSE::Logging::LogManager::Initialize("AnyFSE");
         Logger log = LogManager::GetLogger("Main");
+
+        LPCTSTR className = L"AnyFSE";
+
+        HWND hAppWnd = FindWindow(className, NULL);
+
+        if (hAppWnd)
+        {
+            log.Info("Application is executed already, exiting\n");
+            PostMessage(hAppWnd, MainWindow::WM_TRAY, 0, WM_LBUTTONDBLCLK);
+            return 0;
+        }
+
 
         log.Info("Application is started (hInstance=%08x)", hInstance);
         try
@@ -107,20 +120,38 @@ namespace AnyFSE
             log.Error(ex, "Fail to load config:");
         }
 
-        LPCTSTR className = _T("AnyFSE");
-
-
-        /// DEBUG
-        // SettingsDialog dialog;
-        // INT_PTR result = dialog.Show(hInstance);
-        // exit(0);
-
-        HWND hAppWnd = FindWindow(className, NULL);
-        if (hAppWnd)
+        if (!GamingExperience::ApiIsAvailable)
         {
-            log.Info("Application is executed already, exiting\n");
-            PostMessage(hAppWnd, MainWindow::WM_TRAY, 0, WM_LBUTTONDBLCLK);
-            return 0;
+            log.Critical("Fullscreen Gaming API is not detected, exiting\n");
+            InitCustomControls();
+            TaskDialog(NULL, hInstance,
+                       L"Error",
+                       L"Gaming Fullscreen Experiense API is not detected",
+                       L"Fullscreen expiriense is not available on your version of windows.\n"
+                       L"It is supported since Windows 25H2 version for Handheld Devices",
+                       TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
+            return -1;
+        }
+
+        if (!ShouldRunAsApplication(lpCmdLine) && !AnyFSE::Application::IsRunningAsAdministrator(true))
+        {
+            log.Critical("Application should be executed as Adminisrator, exiting\n");
+            AnyFSE::Application::InitCustomControls();
+            TaskDialog(NULL, hInstance,
+                    L"Insufficient permissons",
+                    L"Please run AnyFSE as Administrator",
+                    L"Escalated privileges is required to monitor XBox application execution "
+                    L"or instaling application as schedulled autorun task.\n\n",
+                    TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
+            return -1;
+        }
+
+
+        if (0)
+        {
+            SettingsDialog dialog;
+            INT_PTR result = dialog.Show(hInstance);
+            exit(0);
         }
 
         MainWindow mainWindow;
@@ -172,7 +203,12 @@ namespace AnyFSE
         managerState.Start();
 
         exitCode = MainWindow::RunLoop();
-        managerState.NotifyRemote(StateEvent::EXIT_SERVICE);
+
+        if (exitCode != ERROR_RESTART_APPLICATION)
+        {
+            managerState.NotifyRemote(StateEvent::EXIT_SERVICE);
+        }
+
 
         managerState.Stop();
 
@@ -188,6 +224,12 @@ namespace AnyFSE
             log.Info("Job is done!");
         }
 
-        return (int) exitCode;
+        if (exitCode == ERROR_RESTART_APPLICATION)
+        {
+            wchar_t modulePath[MAX_PATH];
+            GetModuleFileName(NULL, modulePath, MAX_PATH);
+            Process::Start(modulePath, L"");
+        }
+        return (int)exitCode;
     }
 };

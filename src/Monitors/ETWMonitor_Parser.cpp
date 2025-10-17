@@ -1,6 +1,6 @@
 #include "ETWMonitor.hpp"
 #include "Logging/LogManager.hpp"
-#include "Tools/Tools.hpp"
+#include "Tools/Unicode.hpp"
 #include <tdh.h>
 #include <iostream>
 #include <sstream>
@@ -113,7 +113,7 @@ namespace AnyFSE::Monitors
 
             // Calculate latency (rough approximation)
             LONGLONG latency = (currentTime.QuadPart - timestamp.QuadPart) / 10000; // Convert to milliseconds
-            log.Info("Process %s is detected, Latency: %lldms", Tools::to_string(pFileName).c_str(), latency);
+            log.Info("Process %s is detected, Latency: %lldms", Unicode::to_string(pFileName).c_str(), latency);
             OnProcessExecuted.Notify();
         }
         else if (_wcsicmp(pFileName, L"explorer.exe") ==0)
@@ -133,12 +133,12 @@ namespace AnyFSE::Monitors
 
         if (isGamingApp && isExplorer)
         {
-            //log.Info("Explorer has accessed to %s registry value", Tools::to_string(valueName).c_str());
+            //log.Info("Explorer has accessed to %s registry value", Unicode::to_string(valueName).c_str());
             OnHomeAppTouched.Notify();
         }
         else if (isDeviceForm && isExplorer)
         {
-            //log.Info("Explorer has accessed to %s registry value", Tools::to_string(valueName).c_str());
+            //log.Info("Explorer has accessed to %s registry value", Unicode::to_string(valueName).c_str());
             OnDeviceFormTouched.Notify();
         }
     }

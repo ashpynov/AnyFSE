@@ -1,6 +1,6 @@
 #include "ETWMonitor.hpp"
 #include "Logging/LogManager.hpp"
-#include "Tools/Tools.hpp"
+#include "Tools/Unicode.hpp"
 #include <tdh.h>
 #include <iostream>
 #include <sstream>
@@ -174,7 +174,7 @@ namespace AnyFSE::Monitors
         //EnableRegistryProvider();
         OpenConsumer();
 
-        log.Info("Real-time ETW monitoring started successfully for process: %s", Tools::to_string(m_processName).c_str());
+        log.Info("Real-time ETW monitoring started successfully for process: %s", Unicode::to_string(m_processName).c_str());
     }
 
     void ETWMonitor::StopRealtimeETW()
@@ -210,6 +210,6 @@ namespace AnyFSE::Monitors
             m_sessionHandle = NULL;
         }
 
-        log.Info("Real-time ETW monitoring stopped for process: %s", Tools::to_string(m_processName).c_str());
+        log.Info("Real-time ETW monitoring stopped for process: %s", Unicode::to_string(m_processName).c_str());
     }
 } // namespace AnyFSE::Monitors

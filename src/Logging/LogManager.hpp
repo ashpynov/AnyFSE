@@ -28,7 +28,7 @@ namespace AnyFSE::Logging
         static void WriteMessage(LogLevel level, const std::string &loggerName, const char* format, va_list args);
 
     public:
-        static void Initialize(const std::string &appName, LogLevel level, const std::string &filePath = "");
+        static void Initialize(const std::string &appName);
         static Logger GetLogger(const std::string &loggerName = "");
     };
 }

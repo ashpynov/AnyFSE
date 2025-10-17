@@ -32,11 +32,12 @@ namespace AnyFSE::Settings::TaskManager
         IPrincipal *pPrincipal = NULL;
         ITriggerCollection *pTriggerCollection = NULL;
         ITrigger *pTrigger = NULL;
-        ILogonTrigger *pLogonTrigger = NULL;
+        IBootTrigger *pBootTrigger = NULL;
         IActionCollection *pActionCollection = NULL;
         IAction *pAction = NULL;
         IExecAction *pExecAction = NULL;
         ITaskSettings* pSettings = NULL;
+        IRegistrationInfo* pRegInfo = NULL;
 
         try
         {
@@ -51,18 +52,25 @@ namespace AnyFSE::Settings::TaskManager
             TRY( pSettings->put_StopIfGoingOnBatteries(VARIANT_FALSE));         // Also set other related power settings
             TRY( pTask->get_Principal(&pPrincipal));                            // Set principal for elevated privileges
             TRY( pPrincipal->put_RunLevel(TASK_RUNLEVEL_HIGHEST));              // Run with highest privileges:cite[5]
-            TRY( pTask->get_Triggers(&pTriggerCollection));                     // Create logon trigger for any user
-            TRY( pTriggerCollection->Create(TASK_TRIGGER_LOGON, &pTrigger));    // Trigger on any user logon:cite[2]
-            TRY( pTrigger->QueryInterface(IID_ILogonTrigger, (void **)&pLogonTrigger));
-            TRY( pLogonTrigger->put_Id(_bstr_t(L"LogonTrigger")));
-            TRY( pLogonTrigger->put_UserId(_bstr_t(L"")));                      // Empty string = any user:cite[2]
+            TRY( pPrincipal->put_UserId(_bstr_t(L"SYSTEM")));                   // Run as SYSTEM user
+            TRY( pPrincipal->put_LogonType(TASK_LOGON_SERVICE_ACCOUNT));        // Service account logon type
+
+            TRY( pTask->get_Triggers(&pTriggerCollection));
+            TRY( pTriggerCollection->Create(TASK_TRIGGER_BOOT, &pTrigger));     // Trigger on system boot
+            TRY( pTrigger->QueryInterface(IID_IBootTrigger, (void **)&pBootTrigger));
+            TRY( pBootTrigger->put_Id(_bstr_t(L"BootTrigger")));
             TRY( pTask->get_Actions(&pActionCollection));
             TRY( pActionCollection->Create(TASK_ACTION_EXEC, &pAction));
             TRY( pAction->QueryInterface(IID_IExecAction, (void **)&pExecAction));
             TRY( pExecAction->put_Path(_bstr_t(modulePath)));                   // Use current process path:cite[2]
+            TRY( pExecAction->put_Arguments(_bstr_t(L"--service")));
+
+            TRY(pTask->get_RegistrationInfo(&pRegInfo));
+            TRY(pRegInfo->put_Author(_bstr_t(L"Artem Shpynov")));
+            TRY(pRegInfo->put_Description(_bstr_t(L"Starts AnyFSE home application as a system service on Windows boot")));
 
             TRY( pRootFolder->RegisterTaskDefinition(                           // Register the task
-                    _bstr_t(L"AnyFSE Launcher"),  // Task name
+                    _bstr_t(L"AnyFSE home application"),  // Task name
                     pTask,
                     TASK_CREATE_OR_UPDATE,
                     _variant_t(),                 // User credentials (empty for current user)
@@ -79,6 +87,7 @@ namespace AnyFSE::Settings::TaskManager
         }
 
         // Cleanup
+        FREE(pRegInfo)
         FREE(pSettings)
         FREE(pService)
         FREE(pRootFolder)
@@ -87,7 +96,7 @@ namespace AnyFSE::Settings::TaskManager
         FREE(pPrincipal)
         FREE(pTriggerCollection)
         FREE(pTrigger)
-        FREE(pLogonTrigger)
+        FREE(pBootTrigger)
         FREE(pActionCollection)
         FREE(pAction)
         FREE(pExecAction)

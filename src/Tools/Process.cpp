@@ -9,7 +9,7 @@
 
 #pragma comment(lib, "psapi.lib")
 
-namespace AnyFSE::Process
+namespace AnyFSE::Tools::Process
 {
     DWORD FindByName(const std::wstring &processName)
     {
@@ -117,7 +117,7 @@ namespace AnyFSE::Process
         }
 
         DWORD processId = GetProcessId(pi.hProcess);
-        
+
         // Close process and thread handles
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
@@ -190,5 +190,3 @@ namespace AnyFSE::Process
         return searchData.foundWindow;
     }
 }
-
-namespace Process = AnyFSE::Process;

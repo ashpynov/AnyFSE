@@ -2,7 +2,7 @@
 #include <string>
 #include <windows.h>
 
-namespace AnyFSE::Process
+namespace AnyFSE::Tools::Process
 {
     DWORD FindByName(const std::wstring& processName);
     HRESULT Kill(const std::wstring& processName);
@@ -11,4 +11,4 @@ namespace AnyFSE::Process
     HWND  GetWindow(DWORD processId, const std::wstring& title);
 }
 
-namespace Process = AnyFSE::Process;
+namespace Process = AnyFSE::Tools::Process;

@@ -1,7 +1,7 @@
 #include <filesystem>
 #include "Config.hpp"
 #include "Tools/Registry.hpp"
-#include "Tools/Tools.hpp"
+#include "Tools/Unicode.hpp"
 
 namespace AnyFSE::Configuration
 {

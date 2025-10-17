@@ -3,7 +3,7 @@
 #include <string>
 #include <functional>
 #include <Uxtheme.h>
-#include "Tools/Tools.hpp"
+#include "Tools/Unicode.hpp"
 #include "Button.hpp"
 #include "DoubleBufferedPaint.hpp"
 

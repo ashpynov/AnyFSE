@@ -2,7 +2,7 @@
 #include "Application.hpp"
 #include "Monitors/ETWMonitor.hpp"
 #include "Logging/LogManager.hpp"
-#include "Process/Process.hpp"
+#include "Tools/Process.hpp"
 #include "Window/MainWindow.hpp"
 
 #include <windows.h>
@@ -34,7 +34,7 @@ namespace AnyFSE
 
     int WINAPI Service::ServiceMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine)
     {
-        AnyFSE::Logging::LogManager::Initialize("AnyFSE", LogLevel::Trace, "C:\\Tools\\AnyFSE_System.log");
+        AnyFSE::Logging::LogManager::Initialize("AnyFSEService");
         log.Info("Service is started (hInstance=%08x)", hInstance);
 
         if (!Application::IsRunningAsAdministrator())

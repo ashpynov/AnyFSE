@@ -5,9 +5,6 @@
 namespace AnyFSE::Tools
 {
     HICON LoadIcon(const std::wstring& icon);
-    std::wstring to_wstring(const std::string& str);
-    std::string to_string(const std::wstring& wstr);
-    std::wstring to_lower(const std::wstring &str);
 
     template <typename T, typename V>
     size_t index_of(const T& list, const V &value);
@@ -25,8 +22,6 @@ namespace AnyFSE::Tools
         auto it = std::find_if(list.begin(), list.end(), pred);
         return (it != list.end()) ? std::distance(list.begin(), it) : npos;
     }
-
-
 }
 
 namespace Tools = AnyFSE::Tools;

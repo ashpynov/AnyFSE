@@ -6,6 +6,7 @@
 #include "Logging/LogManager.hpp"
 #include "Configuration/Config.hpp"
 #include "Tools/Tools.hpp"
+#include "Tools/Unicode.hpp"
 
 #include "Settings/SettingsDialog.hpp"
 

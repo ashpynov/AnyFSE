@@ -1,6 +1,6 @@
 #include "Configuration/Config.hpp"
 #include "Monitors/GamingExperience.hpp"
-#include "Process/Process.hpp"
+#include "Tools/Process.hpp"
 #include "Logging/LogManager.hpp"
 #include "Window/MainWindow.hpp"
 #include "ManagerService.hpp"

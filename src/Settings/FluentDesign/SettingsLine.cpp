@@ -7,9 +7,6 @@
 #include <dwmapi.h>
 #include <vssym32.h>
 
-#pragma comment(lib, "comctl32.lib")
-#pragma comment(lib, "uxtheme.lib")
-
 namespace FluentDesign
 {
     static Logger log = LogManager::GetLogger("SettingsLine");

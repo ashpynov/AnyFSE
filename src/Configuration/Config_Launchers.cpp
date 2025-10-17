@@ -1,7 +1,7 @@
 #include <filesystem>
 #include "Config.hpp"
 #include "Tools/Registry.hpp"
-#include "Tools/Tools.hpp"
+#include "Tools/Unicode.hpp"
 
 namespace AnyFSE::Configuration
 {
@@ -174,10 +174,10 @@ namespace AnyFSE::Configuration
             return true;
         }
 
-        const wstring exe = Tools::to_lower(fs::path(path).filename().wstring());
+        const wstring exe = Unicode::to_lower(fs::path(path).filename().wstring());
         for (auto it = Config::LauncherConfigs.begin(); it != Config::LauncherConfigs.end(); ++it)
         {
-            if (Tools::to_lower(it->second.StartCommand) == exe)
+            if (Unicode::to_lower(it->second.StartCommand) == exe)
             {
                 out = it->second;
 
@@ -191,9 +191,9 @@ namespace AnyFSE::Configuration
                 FindInstalledLaunchers(installed);
 
                 if (!std::any_of(installed.begin(), installed.end(),
-                    [&command = Tools::to_lower(out.StartCommand) ](const wstring& p)
+                    [&command = Unicode::to_lower(out.StartCommand) ](const wstring& p)
                     {
-                        return command == Tools::to_lower(p);
+                        return command == Unicode::to_lower(p);
                     })
                 )
                 {
