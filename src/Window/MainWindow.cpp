@@ -266,20 +266,31 @@ namespace AnyFSE::Window
                 {
                     return FALSE;
                 }
+                static bool inDialog = false;
 
+                if (inDialog) return FALSE;
+
+                inDialog = true;
                 SettingsDialog dialog;
                 INT_PTR result = dialog.Show(stWC.hInstance);
                 if ( result == IDOK)
                 {
                     FreeResources();
-                    PostQuitMessage(ERROR_RESTART_APPLICATION);
+                    m_result = ERROR_RESTART_APPLICATION;
+                    DestroyWindow(hWnd);
                 }
+                else if ( result == IDABORT)
+                {
+                    m_result = ERROR_PRODUCT_UNINSTALLED;
+                    DestroyWindow(hWnd);
+                }
+                inDialog = false;
             }
 
             return FALSE;
         case ID_QUIT:
-            FreeResources();
-            PostQuitMessage(0);
+            m_result = 0;
+            DestroyWindow(hWnd);
             return TRUE;
         }
         return FALSE;
@@ -288,6 +299,6 @@ namespace AnyFSE::Window
     void MainWindow::OnDestroy()
     {
         FreeResources();
-        PostQuitMessage(0);
+        PostQuitMessage(m_result);
     }
 }

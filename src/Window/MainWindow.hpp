@@ -16,6 +16,8 @@ namespace AnyFSE::Window
         HWND hWnd;
         ATOM aClass;
 
+        int m_result = ERROR_RESTART_APPLICATION;
+
         static WNDCLASS stWC;
         static LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
         static void LoadStringSafe(UINT nStrID, LPTSTR szBuf, UINT nBufLen);

@@ -25,6 +25,7 @@ namespace AnyFSE::Settings
     {
         static const int Layout_OKWidth = 100;
         static const int Layout_CloseWidth = 150;
+        static const int Layout_UninstallWidth = 100;
 
         static const int Layout_BrowseWidth = 130;
         static const int Layout_BrowseHeight = 32;
@@ -67,6 +68,7 @@ namespace AnyFSE::Settings
             , browseButton(m_theme)
             , okButton(m_theme)
             , closeButton(m_theme)
+            , removeButton(m_theme)
         {}
 
     private:
@@ -81,6 +83,7 @@ namespace AnyFSE::Settings
         void OnBrowseLauncher(HWND hwnd, int editId);
         void OnLauncherChanged(HWND hwnd);
         void OnOk();
+        void OnUninstall();
         void OnCustomChanged(HWND hwnd);
         void OnAggressiveChanged(HWND hwnd);
         void UpdateControls();
@@ -109,9 +112,11 @@ namespace AnyFSE::Settings
         FluentDesign::Button browseButton;
         FluentDesign::Button okButton;
         FluentDesign::Button closeButton;
+        FluentDesign::Button removeButton;
 
         HWND m_hButtonOk;
         HWND m_hButtonClose;
+        HWND m_hButtonRemove;
 
         std::list<FluentDesign::SettingsLine> settingLines;
         template <class T>

@@ -42,8 +42,6 @@ namespace AnyFSE::Configuration
 
             Config() {};
 
-            static wstring GetFilename();
-
             static void SetDefault();
 
             static bool IsFseOnStartupConfigured();
@@ -59,7 +57,8 @@ namespace AnyFSE::Configuration
 
             static wstring GetModulePath();
             static void Load();
-            static void Dump();
+
+            static bool IsConfigured();
 
             static wstring GetCurrentLauncher();
             static bool FindLaunchers(std::list<wstring>& found);
@@ -77,6 +76,7 @@ namespace AnyFSE::Configuration
             static wstring LauncherProcessNameAlt;
             static wstring LauncherWindowNameAlt;
             static bool LauncherIsTrayAggressive;
+            
             static wstring XBoxProcessName;
 
             static bool AggressiveMode;

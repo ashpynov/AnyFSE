@@ -38,15 +38,7 @@ namespace AnyFSE::Configuration
         return binary.parent_path().wstring();
     }
 
-    wstring Config::GetFilename()
-    {
-        char path[MAX_PATH];
-        GetModuleFileNameA(NULL, path, MAX_PATH);
-        fs::path binary = path;
-        return binary.replace_extension(".ini").wstring();
-    }
-
-    void Config::SetDefault()
+     void Config::SetDefault()
     {
         XBoxProcessName = Registry::ReadString(Config::root, L"XBoxProcessName", L"XboxPcApp.exe");
         AggressiveMode = Registry::ReadBool(Config::root, L"AggressiveMode", false);
@@ -67,6 +59,13 @@ namespace AnyFSE::Configuration
             L"Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration",
             L"GamingHomeApp") == L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";
     }
+    
+    bool Config::IsConfigured()
+    {
+        wstring launcher = Registry::ReadString(Config::root, L"LauncherPath");
+        return !launcher.empty();
+    }
+    
     void Config::Load()
     {
         SetDefault();
@@ -88,9 +87,4 @@ namespace AnyFSE::Configuration
         LauncherIcon = config.IconFile;
         LauncherIsTrayAggressive = config.isTrayAggressive;
     }
-
-    void Config::Dump()
-    {
-    }
-
 }

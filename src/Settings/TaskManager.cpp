@@ -14,6 +14,7 @@ namespace AnyFSE::Settings::TaskManager
     #define TRY(hr) if (FAILED((hr))) throw std::exception((std::string("Can't register task at ") + std::to_string(__LINE__)).c_str());
     #define FREE(f) if(f) f->Release();
 
+    static const std::wstring TaskName = L"AnyFSE home application";
     Logger log = LogManager::GetLogger("TaskManager");
 
     bool CreateTask()
@@ -70,7 +71,7 @@ namespace AnyFSE::Settings::TaskManager
             TRY(pRegInfo->put_Description(_bstr_t(L"Starts AnyFSE home application as a system service on Windows boot")));
 
             TRY( pRootFolder->RegisterTaskDefinition(                           // Register the task
-                    _bstr_t(L"AnyFSE home application"),  // Task name
+                    _bstr_t(TaskName.c_str()),      // Task name
                     pTask,
                     TASK_CREATE_OR_UPDATE,
                     _variant_t(),                 // User credentials (empty for current user)
@@ -104,5 +105,30 @@ namespace AnyFSE::Settings::TaskManager
         CoUninitialize();
 
         return result;
+    }
+
+    bool RemoveTask()
+    {
+        ITaskService *pService = NULL;
+        ITaskFolder *pRootFolder = NULL;
+
+        try
+        {  
+            TRY( CoInitializeEx(NULL, COINIT_MULTITHREADED));
+            TRY( CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void **)&pService));
+            TRY( pService->Connect(_variant_t(), _variant_t(), _variant_t(), _variant_t()));
+            TRY( pService->GetFolder(_bstr_t(L"\\"), &pRootFolder));
+            pRootFolder->DeleteTask(_bstr_t(TaskName.c_str()), 0);
+        }
+        catch (HRESULT hr)
+        {
+            printf("Error removing task: 0x%08X\n", hr);
+        }
+        catch (...){}
+
+        FREE(pRootFolder);
+        FREE(pService);
+        CoUninitialize();
+        return true;
     }
 }

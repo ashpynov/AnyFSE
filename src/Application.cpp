@@ -92,7 +92,7 @@ namespace AnyFSE
 
     BOOL Application::ShouldRunAsConfiguration(LPSTR lpCmdLine)
     {
-        return !_strcmpi(lpCmdLine, "--configure");
+        return !_strcmpi(lpCmdLine, "--configure") || !Config::IsConfigured();
     }
 
     int WINAPI Application::WinMain(HINSTANCE hInstance,
@@ -122,7 +122,7 @@ namespace AnyFSE
             TaskDialog(NULL, hInstance,
                        L"Error",
                        L"Gaming Fullscreen Experiense API is not detected",
-                       L"Fullscreen expiriense is not available on your version of windows.\n"
+                       L"Fullscreen experiense is not available on your version of windows.\n"
                        L"It is supported since Windows 25H2 version for Handheld Devices",
                        TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
             return -1;
@@ -172,15 +172,23 @@ namespace AnyFSE
             return -1;
         }
 
-        if (false && !GamingExperience::ApiIsAvailable)
+                if (!GamingExperience::ApiIsAvailable)
         {
             log.Critical("Fullscreen Gaming API is not detected, exiting\n");
             managerState.NotifyRemote(StateEvent::EXIT_SERVICE);
             return -1;
         }
-
-        // managerState.NotifyRemote(StateEvent::MONITOR_REGISTRY);
-        managerState.Notify(StateEvent::START);
+        //managerState.NotifyRemote(StateEvent::MONITOR_REGISTRY);
+        
+        if (Config::Type != LauncherType::None || Config::Type != LauncherType::Xbox)
+        {
+            managerState.Notify(StateEvent::START);
+            managerState.Start();
+        }
+        else
+        {
+            managerState.NotifyRemote(StateEvent::EXIT_SERVICE);
+        }
 
         GamingExperience fseMonitor;
 
@@ -194,8 +202,6 @@ namespace AnyFSE
         });
 
         log.Info("Run window loop.");
-
-        managerState.Start();
 
         exitCode = MainWindow::RunLoop();
 
@@ -223,7 +229,7 @@ namespace AnyFSE
         {
             wchar_t modulePath[MAX_PATH];
             GetModuleFileName(NULL, modulePath, MAX_PATH);
-            Process::Start(modulePath, L"");
+            Process::Start(modulePath, ShouldRunAsApplication(lpCmdLine) ? L"--application" : L"" );
         }
         return (int)exitCode;
     }

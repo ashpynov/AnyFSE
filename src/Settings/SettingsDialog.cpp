@@ -2,7 +2,6 @@
 #include "SettingsDialog.hpp"
 #include "Resource.h"
 #include <commdlg.h>
-
 #include <uxtheme.h>
 #include "Tools/Tools.hpp"
 #include "Tools/Unicode.hpp"
@@ -13,6 +12,7 @@
 #include "FluentDesign/Theme.hpp"
 #include "FluentDesign/DoubleBufferedPaint.hpp"
 #include "TaskManager.hpp"
+#include "Application.hpp"
 
 #define byte ::byte
 
@@ -122,6 +122,7 @@ namespace AnyFSE::Settings
 
                 m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_hButtonOk);
                 m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_hButtonClose);
+                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_hButtonRemove);
 
                 SelectObject(paint.MemDC(), oldFont);
             }
@@ -155,6 +156,9 @@ namespace AnyFSE::Settings
                 return TRUE;
             case IDCANCEL:
                 EndDialog(hwnd, IDCANCEL);
+                return TRUE;
+            case IDABORT:
+                EndDialog(hwnd, IDABORT);
                 return TRUE;
             }
             break;
@@ -265,6 +269,22 @@ namespace AnyFSE::Settings
             - m_theme.DpiScale(Layout_ButtonHeight);
 
         rect.right -= m_theme.DpiScale(Layout_MarginRight);
+        rect.left  += m_theme.DpiScale(Layout_MarginLeft);
+
+
+        m_hButtonRemove = removeButton.Create(m_hDialog,
+            rect.left,
+            rect.top,
+            m_theme.DpiScale(Layout_UninstallWidth),
+            m_theme.DpiScale(Layout_ButtonHeight));
+
+        removeButton.SetText(L"Uninstall");
+        
+        removeButton.OnChanged += [This = this]()
+        {
+            This->OnUninstall();
+        };
+
 
         m_hButtonOk = okButton.Create(m_hDialog,
             rect.right
@@ -276,6 +296,11 @@ namespace AnyFSE::Settings
             m_theme.DpiScale(Layout_ButtonHeight));
 
         okButton.SetText(L"Save");
+        
+        okButton.OnChanged += [This = this]()
+        {
+            This->OnOk();
+        };
 
         m_hButtonClose = closeButton.Create(m_hDialog,
             rect.right - m_theme.DpiScale(Layout_CloseWidth),
@@ -287,12 +312,6 @@ namespace AnyFSE::Settings
         {
             EndDialog(This->m_hDialog, IDCANCEL);
         };
-
-        okButton.OnChanged += [This = this]()
-        {
-            This->OnOk();
-        };
-
 
         closeButton.SetText(L"Discard and Close");
 
@@ -366,6 +385,25 @@ namespace AnyFSE::Settings
     {
         SaveSettings();
         EndDialog(m_hDialog, IDOK);
+    }
+
+    void SettingsDialog::OnUninstall()
+    {
+        // uninstall
+        AnyFSE::Application::InitCustomControls();
+        int nButtonClicked = 0;
+        if (SUCCEEDED(TaskDialog(m_hDialog, GetModuleHandle(NULL),
+                       L"Uninstall",
+                       L"Uninstall Any Fullscreen Experiense?",
+                       L"This will remove system task and all settings\n",
+                       TDCBF_YES_BUTTON | TDCBF_CANCEL_BUTTON, TD_INFORMATION_ICON, &nButtonClicked))
+            && nButtonClicked == IDYES)
+
+        {
+            Registry::DeleteKey(L"HKCU\\Software\\AnyFSE");
+            TaskManager::RemoveTask();
+            EndDialog(m_hDialog, IDABORT);
+        }
     }
 
     void SettingsDialog::OnCustomChanged(HWND hwnd)
@@ -506,8 +544,7 @@ namespace AnyFSE::Settings
         }
         if (removeAnyFSE)
         {
-            Registry::DeleteKey(anyFSERoot);
-            // remove appstart
+            TaskManager::RemoveTask();
         }
         else
         {
