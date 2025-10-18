@@ -16,6 +16,9 @@ namespace AnyFSE::Manager::State
             LONGLONG m_xboxAge;
             LONGLONG m_deviceFormAge;
 
+            DWORD launcherPid;
+            DWORD m_waitStartTime;
+
 
         public:
             ManagerState(MainWindow &splash);
@@ -26,6 +29,7 @@ namespace AnyFSE::Manager::State
             void OnStart();
             void OnXboxDetected();
             void OnGameModeEnter();
+            void OnGameModeExit();
             void OnDeviceForm();
             void OnOpenHome();
             void OnLauncherTimer();
@@ -33,6 +37,7 @@ namespace AnyFSE::Manager::State
 
             bool IsInFSEMode();
             bool IsLauncherActive();
+            bool IsLauncherStarted();
             bool IsLauncherProcess();
             bool IsSplashActive();
             bool IsPreventIsActive();

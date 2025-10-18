@@ -41,7 +41,7 @@ namespace AnyFSE::Monitors
                 log.Info(
                     "FullScreenExperienceChangeNotification is registered\n"
                     "Current mode is %s\n",
-                    GamingExperience::IsActive() ? "Fullscreeen expirience" : "Windows Desktop"
+                    GamingExperience::IsActive() ? "Fullscreeen experience" : "Windows Desktop"
                 );
             }
             else

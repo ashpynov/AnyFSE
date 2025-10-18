@@ -29,6 +29,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     else
     {
         int exitCode = 0;
+        AnyFSE::Logging::LogManager::Initialize("AnyFSE");
         std::thread serviceThread = std::thread([&]()
                                     { AnyFSE::Service::ServiceMain(hInstance, hPrevInstance, NULL); });
         std::thread applicationThread = std::thread([&]()

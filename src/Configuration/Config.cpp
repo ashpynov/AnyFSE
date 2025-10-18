@@ -17,6 +17,10 @@ namespace AnyFSE::Configuration
     wstring Config::LauncherStartCommand;
     wstring Config::LauncherStartCommandArgs;
     wstring Config::XBoxProcessName;
+    wstring Config::LauncherProcessNameAlt;
+    wstring Config::LauncherWindowNameAlt;
+
+    bool Config::LauncherIsTrayAggressive = false;
 
     bool Config::AggressiveMode = false;
     bool Config::SilentMode = false;
@@ -76,10 +80,13 @@ namespace AnyFSE::Configuration
         Type = config.Type;
         LauncherName = config.Name;
         LauncherWindowName = config.WindowTitle;
+        LauncherWindowNameAlt = config.WindowTitleAlt;
         LauncherProcessName = config.ProcessName;
+        LauncherProcessNameAlt = config.ProcessNameAlt;
         LauncherStartCommand = config.StartCommand;
         LauncherStartCommandArgs = config.StartArg;
         LauncherIcon = config.IconFile;
+        LauncherIsTrayAggressive = config.isTrayAggressive;
     }
 
     void Config::Dump()

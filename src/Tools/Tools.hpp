@@ -4,7 +4,7 @@
 
 namespace AnyFSE::Tools
 {
-    HICON LoadIcon(const std::wstring& icon);
+    HICON LoadIcon(const std::wstring& icon, int size = 256);
 
     template <typename T, typename V>
     size_t index_of(const T& list, const V &value);

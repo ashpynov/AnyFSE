@@ -45,6 +45,12 @@ namespace AnyFSE
 
         CreateBackgroundWindow();
         StartMonitoring();
+        DWORD activeSession = WTSGetActiveConsoleSessionId();
+        if (lpCmdLine != NULL && activeSession != 0xFFFFFFFF)
+        {
+            log.Info("Session is started already force to run\n");
+            LaunchAppInUserSession(activeSession);
+        }
         MonitorSessions();
         StopMonitoring();
         log.Info("Work is done");

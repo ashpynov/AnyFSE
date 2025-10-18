@@ -3,6 +3,7 @@
 #include <windows.h>
 #include "resource.h"
 #include "MainWindow.hpp"
+#include "Application.hpp"
 #include "Logging/LogManager.hpp"
 #include "Configuration/Config.hpp"
 #include "Tools/Tools.hpp"
@@ -49,7 +50,7 @@ namespace AnyFSE::Window
         stWC.lpszClassName = className;
         stWC.hInstance = hInstance;
         stWC.lpfnWndProc = MainWndProc;
-        stWC.hIcon = Tools::LoadIcon(Config::LauncherIcon);
+        stWC.hIcon = Tools::LoadIcon(Config::LauncherIcon, 16);
         //stWC.hbrBackground = NULL_BRUSH;
         stWC.style = CS_HREDRAW | CS_VREDRAW;
 
@@ -60,7 +61,7 @@ namespace AnyFSE::Window
             return false;
         }
 
-        hWnd = CreateWindow((LPCTSTR)aClass, windowName, WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, NULL, NULL, hInstance, this);
+        hWnd = CreateWindow((LPCTSTR)aClass, windowName, WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, NULL, NULL, hInstance, this);
 
         if (!IsWindow(hWnd))
         {
@@ -74,7 +75,13 @@ namespace AnyFSE::Window
 
     bool MainWindow::Show()
     {
-        return IsWindow(hWnd) && StartAnimation() && AnimateWindow(hWnd, 200, AW_BLEND) ;
+        if (IsWindow(hWnd))
+        {
+            StartAnimation();
+            AnimateWindow(hWnd, 200, AW_BLEND);
+            ShowWindow(hWnd, SW_MAXIMIZE);
+        }
+        return true;
     }
 
     bool MainWindow::Hide()
@@ -141,6 +148,8 @@ namespace AnyFSE::Window
         case WM_PAINT:
             OnPaint();
             break;
+        case WM_ERASEBKGND:
+            return 1;
         case WM_DESTROY:
             OnDestroy();
             break;
@@ -183,7 +192,7 @@ namespace AnyFSE::Window
         stData.hWnd = hWnd;
         stData.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
         stData.uCallbackMessage = WM_TRAY;
-        stData.hIcon = Tools::LoadIcon(Config::LauncherIcon);
+        stData.hIcon = Tools::LoadIcon(Config::LauncherIcon, 16);
         LoadStringSafe(IDS_TIP, stData.szTip, _countof(stData.szTip));
         if (!Shell_NotifyIcon(NIM_ADD, &stData))
         {
@@ -194,13 +203,23 @@ namespace AnyFSE::Window
 
     void MainWindow::OnPaint()
     {
-        OnPaintAnimated();
+        if ( Config::ShowAnimation || Config::ShowLogo ||  Config::ShowText)
+        {
+            OnPaintAnimated();
+        }
+        else
+        {
+            PAINTSTRUCT ps;
+            BeginPaint(hWnd, &ps);
+            EndPaint(hWnd, &ps);
+        }
     }
 
     void MainWindow::OnTray(LPARAM message)
     {
         switch (message)
         {
+        case WM_LBUTTONDOWN:
         case WM_LBUTTONDBLCLK:
             SendMessage(hWnd, WM_COMMAND, ID_CONFIGURE, 0);
             break;
@@ -226,7 +245,16 @@ namespace AnyFSE::Window
         }
     }
 
-
+    BOOL MainWindow::FreeResources()
+    {
+        NOTIFYICONDATA stData;
+        ZeroMemory(&stData, sizeof(stData));
+        stData.cbSize = sizeof(stData);
+        stData.hWnd = hWnd;
+        Shell_NotifyIcon(NIM_DELETE, &stData);
+        FreeAnimationResources();
+        return TRUE;
+    }
 
     BOOL MainWindow::OnCommand(WORD command)
     {
@@ -234,12 +262,23 @@ namespace AnyFSE::Window
         {
         case ID_CONFIGURE:
             {
+                if (!AnyFSE::Application::IsRunningAsAdministrator(true, true))
+                {
+                    return FALSE;
+                }
+
                 SettingsDialog dialog;
                 INT_PTR result = dialog.Show(stWC.hInstance);
+                if ( result == IDOK)
+                {
+                    FreeResources();
+                    PostQuitMessage(ERROR_RESTART_APPLICATION);
+                }
             }
 
             return FALSE;
         case ID_QUIT:
+            FreeResources();
             PostQuitMessage(0);
             return TRUE;
         }
@@ -248,13 +287,7 @@ namespace AnyFSE::Window
 
     void MainWindow::OnDestroy()
     {
-        NOTIFYICONDATA stData;
-        ZeroMemory(&stData, sizeof(stData));
-        stData.cbSize = sizeof(stData);
-        stData.hWnd = hWnd;
-        Shell_NotifyIcon(NIM_DELETE, &stData);
-        FreeAnimationResources();
-
+        FreeResources();
         PostQuitMessage(0);
     }
 }

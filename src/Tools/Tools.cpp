@@ -6,12 +6,13 @@
 #include "Logging/LogManager.hpp"
 #include "Tools.hpp"
 #include <algorithm>
+#include <shlobj_core.h> 
 
 namespace AnyFSE::Tools
 {
     static Logger log = LogManager::GetLogger("Tools");
 
-    HICON LoadIcon(const std::wstring &icon)
+    HICON LoadIcon(const std::wstring &icon, int iconSize)
     {
         if ( icon[0] == L'#')
         {
@@ -42,9 +43,11 @@ namespace AnyFSE::Tools
             return NULL;
         }
 
-        HICON hIcon = ExtractIcon(GetModuleHandle(NULL), path.wstring().c_str(), index);
+        HICON hIcon;
+        
+        HRESULT hr = SHDefExtractIconW(path.wstring().c_str(), index, 0, &hIcon, NULL, (DWORD)iconSize);
 
-        if (!hIcon)
+        if (!SUCCEEDED(hr) || !hIcon)
         {
             log.Warn(log.APIError(), "No icon with index %d", index);
             return NULL;

@@ -30,6 +30,7 @@ namespace AnyFSE::Configuration
         wstring ProcessNameAlt;
         wstring WindowTitleAlt;
         wstring IconFile;
+        bool isTrayAggressive;
         bool isCustom;
         bool isPortable;
     };
@@ -73,7 +74,9 @@ namespace AnyFSE::Configuration
             static wstring LauncherProcessName;
             static wstring LauncherStartCommand;
             static wstring LauncherStartCommandArgs;
-
+            static wstring LauncherProcessNameAlt;
+            static wstring LauncherWindowNameAlt;
+            static bool LauncherIsTrayAggressive;
             static wstring XBoxProcessName;
 
             static bool AggressiveMode;
@@ -83,6 +86,7 @@ namespace AnyFSE::Configuration
             static bool ShowAnimation;
             static bool ShowLogo;
             static bool ShowText;
+            
     };
 }
 

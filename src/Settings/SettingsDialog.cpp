@@ -197,7 +197,7 @@ namespace AnyFSE::Settings
 
         FluentDesign::SettingsLine &launcher = AddSettingsLine(top,
             L"Choose home app",
-            L"Choose home application for full screen expirience",
+            L"Choose home application for full screen experience",
             launcherCombo,
             Layout_LineHeight, Layout_LauncherBrowsePadding, 0,
             Layout_LauncherComboWidth );
@@ -214,7 +214,7 @@ namespace AnyFSE::Settings
         browse.SetFrame(Gdiplus::FrameFlags::SIDE_NO_TOP | Gdiplus::FrameFlags::CORNER_BOTTOM);
 
         fseOnStartupLine = &AddSettingsLine(top,
-            L"Enter full screen expirience on startup",
+            L"Enter full screen experience on startup",
             L"",
             fseOnStartupToggle,
             Layout_LineHeight, Layout_LinePadding, 0);

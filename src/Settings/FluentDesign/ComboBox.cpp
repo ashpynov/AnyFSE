@@ -67,7 +67,7 @@ namespace FluentDesign
     {
         ComboItem &cb = *(comboItems.insert(pos != -1 ? comboItems.begin() + pos : comboItems.end(), ComboItem{name, icon, value, -1}));
 
-        HICON hIcon = Tools::LoadIconW(cb.icon);
+        HICON hIcon = Tools::LoadIcon(cb.icon, 32);
         cb.iconIndex = hIcon ? ImageList_AddIcon(m_hImageList, hIcon) : -1;
 
         InvalidateRect(hCombo, NULL, FALSE);
@@ -573,7 +573,7 @@ namespace FluentDesign
         {
             if (item.iconIndex != -1 && !item.icon.empty())
             {
-                HICON hIcon = Tools::LoadIconW(item.icon);
+                HICON hIcon = Tools::LoadIcon(item.icon, 32);
                 item.iconIndex = hIcon ? ImageList_AddIcon(m_hImageList, hIcon) : -1;
             }
         }

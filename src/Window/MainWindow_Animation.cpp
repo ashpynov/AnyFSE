@@ -5,6 +5,7 @@
 #include "MainWindow.hpp"
 #include "Logging/LogManager.hpp"
 #include "Configuration/Config.hpp"
+#include "Tools/Tools.hpp"
 #include "Settings/FluentDesign/GdiPlus.hpp"
 #include "Settings/FluentDesign/DoubleBufferedPaint.hpp"
 
@@ -26,7 +27,17 @@ namespace AnyFSE::Window
             return FALSE;
         }
 
-        pLogoImage = Gdiplus::LoadImageFromResource(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_LOGO), L"PNG");
+        if (HICON hIcon = Tools::LoadIcon(Config::LauncherIcon))
+        {
+            pLogoImage = new Gdiplus::Bitmap(hIcon);
+            DestroyIcon(hIcon);
+        }
+
+        if (!pLogoImage || pLogoImage->GetLastStatus() != Gdiplus::Status::Ok)
+        {
+            pLogoImage = Gdiplus::LoadImageFromResource(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_LOGO), L"PNG");
+        }
+
         return (pLogoImage && pLogoImage->GetLastStatus() == Gdiplus::Status::Ok);
     }
 
@@ -37,6 +48,7 @@ namespace AnyFSE::Window
         FluentDesign::DoubleBuferedPaint paint(hWnd);
         Graphics graphics(paint.MemDC());
 
+        graphics.SetSmoothingMode(SmoothingModeAntiAlias);
         // Fill background
         Color backgroundColor;
         backgroundColor.SetFromCOLORREF(themeBackgroundColor);
@@ -47,8 +59,8 @@ namespace AnyFSE::Window
 
         if (Config::ShowLogo && pLogoImage && pLogoImage->GetLastStatus() == Gdiplus::Ok)
         {
-            REAL imageWidth = pLogoImage->GetWidth() * currentZoom;
-            REAL imageHeight = pLogoImage->GetHeight() * currentZoom;
+            REAL imageWidth = 150 /*pLogoImage->GetWidth()*/ * currentZoom;
+            REAL imageHeight = 150 /*pLogoImage->GetHeight()*/ * currentZoom;
             REAL xPos = (rect.Width - imageWidth) / 2;
             REAL yPos = (rect.Height - imageHeight) / 2;
 

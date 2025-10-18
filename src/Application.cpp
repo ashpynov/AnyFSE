@@ -1,17 +1,3 @@
-/*-------------------------------------------------------------------------------
-    AllyG free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
----------------------------------------------------------------------------------*/
 
 #include <windows.h>
 #include <iostream>
@@ -34,7 +20,9 @@
 
 namespace AnyFSE
 {
-    BOOL Application::IsRunningAsAdministrator(bool elevate)
+    static Logger log = LogManager::GetLogger("Main");
+
+    BOOL Application::IsRunningAsAdministrator(bool elevate, bool configure)
     {
         BOOL fRet = FALSE;
         HANDLE hToken = NULL;
@@ -55,10 +43,10 @@ namespace AnyFSE
             CloseHandle(hToken);
         }
 
-        return fRet || (elevate && RequestAdminElevation());
+        return fRet || (elevate && RequestAdminElevation(configure));
     }
 
-    BOOL Application::RequestAdminElevation() {
+    BOOL Application::RequestAdminElevation(bool configure) {
         wchar_t modulePath[MAX_PATH];
         GetModuleFileName(NULL, modulePath, MAX_PATH);
 
@@ -67,10 +55,25 @@ namespace AnyFSE
         sei.lpFile = modulePath;
         sei.nShow = SW_NORMAL;
 
+        if (configure)
+        {
+            sei.lpParameters = L"--configure";
+        }
+
         if (ShellExecuteEx(&sei))
         {
             exit(0);
         }
+
+        log.Critical("Application should be executed as Adminisrator, exiting\n");
+        AnyFSE::Application::InitCustomControls();
+        TaskDialog(NULL, GetModuleHandle(NULL),
+            L"Insufficient permissons",
+            L"Please run AnyFSE as Administrator",
+            L"Escalated privileges is required to monitor XBox application execution "
+            L"or instaling application as schedulled autorun task.\n\n",
+            TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
+
         return false;
     }
 
@@ -87,6 +90,11 @@ namespace AnyFSE
         return !_strcmpi(lpCmdLine, "--application");
     }
 
+    BOOL Application::ShouldRunAsConfiguration(LPSTR lpCmdLine)
+    {
+        return !_strcmpi(lpCmdLine, "--configure");
+    }
+
     int WINAPI Application::WinMain(HINSTANCE hInstance,
                     HINSTANCE hPrevInstance,
                     LPSTR lpCmdLine,
@@ -96,10 +104,8 @@ namespace AnyFSE
         int exitCode = -1;
 
         AnyFSE::Logging::LogManager::Initialize("AnyFSE");
-        Logger log = LogManager::GetLogger("Main");
 
         LPCTSTR className = L"AnyFSE";
-
         HWND hAppWnd = FindWindow(className, NULL);
 
         if (hAppWnd)
@@ -107,17 +113,6 @@ namespace AnyFSE
             log.Info("Application is executed already, exiting\n");
             PostMessage(hAppWnd, MainWindow::WM_TRAY, 0, WM_LBUTTONDBLCLK);
             return 0;
-        }
-
-
-        log.Info("Application is started (hInstance=%08x)", hInstance);
-        try
-        {
-            Config::Load();
-        }
-        catch (std::exception ex)
-        {
-            log.Error(ex, "Fail to load config:");
         }
 
         if (!GamingExperience::ApiIsAvailable)
@@ -133,16 +128,18 @@ namespace AnyFSE
             return -1;
         }
 
+        log.Info("Application is started (hInstance=%08x)", hInstance);
+        try
+        {
+            Config::Load();
+        }
+        catch (std::exception ex)
+        {
+            log.Error(ex, "Fail to load config:");
+        }
+ 
         if (!ShouldRunAsApplication(lpCmdLine) && !AnyFSE::Application::IsRunningAsAdministrator(true))
         {
-            log.Critical("Application should be executed as Adminisrator, exiting\n");
-            AnyFSE::Application::InitCustomControls();
-            TaskDialog(NULL, hInstance,
-                    L"Insufficient permissons",
-                    L"Please run AnyFSE as Administrator",
-                    L"Escalated privileges is required to monitor XBox application execution "
-                    L"or instaling application as schedulled autorun task.\n\n",
-                    TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
             return -1;
         }
 
@@ -151,6 +148,12 @@ namespace AnyFSE
         if (!mainWindow.Create(className, hInstance, (Config::LauncherName + L" is launching").c_str()))
         {
             return (int)GetLastError();
+        }
+
+        if (ShouldRunAsConfiguration(lpCmdLine))
+        {
+            hAppWnd = FindWindow(className, NULL);
+            PostMessage(hAppWnd, MainWindow::WM_TRAY, 0, WM_LBUTTONDBLCLK);
         }
 
         if (GamingExperience::IsActive())
@@ -176,18 +179,18 @@ namespace AnyFSE
             return -1;
         }
 
-        managerState.NotifyRemote(StateEvent::MONITOR_REGISTRY);
+        // managerState.NotifyRemote(StateEvent::MONITOR_REGISTRY);
         managerState.Notify(StateEvent::START);
 
         GamingExperience fseMonitor;
 
-        fseMonitor.OnExperienseChanged += ([&log, &managerState]()
+        fseMonitor.OnExperienseChanged += ([&managerState]()
         {
             log.Info(
                 "Mode is changed to %s\n",
-                GamingExperience::IsActive() ? "Fullscreeen expirience" : "Windows Desktop"
+                GamingExperience::IsActive() ? "Fullscreeen experience" : "Windows Desktop"
             );
-            managerState.Notify(StateEvent::GAMEMODE_ENTER);
+            managerState.Notify(GamingExperience::IsActive() ? StateEvent::GAMEMODE_ENTER : StateEvent::GAMEMODE_EXIT);
         });
 
         log.Info("Run window loop.");

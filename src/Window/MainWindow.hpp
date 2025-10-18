@@ -24,6 +24,7 @@ namespace AnyFSE::Window
         void OnPaint();
 
         void OnTray(LPARAM message);
+        BOOL FreeResources();
         BOOL OnCommand(WORD command);
         void OnDestroy();
 

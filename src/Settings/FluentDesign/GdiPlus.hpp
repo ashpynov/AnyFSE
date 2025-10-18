@@ -1,7 +1,6 @@
 #pragma once
 #define byte ::byte
 #include <gdiplus.h>
-
 namespace Gdiplus
 {
 
@@ -182,4 +181,5 @@ namespace Gdiplus
 
         return pBmp;
     }
+
 }

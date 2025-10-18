@@ -35,14 +35,15 @@ namespace AnyFSE::Configuration
         {
             LauncherType::Steam, {
                 LauncherType::Steam,
-                L"Steam",
+                L"Steam Big Picture Mode",
                 L"Steam.exe",
+                L"steam://open/bigpicture",
+                L"steamwebhelper.exe",
+                L"Steam Big Picture Mode",
                 L"",
-                L"Steam.exe",
                 L"",
                 L"",
-                L"",
-                L""
+                true // trayable
             }
         },
         {

@@ -31,6 +31,7 @@ namespace AnyFSE::Manager::State
             case StateEvent::START:             return OnStart();
             case StateEvent::XBOX_DETECTED:     return OnXboxDetected();
             case StateEvent::GAMEMODE_ENTER:    return OnGameModeEnter();
+            case StateEvent::GAMEMODE_EXIT:     return OnGameModeExit();
             case StateEvent::OPEN_HOME:         return OnOpenHome();
             case StateEvent::OPEN_DEVICE_FORM:  return OnDeviceForm();
             default: break;
@@ -52,14 +53,16 @@ namespace AnyFSE::Manager::State
     {
         //if (IsInFSEMode() || Config::AggressiveMode)
         {
-            log.Info("XBoxStartDetected in %s Mode", IsInFSEMode() ? "Desktop" : "FSE");
+            log.Info("XBoxStartDetected in %s Mode", IsInFSEMode() ? "FSE" : "Desktop" );
 
             if (IsSplashActive() || IsPreventIsActive())
             {
+                log.Info("%s is still active. Kill Xbox", IsSplashActive() ? "Splash" : "Preventing");
                 KillXbox();
             }
             else if (!IsLauncherActive())
             {
+                log.Info("Launcher is not active");
                 ShowSplash();
                 KillXbox();
                 StartLauncher();
@@ -67,6 +70,7 @@ namespace AnyFSE::Manager::State
             }
             else if (Config::AggressiveMode)
             {
+                log.Info("Aggressive mode.. kill.");
                 KillXbox();
                 PreventTimeout();
                 FocusLauncher();
@@ -77,7 +81,7 @@ namespace AnyFSE::Manager::State
 
     void ManagerState::OnGameModeEnter()
     {
-        if (!IsLauncherProcess())
+        if (!IsLauncherStarted())
         {
             ShowSplash();
             StartLauncher();
@@ -92,6 +96,10 @@ namespace AnyFSE::Manager::State
             PreventTimeout();
             FocusLauncher();
         }
+    }
+    void ManagerState::OnGameModeExit()
+    {
+        log.Info("Exited Game Modoe, do nothing");
     }
 
     void ManagerState::OnDeviceForm()
@@ -129,7 +137,7 @@ namespace AnyFSE::Manager::State
 
     void ManagerState::OnLauncherTimer()
     {
-        log.Info("Launcher check");
+        log.Info("Launcher check %d ms", GetTickCount() - m_waitStartTime);
         if (IsLauncherActive())
         {
             log.Info("Launcher activated");
@@ -138,6 +146,14 @@ namespace AnyFSE::Manager::State
             FocusLauncher();
             PreventTimeout();
             CloseSplash();
+        }
+        else if (GetTickCount() - m_waitStartTime > 30000)
+        {
+            log.Info("Launcher not started, starting");
+            ManagerCycle::CancelTimer(m_waitLauncherTimer);
+            m_waitLauncherTimer = 0;
+            StartLauncher();
+            WaitLauncher();
         }
     }
 
@@ -156,14 +172,25 @@ namespace AnyFSE::Manager::State
 
     bool ManagerState::IsLauncherActive()
     {
-        wstring pName = Config::LauncherProcessName;
-        DWORD processId = Process::FindByName(Config::LauncherProcessName);
-        return processId && Process::GetWindow(processId, Config::LauncherWindowName);
+        std::set<DWORD> processIds;
+        return  (
+            Process::FindAllByName(Config::LauncherProcessName, processIds)
+            && Process::GetWindow(processIds, Config::LauncherWindowName)
+        ) || (
+            !Config::LauncherProcessNameAlt.empty()
+            && Process::FindAllByName(Config::LauncherProcessNameAlt, processIds)
+            && Process::GetWindow(processIds, Config::LauncherWindowNameAlt)
+        );
     }
 
+    bool ManagerState::IsLauncherStarted()
+    {
+        return Config::LauncherIsTrayAggressive ? IsLauncherActive() : IsLauncherProcess();
+    }
     bool ManagerState::IsLauncherProcess()
     {
-        return 0 != Process::FindByName(Config::LauncherProcessName);
+        return 0 != Process::FindFirstByName(Config::LauncherProcessName)
+            || 0 != Process::FindFirstByName(Config::LauncherProcessNameAlt);
     }
 
     bool ManagerState::IsSplashActive()
@@ -201,13 +228,17 @@ namespace AnyFSE::Manager::State
 
     void ManagerState::StartLauncher()
     {
-        if (!IsLauncherProcess())
+        if (!IsLauncherStarted())
         {
             log.Info("Start Launcher");
             if (0 == Process::Start(Config::LauncherStartCommand, Config::LauncherStartCommandArgs))
             {
                 log.Error(log.APIError(), "Can't start launcher:" );
             }
+        }
+        else
+        {
+            log.Info("Launcher is Active already");
         }
     }
 
@@ -216,6 +247,7 @@ namespace AnyFSE::Manager::State
         if (!m_waitLauncherTimer)
         {
             log.Info("Set timer for await Launcher");
+            m_waitStartTime = GetTickCount();
             m_waitLauncherTimer = ManagerCycle::SetTimer(std::chrono::milliseconds(500), [this](){ this->OnLauncherTimer(); }, true );
         }
     }
@@ -238,10 +270,11 @@ namespace AnyFSE::Manager::State
     void ManagerState::FocusLauncher()
     {
         log.Info("Focus Launcher");
-        DWORD processId = Process::FindByName(Config::LauncherProcessName);
-        if (processId)
+
+        std::set<DWORD> processIds;
+        if (Process::FindAllByName(Config::LauncherProcessName, processIds))
         {
-            HWND launcher = Process::GetWindow(processId, Config::LauncherWindowName);
+            HWND launcher = Process::GetWindow(processIds, Config::LauncherWindowName);
             if (launcher)
             {
                 ShowWindow(launcher, SW_RESTORE);

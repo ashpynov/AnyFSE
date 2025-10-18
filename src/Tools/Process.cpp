@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <set>
+#include <sstream>
 
 #include "Process.hpp"
 
@@ -11,7 +13,7 @@
 
 namespace AnyFSE::Tools::Process
 {
-    DWORD FindByName(const std::wstring &processName)
+    DWORD FindFirstByName(const std::wstring &processName)
     {
         HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
         if (hSnapshot == INVALID_HANDLE_VALUE)
@@ -33,13 +35,25 @@ namespace AnyFSE::Tools::Process
 
         // Convert to lowercase for case-insensitive comparison
         std::transform(targetName.begin(), targetName.end(), targetName.begin(), ::towlower);
+        
+        std::set<std::wstring> targetNames;
+        std::wstringstream ss(targetName);
+        std::wstring token;
+        
+        while (std::getline(ss, token, L';')) 
+        { 
+            if (!token.empty()) 
+            {
+                targetNames.insert(token);
+            }
+        }
 
         do
         {
             std::wstring currentName = pe32.szExeFile;
             std::transform(currentName.begin(), currentName.end(), currentName.begin(), ::towlower);
 
-            if (currentName == targetName)
+            if (targetNames.find(currentName) != targetNames.end())
             {
                 processId = pe32.th32ProcessID;
                 break;
@@ -50,9 +64,60 @@ namespace AnyFSE::Tools::Process
         return processId;
     }
 
+    size_t FindAllByName(const std::wstring &processName, std::set<DWORD> & result)
+    {
+        result.clear();
+        HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if (hSnapshot == INVALID_HANDLE_VALUE)
+        {
+            return 0;
+        }
+
+        PROCESSENTRY32W pe32;
+        pe32.dwSize = sizeof(PROCESSENTRY32W);
+
+        if (!Process32FirstW(hSnapshot, &pe32))
+        {
+            CloseHandle(hSnapshot);
+            return 0;
+        }
+
+        DWORD processId = 0;
+        std::wstring targetName = processName;
+
+        // Convert to lowercase for case-insensitive comparison
+        std::transform(targetName.begin(), targetName.end(), targetName.begin(), ::towlower);
+
+        std::set<std::wstring> targetNames;
+        std::wstringstream ss(targetName);
+        std::wstring token;
+        
+        while (std::getline(ss, token, L';')) 
+        { 
+            if (!token.empty()) 
+            {
+                targetNames.insert(token);
+            }
+        }
+
+        do
+        {
+            std::wstring currentName = pe32.szExeFile;
+            std::transform(currentName.begin(), currentName.end(), currentName.begin(), ::towlower);
+
+            if (targetNames.find(currentName) != targetNames.end())
+            {
+                result.insert(pe32.th32ProcessID);
+            }
+        } while (Process32NextW(hSnapshot, &pe32));
+
+        CloseHandle(hSnapshot);
+        return result.size();
+    }
+
     HRESULT Kill(const std::wstring &processName)
     {
-        DWORD processId = FindByName(processName);
+        DWORD processId = FindFirstByName(processName);
         if (processId == 0)
         {
             return ERROR_PROC_NOT_FOUND;
@@ -128,7 +193,7 @@ namespace AnyFSE::Tools::Process
     // Callback function for EnumWindows
     struct WindowSearchData
     {
-        DWORD processId;
+        const std::set<DWORD> * processIds;
         std::wstring windowTitle;
         HWND foundWindow;
     };
@@ -139,33 +204,32 @@ namespace AnyFSE::Tools::Process
 
         DWORD windowProcessId;
         GetWindowThreadProcessId(hwnd, &windowProcessId);
-
-        if (windowProcessId == searchData->processId)
+        if ( searchData->processIds->find(windowProcessId) != searchData->processIds->end())
         {
-            // Check if it's a main window (has no parent and is visible)
-            if (GetParent(hwnd) == NULL && IsWindowVisible(hwnd))
+            // If no specific window title provided, return the first main window found
+            if (searchData->windowTitle.empty())
             {
-                // If no specific window title provided, return the first main window found
-                if (searchData->windowTitle.empty())
+                searchData->foundWindow = hwnd;
+                return FALSE; // Stop enumeration
+            }
+
+            if (GetParent(hwnd) != NULL || !IsWindowVisible(hwnd))
+            {
+                return TRUE;
+            }
+            // Get window title
+            wchar_t title[256];
+            int titleLength = GetWindowTextW(hwnd, title, sizeof(title));
+
+            if (titleLength > 0)
+            {
+                std::wstring currentTitle(title, titleLength);
+
+                // Compare titles (case-sensitive)
+                if (currentTitle == searchData->windowTitle)
                 {
                     searchData->foundWindow = hwnd;
                     return FALSE; // Stop enumeration
-                }
-
-                // Get window title
-                wchar_t title[256];
-                int titleLength = GetWindowTextW(hwnd, title, sizeof(title));
-
-                if (titleLength > 0)
-                {
-                    std::wstring currentTitle(title, titleLength);
-
-                    // Compare titles (case-sensitive)
-                    if (currentTitle == searchData->windowTitle)
-                    {
-                        searchData->foundWindow = hwnd;
-                        return FALSE; // Stop enumeration
-                    }
                 }
             }
         }
@@ -173,15 +237,15 @@ namespace AnyFSE::Tools::Process
         return TRUE; // Continue enumeration
     }
 
-    HWND GetWindow(DWORD processId, const std::wstring &windowTitle)
+    HWND GetWindow(const std::set<DWORD>& processIds, const std::wstring &windowTitle)
     {
-        if (processId == 0)
+        if (processIds.size() == 0)
         {
             return NULL;
         }
 
         WindowSearchData searchData;
-        searchData.processId = processId;
+        searchData.processIds = &processIds;
         searchData.windowTitle = windowTitle;
         searchData.foundWindow = NULL;
 
