@@ -1,4 +1,16 @@
+// AnyFSE is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// AnyFSE is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+
+
 #pragma once
+
 #include <windows.h>
 #include <string>
 #include <functional>
@@ -20,8 +32,8 @@ namespace FluentDesign
         };
 
     private:
-        int linePadding;
-        int leftMargin;
+        int m_linePadding;
+        int m_leftMargin;
 
     protected:
         HWND m_hWnd;
@@ -42,25 +54,25 @@ namespace FluentDesign
 
         State m_state;
 
-        int CHEVRON_SIZE = 12;
+        const int CHEVRON_SIZE = 12;
 
     private:
         virtual LPARAM OnCommand(HWND hwnd, int msg, WPARAM wParam, LPARAM lParam) { return 0; };
         virtual LPARAM OnDrawItem(HWND hwnd, LPDRAWITEMSTRUCT dis) { return 0; };
 
-        FluentDesign::Theme &m_theme;
-        std::list<SettingsLine *> m_groupItems;
+        Theme &m_theme;
+        std::list<SettingsLine *> m_groupItemsList;
 
 
     public:
 
-        explicit SettingsLine(FluentDesign::Theme &theme);
+        explicit SettingsLine(Theme &theme);
 
-        explicit SettingsLine(FluentDesign::Theme &theme, HWND hParent,
+        explicit SettingsLine(Theme &theme, HWND hParent,
             const std::wstring &name, const std::wstring &description,
             int x, int y, int width, int height);
 
-        explicit SettingsLine(FluentDesign::Theme &theme, HWND hParent,
+        explicit SettingsLine(Theme &theme, HWND hParent,
             const std::wstring &name, const std::wstring &description,
             int x, int y, int width, int height,
              std::function<HWND(HWND)> createChild);

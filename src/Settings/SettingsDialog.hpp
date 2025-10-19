@@ -1,4 +1,14 @@
-// ModernSettingsDialog.h
+// AnyFSE is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// AnyFSE is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+
+
 #pragma once
 #include <windows.h>
 #include <commctrl.h>
@@ -21,8 +31,10 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 namespace AnyFSE::Settings
 {
+    using namespace FluentDesign;
     class SettingsDialog
     {
+
         static const int Layout_OKWidth = 100;
         static const int Layout_CloseWidth = 150;
         static const int Layout_UninstallWidth = 100;
@@ -58,18 +70,18 @@ namespace AnyFSE::Settings
         SettingsDialog()
             : m_theme()
             , m_customSettingsState(FluentDesign::SettingsLine::Closed)
-            , launcherCombo(m_theme)
-            , fseOnStartupToggle(m_theme)
-            , customSettingsToggle(m_theme)
-            , additionalArgumentsEdit(m_theme)
-            , processNameEdit(m_theme)
-            , titleEdit(m_theme)
-            , processNameAltEdit(m_theme)
-            , titleAltEdit(m_theme)
-            , browseButton(m_theme)
-            , okButton(m_theme)
-            , closeButton(m_theme)
-            , removeButton(m_theme)
+            , m_launcherCombo(m_theme)
+            , m_fseOnStartupToggle(m_theme)
+            , m_customSettingsToggle(m_theme)
+            , m_additionalArgumentsEdit(m_theme)
+            , m_processNameEdit(m_theme)
+            , m_titleEdit(m_theme)
+            , m_processNameAltEdit(m_theme)
+            , m_titleAltEdit(m_theme)
+            , m_browseButton(m_theme)
+            , m_okButton(m_theme)
+            , m_closeButton(m_theme)
+            , m_removeButton(m_theme)
         {}
 
     private:
@@ -96,41 +108,41 @@ namespace AnyFSE::Settings
         bool m_isAgressive;
         bool m_enterOnStartup;
 
-        LauncherConfig config;
-        std::wstring current;
-        std::list<std::wstring> launchers;
+        LauncherConfig m_config;
+        std::wstring m_currentLauncherPath;
+        std::list<std::wstring> m_launchersList;
 
-        FluentDesign::Theme m_theme;
-
-        FluentDesign::ComboBox launcherCombo;
-        FluentDesign::Toggle fseOnStartupToggle;
-        FluentDesign::Toggle customSettingsToggle;
-        FluentDesign::TextBox additionalArgumentsEdit;
-        FluentDesign::TextBox processNameEdit;
-        FluentDesign::TextBox titleEdit;
-        FluentDesign::TextBox processNameAltEdit;
-        FluentDesign::TextBox titleAltEdit;
-        FluentDesign::Button browseButton;
-        FluentDesign::Button okButton;
-        FluentDesign::Button closeButton;
-        FluentDesign::Button removeButton;
+        Theme m_theme;
+        ComboBox m_launcherCombo;
+        Toggle m_fseOnStartupToggle;
+        Toggle m_customSettingsToggle;
+        TextBox m_additionalArgumentsEdit;
+        TextBox m_processNameEdit;
+        TextBox m_titleEdit;
+        TextBox m_processNameAltEdit;
+        TextBox m_titleAltEdit;
+        Button m_browseButton;
+        Button m_okButton;
+        Button m_closeButton;
+        Button m_removeButton;
 
         HWND m_hButtonOk;
         HWND m_hButtonClose;
         HWND m_hButtonRemove;
 
-        std::list<FluentDesign::SettingsLine> settingLines;
+        std::list<SettingsLine> m_settingLinesList;
+        
         template <class T>
-        FluentDesign::SettingsLine& AddSettingsLine(
+        SettingsLine& AddSettingsLine(
             ULONG &top, const wstring &name, const wstring &desc,
             T &control, int height, int padding, int contentMargin,
             int contentWidth = Layout_CustomSettingsWidth,
             int contentHeight = Layout_Layout_CustomSettingsHeight);
 
-        FluentDesign::SettingsLine * fseOnStartupLine;
-        FluentDesign::SettingsLine * customSettingsLine;
+        SettingsLine * m_pFseOnStartupLine;
+        SettingsLine * m_pCustomSettingsLine;
 
-        FluentDesign::SettingsLine::State m_customSettingsState;
+        SettingsLine::State m_customSettingsState;
     };
 }
 

@@ -1,3 +1,14 @@
+// AnyFSE is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// AnyFSE is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+
+
 
 #include <tchar.h>
 #include <windows.h>
@@ -14,32 +25,32 @@
 namespace AnyFSE::Window
 {
     static Logger log = LogManager::GetLogger("MainWindow");
-    WNDCLASS MainWindow::stWC;
+    WNDCLASS MainWindow::WC;
 
     MainWindow::MainWindow()
-        : hWnd(NULL)
-        , aClass(NULL)
+        : m_hWnd(NULL)
+        , m_aClass(NULL)
         , WM_TASKBARCREATED(RegisterWindowMessage(L"TaskbarCreated"))
     {
 
-        ZeroMemory(&stWC, sizeof(stWC));
+        ZeroMemory(&WC, sizeof(WC));
     }
     MainWindow::~MainWindow()
     {
-        if (stWC.hIcon)
+        if (WC.hIcon)
         {
-            DestroyIcon(stWC.hIcon);
+            DestroyIcon(WC.hIcon);
         }
 
-        if (IsWindow(hWnd))
+        if (IsWindow(m_hWnd))
         {
 
-            DestroyWindow(hWnd);
-            hWnd = NULL;
+            DestroyWindow(m_hWnd);
+            m_hWnd = NULL;
         }
-        if (aClass)
+        if (m_aClass)
         {
-            UnregisterClass((LPCTSTR)aClass, stWC.hInstance);
+            UnregisterClass((LPCTSTR)m_aClass, WC.hInstance);
         }
     }
 
@@ -47,51 +58,51 @@ namespace AnyFSE::Window
     {
 
 
-        stWC.lpszClassName = className;
-        stWC.hInstance = hInstance;
-        stWC.lpfnWndProc = MainWndProc;
-        stWC.hIcon = Tools::LoadIcon(Config::LauncherIcon, 16);
+        WC.lpszClassName = className;
+        WC.hInstance = hInstance;
+        WC.lpfnWndProc = MainWndProc;
+        WC.hIcon = Tools::LoadIcon(Config::LauncherIcon, 16);
         //stWC.hbrBackground = NULL_BRUSH;
-        stWC.style = CS_HREDRAW | CS_VREDRAW;
+        WC.style = CS_HREDRAW | CS_VREDRAW;
 
-        aClass = RegisterClass(&stWC);
-        if (!aClass)
+        m_aClass = RegisterClass(&WC);
+        if (!m_aClass)
         {
             log.Debug(Logger::APIError(), "Can not register class name");
             return false;
         }
 
-        hWnd = CreateWindow((LPCTSTR)aClass, windowName, WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, NULL, NULL, hInstance, this);
+        m_hWnd = CreateWindow((LPCTSTR)m_aClass, windowName, WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, NULL, NULL, hInstance, this);
 
-        if (!IsWindow(hWnd))
+        if (!IsWindow(m_hWnd))
         {
             log.Debug(Logger::APIError(), "Can not create window");
             return false;
         }
 
-        log.Debug("Window is created (hWnd=%08x)", hWnd);
+        log.Debug("Window is created (hWnd=%08x)", m_hWnd);
         return true;
     };
 
     bool MainWindow::Show()
     {
-        if (IsWindow(hWnd))
+        if (IsWindow(m_hWnd))
         {
             StartAnimation();
-            AnimateWindow(hWnd, 200, AW_BLEND);
-            ShowWindow(hWnd, SW_MAXIMIZE);
+            AnimateWindow(m_hWnd, 200, AW_BLEND);
+            ShowWindow(m_hWnd, SW_MAXIMIZE);
         }
         return true;
     }
 
     bool MainWindow::Hide()
     {
-        return !IsWindow(hWnd) || StopAnimation() && AnimateWindow(hWnd, 200, AW_BLEND|AW_HIDE);
+        return !IsWindow(m_hWnd) || StopAnimation() && AnimateWindow(m_hWnd, 200, AW_BLEND|AW_HIDE);
     }
 
     bool MainWindow::IsVisible()
     {
-        return IsWindowVisible(hWnd);
+        return IsWindowVisible(m_hWnd);
     }
 
     // static
@@ -115,7 +126,7 @@ namespace AnyFSE::Window
         {
             CREATESTRUCT *pCreate = (CREATESTRUCT *)lParam;
             pWindow = (MainWindow *)pCreate->lpCreateParams;
-            pWindow->hWnd = hWnd;
+            pWindow->m_hWnd = hWnd;
             SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pWindow);
 
         }
@@ -138,7 +149,7 @@ namespace AnyFSE::Window
         {
             log.Debug("Explorer start taskbar ready");
             CreateTrayIcon();
-            return DefWindowProc(hWnd, uMsg, wParam, lParam);
+            return DefWindowProc(m_hWnd, uMsg, wParam, lParam);
         }
         switch (uMsg)
         {
@@ -166,13 +177,13 @@ namespace AnyFSE::Window
             }
             break;
         }
-        return DefWindowProc(hWnd, uMsg, wParam, lParam);
+        return DefWindowProc(m_hWnd, uMsg, wParam, lParam);
     }
 
     // static
     void MainWindow::LoadStringSafe(UINT nStrID, LPTSTR szBuf, UINT nBufLen)
     {
-        UINT nLen = LoadString(stWC.hInstance, nStrID, szBuf, nBufLen);
+        UINT nLen = LoadString(WC.hInstance, nStrID, szBuf, nBufLen);
         if (nLen >= nBufLen)
             nLen = nBufLen - 1;
         szBuf[nLen] = 0;
@@ -189,7 +200,7 @@ namespace AnyFSE::Window
         NOTIFYICONDATA stData;
         ZeroMemory(&stData, sizeof(stData));
         stData.cbSize = sizeof(stData);
-        stData.hWnd = hWnd;
+        stData.hWnd = m_hWnd;
         stData.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
         stData.uCallbackMessage = WM_TRAY;
         stData.hIcon = Tools::LoadIcon(Config::LauncherIcon, 16);
@@ -210,8 +221,8 @@ namespace AnyFSE::Window
         else
         {
             PAINTSTRUCT ps;
-            BeginPaint(hWnd, &ps);
-            EndPaint(hWnd, &ps);
+            BeginPaint(m_hWnd, &ps);
+            EndPaint(m_hWnd, &ps);
         }
     }
 
@@ -221,12 +232,12 @@ namespace AnyFSE::Window
         {
         case WM_LBUTTONDOWN:
         case WM_LBUTTONDBLCLK:
-            SendMessage(hWnd, WM_COMMAND, ID_CONFIGURE, 0);
+            SendMessage(m_hWnd, WM_COMMAND, ID_CONFIGURE, 0);
             break;
 
         case WM_RBUTTONDOWN:
         {
-            HMENU hMenu = LoadMenu(stWC.hInstance, MAKEINTRESOURCE(IDR_POPUP));
+            HMENU hMenu = LoadMenu(WC.hInstance, MAKEINTRESOURCE(IDR_POPUP));
             if (hMenu)
             {
                 HMENU hSubMenu = GetSubMenu(hMenu, 0);
@@ -235,7 +246,7 @@ namespace AnyFSE::Window
                     POINT stPoint;
                     GetCursorPos(&stPoint);
 
-                    TrackPopupMenu(hSubMenu, TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, stPoint.x, stPoint.y, 0, hWnd, NULL);
+                    TrackPopupMenu(hSubMenu, TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, stPoint.x, stPoint.y, 0, m_hWnd, NULL);
                 }
 
                 DestroyMenu(hMenu);
@@ -250,7 +261,7 @@ namespace AnyFSE::Window
         NOTIFYICONDATA stData;
         ZeroMemory(&stData, sizeof(stData));
         stData.cbSize = sizeof(stData);
-        stData.hWnd = hWnd;
+        stData.hWnd = m_hWnd;
         Shell_NotifyIcon(NIM_DELETE, &stData);
         FreeAnimationResources();
         return TRUE;
@@ -272,17 +283,17 @@ namespace AnyFSE::Window
 
                 inDialog = true;
                 SettingsDialog dialog;
-                INT_PTR result = dialog.Show(stWC.hInstance);
+                INT_PTR result = dialog.Show(WC.hInstance);
                 if ( result == IDOK)
                 {
                     FreeResources();
                     m_result = ERROR_RESTART_APPLICATION;
-                    DestroyWindow(hWnd);
+                    DestroyWindow(m_hWnd);
                 }
                 else if ( result == IDABORT)
                 {
                     m_result = ERROR_PRODUCT_UNINSTALLED;
-                    DestroyWindow(hWnd);
+                    DestroyWindow(m_hWnd);
                 }
                 inDialog = false;
             }
@@ -290,7 +301,7 @@ namespace AnyFSE::Window
             return FALSE;
         case ID_QUIT:
             m_result = 0;
-            DestroyWindow(hWnd);
+            DestroyWindow(m_hWnd);
             return TRUE;
         }
         return FALSE;

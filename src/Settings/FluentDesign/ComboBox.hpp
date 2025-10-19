@@ -1,4 +1,16 @@
+// AnyFSE is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// AnyFSE is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+
+
 #pragma once
+
 #include <windows.h>
 #include <commctrl.h>
 #include <string>
@@ -19,20 +31,20 @@ namespace FluentDesign
         };
 
     private:
-        static const int itemHeight = 38;
-        static const int imageSize = 20;
-        static const int leftMargin = 16;
-        static const int iconMargin = 8;
-        static const int chevronMargin = 16;
-        static const int cornerRadius = 8;
+        static const int Layout_ItemHeight = 38;
+        static const int Layout_ImageSize = 20;
+        static const int Layout_LeftMargin = 16;
+        static const int Layout_IconMargin = 8;
+        static const int Layout_ChevronMargin = 16;
+        static const int Layout_CornerRadius = 8;
 
         HWND hCombo;
         HIMAGELIST m_hImageList = NULL;
 
-        std::vector<ComboItem> comboItems;
+        std::vector<ComboItem> m_comboItems;
 
-        bool buttonPressed;
-        bool buttonMouseOver;
+        bool m_buttonPressed;
+        bool m_buttonMouseOver;
 
         int m_designWidth;
 
@@ -59,12 +71,12 @@ namespace FluentDesign
 
         void UpdateLayout();
 
-        FluentDesign::Theme &m_theme;
+        Theme &m_theme;
 
     public:
-        ComboBox(FluentDesign::Theme& theme);
+        ComboBox(Theme& theme);
         ComboBox(
-            FluentDesign::Theme& theme,
+            Theme& theme,
             HWND hParent,
             int x, int y,
             int width, int height);

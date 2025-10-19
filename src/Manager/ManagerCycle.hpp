@@ -22,11 +22,13 @@ namespace AnyFSE::Manager::Cycle
     {
         friend class ManagerState;
         static const int MESSAGES_EOL = 5000;
+    
+    protected:
+        AnyFSE::Manager::IPCChannel m_ipcChannel;
 
     public:
         // Event enum - you can extend this as needed
 
-        AnyFSE::Manager::IPCChannel ipcChannel;
         ManagerCycle(bool isServer);
         virtual ~ManagerCycle();
 
@@ -52,13 +54,13 @@ namespace AnyFSE::Manager::Cycle
 
     private:
         // Thread-safe queue for events
-        std::queue<StateEvent> eventQueue;
-        std::mutex queueMutex;
+        std::queue<StateEvent> m_eventQueue;
+        std::mutex m_queueMutex;
 
-        HANDLE queueCondition;
+        HANDLE m_hQueueCondition;
 
-        HANDLE hReadPipe;
-        HANDLE hWritePipe;
+        HANDLE m_hReadPipe;
+        HANDLE m_hWritePipe;
 
         Logger _log;
         // Timer management - only accessed from processing thread
@@ -71,12 +73,12 @@ namespace AnyFSE::Manager::Cycle
             bool isInvalid;
         };
 
-        std::map<uint64_t, TimerInfo> timers;
-        uint64_t nextTimerId{1};
+        std::map<uint64_t, TimerInfo> m_timersMap;
+        uint64_t m_nextTimerId{1};
 
         // Control flags
-        std::atomic<bool> isRunning{false};
-        std::thread processingThread;
+        std::atomic<bool> m_isRunning{false};
+        std::thread m_thread;
 
         // Private methods
         void ProcessingCycle();

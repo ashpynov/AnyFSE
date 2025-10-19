@@ -37,8 +37,8 @@ namespace AnyFSE::Configuration
 
     class Config
     {
-            static const wstring root;
-            static const map<LauncherType, LauncherConfig> LauncherConfigs;
+            static const wstring Root;
+            static const map<LauncherType, LauncherConfig> LauncherConfigsMap;
 
             Config() {};
 

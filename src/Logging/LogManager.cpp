@@ -19,38 +19,38 @@ using namespace AnyFSE::Logging;
 
 namespace AnyFSE::Logging
 {
-    std::ofstream LogManager::logWriter;
-    std::mutex LogManager::writeLock;
-    LogLevel LogManager::logLevel;
-    std::string LogManager::applicationName;
-    bool LogManager::logToConsole;
+    std::ofstream LogManager::LogWriter;
+    std::mutex LogManager::WriteLock;
+    LogLevel LogManager::Level;
+    std::string LogManager::ApplicationName;
+    bool LogManager::LogToConsole;
 
     void LogManager::Initialize(const string &appName)
     {
-        if (!applicationName.empty())
+        if (!ApplicationName.empty())
         {
             return;
         }
 
-        logToConsole = IsDebuggerPresent() != 0;
-        applicationName = appName;
-        logLevel = LogLevel::Trace;
+        LogToConsole = IsDebuggerPresent() != 0;
+        ApplicationName = appName;
+        Level = LogLevel::Trace;
 
-        if (!logToConsole)
+        if (!LogToConsole)
         {
             const wstring root = L"HKLM\\Software\\AnyFSE\\Logger\\" + Unicode::to_wstring(appName);
             wstring filePath = Registry::ReadString(root, L"FilePath", L"");
-            logLevel = (LogLevel)Registry::ReadDWORD(root, L"Level", (DWORD)LogLevel::Error);
+            Level = (LogLevel)Registry::ReadDWORD(root, L"Level", (DWORD)LogLevel::Error);
             if (!filePath.empty())
             {
-                logWriter.open(filePath, ios::app | ios::out);
+                LogWriter.open(filePath, ios::app | ios::out);
             }
         }
     }
 
     LogManager::~LogManager()
     {
-        logWriter.close();
+        LogWriter.close();
     }
 
     // Helper methods
@@ -96,7 +96,7 @@ namespace AnyFSE::Logging
     // Main logging method
     void LogManager::WriteMessage(LogLevel level, const string &loggerName, const char *format, va_list args)
     {
-        if (level < logLevel || !(logToConsole || logWriter.is_open()))
+        if (level < Level || !(LogToConsole || LogWriter.is_open()))
         {
             return;
         }
@@ -121,21 +121,21 @@ namespace AnyFSE::Logging
         transform(levelText.begin(), levelText.end(), levelText.begin(), ::tolower);
 
         string prefix = string(timestamp) + " [" + levelText + "] [" + loggerName + "]";
-        string consolePrefix = string(consoleTime) + " [" + levelText + "] [" + applicationName + "/" + loggerName + "]";
+        string consolePrefix = string(consoleTime) + " [" + levelText + "] [" + ApplicationName + "/" + loggerName + "]";
 
         string message = FormatString(format, args);
 
         // Write to file
-        if (logWriter.is_open())
+        if (LogWriter.is_open())
         {
             string fullLogMessage = prefix + " " + message;
-            lock_guard<mutex> lock(writeLock);
-            logWriter << fullLogMessage << endl;
-            logWriter.flush();
+            lock_guard<mutex> lock(WriteLock);
+            LogWriter << fullLogMessage << endl;
+            LogWriter.flush();
         }
 
         // Write to console if debugger attached
-        if (logToConsole)
+        if (LogToConsole)
         {
             vector<string> lines;
             stringstream ss(message);

@@ -32,11 +32,11 @@ namespace AnyFSE::Monitors
 
     GamingExperience::GamingExperience()
     {
-        fseHandle = nullptr;
+        m_fseHandle = nullptr;
         if (ApiIsAvailable)
         {
-            RegisterGamingFullScreenExperienceChangeNotification((VOID(CALLBACK *)(LPVOID))Callback, this, &fseHandle);
-            if (fseHandle != nullptr)
+            RegisterGamingFullScreenExperienceChangeNotification((VOID(CALLBACK *)(LPVOID))Callback, this, &m_fseHandle);
+            if (m_fseHandle != nullptr)
             {
                 log.Debug(
                     "FullScreenExperienceChangeNotification is registered\n"
@@ -58,9 +58,9 @@ namespace AnyFSE::Monitors
 
     GamingExperience::~GamingExperience()
     {
-        if (fseHandle != nullptr && ApiIsAvailable)
+        if (m_fseHandle != nullptr && ApiIsAvailable)
         {
-            UnregisterGamingFullScreenExperienceChangeNotification(fseHandle);
+            UnregisterGamingFullScreenExperienceChangeNotification(m_fseHandle);
         }
     }
 }

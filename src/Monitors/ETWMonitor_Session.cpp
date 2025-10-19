@@ -26,41 +26,41 @@ namespace AnyFSE::Monitors
     void ETWMonitor::SetTraceProperties()
     {
         size_t bufferSize = sizeof(EVENT_TRACE_PROPERTIES) + (m_sessionName.size() + 1) * sizeof(WCHAR)+ 4096;
-        if (m_traceProperties == nullptr)
+        if (m_pTraceProperties == nullptr)
         {
-            m_traceProperties = (EVENT_TRACE_PROPERTIES *)malloc(bufferSize);
-            if (!m_traceProperties)
+            m_pTraceProperties = (EVENT_TRACE_PROPERTIES *)malloc(bufferSize);
+            if (!m_pTraceProperties)
             {
                 throw std::runtime_error("Failed to allocate memory for ETW properties");
             }
         }
 
-        ZeroMemory(m_traceProperties, bufferSize);
-        m_traceProperties->Wnode.BufferSize = (ULONG)bufferSize;
-        m_traceProperties->Wnode.Flags = WNODE_FLAG_TRACED_GUID;
-        m_traceProperties->Wnode.ClientContext = 1; // QoS
-        m_traceProperties->Wnode.Guid = ProcessProviderGuid;
-        m_traceProperties->EnableFlags = EVENT_TRACE_FLAG_PROCESS | EVENT_TRACE_FLAG_THREAD | EVENT_TRACE_FLAG_IMAGE_LOAD;
-        m_traceProperties->LogFileMode = EVENT_TRACE_NO_PER_PROCESSOR_BUFFERING | EVENT_TRACE_REAL_TIME_MODE;
-        m_traceProperties->MaximumFileSize = 1; // 1MB
-        m_traceProperties->LoggerNameOffset = sizeof(EVENT_TRACE_PROPERTIES);
+        ZeroMemory(m_pTraceProperties, bufferSize);
+        m_pTraceProperties->Wnode.BufferSize = (ULONG)bufferSize;
+        m_pTraceProperties->Wnode.Flags = WNODE_FLAG_TRACED_GUID;
+        m_pTraceProperties->Wnode.ClientContext = 1; // QoS
+        m_pTraceProperties->Wnode.Guid = ProcessProviderGuid;
+        m_pTraceProperties->EnableFlags = EVENT_TRACE_FLAG_PROCESS | EVENT_TRACE_FLAG_THREAD | EVENT_TRACE_FLAG_IMAGE_LOAD;
+        m_pTraceProperties->LogFileMode = EVENT_TRACE_NO_PER_PROCESSOR_BUFFERING | EVENT_TRACE_REAL_TIME_MODE;
+        m_pTraceProperties->MaximumFileSize = 1; // 1MB
+        m_pTraceProperties->LoggerNameOffset = sizeof(EVENT_TRACE_PROPERTIES);
 
         // optimization for low latency
-        m_traceProperties->BufferSize = 1;      // Smallest possible buffers
-        m_traceProperties->MinimumBuffers = 0;  // Minimum buffers
-        m_traceProperties->MaximumBuffers = 40; // Prevent buffer buildup
-        m_traceProperties->FlushTimer = 0;      // No timer flush (immediate)
-        m_traceProperties->FlushThreshold = 0;
+        m_pTraceProperties->BufferSize = 1;      // Smallest possible buffers
+        m_pTraceProperties->MinimumBuffers = 0;  // Minimum buffers
+        m_pTraceProperties->MaximumBuffers = 40; // Prevent buffer buildup
+        m_pTraceProperties->FlushTimer = 0;      // No timer flush (immediate)
+        m_pTraceProperties->FlushThreshold = 0;
 
-        wcscpy_s((WCHAR *)((BYTE *)m_traceProperties + m_traceProperties->LoggerNameOffset),
+        wcscpy_s((WCHAR *)((BYTE *)m_pTraceProperties + m_pTraceProperties->LoggerNameOffset),
             m_sessionName.size() + 1, m_sessionName.c_str());
     }
 
     ULONG ETWMonitor::StopSession()
     {
          // Get the session handle
-        if (ControlTraceW(0, m_sessionName.c_str(), m_traceProperties, EVENT_TRACE_CONTROL_QUERY)
-            || ControlTraceW(m_traceProperties->Wnode.HistoricalContext, m_sessionName.c_str(), m_traceProperties, EVENT_TRACE_CONTROL_STOP)
+        if (ControlTraceW(0, m_sessionName.c_str(), m_pTraceProperties, EVENT_TRACE_CONTROL_QUERY)
+            || ControlTraceW(m_pTraceProperties->Wnode.HistoricalContext, m_sessionName.c_str(), m_pTraceProperties, EVENT_TRACE_CONTROL_STOP)
         )
         {
             throw log.APIError("Failed to Stop ETW trace session: ");
@@ -70,7 +70,7 @@ namespace AnyFSE::Monitors
 
     ULONG ETWMonitor::StartSession()
     {
-        ULONG status = StartTraceW(&m_sessionHandle, m_sessionName.c_str(), m_traceProperties);
+        ULONG status = StartTraceW(&m_sessionHandle, m_sessionName.c_str(), m_pTraceProperties);
 
         if (status == ERROR_ALREADY_EXISTS)
         {
@@ -79,12 +79,12 @@ namespace AnyFSE::Monitors
             // Get the session handle
             log.Debug("Old session stopped, Start new session");
             SetTraceProperties();
-            status = StartTraceW(&m_sessionHandle, m_sessionName.c_str(), m_traceProperties);
+            status = StartTraceW(&m_sessionHandle, m_sessionName.c_str(), m_pTraceProperties);
         }
         if (status)
         {
-            free(m_traceProperties);
-            m_traceProperties = nullptr;
+            free(m_pTraceProperties);
+            m_pTraceProperties = nullptr;
             throw log.APIError("Failed to start ETW trace session: ");
         }
         return status;
@@ -109,9 +109,9 @@ namespace AnyFSE::Monitors
             )
         )
         {
-            StopTrace(m_sessionHandle, m_sessionName.c_str(), m_traceProperties);
-            free(m_traceProperties);
-            m_traceProperties = nullptr;
+            StopTrace(m_sessionHandle, m_sessionName.c_str(), m_pTraceProperties);
+            free(m_pTraceProperties);
+            m_pTraceProperties = nullptr;
             m_sessionHandle = NULL;
             throw log.APIError("Failed to enable process provider: ");
         }
@@ -157,9 +157,9 @@ namespace AnyFSE::Monitors
         m_consumerHandle = OpenTrace(&m_logFile);
         if (m_consumerHandle == INVALID_PROCESSTRACE_HANDLE)
         {
-            StopTrace(m_sessionHandle, m_sessionName.c_str(), m_traceProperties);
-            free(m_traceProperties);
-            m_traceProperties = nullptr;
+            StopTrace(m_sessionHandle, m_sessionName.c_str(), m_pTraceProperties);
+            free(m_pTraceProperties);
+            m_pTraceProperties = nullptr;
             m_sessionHandle = NULL;
             throw log.APIError(GetLastError(), "Failed to open ETW trace for consumption: Error: " );
         }
@@ -187,7 +187,7 @@ namespace AnyFSE::Monitors
 
         if (m_sessionHandle != NULL)
         {
-            if (m_traceProperties)
+            if (m_pTraceProperties)
             {
                 EnableTraceEx2(
                     m_sessionHandle,
@@ -203,9 +203,9 @@ namespace AnyFSE::Monitors
                     TRACE_LEVEL_INFORMATION,
                     0x0, 0, 0, NULL);
 
-                StopTrace(m_sessionHandle, m_sessionName.c_str(), m_traceProperties);
-                if (m_traceProperties) free(m_traceProperties);
-                m_traceProperties = nullptr;
+                StopTrace(m_sessionHandle, m_sessionName.c_str(), m_pTraceProperties);
+                if (m_pTraceProperties) free(m_pTraceProperties);
+                m_pTraceProperties = nullptr;
             }
             m_sessionHandle = NULL;
         }

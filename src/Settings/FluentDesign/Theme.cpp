@@ -1,3 +1,14 @@
+// AnyFSE is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// AnyFSE is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+
+
 #include "Theme.hpp"
 #include "GdiPlus.hpp"
 #include "Logging/LogManager.hpp"
@@ -17,7 +28,7 @@ namespace FluentDesign
         , m_isKeyboardFocus(false)
     {
         Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-        Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+        Gdiplus::GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
         LoadColors();
         if (hParentWnd)
         {
@@ -48,7 +59,7 @@ namespace FluentDesign
 
     void Theme::RegisterChild(HWND hChild)
     {
-        childs.push_back(hChild);
+        m_childsList.push_back(hChild);
         SetWindowSubclass(hChild, ControlSublassProc, 0, (DWORD_PTR)this);
         SetWindowSubclass(GetParent(hChild), ControlParentSublassProc, 0, (DWORD_PTR)this);
     }
@@ -71,7 +82,7 @@ namespace FluentDesign
                 if (This->m_isKeyboardFocus)
                 {
                     This->m_isKeyboardFocus = false;
-                    for( auto &c : This->childs)
+                    for( auto &c : This->m_childsList)
                     {
                         Invalidate(c, FALSE);
                     }
@@ -216,7 +227,7 @@ namespace FluentDesign
     {
         // TODO: unsubclass parent wnd
         FreeFonts();
-        Gdiplus::GdiplusShutdown(gdiplusToken);
+        Gdiplus::GdiplusShutdown(m_gdiplusToken);
     };
 
     float Theme::FocusOffsetByWndClass(HWND hWnd)

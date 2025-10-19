@@ -12,7 +12,7 @@ namespace AnyFSE::Logging
 {
     Logger::Logger(const std::string &name)
     {
-        loggerName = name;
+        m_loggerName = name;
     }
     std::exception Logger::APIError(const char * prefix)
     {
@@ -74,6 +74,6 @@ namespace AnyFSE::Logging
 
     void Logger::WriteMessage(LogLevel level, const char * format, va_list args)
     {
-        LogManager::WriteMessage(level, loggerName, format, args);
+        LogManager::WriteMessage(level, m_loggerName, format, args);
     }
 }

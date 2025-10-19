@@ -1,4 +1,14 @@
-#pragma once
+// AnyFSE is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// AnyFSE is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+
+
 #include <windows.h>
 #include <string>
 #include <functional>
@@ -17,9 +27,9 @@ namespace FluentDesign
 {
     Toggle::Toggle(FluentDesign::Theme &theme)
         : m_theme(theme)
-        , buttonMouseOver(false)
-        , buttonPressed(false)
-        , isChecked(false)
+        , m_buttonMouseOver(false)
+        , m_buttonPressed(false)
+        , m_isChecked(false)
     {
         theme.OnDPIChanged += [This = this]() { This->UpdateLayout(); };
     }
@@ -40,17 +50,17 @@ namespace FluentDesign
         int width, int height
     )
     {
-        hToggle = CreateWindow(
+        m_hToggle = CreateWindow(
             L"BUTTON",
             L"TOGGLE",
             WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-            x, y, m_theme.DpiScale(itemWidth + textWidth), m_theme.DpiScale(itemHeight+1),
+            x, y, m_theme.DpiScale(Layout_ItemWidth + Layout_TextWidth), m_theme.DpiScale(Layout_ItemHeight+1),
             hParent, NULL, GetModuleHandle(NULL), NULL);
 
-        m_theme.RegisterChild(hToggle);
-        SetWindowSubclass(hToggle, ToggleSubclassProc, 0, (DWORD_PTR)this);
+        m_theme.RegisterChild(m_hToggle);
+        SetWindowSubclass(m_hToggle, ToggleSubclassProc, 0, (DWORD_PTR)this);
 
-        return hToggle;
+        return m_hToggle;
     }
 
     Toggle::~Toggle()
@@ -59,13 +69,13 @@ namespace FluentDesign
 
     bool Toggle::GetCheck()
     {
-        return isChecked;
+        return m_isChecked;
     }
 
     void Toggle::SetCheck(bool check)
     {
-        isChecked = check;
-        InvalidateRect(hToggle, NULL, true);
+        m_isChecked = check;
+        InvalidateRect(m_hToggle, NULL, true);
     }
 
     LRESULT Toggle::ToggleSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
@@ -85,7 +95,7 @@ namespace FluentDesign
         case WM_KEYDOWN:
             if ( This->m_theme.IsKeyboardFocused() && wParam == VK_SPACE || wParam == VK_GAMEPAD_A)
             {
-                This->isChecked = !This->isChecked;
+                This->m_isChecked = !This->m_isChecked;
                 InvalidateRect(hWnd, NULL, TRUE);
                 This->OnChanged.Notify();
             }
@@ -115,9 +125,9 @@ namespace FluentDesign
         switch (uMsg)
         {
         case WM_MOUSEMOVE:
-            if (!buttonMouseOver)
+            if (!m_buttonMouseOver)
             {
-                buttonMouseOver = true;
+                m_buttonMouseOver = true;
                 InvalidateRect(hWnd, NULL, TRUE);
 
                 // Track mouse leave
@@ -126,44 +136,44 @@ namespace FluentDesign
                 tme.hwndTrack = hWnd;
                 TrackMouseEvent(&tme);
             }
-            else if (buttonPressed)
+            else if (m_buttonPressed)
             {
                 int currentPos = (int16_t)LOWORD(lParam);
-                int currentShift = currentPos - pressedPos;
-                pressedPath += abs(currentShift);
+                int currentShift = currentPos - m_pressedPos;
+                m_pressedPath += abs(currentShift);
 
-                if (isChecked)
-                    thumbShift = min(max(-m_theme.DpiScale(itemWidth-itemHeight-1), currentShift), 0);
+                if (m_isChecked)
+                    m_thumbShift = min(max(-m_theme.DpiScale(Layout_ItemWidth-Layout_ItemHeight-1), currentShift), 0);
                 else
-                    thumbShift = min(max(0, currentShift), m_theme.DpiScale(itemWidth-itemHeight-1));
+                    m_thumbShift = min(max(0, currentShift), m_theme.DpiScale(Layout_ItemWidth-Layout_ItemHeight-1));
                 InvalidateRect(hWnd, NULL, TRUE);
             }
             break;
 
         case WM_MOUSELEAVE:
-            buttonMouseOver = false;
+            m_buttonMouseOver = false;
             SendMessage(GetParent(hWnd), WM_NCMOUSELEAVE, 0, 0);
             InvalidateRect(hWnd, NULL, TRUE);
             break;
 
         case WM_LBUTTONDOWN:
-            buttonPressed = true;
-            pressedPos = LOWORD(lParam);
-            thumbShift = 0;
-            pressedPath = 0;
+            m_buttonPressed = true;
+            m_pressedPos = LOWORD(lParam);
+            m_thumbShift = 0;
+            m_pressedPath = 0;
             InvalidateRect(hWnd, NULL, TRUE);
             SetCapture(hWnd);
             break;
 
         case WM_LBUTTONUP:
-            if (buttonPressed)
+            if (m_buttonPressed)
             {
-                buttonPressed = false;
+                m_buttonPressed = false;
                 ReleaseCapture();
-                int treshhold = m_theme.DpiScale(itemWidth - itemHeight - 1) / 2;
-                if (pressedPath < treshhold || abs(thumbShift) > treshhold)
+                int treshhold = m_theme.DpiScale(Layout_ItemWidth - Layout_ItemHeight - 1) / 2;
+                if (m_pressedPath < treshhold || abs(m_thumbShift) > treshhold)
                 {
-                    isChecked = !isChecked;
+                    m_isChecked = !m_isChecked;
                     InvalidateRect(hWnd, NULL, TRUE);
                     OnChanged.Notify();
                 }
@@ -193,41 +203,41 @@ namespace FluentDesign
         // Calculate button rectangle using GDI+ RectF
         RectF br = gdiRect;
 
-        br.Y += (gdiRect.Height - m_theme.DpiScaleF(itemHeight)) / 2.0f;
-        br.Height = m_theme.DpiScaleF(itemHeight);
-        br.X = br.GetRight() - m_theme.DpiScaleF(itemWidth);
-        br.Width = m_theme.DpiScaleF(itemWidth);
+        br.Y += (gdiRect.Height - m_theme.DpiScaleF(Layout_ItemHeight)) / 2.0f;
+        br.Height = m_theme.DpiScaleF(Layout_ItemHeight);
+        br.X = br.GetRight() - m_theme.DpiScaleF(Layout_ItemWidth);
+        br.Width = m_theme.DpiScaleF(Layout_ItemWidth);
 
         br.Inflate(-m_theme.DpiScaleF(1), -m_theme.DpiScaleF(1));
 
         // Determine colors based on state
         Color borderColor(m_theme.GetColor(
-            isChecked ? ( enabled ? Theme::Colors::ToggleBorderOn : Theme::Colors::ToggleBorderOnDisabled)
+            m_isChecked ? ( enabled ? Theme::Colors::ToggleBorderOn : Theme::Colors::ToggleBorderOnDisabled)
                         : ( enabled ? Theme::Colors::ToggleBorderOff : Theme::Colors::ToggleBorderOffDisabled)
         ));
 
         Color backColor(m_theme.GetColor(
-              (isChecked && !enabled)         ? Theme::Colors::ToggleTrackOnDisabled
-            : (isChecked && buttonPressed)    ? Theme::Colors::ToggleTrackOnPressed
-            : (isChecked)                     ? Theme::Colors::ToggleTrackOn
-            : (!isChecked && !enabled)        ? Theme::Colors::ToggleTrackOffDisabled
-            : (!isChecked && buttonMouseOver) ? Theme::Colors::ToggleTrackOffHover
+              (m_isChecked && !enabled)         ? Theme::Colors::ToggleTrackOnDisabled
+            : (m_isChecked && m_buttonPressed)    ? Theme::Colors::ToggleTrackOnPressed
+            : (m_isChecked)                     ? Theme::Colors::ToggleTrackOn
+            : (!m_isChecked && !enabled)        ? Theme::Colors::ToggleTrackOffDisabled
+            : (!m_isChecked && m_buttonMouseOver) ? Theme::Colors::ToggleTrackOffHover
                                               : Theme::Colors::ToggleTrackOff
         ));
 
         Color thumbColor(m_theme.GetColor(
-            isChecked ? (enabled ? Theme::Colors::ToggleThumbOn : Theme::Colors::ToggleThumbOnDisabled)
+            m_isChecked ? (enabled ? Theme::Colors::ToggleThumbOn : Theme::Colors::ToggleThumbOnDisabled)
                       : (enabled ? Theme::Colors::ToggleThumbOff : Theme::Colors::ToggleThumbOffDisabled)
         ));
 
-        Color thumbCircleColor = (buttonPressed || buttonMouseOver) ? thumbColor : backColor;
+        Color thumbCircleColor = (m_buttonPressed || m_buttonMouseOver) ? thumbColor : backColor;
 
         // Draw outer rounded rectangle (track)
         Pen borderPen(borderColor, (REAL)m_theme.DpiScale(1));
         SolidBrush backBrush(backColor);
 
         // For rounded rectangles in GDI+, we need to use GraphicsPath
-        Gdiplus::RoundRect(graphics, br, m_theme.DpiScaleF(itemHeight), &backBrush, borderPen);
+        Gdiplus::RoundRect(graphics, br, m_theme.DpiScaleF(Layout_ItemHeight), &backBrush, borderPen);
 
         // Calculate thumb rectangle
         RectF tr = br;
@@ -235,15 +245,15 @@ namespace FluentDesign
         tr.Inflate(-inflateAmount, -inflateAmount);
 
         REAL height = tr.Height;
-        if (isChecked)
+        if (m_isChecked)
         {
-            tr.X = tr.GetRight() - height - m_theme.DpiScaleF(buttonPressed ? 2 : 0) + (buttonPressed ? thumbShift : 0);
-            tr.Width = height + m_theme.DpiScaleF(buttonPressed ? 2 : 0);
+            tr.X = tr.GetRight() - height - m_theme.DpiScaleF(m_buttonPressed ? 2 : 0) + (m_buttonPressed ? m_thumbShift : 0);
+            tr.Width = height + m_theme.DpiScaleF(m_buttonPressed ? 2 : 0);
         }
         else
         {
-            tr.X += (buttonPressed ? thumbShift : 0);
-            tr.Width = height + m_theme.DpiScaleF(buttonPressed ? 2 : 0);
+            tr.X += (m_buttonPressed ? m_thumbShift : 0);
+            tr.Width = height + m_theme.DpiScaleF(m_buttonPressed ? 2 : 0);
         }
 
         // Draw thumb (inner circle)
@@ -255,13 +265,13 @@ namespace FluentDesign
 
         // Define the rectangle (X, Y, Width, Height)
         RectF textRect = gdiRect;
-        textRect.Width = m_theme.DpiScaleF(itemWidth);
+        textRect.Width = m_theme.DpiScaleF(Layout_ItemWidth);
 
         // Create the font and brush
         Font font(hdc, m_theme.GetFont_Text());
         SolidBrush textBrush(Color(m_theme.GetColor(enabled ? Theme::Colors::Text : Theme::Colors::TextDisabled)));
 
-        WCHAR *text = isChecked ? L"On" : L"Off";
+        WCHAR *text = m_isChecked ? L"On" : L"Off";
         StringFormat format;
         format.SetAlignment(StringAlignmentNear);       // Left
         format.SetLineAlignment(StringAlignmentCenter); // Vertical center
@@ -272,9 +282,9 @@ namespace FluentDesign
     }
     void Toggle::UpdateLayout()
     {
-        SetWindowPos(hToggle, 0, 0, 0,
-                     m_theme.DpiScale(itemWidth + textWidth),
-                     m_theme.DpiScale(itemHeight + 1),
+        SetWindowPos(m_hToggle, 0, 0, 0,
+                     m_theme.DpiScale(Layout_ItemWidth + Layout_TextWidth),
+                     m_theme.DpiScale(Layout_ItemHeight + 1),
                      SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
     }
 }

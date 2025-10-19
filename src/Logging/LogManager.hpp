@@ -13,11 +13,11 @@ namespace AnyFSE::Logging
         friend class Logger;
 
     private:
-        static std::ofstream logWriter;
-        static std::mutex writeLock;
-        static LogLevel logLevel;
-        static std::string applicationName;
-        static bool logToConsole;
+        static std::ofstream LogWriter;
+        static std::mutex WriteLock;
+        static LogLevel Level;
+        static std::string ApplicationName;
+        static bool LogToConsole;
 
         LogManager() {};
         ~LogManager();

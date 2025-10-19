@@ -1,4 +1,14 @@
-#pragma once
+// AnyFSE is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// AnyFSE is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+
+
 #include <windows.h>
 #include <string>
 #include <functional>
@@ -12,8 +22,8 @@ namespace FluentDesign
 {
     ComboBox::ComboBox(FluentDesign::Theme &theme)
         : m_theme(theme)
-        , buttonMouseOver(false)
-        , buttonPressed(false)
+        , m_buttonMouseOver(false)
+        , m_buttonPressed(false)
         , m_popupVisible(false)
         , m_selectedIndex(-1)
         , m_hoveredIndex(-1)
@@ -44,11 +54,11 @@ namespace FluentDesign
             L"BUTTON",
             L"",
             WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-            x, y, width, m_theme.DpiScale(itemHeight),
+            x, y, width, m_theme.DpiScale(Layout_ItemHeight),
             hParent, NULL, GetModuleHandle(NULL), NULL);
 
         m_hImageList = ImageList_Create(
-            m_theme.DpiScale(imageSize), m_theme.DpiScale(imageSize),
+            m_theme.DpiScale(Layout_ImageSize), m_theme.DpiScale(Layout_ImageSize),
             ILC_COLOR32 | ILC_MASK, 3, 1);
 
 
@@ -65,18 +75,18 @@ namespace FluentDesign
 
     int ComboBox::AddItem(const std::wstring &name, const std::wstring &icon, const std::wstring &value, int pos)
     {
-        ComboItem &cb = *(comboItems.insert(pos != -1 ? comboItems.begin() + pos : comboItems.end(), ComboItem{name, icon, value, -1}));
+        ComboItem &cb = *(m_comboItems.insert(pos != -1 ? m_comboItems.begin() + pos : m_comboItems.end(), ComboItem{name, icon, value, -1}));
 
         HICON hIcon = Tools::LoadIcon(cb.icon, 32);
         cb.iconIndex = hIcon ? ImageList_AddIcon(m_hImageList, hIcon) : -1;
 
         InvalidateRect(hCombo, NULL, FALSE);
-        return pos == -1 ? (int)comboItems.size() : pos;
+        return pos == -1 ? (int)m_comboItems.size() : pos;
     }
 
     int ComboBox::Reset()
     {
-        comboItems.clear();
+        m_comboItems.clear();
         ImageList_RemoveAll(m_hImageList);
         InvalidateRect(hCombo, NULL, FALSE);
         return 0;
@@ -84,7 +94,7 @@ namespace FluentDesign
 
     void ComboBox::SelectItem(int index)
     {
-        if (index >=0 && index < comboItems.size())
+        if (index >=0 && index < m_comboItems.size())
         {
             m_selectedIndex = index;
         }
@@ -92,7 +102,7 @@ namespace FluentDesign
 
     std::wstring ComboBox::GetCurentValue()
     {
-        return comboItems[m_selectedIndex].value;
+        return m_comboItems[m_selectedIndex].value;
     }
 
     LRESULT ComboBox::ComboBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
@@ -120,7 +130,7 @@ namespace FluentDesign
                 {
                     if (wParam == VK_SPACE || wParam == VK_GAMEPAD_A)
                     {
-                        This->buttonPressed = true;
+                        This->m_buttonPressed = true;
                         InvalidateRect(hWnd, NULL, TRUE);
                         This->ShowPopup();
                         return 0;
@@ -163,9 +173,9 @@ namespace FluentDesign
 
                     RECT rect = paint.ClientRect();
                     This->DrawComboBackground(hWnd, paint.MemDC(), rect);
-                    rect.right -= This->m_theme.DpiScale(chevronMargin);
+                    rect.right -= This->m_theme.DpiScale(Layout_ChevronMargin);
                     This->DrawComboItem(hWnd, paint.MemDC(), rect, This->m_selectedIndex);
-                    rect.right += This->m_theme.DpiScale(chevronMargin);
+                    rect.right += This->m_theme.DpiScale(Layout_ChevronMargin);
                     This->DrawComboChevron(hWnd, paint.MemDC(), rect);
                 }
                 return 0;
@@ -186,9 +196,9 @@ namespace FluentDesign
         switch (uMsg)
         {
         case WM_MOUSEMOVE:
-            if (!buttonMouseOver)
+            if (!m_buttonMouseOver)
             {
-                buttonMouseOver = true;
+                m_buttonMouseOver = true;
                 InvalidateRect(hWnd, NULL, TRUE);
 
                 // Track mouse leave
@@ -200,19 +210,19 @@ namespace FluentDesign
             break;
 
         case WM_MOUSELEAVE:
-            buttonMouseOver = false;
-            buttonPressed = false;
+            m_buttonMouseOver = false;
+            m_buttonPressed = false;
             InvalidateRect(hWnd, NULL, TRUE);
             break;
 
         case WM_LBUTTONDOWN:
-            buttonPressed = true;
+            m_buttonPressed = true;
             InvalidateRect(hWnd, NULL, TRUE);
             ShowPopup();
             break;
 
         case WM_LBUTTONUP:
-            buttonPressed = false;
+            m_buttonPressed = false;
             InvalidateRect(hWnd, NULL, TRUE);
             break;
         }
@@ -233,8 +243,8 @@ namespace FluentDesign
             // Draw button background
             Color color = m_theme.GetColor(
                   !enabled          ? Theme::Colors::ComboDisabled                       // TODO Disabled Color
-                : buttonPressed     ? Theme::Colors::ComboPressed
-                : buttonMouseOver   ? Theme::Colors::ComboHover
+                : m_buttonPressed     ? Theme::Colors::ComboPressed
+                : m_buttonMouseOver   ? Theme::Colors::ComboHover
                 : Theme::Colors::Combo
             );
 
@@ -253,7 +263,7 @@ namespace FluentDesign
             return;
         }
         bool enabled = IsWindowEnabled(hWnd);
-        ComboItem &item = comboItems[itemId];
+        ComboItem &item = m_comboItems[itemId];
         // Draw text
         SetBkMode(hdc, TRANSPARENT);
         SetTextColor(hdc, enabled
@@ -263,13 +273,13 @@ namespace FluentDesign
 
         HFONT hOldFont = (HFONT)SelectObject(hdc, m_theme.GetFont_Text());
 
-        rect.left += m_theme.DpiScale(leftMargin);
+        rect.left += m_theme.DpiScale(Layout_LeftMargin);
 
         if (item.iconIndex != -1)
         {
-            int imageY = rect.top + (rect.bottom - rect.top - m_theme.DpiScale(imageSize)) / 2;
+            int imageY = rect.top + (rect.bottom - rect.top - m_theme.DpiScale(Layout_ImageSize)) / 2;
             ImageList_Draw(m_hImageList, item.iconIndex, hdc, rect.left, imageY, ILD_NORMAL);
-            rect.left += m_theme.DpiScale(imageSize + iconMargin);
+            rect.left += m_theme.DpiScale(Layout_ImageSize + Layout_IconMargin);
         }
 
         ::DrawText(hdc, item.name.c_str(), -1, &rect,
@@ -279,7 +289,7 @@ namespace FluentDesign
     }
     void ComboBox::DrawComboChevron(HWND hWnd, HDC hdc, RECT rect)
     {
-            rect.right -= m_theme.DpiScale(chevronMargin);
+            rect.right -= m_theme.DpiScale(Layout_ChevronMargin);
 
             HFONT hOldFont = (HFONT)SelectObject(hdc, m_theme.GetFont_Glyph());
 
@@ -300,7 +310,7 @@ namespace FluentDesign
         GetWindowRect(hCombo, &buttonRect);
 
         int popupWidth = buttonRect.right - buttonRect.left;
-        int popupHeight = min(m_theme.DpiScale(400), (int)comboItems.size() * m_theme.DpiScale(itemHeight)); // Calculate height based on items
+        int popupHeight = min(m_theme.DpiScale(400), (int)m_comboItems.size() * m_theme.DpiScale(Layout_ItemHeight)); // Calculate height based on items
 
         // Create popup listbox window
         m_hPopupList = CreateWindowEx(
@@ -321,9 +331,9 @@ namespace FluentDesign
         SetLayeredWindowAttributes(m_hPopupList, 0, 255, LWA_COLORKEY);
 
         // Add items to listbox (we'll use item data to store our ComboItem index)
-        for (int i = 0; i < (int)comboItems.size(); i++)
+        for (int i = 0; i < (int)m_comboItems.size(); i++)
         {
-            int lbIndex = (int)SendMessage(m_hPopupList, LB_ADDSTRING, 0, (LPARAM)comboItems[i].name.c_str());
+            int lbIndex = (int)SendMessage(m_hPopupList, LB_ADDSTRING, 0, (LPARAM)m_comboItems[i].name.c_str());
             SendMessage(m_hPopupList, LB_SETITEMDATA, lbIndex, (LPARAM)i); // Store index to our comboItems
             if (lbIndex == m_selectedIndex)
             {
@@ -336,7 +346,7 @@ namespace FluentDesign
         SetWindowSubclass(m_hPopupList, PopupListSubclassProc, 0, (DWORD_PTR)this);
 
         // Set item height
-        SendMessage(m_hPopupList, LB_SETITEMHEIGHT, 0, (LPARAM)m_theme.DpiScale(itemHeight)); // Match your DrawComboItem height
+        SendMessage(m_hPopupList, LB_SETITEMHEIGHT, 0, (LPARAM)m_theme.DpiScale(Layout_ItemHeight)); // Match your DrawComboItem height
 
         ShowWindow(m_hPopupList, SW_SHOW);
         m_popupVisible = true;
@@ -376,7 +386,7 @@ namespace FluentDesign
 
             This->DrawPopupBackground(hWnd, paint.MemDC(), paint.ClientRect());
 
-            for (int i = 0; i < This->comboItems.size(); i++)
+            for (int i = 0; i < This->m_comboItems.size(); i++)
             {
                 RECT itemRect;
                 SendMessage(hWnd, LB_GETITEMRECT, i, (LPARAM)&itemRect);
@@ -387,7 +397,7 @@ namespace FluentDesign
             {
                 RECT itemRect;
                 SendMessage(hWnd, LB_GETITEMRECT, This->m_selectedIndex, (LPARAM)&itemRect);
-                InflateRect(&itemRect, This->m_theme.DpiScale(-leftMargin/4), This->m_theme.DpiScale(-2));
+                InflateRect(&itemRect, This->m_theme.DpiScale(-Layout_LeftMargin/4), This->m_theme.DpiScale(-2));
                 This->m_theme.DrawFocusFrame(paint.MemDC(), itemRect, 0);
             }
         }
@@ -466,7 +476,7 @@ namespace FluentDesign
             }
             else if (wParam == VK_DOWN || wParam == VK_GAMEPAD_DPAD_DOWN)
             {
-                if (This->m_selectedIndex < This->comboItems.size() - 1 )
+                if (This->m_selectedIndex < This->m_comboItems.size() - 1 )
                 {
                     This->m_selectedIndex += 1;
                     InvalidateRect(This->m_hPopupList, NULL, TRUE);
@@ -511,7 +521,7 @@ namespace FluentDesign
     void ComboBox::DrawPopupItem(HWND hWnd, HDC hdcMem, RECT itemRect, int itemId)
     {
         RECT backgroundRect = itemRect;
-        InflateRect(&backgroundRect, m_theme.DpiScale(-leftMargin/4), m_theme.DpiScale(-2));
+        InflateRect(&backgroundRect, m_theme.DpiScale(-Layout_LeftMargin/4), m_theme.DpiScale(-2));
         if ( itemId == m_hoveredIndex || itemId == m_selectedIndex)
         {
             COLORREF color = (itemId == m_hoveredIndex) ? m_theme.GetColorRef(Theme::Colors::ComboPopupHover)
@@ -523,8 +533,8 @@ namespace FluentDesign
             HBRUSH hPrevBrush = (HBRUSH)SelectObject(hdcMem, hHoverBrush);
             RoundRect(hdcMem, backgroundRect.left,
                 backgroundRect.top, backgroundRect.right,
-                backgroundRect.bottom, m_theme.DpiScale(cornerRadius),
-                m_theme.DpiScale(cornerRadius));
+                backgroundRect.bottom, m_theme.DpiScale(Layout_CornerRadius),
+                m_theme.DpiScale(Layout_CornerRadius));
             SelectObject(hdcMem, hPrevBrush);
             SelectObject(hdcMem, hOldPen);
             DeleteObject(hHoverBrush);
@@ -546,7 +556,7 @@ namespace FluentDesign
 
     void ComboBox::HandleListClick(int index)
     {
-        if (index >= 0 && index < (int)comboItems.size())
+        if (index >= 0 && index < (int)m_comboItems.size())
         {
             m_selectedIndex = index;
             // Update your main button display here
@@ -559,17 +569,17 @@ namespace FluentDesign
     {
         SetWindowPos(hCombo, 0, 0, 0,
                      m_theme.DpiScale(m_designWidth),
-                     m_theme.DpiScale(itemHeight + 1),
+                     m_theme.DpiScale(Layout_ItemHeight + 1),
                      SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 
         ImageList_RemoveAll(m_hImageList);
         ImageList_Destroy(m_hImageList);
 
         m_hImageList = ImageList_Create(
-            m_theme.DpiScale(imageSize), m_theme.DpiScale(imageSize),
+            m_theme.DpiScale(Layout_ImageSize), m_theme.DpiScale(Layout_ImageSize),
             ILC_COLOR32 | ILC_MASK, 3, 1);
 
-        for(auto& item: comboItems)
+        for(auto& item: m_comboItems)
         {
             if (item.iconIndex != -1 && !item.icon.empty())
             {

@@ -5,7 +5,7 @@
 
 namespace AnyFSE::Configuration
 {
-    const wstring Config::root = L"Software\\AnyFSE\\Settings";
+    const wstring Config::Root = L"Software\\AnyFSE\\Settings";
 
     namespace fs = std::filesystem;
 
@@ -42,8 +42,8 @@ namespace AnyFSE::Configuration
 
      void Config::SetDefault()
     {
-        XBoxProcessName = Registry::ReadString(Config::root, L"XBoxProcessName", L"XboxPcApp.exe");
-        AggressiveMode = Registry::ReadBool(Config::root, L"AggressiveMode", false);
+        XBoxProcessName = Registry::ReadString(Config::Root, L"XBoxProcessName", L"XboxPcApp.exe");
+        AggressiveMode = Registry::ReadBool(Config::Root, L"AggressiveMode", false);
         SilentMode = false;
     }
 
@@ -64,7 +64,7 @@ namespace AnyFSE::Configuration
     
     bool Config::IsConfigured()
     {
-        wstring launcher = Registry::ReadString(Config::root, L"LauncherPath");
+        wstring launcher = Registry::ReadString(Config::Root, L"LauncherPath");
         return !launcher.empty();
     }
     
@@ -81,7 +81,7 @@ namespace AnyFSE::Configuration
         Type = config.Type;
         LauncherName = config.Name;
         LauncherStartCommand = config.StartCommand;
-        LauncherCustomSettings = Registry::ReadBool(root, L"CustomSettings", config.isCustom);
+        LauncherCustomSettings = Registry::ReadBool(Root, L"CustomSettings", config.isCustom);
         LauncherWindowName = config.WindowTitle;
         LauncherWindowNameAlt = config.WindowTitleAlt;
         LauncherProcessName = config.ProcessName;

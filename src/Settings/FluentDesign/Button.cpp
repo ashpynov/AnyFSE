@@ -1,4 +1,14 @@
-#pragma once
+// AnyFSE is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// AnyFSE is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+
+
 #include <windows.h>
 #include <string>
 #include <functional>
@@ -17,8 +27,8 @@ namespace FluentDesign
 {
     Button::Button(FluentDesign::Theme &theme)
         : m_theme(theme)
-        , buttonMouseOver(false)
-        , buttonPressed(false)
+        , m_buttonMouseOver(false)
+        , m_buttonPressed(false)
     {
     }
 
@@ -41,7 +51,7 @@ namespace FluentDesign
 
         m_designHeight = m_theme.DpiUnscale(height);
         m_designWidth = m_theme.DpiUnscale(width);
-        hButton = CreateWindow(
+        m_hButton = CreateWindow(
             L"BUTTON",
             L"",
             WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP,
@@ -53,15 +63,15 @@ namespace FluentDesign
         {
             m_theme.OnDPIChanged += [This = this]() { This->UpdateLayout(); };
         }
-        m_theme.RegisterChild(hButton);
-        SetWindowSubclass(hButton, ButtonSubclassProc, 0, (DWORD_PTR)this);
-        return hButton;
+        m_theme.RegisterChild(m_hButton);
+        SetWindowSubclass(m_hButton, ButtonSubclassProc, 0, (DWORD_PTR)this);
+        return m_hButton;
     }
 
     void Button::SetText(const std::wstring &text)
     {
         m_text = text;
-        InvalidateRect(hButton, NULL, TRUE);
+        InvalidateRect(m_hButton, NULL, TRUE);
     }
 
     Button::~Button()
@@ -112,9 +122,9 @@ namespace FluentDesign
         switch (uMsg)
         {
         case WM_MOUSEMOVE:
-            if (!buttonMouseOver)
+            if (!m_buttonMouseOver)
             {
-                buttonMouseOver = true;
+                m_buttonMouseOver = true;
                 InvalidateRect(hWnd, NULL, TRUE);
 
                 // Track mouse leave
@@ -126,30 +136,30 @@ namespace FluentDesign
             break;
 
         case WM_MOUSELEAVE:
-            buttonMouseOver = false;
-            buttonPressed = false;
+            m_buttonMouseOver = false;
+            m_buttonPressed = false;
             InvalidateRect(hWnd, NULL, TRUE);
             break;
 
         case WM_LBUTTONDOWN:
-            buttonPressed = true;
+            m_buttonPressed = true;
             InvalidateRect(hWnd, NULL, TRUE);
             SetCapture(hWnd);
             break;
 
         case WM_LBUTTONUP:
-            if (buttonPressed)
+            if (m_buttonPressed)
             {
-                buttonPressed = false;
+                m_buttonPressed = false;
                 ReleaseCapture();
                 InvalidateRect(hWnd, NULL, TRUE);
 
                 POINT pt;
                 GetCursorPos(&pt);
-                MapWindowPoints(NULL, hButton, &pt, 1);
+                MapWindowPoints(NULL, m_hButton, &pt, 1);
 
                 RECT rc;
-                GetClientRect(hButton, &rc);
+                GetClientRect(m_hButton, &rc);
                 if (PtInRect(&rc, pt))
                 {
                     OnChanged.Notify();
@@ -182,14 +192,14 @@ namespace FluentDesign
 
         // Determine colors based on state
         Color borderColor(
-                buttonPressed ? m_theme.GetColor(Theme::Colors::ButtonBorderPressed)
-            : buttonMouseOver ? m_theme.GetColor(Theme::Colors::ButtonBorderHover)
+                m_buttonPressed ? m_theme.GetColor(Theme::Colors::ButtonBorderPressed)
+            : m_buttonMouseOver ? m_theme.GetColor(Theme::Colors::ButtonBorderHover)
                               : m_theme.GetColor(Theme::Colors::ButtonBorder)
         );
 
         Color backColor(
-                buttonPressed ? m_theme.GetColor(Theme::Colors::ButtonPressed)
-            : buttonMouseOver ? m_theme.GetColor(Theme::Colors::ButtonHover)
+                m_buttonPressed ? m_theme.GetColor(Theme::Colors::ButtonPressed)
+            : m_buttonMouseOver ? m_theme.GetColor(Theme::Colors::ButtonHover)
                               : m_theme.GetColor(Theme::Colors::Button)
         );
 
@@ -214,7 +224,7 @@ namespace FluentDesign
     }
     void Button::UpdateLayout()
     {
-        SetWindowPos(hButton, 0, 0, 0,
+        SetWindowPos(m_hButton, 0, 0, 0,
                      m_theme.DpiScale(m_designWidth),
                      m_theme.DpiScale(m_designHeight),
                      SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);

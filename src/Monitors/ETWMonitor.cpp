@@ -21,7 +21,7 @@ namespace AnyFSE::Monitors
           m_threadHandle(NULL),
           m_sessionHandle(NULL),
           m_consumerHandle(NULL),
-          m_traceProperties(nullptr),
+          m_pTraceProperties(nullptr),
           m_explorerProcessId(Process::FindFirstByName(L"explorer.exe"))
     {
         ZeroMemory(&m_logFile, sizeof(m_logFile));

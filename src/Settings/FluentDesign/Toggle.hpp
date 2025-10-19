@@ -1,4 +1,16 @@
+// AnyFSE is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// AnyFSE is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+
+
 #pragma once
+
 #include <windows.h>
 #include <commctrl.h>
 #include <string>
@@ -12,20 +24,18 @@ namespace FluentDesign
     {
 
     private:
-        static const int itemHeight = 20;
-        static const int itemWidth = 40;
-        static const int textWidth = 32;
+        static const int Layout_ItemHeight = 20;
+        static const int Layout_ItemWidth = 40;
+        static const int Layout_TextWidth = 32;
 
 
-        HWND hToggle;
-
-        bool buttonPressed;
-        bool buttonMouseOver;
-        int  pressedPos;
-        int  thumbShift;
-        int  pressedPath;
-
-        bool isChecked;
+        HWND m_hToggle;
+        bool m_buttonPressed;
+        bool m_buttonMouseOver;
+        int  m_pressedPos;
+        int  m_thumbShift;
+        int  m_pressedPath;
+        bool m_isChecked;
 
         static LRESULT CALLBACK ToggleSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
             UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
@@ -35,12 +45,12 @@ namespace FluentDesign
 
         void UpdateLayout();
 
-        FluentDesign::Theme &m_theme;
+        Theme &m_theme;
 
     public:
-        Toggle(FluentDesign::Theme& theme);
+        Toggle(Theme& theme);
         Toggle(
-            FluentDesign::Theme& theme,
+            Theme& theme,
             HWND hParent,
             int x, int y,
             int width, int height);

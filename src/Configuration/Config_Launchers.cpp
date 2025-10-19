@@ -5,7 +5,7 @@
 
 namespace AnyFSE::Configuration
 {
-    const map<LauncherType, LauncherConfig> Config::LauncherConfigs = map<LauncherType, LauncherConfig>{
+    const map<LauncherType, LauncherConfig> Config::LauncherConfigsMap = map<LauncherType, LauncherConfig>{
         {
             LauncherType::PlayniteFullscreen, {
                 LauncherType::PlayniteFullscreen,
@@ -65,7 +65,7 @@ namespace AnyFSE::Configuration
 
     wstring Config::GetCurrentLauncher()
     {
-        wstring launcher = Registry::ReadString(Config::root, L"LauncherPath");
+        wstring launcher = Registry::ReadString(Config::Root, L"LauncherPath");
 
         if (!launcher.empty())
         {
@@ -176,7 +176,7 @@ namespace AnyFSE::Configuration
         }
 
         const wstring exe = Unicode::to_lower(fs::path(path).filename().wstring());
-        for (auto it = Config::LauncherConfigs.begin(); it != Config::LauncherConfigs.end(); ++it)
+        for (auto it = Config::LauncherConfigsMap.begin(); it != Config::LauncherConfigsMap.end(); ++it)
         {
             if (Unicode::to_lower(it->second.StartCommand) == exe)
             {
@@ -219,15 +219,15 @@ namespace AnyFSE::Configuration
     bool Config::GetLauncherSettings(const wstring& path, LauncherConfig& out)
     {
         GetLauncherDefaults(path, out);
-        if (out.Type == Custom || Registry::ReadBool(root, L"CustomSettings", out.isCustom))
+        if (out.Type == Custom || Registry::ReadBool(Root, L"CustomSettings", out.isCustom))
         {
-            out.StartCommand    = Registry::ReadString(root, L"StartCommand",   out.StartCommand);
-            out.StartArg        = Registry::ReadString(root, L"StartArg",       out.StartArg);
-            out.ProcessName     = Registry::ReadString(root, L"ProcessName",    out.ProcessName);
-            out.WindowTitle     = Registry::ReadString(root, L"WindowTitle",    out.WindowTitle);
-            out.ProcessNameAlt  = Registry::ReadString(root, L"ProcessNameAlt", out.ProcessNameAlt);
-            out.WindowTitleAlt  = Registry::ReadString(root, L"WindowTitleAlt", out.WindowTitleAlt);
-            out.IconFile        = Registry::ReadString(root, L"IconFile",       out.IconFile);
+            out.StartCommand    = Registry::ReadString(Root, L"StartCommand",   out.StartCommand);
+            out.StartArg        = Registry::ReadString(Root, L"StartArg",       out.StartArg);
+            out.ProcessName     = Registry::ReadString(Root, L"ProcessName",    out.ProcessName);
+            out.WindowTitle     = Registry::ReadString(Root, L"WindowTitle",    out.WindowTitle);
+            out.ProcessNameAlt  = Registry::ReadString(Root, L"ProcessNameAlt", out.ProcessNameAlt);
+            out.WindowTitleAlt  = Registry::ReadString(Root, L"WindowTitleAlt", out.WindowTitleAlt);
+            out.IconFile        = Registry::ReadString(Root, L"IconFile",       out.IconFile);
         }
         return true;
     }

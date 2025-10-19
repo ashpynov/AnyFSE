@@ -1,4 +1,16 @@
+// AnyFSE is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// AnyFSE is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+
+
 #pragma once
+
 #include <windows.h>
 #include <string>
 
@@ -12,13 +24,14 @@ namespace AnyFSE::Window
         static const UINT WM_TRAY = WM_USER + 1;
     private:
         const UINT WM_TASKBARCREATED;
-        HICON hIcon = NULL;
-        HWND hWnd;
-        ATOM aClass;
+
+        HICON m_hIcon = NULL;
+        HWND m_hWnd;
+        ATOM m_aClass;
 
         int m_result = ERROR_RESTART_APPLICATION;
 
-        static WNDCLASS stWC;
+        static WNDCLASS WC;
         static LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
         static void LoadStringSafe(UINT nStrID, LPTSTR szBuf, UINT nBufLen);
         void OnCreate();
@@ -44,19 +57,19 @@ namespace AnyFSE::Window
 
     private: // Animation
 
-        UINT_PTR animationTimerId = 1;
-        UINT_PTR hTimer = NULL;
+        UINT_PTR m_animationTimerId = 1;
+        UINT_PTR m_hTimer = NULL;
 
-        int ZOOM_INTERVAL_MS = 20;
+        const int ZOOM_INTERVAL_MS = 20;
 
-        float currentZoom = 0.96f;
-        float zoomStep = 0.002f;
-        float zoomDelta = 0.06f;
+        float m_currentZoom = 0.96f;
+        float m_zoomStep = 0.002f;
+        float m_zoomDelta = 0.06f;
 
-        ULONG_PTR gdiplusToken;
+        ULONG_PTR m_gdiplusToken;
 
-        Gdiplus::Image * pLogoImage;
-        COLORREF themeBackgroundColor=RGB(22,22,22);
+        Gdiplus::Image * m_pLogoImage;
+        const COLORREF THEME_BACKGROUND_COLOR = RGB(22,22,22);
 
 
         bool InitAnimationResources();

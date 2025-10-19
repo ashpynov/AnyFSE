@@ -9,7 +9,7 @@ namespace AnyFSE::Monitors
     class GamingExperience
     {
     private:
-        GAMING_FULL_SCREEN_EXPERIENCE_REGISTRATION fseHandle;
+        GAMING_FULL_SCREEN_EXPERIENCE_REGISTRATION m_fseHandle;
 
         static void Callback(GamingExperience * This);
 

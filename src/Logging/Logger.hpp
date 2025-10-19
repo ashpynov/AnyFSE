@@ -27,7 +27,7 @@ namespace AnyFSE::Logging
     {
         friend class LogManager;
     private:
-        std::string loggerName;
+        std::string m_loggerName;
         void WriteMessage(LogLevel level, const char * format, va_list args = NULL);           
 
     public:

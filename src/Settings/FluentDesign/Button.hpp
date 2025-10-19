@@ -1,4 +1,16 @@
+// AnyFSE is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// AnyFSE is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+
+
 #pragma once
+
 #include <windows.h>
 #include <commctrl.h>
 #include <string>
@@ -15,10 +27,10 @@ namespace FluentDesign
         int m_designWidth;
         int m_designHeight;
 
-        HWND hButton;
+        HWND m_hButton;
 
-        bool buttonPressed;
-        bool buttonMouseOver;
+        bool m_buttonPressed;
+        bool m_buttonMouseOver;
         int m_cornerRadius = 8;
         std::wstring m_text;
 
@@ -30,12 +42,12 @@ namespace FluentDesign
 
         void UpdateLayout();
 
-        FluentDesign::Theme &m_theme;
+        Theme &m_theme;
 
     public:
-        Button(FluentDesign::Theme& theme);
+        Button(Theme& theme);
         Button(
-            FluentDesign::Theme& theme,
+            Theme& theme,
             HWND hParent,
             int x, int y,
             int width, int height);

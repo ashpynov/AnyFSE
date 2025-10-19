@@ -1,3 +1,14 @@
+// AnyFSE is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// AnyFSE is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+
+
 #include "SettingsLine.hpp"
 #include "Logging/LogManager.hpp"
 #include "DoubleBufferedPaint.hpp"
@@ -20,8 +31,8 @@ namespace FluentDesign
         , m_enabled(true)
         , m_hovered(false)
         , m_hWnd(NULL)
-        , linePadding(4)
-        , leftMargin(16)
+        , m_linePadding(4)
+        , m_leftMargin(16)
         , m_state(State::Normal)
         , m_childFocused(false)
         , m_frameFlags(Gdiplus::FrameFlags::CORNER_ALL | Gdiplus::FrameFlags::SIDE_ALL)
@@ -269,7 +280,7 @@ namespace FluentDesign
         SetBkMode(hdc, TRANSPARENT);
 
         // Draw name
-        rect.left += m_theme.DpiScale(leftMargin);   // Margin
+        rect.left += m_theme.DpiScale(m_leftMargin);   // Margin
         //rect.right -= 160; // Space for child control
 
         SelectObject(hdc, m_theme.GetFont_Text());
@@ -278,7 +289,7 @@ namespace FluentDesign
         int height = m_theme.GetSize_Text();
         if (!m_description.empty())
         {
-            height += m_theme.DpiScale(linePadding) + m_theme.GetSize_TextSecondary();
+            height += m_theme.DpiScale(m_linePadding) + m_theme.GetSize_TextSecondary();
         }
 
         RECT nameRect = rect;
@@ -292,7 +303,7 @@ namespace FluentDesign
         SetTextColor(hdc, descColor);
 
         RECT descRect = rect;
-        descRect.top = nameRect.bottom + m_theme.DpiScale(linePadding);
+        descRect.top = nameRect.bottom + m_theme.DpiScale(m_linePadding);
         descRect.bottom = descRect.top + m_theme.GetSize_TextSecondary();
 
         ::DrawText(hdc, m_description.c_str(), -1, &descRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE| DT_NOCLIP);
@@ -408,11 +419,11 @@ namespace FluentDesign
     void SettingsLine::UpdateLayout()
     {
         PositionChildControl();
-        if (m_groupItems.size() > 0)
+        if (m_groupItemsList.size() > 0)
         {
             bool bShow = m_state == State::Opened;
 
-            for (auto& gr : m_groupItems)
+            for (auto& gr : m_groupItemsList)
             {
                 ShowWindow(gr->m_hWnd, bShow ? SW_SHOW : SW_HIDE);
             }
@@ -492,7 +503,7 @@ namespace FluentDesign
     }
     void SettingsLine::SetLeftMargin(int margin)
     {
-        leftMargin = margin;
+        m_leftMargin = margin;
         Invalidate();
     }
     void SettingsLine::SetState(State state)
@@ -512,11 +523,11 @@ namespace FluentDesign
     }
     void SettingsLine::AddGroupItem(SettingsLine *groupItem)
     {
-        if (m_groupItems.size())
+        if (m_groupItemsList.size())
         {
-            m_groupItems.back()->SetFrame(Gdiplus::FrameFlags::SIDE_NO_BOTTOM);
+            m_groupItemsList.back()->SetFrame(Gdiplus::FrameFlags::SIDE_NO_BOTTOM);
         }
-        m_groupItems.push_back(groupItem);
+        m_groupItemsList.push_back(groupItem);
         groupItem->SetFrame(Gdiplus::FrameFlags::SIDE_ALL | Gdiplus::FrameFlags::CORNER_BOTTOM);
     }
 }

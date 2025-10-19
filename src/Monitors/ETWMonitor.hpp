@@ -75,7 +75,7 @@ namespace AnyFSE::Monitors
         TRACEHANDLE m_traceHandle;
         TRACEHANDLE m_consumerHandle;
         EVENT_TRACE_LOGFILEW m_logFile;
-        EVENT_TRACE_PROPERTIES *m_traceProperties;
+        EVENT_TRACE_PROPERTIES *m_pTraceProperties;
 
         LONG m_explorerProcessId;
         void HandleStartProcessEvent(EVENT_RECORD *eventRecord);

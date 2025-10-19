@@ -1,3 +1,13 @@
+// AnyFSE is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// AnyFSE is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+
 
 #include <tchar.h>
 #include <windows.h>
@@ -15,7 +25,7 @@ namespace AnyFSE::Window
     bool MainWindow::InitAnimationResources()
     {
         Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-        GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+        GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
         LoadLogoImage();
         return TRUE;
     }
@@ -29,43 +39,43 @@ namespace AnyFSE::Window
 
         if (HICON hIcon = Tools::LoadIcon(Config::LauncherIcon))
         {
-            pLogoImage = new Gdiplus::Bitmap(hIcon);
+            m_pLogoImage = new Gdiplus::Bitmap(hIcon);
             DestroyIcon(hIcon);
         }
 
-        if (!pLogoImage || pLogoImage->GetLastStatus() != Gdiplus::Status::Ok)
+        if (!m_pLogoImage || m_pLogoImage->GetLastStatus() != Gdiplus::Status::Ok)
         {
-            pLogoImage = Gdiplus::LoadImageFromResource(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_LOGO), L"PNG");
+            m_pLogoImage = Gdiplus::LoadImageFromResource(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_LOGO), L"PNG");
         }
 
-        return (pLogoImage && pLogoImage->GetLastStatus() == Gdiplus::Status::Ok);
+        return (m_pLogoImage && m_pLogoImage->GetLastStatus() == Gdiplus::Status::Ok);
     }
 
 
     void MainWindow::OnPaintAnimated()
     {
         using namespace Gdiplus;
-        FluentDesign::DoubleBuferedPaint paint(hWnd);
+        FluentDesign::DoubleBuferedPaint paint(m_hWnd);
         Graphics graphics(paint.MemDC());
 
         graphics.SetSmoothingMode(SmoothingModeAntiAlias);
         // Fill background
         Color backgroundColor;
-        backgroundColor.SetFromCOLORREF(themeBackgroundColor);
-        SolidBrush backgroundBrush(themeBackgroundColor);
+        backgroundColor.SetFromCOLORREF(THEME_BACKGROUND_COLOR);
+        SolidBrush backgroundBrush(THEME_BACKGROUND_COLOR);
 
         RectF rect = ToRectF(paint.ClientRect());
         graphics.FillRectangle(&backgroundBrush, 0.0f, 0.0f, rect.Width, rect.Height);
 
-        if (Config::ShowLogo && pLogoImage && pLogoImage->GetLastStatus() == Gdiplus::Ok)
+        if (Config::ShowLogo && m_pLogoImage && m_pLogoImage->GetLastStatus() == Gdiplus::Ok)
         {
-            REAL imageWidth = 150 /*pLogoImage->GetWidth()*/ * currentZoom;
-            REAL imageHeight = 150 /*pLogoImage->GetHeight()*/ * currentZoom;
+            REAL imageWidth = 150 /*pLogoImage->GetWidth()*/ * m_currentZoom;
+            REAL imageHeight = 150 /*pLogoImage->GetHeight()*/ * m_currentZoom;
             REAL xPos = (rect.Width - imageWidth) / 2;
             REAL yPos = (rect.Height - imageHeight) / 2;
 
             // Draw centered image
-            graphics.DrawImage(pLogoImage, xPos, yPos, imageWidth, imageHeight);
+            graphics.DrawImage(m_pLogoImage, xPos, yPos, imageWidth, imageHeight);
         }
 
         if (Config::ShowText)
@@ -89,46 +99,46 @@ namespace AnyFSE::Window
 
     void MainWindow::OnTimer(UINT_PTR timerId)
     {
-        if (timerId == animationTimerId)
+        if (timerId == m_animationTimerId)
         {
-            currentZoom += (zoomStep > 0 ? zoomStep * 5 : zoomStep);
-            if (currentZoom > 1 + zoomDelta && zoomStep > 0
-                || (currentZoom < 1 - zoomDelta && zoomStep < 0))
+            m_currentZoom += (m_zoomStep > 0 ? m_zoomStep * 5 : m_zoomStep);
+            if (m_currentZoom > 1 + m_zoomDelta && m_zoomStep > 0
+                || (m_currentZoom < 1 - m_zoomDelta && m_zoomStep < 0))
             {
-                zoomStep = -zoomStep;
+                m_zoomStep = -m_zoomStep;
             }
 
             // Force repaint
-            InvalidateRect(hWnd, NULL, FALSE);
+            InvalidateRect(m_hWnd, NULL, FALSE);
         }
     }
 
     BOOL MainWindow::FreeAnimationResources()
     {
-        if (pLogoImage)
+        if (m_pLogoImage)
         {
-            delete pLogoImage;
-            pLogoImage = NULL;
+            delete m_pLogoImage;
+            m_pLogoImage = NULL;
         }
-        Gdiplus::GdiplusShutdown(gdiplusToken);
+        Gdiplus::GdiplusShutdown(m_gdiplusToken);
         return TRUE;
     }
 
 
     BOOL MainWindow::StartAnimation()
     {
-        if (Config::ShowAnimation && Config::ShowLogo && !hTimer && pLogoImage)
+        if (Config::ShowAnimation && Config::ShowLogo && !m_hTimer && m_pLogoImage)
         {
-            hTimer = SetTimer(hWnd, animationTimerId, ZOOM_INTERVAL_MS, NULL);
+            m_hTimer = SetTimer(m_hWnd, m_animationTimerId, ZOOM_INTERVAL_MS, NULL);
         }
         return TRUE;
     }
     BOOL MainWindow::StopAnimation()
     {
-        if (hTimer)
+        if (m_hTimer)
         {
-            KillTimer(hWnd, animationTimerId);
-            hTimer = NULL;
+            KillTimer(m_hWnd, m_animationTimerId);
+            m_hTimer = NULL;
         }
         return TRUE;
     }
