@@ -140,7 +140,9 @@ namespace AnyFSE::Manager::Cycle
                 if (ipcMessage.ticks > eol)
                 {
                     lock.unlock();
-                    _log.Debug("Got message: %d (%ldms)", ipcMessage.event, GetTickCount64()-ipcMessage.ticks);
+                    #ifdef _TRACE
+                        _log.Trace("Got message: %d (%ldms)", ipcMessage.event, GetTickCount64()-ipcMessage.ticks);
+                    #endif
                     ProcessEvent(ipcMessage.event);
                     lock.lock();
                 }

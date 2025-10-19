@@ -1,7 +1,15 @@
 ﻿#pragma once
+
+#ifdef _TRACE
+#define TRACE log.Trace
+#else
+#define TRACE(...)
+#endif
+
 #include <string>
 #include <windows.h>
 #include <exception>
+
 
 namespace AnyFSE::Logging
 {
@@ -21,9 +29,9 @@ namespace AnyFSE::Logging
     private:
         std::string loggerName;
         void WriteMessage(LogLevel level, const char * format, va_list args = NULL);           
+
+    public:
         Logger(const std::string& name);
-    
-    public:    
         static std::exception APIError(DWORD errorCode = 0, const char * prefix = "");
         static std::exception APIError(const char * prefix);
         void Trace(const char * format, ...);

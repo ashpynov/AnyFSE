@@ -42,7 +42,7 @@ namespace AnyFSE::Manager::State
                 return OnExit.Notify();
 
             default:
-                log.Info("Recieved event by service %d", event);
+                log.Debug("Recieved event by service %d", event);
         }
     }
 }

@@ -39,7 +39,7 @@ namespace AnyFSE::Monitors
     {
         if (m_isRunning)
         {
-            log.Info("Monitoring already running for process: %s", Unicode::to_string(m_processName).c_str());
+            log.Debug("Monitoring already running for process: %s", Unicode::to_string(m_processName).c_str());
             return m_threadHandle;
         }
 
@@ -49,7 +49,7 @@ namespace AnyFSE::Monitors
         m_monitoringThread = std::thread(&ETWMonitor::MonitoringThread, this);
         m_threadHandle = m_monitoringThread.native_handle();
 
-        log.Info("Started thread for monitoring for process: %s", Unicode::to_string(m_processName).c_str());
+        log.Debug("Started thread for monitoring for process: %s", Unicode::to_string(m_processName).c_str());
         return m_threadHandle;
     }
 
@@ -92,7 +92,7 @@ namespace AnyFSE::Monitors
 
     void ETWMonitor::MonitoringThread()
     {
-        log.Info("Starting real-time ETW monitoring for process: %s", Unicode::to_string(m_processName).c_str());
+        log.Debug("Starting real-time ETW monitoring for process: %s", Unicode::to_string(m_processName).c_str());
 
         try
         {
@@ -102,11 +102,11 @@ namespace AnyFSE::Monitors
             while (!m_stopRequested)
             {
                 // ProcessTrace will block until events arrive or session stops
-                log.Info("Entering wait cycle for real-time ETW monitoring");
+                log.Debug("Entering wait cycle for real-time ETW monitoring");
                 ULONG status = ProcessTrace(&m_consumerHandle, 1, NULL, NULL);
                 if (status != ERROR_SUCCESS && status != ERROR_CANCELLED)
                 {
-                    log.Info(log.APIError(status), "ProcessTrace ended with status: %lu", status);
+                    log.Debug(log.APIError(status), "ProcessTrace ended with status: %lu", status);
                     break;
                 }
             }
@@ -120,7 +120,7 @@ namespace AnyFSE::Monitors
         }
 
         m_isRunning = false;
-        log.Info("Real-time monitoring stopped for process: %s", Unicode::to_string(m_processName).c_str());
+        log.Debug("Real-time monitoring stopped for process: %s", Unicode::to_string(m_processName).c_str());
     }
 
     // Static callback function
@@ -139,11 +139,11 @@ namespace AnyFSE::Monitors
 
         if (!m_isRunning)
         {
-            log.Info("Stop called but monitoring is not running for process: %s", Unicode::to_string(m_processName).c_str());
+            log.Debug("Stop called but monitoring is not running for process: %s", Unicode::to_string(m_processName).c_str());
             return;
         }
 
-        log.Info("Stopping monitoring for process: %s", Unicode::to_string(m_processName).c_str());
+        log.Debug("Stopping monitoring for process: %s", Unicode::to_string(m_processName).c_str());
         m_stopRequested = true;
 
         StopRealtimeETW();
@@ -156,7 +156,7 @@ namespace AnyFSE::Monitors
         m_isRunning = false;
         m_threadHandle = NULL;
 
-        log.Info("Monitoring successfully stopped for process: %s", Unicode::to_string(m_processName).c_str());
+        log.Debug("Monitoring successfully stopped for process: %s", Unicode::to_string(m_processName).c_str());
     }
 
     HANDLE ETWMonitor::StopAsync()
@@ -164,11 +164,11 @@ namespace AnyFSE::Monitors
 
         if (!m_isRunning)
         {
-            log.Info("StopAsync called but monitoring is not running for process: %s", Unicode::to_string(m_processName).c_str());
+            log.Debug("StopAsync called but monitoring is not running for process: %s", Unicode::to_string(m_processName).c_str());
             return NULL;
         }
 
-        log.Info("Stopping monitoring asynchronously for process: %s", Unicode::to_string(m_processName).c_str());
+        log.Debug("Stopping monitoring asynchronously for process: %s", Unicode::to_string(m_processName).c_str());
         m_stopRequested = true;
 
         StopRealtimeETW();

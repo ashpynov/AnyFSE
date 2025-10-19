@@ -7,7 +7,7 @@ namespace AnyFSE::Tools
 
     void Event::operator+=(std::function<void()> callback)
     {
-        log.Info("Added notification handler");
+        log.Debug("Added notification handler");
         callbacks.push_back(callback);
     }
 

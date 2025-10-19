@@ -88,6 +88,14 @@ namespace AnyFSE::Monitors
         {
             HandleRegistryQueryValueEvent(eventRecord);
         }
+        else {
+            count++;
+
+            #ifdef _TRACE
+            TraceEvent(eventRecord, count);
+            #endif
+        }
+
         return;
     }
     void ETWMonitor::HandleStartProcessEvent(EVENT_RECORD *eventRecord)
@@ -113,13 +121,13 @@ namespace AnyFSE::Monitors
 
             // Calculate latency (rough approximation)
             LONGLONG latency = (currentTime.QuadPart - timestamp.QuadPart) / 10000; // Convert to milliseconds
-            log.Info("Process %s is detected, Latency: %lldms", Unicode::to_string(pFileName).c_str(), latency);
+            log.Debug("Process %s is detected, Latency: %lldms", Unicode::to_string(pFileName).c_str(), latency);
             OnProcessExecuted.Notify();
         }
         else if (_wcsicmp(pFileName, L"explorer.exe") ==0)
         {
             m_explorerProcessId = eventRecord->EventHeader.ProcessId;
-            log.Info("Explorer.exe was started with pid %d", m_explorerProcessId);
+            log.Debug("Explorer.exe was started with pid %d", m_explorerProcessId);
         }
     }
 
@@ -133,13 +141,20 @@ namespace AnyFSE::Monitors
 
         if (isGamingApp && isExplorer)
         {
-            ParseWithTDH(eventRecord, 0);
-            log.Info("Explorer has accessed to %s registry value", Unicode::to_string(valueName).c_str());
+            #ifdef _TRACE
+            TRACE("(%d) Explorer has accessed to %s registry value", Unicode::to_string(valueName).c_str(), count);
+            TraceEvent(eventRecord, 0);
+            #endif
+            
             OnHomeAppTouched.Notify();
         }
         else if (isDeviceForm && isExplorer)
         {
-            log.Info("Explorer has accessed to %s registry value", Unicode::to_string(valueName).c_str());
+            #ifdef _TRACE
+            TRACE("(%d) Explorer has accessed to %s registry value", Unicode::to_string(valueName).c_str(), count);
+            TraceEvent(eventRecord, 0);
+            #endif
+
             OnDeviceFormTouched.Notify();
         }
     }

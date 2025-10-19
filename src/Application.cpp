@@ -110,7 +110,7 @@ namespace AnyFSE
 
         if (hAppWnd)
         {
-            log.Info("Application is executed already, exiting\n");
+            log.Debug("Application is executed already, exiting\n");
             PostMessage(hAppWnd, MainWindow::WM_TRAY, 0, WM_LBUTTONDBLCLK);
             return 0;
         }
@@ -128,7 +128,7 @@ namespace AnyFSE
             return -1;
         }
 
-        log.Info("Application is started (hInstance=%08x)", hInstance);
+        log.Debug("Application is started (hInstance=%08x)", hInstance);
         try
         {
             Config::Load();
@@ -194,14 +194,14 @@ namespace AnyFSE
 
         fseMonitor.OnExperienseChanged += ([&managerState]()
         {
-            log.Info(
+            log.Debug(
                 "Mode is changed to %s\n",
                 GamingExperience::IsActive() ? "Fullscreeen experience" : "Windows Desktop"
             );
             managerState.Notify(GamingExperience::IsActive() ? StateEvent::GAMEMODE_ENTER : StateEvent::GAMEMODE_EXIT);
         });
 
-        log.Info("Run window loop.");
+        log.Debug("Run window loop.");
 
         exitCode = MainWindow::RunLoop();
 
@@ -213,7 +213,7 @@ namespace AnyFSE
 
         managerState.Stop();
 
-        log.Info("Loop finished. Time to exit");
+        log.Debug("Loop finished. Time to exit");
 
 
         if (exitCode)
@@ -222,7 +222,7 @@ namespace AnyFSE
         }
         else
         {
-            log.Info("Job is done!");
+            log.Debug("Job is done!");
         }
 
         if (exitCode == ERROR_RESTART_APPLICATION)

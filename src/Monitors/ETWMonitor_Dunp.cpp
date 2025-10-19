@@ -13,7 +13,7 @@ namespace AnyFSE::Monitors
 {
     static Logger log = LogManager::GetLogger("ETWMonitor/Dump");
 
-    void ETWMonitor::ParseWithTDH(PEVENT_RECORD pEvent, size_t count) {
+    void ETWMonitor::TraceEvent(PEVENT_RECORD pEvent, size_t count) {
         DWORD status = ERROR_SUCCESS;
         DWORD bufferSize = 0;
         PTRACE_EVENT_INFO pInfo = NULL;
@@ -98,7 +98,7 @@ namespace AnyFSE::Monitors
             offset += GetPropertySizeTDH(pEvent, pInfo, prop->nonStructType.InType, wCharAt(pInfo,  prop->NameOffset));
         }
 
-        log.Info("\n%s\n", Unicode::to_string(ss.str()).c_str());
+        log.Trace("\n%s\n", Unicode::to_string(ss.str()).c_str());
     }
 
 } // namespace AnyFSE::Monitors

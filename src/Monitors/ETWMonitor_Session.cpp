@@ -74,10 +74,10 @@ namespace AnyFSE::Monitors
 
         if (status == ERROR_ALREADY_EXISTS)
         {
-            log.Info("Session is exist already, stopping");
+            log.Debug("Session is exist already, stopping");
             StopSession();
             // Get the session handle
-            log.Info("Old session stopped, Start new session");
+            log.Debug("Old session stopped, Start new session");
             SetTraceProperties();
             status = StartTraceW(&m_sessionHandle, m_sessionName.c_str(), m_traceProperties);
         }
@@ -130,7 +130,7 @@ namespace AnyFSE::Monitors
                 m_sessionHandle,
                 &RegistryProviderGuid,
                 EVENT_CONTROL_CODE_ENABLE_PROVIDER,
-                TRACE_LEVEL_VERBOSE,
+                TRACE_LEVEL_ERROR,
                 0x400, 0, INFINITE, &params
             )
         )
@@ -174,7 +174,7 @@ namespace AnyFSE::Monitors
         //EnableRegistryProvider();
         OpenConsumer();
 
-        log.Info("Real-time ETW monitoring started successfully for process: %s", Unicode::to_string(m_processName).c_str());
+        log.Debug("Real-time ETW monitoring started successfully for process: %s", Unicode::to_string(m_processName).c_str());
     }
 
     void ETWMonitor::StopRealtimeETW()
@@ -210,6 +210,6 @@ namespace AnyFSE::Monitors
             m_sessionHandle = NULL;
         }
 
-        log.Info("Real-time ETW monitoring stopped for process: %s", Unicode::to_string(m_processName).c_str());
+        log.Debug("Real-time ETW monitoring stopped for process: %s", Unicode::to_string(m_processName).c_str());
     }
 } // namespace AnyFSE::Monitors

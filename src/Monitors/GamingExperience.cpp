@@ -38,7 +38,7 @@ namespace AnyFSE::Monitors
             RegisterGamingFullScreenExperienceChangeNotification((VOID(CALLBACK *)(LPVOID))Callback, this, &fseHandle);
             if (fseHandle != nullptr)
             {
-                log.Info(
+                log.Debug(
                     "FullScreenExperienceChangeNotification is registered\n"
                     "Current mode is %s\n",
                     GamingExperience::IsActive() ? "Fullscreeen experience" : "Windows Desktop"

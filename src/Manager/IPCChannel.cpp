@@ -1,9 +1,3 @@
-#ifdef _TRACE
-#define TRACE log.Trace
-#else
-#define TRACE(...)
-#endif
-
 #include <windows.h>
 #include <sddl.h>
 #include "IPCChannel.hpp"

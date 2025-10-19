@@ -53,7 +53,7 @@ namespace AnyFSE::Monitors
         void StopRealtimeETW();
         static void WINAPI EventRecordCallback(EVENT_RECORD *eventRecord);
 
-        void ParseWithTDH(PEVENT_RECORD pEvent, size_t count);
+        void TraceEvent(PEVENT_RECORD pEvent, size_t count);
         DWORD GetPropertySizeTDH(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo, int type, LPCWSTR propertyName);
         void DumpEventTDH(PEVENT_RECORD pEvent, PTRACE_EVENT_INFO pInfo, size_t count);
         DWORD FindExploredPid();

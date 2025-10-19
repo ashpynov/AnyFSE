@@ -57,7 +57,7 @@ namespace AnyFSE::Window
         aClass = RegisterClass(&stWC);
         if (!aClass)
         {
-            log.Info(Logger::APIError(), "Can not register class name");
+            log.Debug(Logger::APIError(), "Can not register class name");
             return false;
         }
 
@@ -65,11 +65,11 @@ namespace AnyFSE::Window
 
         if (!IsWindow(hWnd))
         {
-            log.Info(Logger::APIError(), "Can not create window");
+            log.Debug(Logger::APIError(), "Can not create window");
             return false;
         }
 
-        log.Info("Window is created (hWnd=%08x)", hWnd);
+        log.Debug("Window is created (hWnd=%08x)", hWnd);
         return true;
     };
 
@@ -136,7 +136,7 @@ namespace AnyFSE::Window
     {
         if (uMsg == WM_TASKBARCREATED)
         {
-            log.Info("Explorer start taskbar ready");
+            log.Debug("Explorer start taskbar ready");
             CreateTrayIcon();
             return DefWindowProc(hWnd, uMsg, wParam, lParam);
         }
@@ -196,7 +196,7 @@ namespace AnyFSE::Window
         LoadStringSafe(IDS_TIP, stData.szTip, _countof(stData.szTip));
         if (!Shell_NotifyIcon(NIM_ADD, &stData))
         {
-            log.Info(log.APIError(), "Can not create tray icon");
+            log.Debug(log.APIError(), "Can not create tray icon");
             return; // oops
         }
     }

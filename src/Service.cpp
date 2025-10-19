@@ -35,7 +35,7 @@ namespace AnyFSE
     int WINAPI Service::ServiceMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine)
     {
         AnyFSE::Logging::LogManager::Initialize("AnyFSEService");
-        log.Info("Service is started (hInstance=%08x)", hInstance);
+        log.Debug("Service is started (hInstance=%08x)", hInstance);
 
         if (!Application::IsRunningAsAdministrator())
         {
@@ -48,12 +48,12 @@ namespace AnyFSE
         DWORD activeSession = WTSGetActiveConsoleSessionId();
         if (lpCmdLine != NULL && activeSession != 0xFFFFFFFF)
         {
-            log.Info("Session is started already force to run\n");
+            log.Debug("Session is started already force to run\n");
             LaunchAppInUserSession(activeSession);
         }
         MonitorSessions();
         StopMonitoring();
-        log.Info("Work is done");
+        log.Debug("Work is done");
 
         return 0;
     }
@@ -74,7 +74,7 @@ namespace AnyFSE
 
         if (m_hwnd)
         {
-            log.Info("Logon monitor background window is created");
+            log.Debug("Logon monitor background window is created");
             WTSRegisterSessionNotification(m_hwnd, NOTIFY_FOR_ALL_SESSIONS);
         }
     }
@@ -107,7 +107,7 @@ namespace AnyFSE
 
     BOOL Service::LaunchAppInUserSession(DWORD sessionId)
     {
-        log.Info(log.APIError(), "LaunchAppInUserSession");
+        log.Debug(log.APIError(), "LaunchAppInUserSession");
 
         HANDLE hUserToken = NULL;
         if (!WTSQueryUserToken(sessionId, &hUserToken))
@@ -141,7 +141,7 @@ namespace AnyFSE
         wcscpy_s(cmdLine.data(), MAX_PATH, fullCommand.c_str());
 
 
-        log.Info(log.APIError(), "To CreateProcessAsUser...");
+        log.Debug(log.APIError(), "To CreateProcessAsUser...");
         // Create process with elevated token
         BOOL success = CreateProcessAsUser(
             hUserToken,                  // Elevated token
@@ -158,7 +158,7 @@ namespace AnyFSE
             &pi           // Process info
         );
 
-        log.Info(log.APIError(), "User session application is executed");
+        log.Debug(log.APIError(), "User session application is executed");
 
         if (success)
         {
@@ -176,7 +176,7 @@ namespace AnyFSE
     {
         etwMonitor.OnProcessExecuted += ([]()
         {
-            log.Info("Xbox process execution is detected\n" );
+            log.Debug("Xbox process execution is detected\n" );
             managerState.NotifyRemote(StateEvent::XBOX_DETECTED);
             if (xboxIsDenied)
             {
@@ -186,13 +186,13 @@ namespace AnyFSE
 
         etwMonitor.OnHomeAppTouched += ([]()
         {
-            log.Info("Attempt to open Home App detected!" );
+            log.Debug("Attempt to open Home App detected!" );
             managerState.NotifyRemote(StateEvent::OPEN_HOME);
         });
 
         etwMonitor.OnDeviceFormTouched += ([]()
         {
-            log.Info("Access to DeviceForm detected!" );
+            log.Debug("Access to DeviceForm detected!" );
             managerState.NotifyRemote(StateEvent::OPEN_DEVICE_FORM);
         });
 
@@ -203,26 +203,26 @@ namespace AnyFSE
 
         managerState.OnMonitorRegistry += ([]()
         {
-            log.Info("Monitor registry recieved!" );
+            log.Debug("Monitor registry recieved!" );
             etwMonitor.EnableRegistryProvider();
         });
 
         managerState.OnExit += ([]()
         {
-            log.Info("Exiting!" );
+            log.Debug("Exiting!" );
             ExitService();
         });
 
         managerState.OnXboxDeny += ([]()
         {
-            log.Info("XboxDeny message recieved!" );
+            log.Debug("XboxDeny message recieved!" );
             xboxIsDenied = true;
             KillXbox();
         });
 
         managerState.OnXboxAllow += ([]()
         {
-            log.Info("XboxAllow message recieved!" );
+            log.Debug("XboxAllow message recieved!" );
             xboxIsDenied = false;
         });
 
@@ -238,7 +238,7 @@ namespace AnyFSE
 
     void Service::KillXbox()
     {
-        log.Info("Killing Xbox");
+        log.Debug("Killing Xbox");
         if (ERROR_SUCCESS != Process::Kill(XBoxProcessName))
         {
             log.Error(log.APIError(), "Can't Kill XBOX: ");
