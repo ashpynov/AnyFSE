@@ -213,10 +213,10 @@ namespace AnyFSE::Tools::Process
                 return FALSE; // Stop enumeration
             }
 
-            if (GetParent(hwnd) != NULL || !IsWindowVisible(hwnd))
-            {
-                return TRUE;
-            }
+            // if (GetParent(hwnd) != NULL || !IsWindowVisible(hwnd))
+            // {
+            //     return TRUE;
+            // }
             // Get window title
             wchar_t title[256];
             int titleLength = GetWindowTextW(hwnd, title, sizeof(title));

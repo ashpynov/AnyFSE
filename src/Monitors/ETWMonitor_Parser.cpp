@@ -133,12 +133,13 @@ namespace AnyFSE::Monitors
 
         if (isGamingApp && isExplorer)
         {
-            //log.Info("Explorer has accessed to %s registry value", Unicode::to_string(valueName).c_str());
+            ParseWithTDH(eventRecord, 0);
+            log.Info("Explorer has accessed to %s registry value", Unicode::to_string(valueName).c_str());
             OnHomeAppTouched.Notify();
         }
         else if (isDeviceForm && isExplorer)
         {
-            //log.Info("Explorer has accessed to %s registry value", Unicode::to_string(valueName).c_str());
+            log.Info("Explorer has accessed to %s registry value", Unicode::to_string(valueName).c_str());
             OnDeviceFormTouched.Notify();
         }
     }

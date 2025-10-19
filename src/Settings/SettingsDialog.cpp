@@ -336,13 +336,17 @@ namespace AnyFSE::Settings
             This->OnBrowseLauncher(This->m_hDialog, 0);
         };
 
-        CheckDlgButton(m_hDialog, IDC_RUN_ON_STARTUP, true ? BST_CHECKED : BST_UNCHECKED);
         current = Config::GetCurrentLauncher();
         Config::FindLaunchers(launchers);
         UpdateCombo();
         Config::GetLauncherSettings(current, config);
-        m_isCustom = config.isCustom && config.Type != LauncherType::Xbox || config.Type == LauncherType::Custom;
+        
+        bool customSettings = Config::LauncherCustomSettings;
+        m_customSettingsState = customSettings ? FluentDesign::SettingsLine::Opened: FluentDesign::SettingsLine::Closed;
+
+        m_isCustom = (customSettings || config.isCustom) && config.Type != LauncherType::Xbox || config.Type == LauncherType::Custom;
         m_isAgressive = Config::AggressiveMode && config.Type != LauncherType::Xbox;
+        
         UpdateControls();
         UpdateCustomSettings();
         m_customSettingsState = customSettingsLine->GetState() != FluentDesign::SettingsLine::Normal

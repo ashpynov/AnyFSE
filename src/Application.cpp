@@ -172,13 +172,13 @@ namespace AnyFSE
             return -1;
         }
 
-                if (!GamingExperience::ApiIsAvailable)
+        if (!GamingExperience::ApiIsAvailable)
         {
             log.Critical("Fullscreen Gaming API is not detected, exiting\n");
             managerState.NotifyRemote(StateEvent::EXIT_SERVICE);
             return -1;
         }
-        //managerState.NotifyRemote(StateEvent::MONITOR_REGISTRY);
+        managerState.NotifyRemote(StateEvent::MONITOR_REGISTRY);
         
         if (Config::Type != LauncherType::None || Config::Type != LauncherType::Xbox)
         {

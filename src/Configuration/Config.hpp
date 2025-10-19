@@ -68,6 +68,7 @@ namespace AnyFSE::Configuration
 
             static LauncherType Type;
             static wstring LauncherName;
+            static bool    LauncherCustomSettings;
             static wstring LauncherWindowName;
             static wstring LauncherIcon;
             static wstring LauncherProcessName;

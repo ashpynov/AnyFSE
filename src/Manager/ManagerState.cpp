@@ -53,27 +53,42 @@ namespace AnyFSE::Manager::State
     {
         //if (IsInFSEMode() || Config::AggressiveMode)
         {
-            log.Info("XBoxStartDetected in %s Mode", IsInFSEMode() ? "FSE" : "Desktop" );
+            log.Info("OnXboxDetected: XBoxStartDetected in %s Mode", IsInFSEMode() ? "FSE" : "Desktop" );
 
-            if (IsSplashActive() || IsPreventIsActive())
+            if (IsSplashActive() || IsPreventIsActive() || IsWaitingLauncher())
             {
-                log.Info("%s is still active. Kill Xbox", IsSplashActive() ? "Splash" : "Preventing");
+                log.Info("OnXboxDetected: During %s => Kill it", 
+                      IsSplashActive()    ? "Splash is Active" 
+                    : IsPreventIsActive() ? "Prevent is Active" 
+                    : "Waiting Launcher");
                 KillXbox();
             }
             else if (!IsLauncherActive())
             {
-                log.Info("Launcher is not active");
+                log.Info("OnXboxDetected: Launcher is not active => Kill It. Start Launcher with splash");
+                if (false)
+                {
+                    ShowSplash();
+                    KillXbox();
+                    StartLauncher();
+                    WaitLauncher();
+                } 
+                else
+                {
+                    log.Info("OnXboxDetected: Launcher is not active //// BUT DISABLED");
+                }
+            }
+            else if (Config::AggressiveMode)
+            {
+                log.Info("OnXboxDetected: Aggressive mode => Kill It. Start Launcher with splash");
                 ShowSplash();
                 KillXbox();
                 StartLauncher();
                 WaitLauncher();
             }
-            else if (Config::AggressiveMode)
+            else 
             {
-                log.Info("Aggressive mode.. kill.");
-                KillXbox();
-                PreventTimeout();
-                FocusLauncher();
+                log.Info("OnXboxDetected: Do nothing");
             }
         }
         m_xboxAge = GetTickCount64();
@@ -111,27 +126,42 @@ namespace AnyFSE::Manager::State
     {
         if (!IsOnTaskSwitcher())
         {
-            log.Info("Home App id Detected");
+            log.Info("OnOpenHome: Accessing to HomeApp registry key was Detected");
 
-            if (IsYoungXbox())
+            if (IsYoungXbox() )
             {
-                KillXbox();
+                log.Info("OnOpenHome: Home App detected on young XBox, do nothing");
+                return;
             }
 
+            if (IsSplashActive() || IsPreventIsActive() || IsWaitingLauncher()) 
+            {
+                log.Info("OnOpenHome: Already in progress %s", 
+                      IsSplashActive()    ? "Splash is Active" 
+                    : IsPreventIsActive() ? "Prevent is Active" 
+                    : "Waiting Launcher");
+                return;
+            }
             if (IsLauncherActive())
             {
+                log.Info("OnOpenHome: Launcher is already active => prevent xBox, Focus home");
                 PreventTimeout();
                 FocusLauncher();
             }
             else
             {
+                log.Info("OnOpenHome: Launcher is need to run  => prevent xBox, launch home");
+                if (IsInFSEMode())
+                {
+                    ShowSplash();
+                }
                 StartLauncher();
                 WaitLauncher();
             }
         }
         else
         {
-            log.Info("Home App id Detected in Task switcher case (%d) ms", GetTickCount64() - m_deviceFormAge);
+            log.Info("Home App Detected in Task switcher case (%d) ms", GetTickCount64() - m_deviceFormAge);
         }
     }
 
@@ -147,7 +177,7 @@ namespace AnyFSE::Manager::State
             PreventTimeout();
             CloseSplash();
         }
-        else if (GetTickCount() - m_waitStartTime > 30000)
+        else if (!IsLauncherProcess() || GetTickCount() - m_waitStartTime > 600000)
         {
             log.Info("Launcher not started, starting");
             ManagerCycle::CancelTimer(m_waitLauncherTimer);
@@ -201,6 +231,11 @@ namespace AnyFSE::Manager::State
     bool ManagerState::IsPreventIsActive()
     {
         return 0 != m_preventTimer;
+    }
+
+    bool ManagerState::IsWaitingLauncher()
+    {
+        return 0 != m_waitLauncherTimer;
     }
 
     bool ManagerState::IsYoungXbox()

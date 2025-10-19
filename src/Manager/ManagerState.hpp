@@ -41,6 +41,7 @@ namespace AnyFSE::Manager::State
             bool IsLauncherProcess();
             bool IsSplashActive();
             bool IsPreventIsActive();
+            bool IsWaitingLauncher();
             bool IsYoungXbox();
             bool IsOnTaskSwitcher();
 

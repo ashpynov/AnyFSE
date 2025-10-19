@@ -57,6 +57,7 @@ namespace AnyFSE::Settings
         void CenterDialog(HWND hwnd);
         SettingsDialog()
             : m_theme()
+            , m_customSettingsState(FluentDesign::SettingsLine::Closed)
             , launcherCombo(m_theme)
             , fseOnStartupToggle(m_theme)
             , customSettingsToggle(m_theme)

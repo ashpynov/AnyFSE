@@ -13,12 +13,14 @@ namespace AnyFSE::Configuration
     wstring Config::LauncherName;
     wstring Config::LauncherWindowName;
     wstring Config::LauncherIcon;
+    bool    Config::LauncherCustomSettings;
     wstring Config::LauncherProcessName;
     wstring Config::LauncherStartCommand;
     wstring Config::LauncherStartCommandArgs;
     wstring Config::XBoxProcessName;
     wstring Config::LauncherProcessNameAlt;
     wstring Config::LauncherWindowNameAlt;
+    
 
     bool Config::LauncherIsTrayAggressive = false;
 
@@ -78,11 +80,12 @@ namespace AnyFSE::Configuration
         GetLauncherSettings(launcher, config);
         Type = config.Type;
         LauncherName = config.Name;
+        LauncherStartCommand = config.StartCommand;
+        LauncherCustomSettings = Registry::ReadBool(root, L"CustomSettings", config.isCustom);
         LauncherWindowName = config.WindowTitle;
         LauncherWindowNameAlt = config.WindowTitleAlt;
         LauncherProcessName = config.ProcessName;
         LauncherProcessNameAlt = config.ProcessNameAlt;
-        LauncherStartCommand = config.StartCommand;
         LauncherStartCommandArgs = config.StartArg;
         LauncherIcon = config.IconFile;
         LauncherIsTrayAggressive = config.isTrayAggressive;
