@@ -10,8 +10,10 @@ The AnyFSE Home application aims to give users the ability to use their favorite
 Currently, there is no official way available for third-party developers to allow their users to choose custom launchers like Playnite, Steam Big Picture mode, LaunchBox, etc. as Home Applications for Fullscreen Experience mode.
 However, I hope that Microsoft will change their mind and provide an official API to do so.
 
-# Microsoft Defender flag
-The tool randomly triggers a Defender detection: Trojan:Win32/Sabsik.FL.A!ml. I’m not sure what exactly in the code caused this, but you don’t have to trust me — feel free to review the code and build it yourself.
+> [!WARNING]
+> ### Microsoft Defender flag
+> The tool randomly triggers a Defender detection: Trojan:Win32/Sabsik.FL.A!ml.
+> I’m not sure what exactly in the code caused this, but you don’t have to trust me — feel  free to review the code and build it yourself.
 
 
 ## Install and Uninstall
@@ -77,5 +79,6 @@ The actual logic is:
 2. During launcher startup and for 3 seconds after - prevent Xbox app execution by killing it, and show the splash window to prevent the shell from restarting it.
 
 3. 'Launcher has been started' is detected when a process with the specified name is present and a window with a specific title owned by this process is visible. To support Playnite's two modes, pairs of names are tracked for both fullscreen and desktop modes.
+
 
 4. If Xbox is executed without reading GamingHomeApp first - allow it and also skip the next access to GamingHomeApp for 2 seconds (Xbox checks it during startup too).
