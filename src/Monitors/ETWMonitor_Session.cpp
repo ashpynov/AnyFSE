@@ -189,6 +189,7 @@ namespace AnyFSE::Monitors
         {
             if (m_pTraceProperties)
             {
+#if 0  // To prevent Defender Warn
                 EnableTraceEx2(
                     m_sessionHandle,
                     &ProcessProviderGuid,
@@ -202,7 +203,7 @@ namespace AnyFSE::Monitors
                     EVENT_CONTROL_CODE_DISABLE_PROVIDER,
                     TRACE_LEVEL_INFORMATION,
                     0x0, 0, 0, NULL);
-
+#endif
                 StopTrace(m_sessionHandle, m_sessionName.c_str(), m_pTraceProperties);
                 if (m_pTraceProperties) free(m_pTraceProperties);
                 m_pTraceProperties = nullptr;

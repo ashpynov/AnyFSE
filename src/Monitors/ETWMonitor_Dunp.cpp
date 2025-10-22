@@ -1,3 +1,5 @@
+#ifdef TRACE
+
 #include "ETWMonitor.hpp"
 #include "Logging/LogManager.hpp"
 #include "Tools/Unicode.hpp"
@@ -102,3 +104,5 @@ namespace AnyFSE::Monitors
     }
 
 } // namespace AnyFSE::Monitors
+
+#endif
