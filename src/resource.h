@@ -5,18 +5,9 @@
 #define IDS_TIP                         1
 
 #define IDI_ICON                        101
-#define IDI_LOGO                        102
 #define IDR_POPUP                       102
 #define ID_CONFIGURE                    40001
 #define ID_QUIT                         40002
-
-
-#define STRINGIZE(x) STRINGIZE2(x)
-#define STRINGIZE2(x) #x
-
-#define VER_VERSION                   0,8,0,0
-#define VER_VERSION_STR               STRINGIZE(VER_VERSION) "\0"
-
 
 // Next default values for new objects
 //
@@ -28,3 +19,10 @@
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
+
+
+#define STRINGIZE(x) STRINGIZE2(x)
+#define STRINGIZE2(x) #x
+
+#define VER_VERSION                   0,9,0,0
+#define VER_VERSION_STR               STRINGIZE(VER_VERSION) "\0"

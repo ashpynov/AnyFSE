@@ -45,11 +45,6 @@ namespace AnyFSE::App::AppControl::Window
             DestroyIcon(hIcon);
         }
 
-        if (!m_pLogoImage || m_pLogoImage->GetLastStatus() != Gdiplus::Status::Ok)
-        {
-            m_pLogoImage = Gdiplus::LoadImageFromResource(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_LOGO), L"PNG");
-        }
-
         return (m_pLogoImage && m_pLogoImage->GetLastStatus() == Gdiplus::Status::Ok);
     }
 

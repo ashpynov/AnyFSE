@@ -65,7 +65,7 @@ namespace AnyFSE::App::AppControl
 
     bool AppControl::AsSettings(LPSTR lpCmdLine)
     {
-        return _strcmpi(lpCmdLine, "/Settings") == 0;
+        return _strcmpi(lpCmdLine, "/Settings") == 0 || !Config::IsConfigured();
     }
 
     bool AppControl::NeedAdmin(LPSTR lpCmdLine)

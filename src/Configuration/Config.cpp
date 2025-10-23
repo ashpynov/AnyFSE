@@ -48,9 +48,7 @@ namespace AnyFSE::Configuration
 
     bool Config::IsConfigured()
     {
-        //wstring launcher = Registry::ReadString(Config::Root, L"LauncherPath");
-        //return !launcher.empty();
-        return false;
+        return fs::exists(GetConfigFileA());
     }
 
     std::string Config::GetConfigFileA()
