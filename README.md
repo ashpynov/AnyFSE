@@ -10,24 +10,10 @@ The AnyFSE Home application aims to give users the ability to use their favorite
 Currently, there is no official way available for third-party developers to allow their users to choose custom launchers like Playnite, Steam Big Picture mode, LaunchBox, etc. as Home Applications for Fullscreen Experience mode.
 However, I hope that Microsoft will change their mind and provide an official API to do so.
 
-> [!WARNING]
-> ## Microsoft Defender flag
-> The tool randomly triggers a Defender detection: Trojan:Win32/Sabsik.FL.A!ml or Program:Script/Wacapew.A!ml.
-> I’m not sure what exactly in the code caused this: for sure there are code that will start self (second instance) of another (launcher)
-> applications, kill (Xbox app) applications and work with registry (settings modifications). But removing everithing from this does not
-> helped at all.
->
-> But you don’t have to trust me — feel free to review the code and build it yourself.
->
-> Anyway, even builded yourself binary will trigger that silly 'Machine Learning' signatures. So it is better to create dedicated folder
-> for AnyFSE, and add this folder to MS Defender exclusions before installation.
->
-> P.S. If you know how to deal with this  - let me know.
-
 
 ## Install and Uninstall
 
-To install AnyFSE, simply extract the single binary to any desired location and launch it. In the settings dialog, choose the application to use and press 'Save'.
+To install AnyFSE, simply extract content to any desired location and launch it. In the settings dialog, choose the application to use and press 'Save'.
 
 If you change your mind and decide to move the file to another location, just put it there, run it, and press Save.
 
