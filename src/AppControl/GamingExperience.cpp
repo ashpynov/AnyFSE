@@ -14,13 +14,15 @@ namespace AnyFSE::App::AppControl
 
     bool isApiSetImplemented( const std::string& api )
     {
-        return  ::IsApiSetImplemented(api.c_str())
-            && QueryOptionalDelayLoadedAPI(
-                GetModuleHandle(NULL),
-                (api + ".dll").c_str(),
-                "RegisterGamingFullScreenExperienceChangeNotification",
-                0
-            );
+        HMODULE hDll = NULL;
+        bool result = ::IsApiSetImplemented(api.c_str())
+            && (hDll = LoadLibraryA((api + ".dll").c_str()))
+            && GetProcAddress(hDll, "RegisterGamingFullScreenExperienceChangeNotification");
+        if (hDll)
+        {
+            FreeLibrary(hDll);
+        }
+        return result;
     }
 
     bool GamingExperience::ApiIsAvailable = isApiSetImplemented("api-ms-win-gaming-experience-l1-1-0");
