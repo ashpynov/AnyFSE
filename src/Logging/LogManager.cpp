@@ -91,7 +91,7 @@ namespace AnyFSE::Logging
     // Main logging method
     void LogManager::WriteMessage(LogLevels level, const string &loggerName, const char *format, va_list args)
     {
-        if (level <= Level || !(LogToConsole || LogWriter.is_open()))
+        if (level > Level || !(LogToConsole || LogWriter.is_open()))
         {
             return;
         }

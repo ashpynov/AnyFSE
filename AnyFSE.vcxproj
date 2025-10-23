@@ -25,4 +25,9 @@
   <ItemGroup>
     <Image Include="media\AnyFSEIcon.ico" />
   </ItemGroup>
+  <Target Name="AfterBuild" AfterTargets="Build">
+    <Copy SourceFiles="$(ProjectDir)LICENSE"
+          DestinationFolder="$(TargetDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
 </Project>

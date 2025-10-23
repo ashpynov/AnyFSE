@@ -16,6 +16,7 @@ namespace AnyFSE::App::AppService::StateLoop
         switch (event)
         {
             case AppEvents::CONNECT:
+                log.Info("AppControl connected" );
             case AppEvents::XBOX_DETECTED:
             case AppEvents::OPEN_HOME:
             case AppEvents::OPEN_DEVICE_FORM:
@@ -35,7 +36,7 @@ namespace AnyFSE::App::AppService::StateLoop
                 return OnExit.Notify();
 
             default:
-                log.Debug("Recieved event by service %d", event);
+                log.Trace("Recieved event by service %d", event);
         }
     }
 }

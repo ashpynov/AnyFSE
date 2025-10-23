@@ -115,7 +115,7 @@ namespace AnyFSE::App::AppControl::StateLoop
     }
     void AppControlStateLoop::OnGameModeExit()
     {
-        log.Debug("Exited Game Modoe, do nothing");
+        log.Debug("Exited Game Mode, do nothing");
     }
 
     void AppControlStateLoop::OnDeviceForm()
@@ -162,13 +162,13 @@ namespace AnyFSE::App::AppControl::StateLoop
         }
         else
         {
-            log.Debug("Home App Detected in Task switcher case (%d) ms", GetTickCount64() - m_deviceFormAge);
+            log.Trace("Home App Detected After DeviceForm: age (%d) ms", GetTickCount64() - m_deviceFormAge);
         }
     }
 
     void AppControlStateLoop::OnLauncherTimer()
     {
-        log.Debug("Launcher check %d ms", GetTickCount() - m_waitStartTime);
+        log.Trace("Launcher check %d ms", GetTickCount() - m_waitStartTime);
         if (IsLauncherActive())
         {
             log.Debug("Launcher activated");

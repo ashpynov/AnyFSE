@@ -199,13 +199,13 @@ namespace AnyFSE::App::AppService
 
         etwMonitor.OnHomeAppTouched += ([]()
         {
-            log.Debug("Attempt to open Home App detected!" );
+            log.Trace("Attempt to open Home App detected!" );
             AppControlStateLoop.NotifyRemote(AppEvents::OPEN_HOME);
         });
 
         etwMonitor.OnDeviceFormTouched += ([]()
         {
-            log.Debug("Access to DeviceForm detected!" );
+            log.Trace("Access to DeviceForm detected!" );
             AppControlStateLoop.NotifyRemote(AppEvents::OPEN_DEVICE_FORM);
         });
 
