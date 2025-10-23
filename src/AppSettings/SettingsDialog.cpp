@@ -182,7 +182,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
     template<class T>
     FluentDesign::SettingsLine& SettingsDialog::AddSettingsLine(
-        ULONG &top, const wstring& name, const wstring& desc, T& control,
+        ULONG &top, const std::wstring& name, const std::wstring& desc, T& control,
         int height, int padding, int contentMargin, int contentWidth, int contentHeight )
     {
         RECT rect;
@@ -193,9 +193,9 @@ namespace AnyFSE::App::AppSettings::Settings
 
         m_settingLinesList.emplace_back(
             m_theme, m_hDialog, name, desc,
-                m_theme.DpiScale(Layout_MarginLeft),
-                top, width,
-                m_theme.DpiScale(height),
+            m_theme.DpiScale(Layout_MarginLeft),
+            top, width,
+            m_theme.DpiScale(height),
             [&](HWND parent) { return control.Create(parent, 0, 0,
                 m_theme.DpiScale(contentWidth), m_theme.DpiScale(contentHeight)); });
 

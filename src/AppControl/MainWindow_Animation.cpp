@@ -34,7 +34,7 @@ namespace AnyFSE::App::AppControl::Window
 
     BOOL MainWindow::LoadLogoImage()
     {
-        if (!Config::ShowLogo)
+        if (!Config::SpalshShowLogo)
         {
             return FALSE;
         }
@@ -69,7 +69,7 @@ namespace AnyFSE::App::AppControl::Window
         RectF rect = ToRectF(paint.ClientRect());
         graphics.FillRectangle(&backgroundBrush, 0.0f, 0.0f, rect.Width, rect.Height);
 
-        if (Config::ShowLogo && m_pLogoImage && m_pLogoImage->GetLastStatus() == Gdiplus::Ok)
+        if (Config::SpalshShowLogo && m_pLogoImage && m_pLogoImage->GetLastStatus() == Gdiplus::Ok)
         {
             REAL imageWidth = 150 /*pLogoImage->GetWidth()*/ * m_currentZoom;
             REAL imageHeight = 150 /*pLogoImage->GetHeight()*/ * m_currentZoom;
@@ -80,12 +80,14 @@ namespace AnyFSE::App::AppControl::Window
             graphics.DrawImage(m_pLogoImage, xPos, yPos, imageWidth, imageHeight);
         }
 
-        if (Config::ShowText)
+        if (Config::SplashShowText)
         {
             // Display text
-            Font font(L"Arial", 16);
+            Font font(L"Segoe UI", 16);
             SolidBrush textBrush(Gdiplus::Color::White);
-            std::wstring name = wstring(L"Launching ") + Config::Launcher.Name;
+            std::wstring name = Config::SplashCustomText.empty()
+                ? std::wstring(L"Launching ") + Config::Launcher.Name
+                : Config::SplashCustomText;
 
             // Use StringFormat for precise centering
             StringFormat format;
@@ -129,7 +131,7 @@ namespace AnyFSE::App::AppControl::Window
 
     BOOL MainWindow::StartAnimation()
     {
-        if (Config::ShowAnimation && Config::ShowLogo && !m_hTimer && m_pLogoImage)
+        if (Config::SplashShowAnimation && Config::SpalshShowLogo && !m_hTimer && m_pLogoImage)
         {
             m_hTimer = SetTimer(m_hWnd, m_animationTimerId, ZOOM_INTERVAL_MS, NULL);
         }

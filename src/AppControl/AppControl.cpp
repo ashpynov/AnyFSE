@@ -54,7 +54,7 @@ namespace AnyFSE::App::AppControl
 
     bool AppControl::AsControl(LPSTR lpCmdLine)
     {
-        return _strcmpi(lpCmdLine, "Control") == 0;
+        return _strcmpi(lpCmdLine, "/Control") == 0;
     }
 
     bool AppControl::IsServiceAvailable()
@@ -65,7 +65,7 @@ namespace AnyFSE::App::AppControl
 
     bool AppControl::AsSettings(LPSTR lpCmdLine)
     {
-        return _strcmpi(lpCmdLine, "Settings") == 0;
+        return _strcmpi(lpCmdLine, "/Settings") == 0;
     }
 
     bool AppControl::NeedAdmin(LPSTR lpCmdLine)
@@ -108,7 +108,7 @@ namespace AnyFSE::App::AppControl
 
         if (configure)
         {
-            sei.lpParameters = L"Settings";
+            sei.lpParameters = L"/Settings";
         }
 
         if (ShellExecuteEx(&sei))
@@ -147,7 +147,7 @@ namespace AnyFSE::App::AppControl
 
         Config::Load();
 
-        AnyFSE::Logging::LogManager::Initialize("AnyFSE");
+        AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
 
         LPCTSTR className = L"AnyFSE";
 
@@ -159,7 +159,7 @@ namespace AnyFSE::App::AppControl
             return 0;
         }
 
-        if (false && !GamingExperience::ApiIsAvailable)
+        if (!GamingExperience::ApiIsAvailable)
         {
             log.Critical("Fullscreen Gaming API is not detected, exiting\n");
             InitCustomControls();
@@ -212,7 +212,7 @@ namespace AnyFSE::App::AppControl
             return -1;
         }
 
-        if (false && !GamingExperience::ApiIsAvailable)
+        if (!GamingExperience::ApiIsAvailable)
         {
             log.Critical("Fullscreen Gaming API is not detected, exiting\n");
             AppControlStateLoop.NotifyRemote(AppEvents::EXIT_SERVICE);

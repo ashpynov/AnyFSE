@@ -13,6 +13,7 @@
 
 #define byte ::byte
 #include <gdiplus.h>
+
 namespace Gdiplus
 {
 

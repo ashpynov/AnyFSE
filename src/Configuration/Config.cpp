@@ -23,20 +23,22 @@ namespace nlohmann
 namespace AnyFSE::Configuration
 {
     namespace fs = std::filesystem;
+    using jp = json::json_pointer;
 
     LogLevels       Config::LogLevel = LogLevels::Disabled;
-    wstring         Config::LogPath = L"";
+    std::wstring         Config::LogPath = L"";
     bool            Config::CustomSettings;
     LauncherConfig  Config::Launcher;
-    wstring         Config::XBoxProcessName;
+    std::wstring         Config::XBoxProcessName;
     bool            Config::AggressiveMode = false;
     bool            Config::SilentMode = false;
     bool            Config::FseOnStartup = false;
-    bool            Config::ShowAnimation = true;
-    bool            Config::ShowLogo = true;
-    bool            Config::ShowText = true;
+    bool            Config::SplashShowAnimation = true;
+    bool            Config::SpalshShowLogo = true;
+    bool            Config::SplashShowText = true;
+    std::wstring    Config::SplashCustomText = L"";
 
-    wstring Config::GetModulePath()
+    std::wstring Config::GetModulePath()
     {
         wchar_t path[MAX_PATH];
         GetModuleFileNameW(NULL, path, MAX_PATH);
@@ -58,11 +60,8 @@ namespace AnyFSE::Configuration
         return fs::path(path).parent_path().string() + "\\AnyFSE.json";
     }
 
-    void Config::Load()
+    json Config::GetConfig()
     {
-        // LogLevel =
-        // LogPath =
-
         json config = json::parse("{}");
         if (fs::exists(GetConfigFileA()))
         {
@@ -73,79 +72,80 @@ namespace AnyFSE::Configuration
             }
             catch(...) {}
         }
+        return config;
+    }
+
+    void Config::Load()
+    {
+        LogPath = GetModulePath();
+
+        json config = GetConfig();
 
         SilentMode = false;
         FseOnStartup = true;
 
-        AggressiveMode          = config.value("AggressiveMode",  false);
-        XBoxProcessName         = config.value("XBoxProcessName", std::wstring(L"XboxPcApp.exe"));
-        Launcher.StartCommand   = config.value("LauncherPath",    std::wstring());
+        LogLevel                = (LogLevels)config.value(jp("/Log/Level"),  (int)LogLevels::Disabled);
+        LogPath                 = config.value(jp("/Log/Path"),              GetModulePath());
+        AggressiveMode          = config.value(jp("/AggressiveMode"),        false);
+        XBoxProcessName         = config.value(jp("/XBoxProcessName"),       std::wstring(L"XboxPcApp.exe"));
 
-        // GetStartupConfigured();  // TODO: Move to settings!!
+        SplashShowAnimation     = config.value(jp("/Splash/ShowAnimation"),  true);
+        SpalshShowLogo          = config.value(jp("/Splash/ShowLogo"),       true);
+        SplashShowText          = config.value(jp("/Splash/ShowText"),       true);
+        SplashCustomText        = config.value(jp("/Splash/CustomText"),     std::wstring());
 
-        LoadLauncherSettings(config, Launcher.StartCommand, Launcher);
-        CustomSettings = config.value("CustomSettings", Launcher.IsCustom);
+        std::wstring launcher   = config.value(jp("/Launcher/Path"),         std::wstring());
+
+        LoadLauncherSettings(config, launcher, Launcher);
+        CustomSettings = config.value(jp("/Launcher/CustomSettings"), Launcher.IsCustom);
 
     }
 
-    bool Config::LoadLauncherSettings(const json& config, const wstring& path, LauncherConfig& out)
+    bool Config::LoadLauncherSettings(const json& config, const std::wstring &path, LauncherConfig& out)
     {
         GetLauncherDefaults(path, out);
-        if (out.Type == Custom || config.value("CustomSettings", out.IsCustom))
+        if (out.Type == Custom || config.value(jp("/Launcher/CustomSettings"), out.IsCustom))
         {
-            out.StartCommand    = config.value("StartCommand",   out.StartCommand);
-            out.StartArg        = config.value("StartArg",       out.StartArg);
-            out.ProcessName     = config.value("ProcessName",    out.ProcessName);
-            out.WindowTitle     = config.value("WindowTitle",    out.WindowTitle);
-            out.ProcessNameAlt  = config.value("ProcessNameAlt", out.ProcessNameAlt);
-            out.WindowTitleAlt  = config.value("WindowTitleAlt", out.WindowTitleAlt);
-            out.IconFile        = config.value("IconFile",       out.IconFile);
+            out.StartCommand    = config.value(jp("/Launcher/StartCommand"),   out.StartCommand);
+            out.StartArg        = config.value(jp("/Launcher/StartArg"),       out.StartArg);
+            out.ProcessName     = config.value(jp("/Launcher/ProcessName"),    out.ProcessName);
+            out.WindowTitle     = config.value(jp("/Launcher/WindowTitle"),    out.WindowTitle);
+            out.ProcessNameAlt  = config.value(jp("/Launcher/ProcessNameAlt"), out.ProcessNameAlt);
+            out.WindowTitleAlt  = config.value(jp("/Launcher/WindowTitleAlt"), out.WindowTitleAlt);
+            out.IconFile        = config.value(jp("/Launcher/IconFile"),       out.IconFile);
         }
         return true;
     }
 
-    bool Config::LoadLauncherSettings(const wstring& path, LauncherConfig& out)
+    bool Config::LoadLauncherSettings(const std::wstring& path, LauncherConfig& out)
     {
-
-        // TODO  - is it realy need?
-        json config = json::parse("{}");
-        if (fs::exists(GetConfigFileA()))
-        {
-            try
-            {
-                std::ifstream j(GetConfigFileA());
-                config = json::parse(j);
-            }
-            catch(...) {}
-        }
-
-        GetLauncherDefaults(path, out);
-        if (out.Type == Custom || config.value("CustomSettings", out.IsCustom))
-        {
-            out.StartCommand    = config.value("StartCommand",   out.StartCommand);
-            out.StartArg        = config.value("StartArg",       out.StartArg);
-            out.ProcessName     = config.value("ProcessName",    out.ProcessName);
-            out.WindowTitle     = config.value("WindowTitle",    out.WindowTitle);
-            out.ProcessNameAlt  = config.value("ProcessNameAlt", out.ProcessNameAlt);
-            out.WindowTitleAlt  = config.value("WindowTitleAlt", out.WindowTitleAlt);
-            out.IconFile        = config.value("IconFile",       out.IconFile);
-        }
-        return true;
+        return LoadLauncherSettings(GetConfig(), path, out);
     }
 
     void Config::Save()
     {
-        json config;
+        json config = GetConfig();
 
-        config["LauncherPath"]      = Config::Launcher.StartCommand;
-        config["CustomSettings"]    = Config::CustomSettings;
-        config["StartCommand"]      = Config::Launcher.StartCommand;
-        config["StartArg"]          = Config::Launcher.StartArg;
-        config["ProcessName"]       = Config::Launcher.ProcessName;
-        config["WindowTitle"]       = Config::Launcher.WindowTitle;
-        config["ProcessNameAlt"]    = Config::Launcher.ProcessNameAlt;
-        config["WindowTitleAlt"]    = Config::Launcher.WindowTitleAlt;
-        config["IconFile"]          = Config::Launcher.IconFile;
+        config["Launcher"]["Path"]              = Launcher.StartCommand;
+        config["Launcher"]["CustomSettings"]    = CustomSettings;
+        config["Launcher"]["StartCommand"]      = Launcher.StartCommand;
+        config["Launcher"]["StartArg"]          = Launcher.StartArg;
+        config["Launcher"]["ProcessName"]       = Launcher.ProcessName;
+        config["Launcher"]["WindowTitle"]       = Launcher.WindowTitle;
+        config["Launcher"]["ProcessNameAlt"]    = Launcher.ProcessNameAlt;
+        config["Launcher"]["WindowTitleAlt"]    = Launcher.WindowTitleAlt;
+        config["Launcher"]["IconFile"]          = Launcher.IconFile;
+
+        config["Splash"]["ShowAnimation"]       = SplashShowAnimation;
+        config["Splash"]["ShowLogo"]            = SpalshShowLogo;
+        config["Splash"]["ShowText"]            = SplashShowText;
+        config["Splash"]["CustomText"]          = SplashCustomText;
+
+        config["Log"]["Level"]                  = (int) LogLevel;
+    //  config["Log"]["Path"]                   = LogPath;
+
+    //  config["AggressiveMode"]                = AggressiveMode;
+    //  config["XBoxProcessName"]               = XBoxProcessName;
 
         std::ofstream file(GetConfigFileA());
         file << config.dump(4);

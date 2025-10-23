@@ -15,13 +15,13 @@ namespace AnyFSE::Logging
 {
     enum class LogLevels
     {
+        Disabled,
         Trace,
         Debug,
         Info,
         Warn,
         Error,
         Critical,
-        Disabled
     };
 
     class Logger

@@ -26,11 +26,6 @@
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 
-// int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-// {
-//     return AnyFSE::App::AppSettings::AppSettings::WinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
-// }
-
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 {
 
@@ -45,7 +40,9 @@ int WINAPI Main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
         inDialog = true;
 
         Config::Load();
-        AnyFSE::Logging::LogManager::Initialize("AnyFSE.Settings");
+        Config::GetStartupConfigured();
+
+        AnyFSE::Logging::LogManager::Initialize("AnyFSE.Settings", Config::LogLevel, Config::LogPath);
         SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
         int result = (int)AnyFSE::App::AppSettings::Settings::SettingsDialog().Show(hInstance);

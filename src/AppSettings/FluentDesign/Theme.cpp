@@ -174,7 +174,17 @@ namespace FluentDesign
             {
                 This->m_dpi = HIWORD(wParam);
                 This->CreateFonts();
+
                 This->OnDPIChanged.Notify();
+
+                HWND hChild = GetWindow(hWnd, GW_CHILD);
+                while (hChild)
+                {
+                    RECT rc;
+                    GetClientRect(hChild, &rc);
+                    SendMessage(hChild, WM_SIZE, 0, MAKELONG(rc.right - rc.left, rc.bottom - rc.top));
+                    hChild = GetWindow(hChild, GW_HWNDNEXT);
+                }
             }
             break;
             case WM_CTLCOLORDLG:

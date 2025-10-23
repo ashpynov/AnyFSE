@@ -9,7 +9,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "AnyFSE.exe",
-            "args": [],
+            "args": ["/Argument"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin/Debug",
             "environment": [],

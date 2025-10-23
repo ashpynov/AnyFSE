@@ -213,7 +213,7 @@ namespace AnyFSE::App::AppControl::Window
 
     void MainWindow::OnPaint()
     {
-        if ( Config::ShowAnimation || Config::ShowLogo ||  Config::ShowText)
+        if ( Config::SplashShowAnimation || Config::SpalshShowLogo || Config::SplashShowText)
         {
             OnPaintAnimated();
         }

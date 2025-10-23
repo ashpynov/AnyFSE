@@ -14,6 +14,8 @@
 #include "Logging/LogManager.hpp"
 #include "AppService/ProcessEx.hpp"
 
+#include "Configuration/Config.hpp"
+
 #include <windows.h>
 #include <wtsapi32.h>
 #include <UserEnv.h>
@@ -50,7 +52,8 @@ namespace AnyFSE::App::AppService
 
     int WINAPI AppService::ServiceMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine)
     {
-        AnyFSE::Logging::LogManager::Initialize("AnyFSE/Service");
+        Config::Load();
+        AnyFSE::Logging::LogManager::Initialize("AnyFSE/Service", Config::LogLevel, Config::LogPath);
         log.Debug("Service is started (hInstance=%08x)", hInstance);
 
         CreateBackgroundWindow();

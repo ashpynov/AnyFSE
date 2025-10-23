@@ -4,7 +4,7 @@
 
 namespace AnyFSE::Configuration
 {
-    const map<LauncherType, LauncherConfig> Config::LauncherConfigsMap = map<LauncherType, LauncherConfig>{
+    const std::map<LauncherType, LauncherConfig> Config::LauncherConfigsMap = std::map<LauncherType, LauncherConfig>{
         {
             LauncherType::PlayniteFullscreen, {
                 LauncherType::PlayniteFullscreen,
@@ -60,7 +60,7 @@ namespace AnyFSE::Configuration
         }
     };
 
-    bool Config::GetLauncherDefaults(const wstring& path, LauncherConfig& out)
+    bool Config::GetLauncherDefaults(const std::wstring& path, LauncherConfig& out)
     {
         namespace fs = std::filesystem;
         out = LauncherConfig();
@@ -72,7 +72,7 @@ namespace AnyFSE::Configuration
             return true;
         }
 
-        const wstring exe = Unicode::to_lower(fs::path(path).filename().wstring());
+        const std::wstring exe = Unicode::to_lower(fs::path(path).filename().wstring());
         for (auto it = Config::LauncherConfigsMap.begin(); it != Config::LauncherConfigsMap.end(); ++it)
         {
             if (Unicode::to_lower(it->second.StartCommand) == exe)

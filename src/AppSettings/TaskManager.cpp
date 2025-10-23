@@ -75,7 +75,7 @@ namespace AnyFSE::App::AppSettings::TaskManager
             TRY( pActionCollection->Create(TASK_ACTION_EXEC, &pAction));
             TRY( pAction->QueryInterface(IID_IExecAction, (void **)&pExecAction));
             TRY( pExecAction->put_Path(_bstr_t(modulePath)));                   // Use current process path:cite[2]
-            TRY( pExecAction->put_Arguments(_bstr_t(L"--service")));
+            TRY( pExecAction->put_Arguments(_bstr_t(L"/Service")));
 
             TRY(pTask->get_RegistrationInfo(&pRegInfo));
             TRY(pRegInfo->put_Author(_bstr_t(L"Artem Shpynov")));

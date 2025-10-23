@@ -37,7 +37,9 @@ namespace AnyFSE::Logging
 
         if (!LogToConsole && !filePath.empty() && level != LogLevels::Disabled)
         {
-            LogWriter.open(filePath, ios::app | ios::out);
+            std::wstring logName = Unicode::to_wstring(appName);
+            logName.replace(logName.begin(), logName.end(), '//', L'.');
+            LogWriter.open(filePath + L"//" + logName + L".log", ios::app | ios::out);
         }
     }
 

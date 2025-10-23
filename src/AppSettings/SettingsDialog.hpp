@@ -136,7 +136,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         template <class T>
         SettingsLine& AddSettingsLine(
-            ULONG &top, const wstring &name, const wstring &desc,
+            ULONG &top, const std::wstring &name, const std::wstring &desc,
             T &control, int height, int padding, int contentMargin,
             int contentWidth = Layout_CustomSettingsWidth,
             int contentHeight = Layout_Layout_CustomSettingsHeight);
