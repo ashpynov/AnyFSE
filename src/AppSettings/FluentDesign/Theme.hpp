@@ -74,6 +74,10 @@ namespace FluentDesign
             ButtonBorder,
             ButtonBorderHover,
             ButtonBorderPressed,
+
+            ScrollThumb,
+            ScrollThumbStroke,
+            ScrollTrack,
             Max
         };
 

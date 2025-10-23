@@ -22,6 +22,7 @@
 #include "FluentDesign/TextBox.hpp"
 #include "FluentDesign/Button.hpp"
 #include "FluentDesign/SettingsLine.hpp"
+#include "FluentDesign/ScrollView.hpp"
 
 
 #pragma comment(linker, "\"/manifestdependency:type='win32' \
@@ -70,6 +71,7 @@ namespace AnyFSE::App::AppSettings::Settings
         SettingsDialog()
             : m_theme()
             , m_customSettingsState(FluentDesign::SettingsLine::Closed)
+            , m_scrollView(m_theme)
             , m_launcherCombo(m_theme)
             , m_fseOnStartupToggle(m_theme)
             , m_customSettingsToggle(m_theme)
@@ -115,6 +117,7 @@ namespace AnyFSE::App::AppSettings::Settings
         std::list<std::wstring> m_launchersList;
 
         Theme m_theme;
+        ScrollView m_scrollView;
         ComboBox m_launcherCombo;
         Toggle m_fseOnStartupToggle;
         Toggle m_customSettingsToggle;
@@ -128,6 +131,7 @@ namespace AnyFSE::App::AppSettings::Settings
         Button m_closeButton;
         Button m_removeButton;
 
+        HWND m_hScrollView;
         HWND m_hButtonOk;
         HWND m_hButtonClose;
         HWND m_hButtonRemove;

@@ -173,6 +173,9 @@ namespace FluentDesign
             m_colors[ButtonBorder] = GetGrey(63);
             m_colors[ButtonBorderHover] = GetGrey(63);
             m_colors[ButtonBorderPressed] = GetGrey(58);
+            m_colors[ScrollThumb] = GetGrey(157);
+            m_colors[ScrollThumbStroke] = GetGrey(100);
+            m_colors[ScrollTrack] = GetGrey(51);
         }
         else
         {
@@ -231,6 +234,9 @@ namespace FluentDesign
             m_colors[ButtonBorder] = GetGrey(211);
             m_colors[ButtonBorderHover] = GetGrey(211);
             m_colors[ButtonBorderPressed] = GetGrey(236);
+            m_colors[ScrollThumb] = GetGrey(135);
+            m_colors[ScrollThumbStroke] = GetGrey(200);
+            m_colors[ScrollTrack] = GetGrey(251);
         }
     }
 }

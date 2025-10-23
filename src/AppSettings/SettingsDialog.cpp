@@ -75,7 +75,7 @@ namespace AnyFSE::App::AppSettings::Settings
         int screenWidth = GetSystemMetrics(SM_CXSCREEN);
         int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-        int cx = m_theme.DpiScale(800);
+        int cx = m_theme.DpiScale(700);
         int cy = m_theme.DpiScale(720);
 
         // Calculate center position
@@ -192,7 +192,7 @@ namespace AnyFSE::App::AppSettings::Settings
             - m_theme.DpiScale(Layout_MarginRight);
 
         m_settingLinesList.emplace_back(
-            m_theme, m_hDialog, name, desc,
+            m_theme, m_hScrollView, name, desc,
             m_theme.DpiScale(Layout_MarginLeft),
             top, width,
             m_theme.DpiScale(height),
@@ -210,7 +210,23 @@ namespace AnyFSE::App::AppSettings::Settings
 
     void SettingsDialog::OnInitDialog(HWND hwnd)
     {
-        ULONG top = m_theme.DpiScale(Layout_MarginTop);
+
+
+        RECT rect;
+        GetClientRect(m_hDialog, &rect);
+
+        m_hScrollView = m_scrollView.Create(m_hDialog,
+            0,
+            rect.top + m_theme.DpiScale(Layout_MarginTop),
+            rect.right,
+            rect.bottom
+                - m_theme.DpiScale(Layout_MarginBottom)
+                - m_theme.DpiScale(Layout_MarginTop)
+                - m_theme.DpiScale(Layout_ButtonHeight)
+                - m_theme.DpiScale(Layout_ButtonPadding)
+        );
+
+        ULONG top = 0;
 
         FluentDesign::SettingsLine &launcher = AddSettingsLine(top,
             L"Choose home app",
@@ -271,8 +287,6 @@ namespace AnyFSE::App::AppSettings::Settings
             L"Title of app window when it alternative mode have been activated",
             m_titleAltEdit,
             Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
-
-        RECT rect;
 
 
 

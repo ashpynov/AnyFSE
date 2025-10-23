@@ -149,6 +149,8 @@ namespace AnyFSE::App::AppControl
 
         AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
 
+        //ShowSettings();
+
         LPCTSTR className = L"AnyFSE";
 
         HWND hAppWnd = FindWindow(className, NULL);
