@@ -17,7 +17,7 @@
 #include "Logging/LogManager.hpp"
 #include "Tools.hpp"
 #include <algorithm>
-#include <shlobj_core.h> 
+#include <shlobj_core.h>
 
 namespace AnyFSE::Tools
 {
@@ -25,7 +25,7 @@ namespace AnyFSE::Tools
 
     HICON LoadIcon(const std::wstring &icon, int iconSize)
     {
-        if ( icon[0] == L'#')
+        if (icon.empty())
         {
             return 0;
         }
@@ -55,7 +55,7 @@ namespace AnyFSE::Tools
         }
 
         HICON hIcon;
-        
+
         HRESULT hr = SHDefExtractIconW(path.wstring().c_str(), index, 0, &hIcon, NULL, (DWORD)iconSize);
 
         if (!SUCCEEDED(hr) || !hIcon)

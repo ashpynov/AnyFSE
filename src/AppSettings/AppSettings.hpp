@@ -11,16 +11,4 @@
 
 #include <windows.h>
 
-namespace AnyFSE::App::AppSettings
-{
-    class AppSettings
-    {
-        private:
-            static BOOL RequestAdminElevation(bool configure = false);
-
-        public:
-            static void InitCustomControls();
-            static BOOL IsRunningAsAdministrator(bool elevate = false, bool configure = false);
-            static int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
-    };
-}
+__declspec(dllimport) INT_PTR ShowSettingsDialog(HWND hParent, HINSTANCE hAppInstance);

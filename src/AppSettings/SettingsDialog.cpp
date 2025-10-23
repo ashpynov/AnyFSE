@@ -21,7 +21,7 @@
 #include "FluentDesign/Theme.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "TaskManager.hpp"
-#include "AppSettings/AppSettings.hpp"
+#include "Registry.hpp"
 
 #define byte ::byte
 
@@ -37,11 +37,30 @@ namespace AnyFSE::App::AppSettings::Settings
 
     INT_PTR SettingsDialog::Show(HINSTANCE hInstance)
     {
-        INT_PTR res = DialogBoxParam(hInstance,
-                                     MAKEINTRESOURCE(IDD_SETTINGS),
-                                     NULL,
-                                     DialogProc,
-                                     (LPARAM)this);
+        size_t size = sizeof(DLGTEMPLATE) + sizeof(WORD) * 3; // menu, class, title
+        HGLOBAL hGlobal = GlobalAlloc(GHND, size);
+
+        LPDLGTEMPLATE dlgTemplate = (LPDLGTEMPLATE)GlobalLock(hGlobal);
+
+        dlgTemplate->style = DS_MODALFRAME | WS_POPUP | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU;
+        dlgTemplate->dwExtendedStyle = WS_EX_TOPMOST | WS_EX_WINDOWEDGE;
+        dlgTemplate->cdit = 0;  // No controls
+        dlgTemplate->x = 0;
+        dlgTemplate->y = 0;
+        dlgTemplate->cx = 0;
+        dlgTemplate->cy = 0;
+
+        // No menu, class, or title
+        WORD* ptr = (WORD*)(dlgTemplate + 1);
+        *ptr++ = 0; // No menu
+        *ptr++ = 0; // Default dialog class
+        *ptr++ = 0; // No title
+
+        GlobalUnlock(hGlobal);
+
+        INT_PTR res = DialogBoxIndirectParam(hInstance, dlgTemplate, NULL, DialogProc, (LPARAM)this);
+
+        GlobalFree(hGlobal);
         if (res == -1)
         {
             log.Error(log.APIError(),"Cant create settings dialog)");
@@ -52,19 +71,19 @@ namespace AnyFSE::App::AppSettings::Settings
 
     void SettingsDialog::CenterDialog(HWND hwnd)
     {
-        RECT rcDialog;
-        GetWindowRect(hwnd, &rcDialog);
-
         // Get screen dimensions
         int screenWidth = GetSystemMetrics(SM_CXSCREEN);
         int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
+        int cx = m_theme.DpiScale(800);
+        int cy = m_theme.DpiScale(720);
+
         // Calculate center position
-        int x = (screenWidth - (rcDialog.right - rcDialog.left)) / 2;
-        int y = (screenHeight - (rcDialog.bottom - rcDialog.top)) / 2;
+        int x = (screenWidth - cx) / 2;
+        int y = (screenHeight - cy) / 2;
 
         // Move dialog to center
-        SetWindowPos(hwnd, NULL, x, y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+        SetWindowPos(hwnd, NULL, x, y, cx, cy, SWP_NOZORDER);
     }
 
     // Static dialog procedure - routes to instance method
@@ -101,8 +120,8 @@ namespace AnyFSE::App::AppSettings::Settings
         case WM_INITDIALOG:
             {   // To enable immersive dark mode (for a dark title bar)
                 m_theme.Attach(hwnd);
-                OnInitDialog(hwnd);
                 CenterDialog(hwnd);
+                OnInitDialog(hwnd);
             }
             return TRUE;
 
@@ -144,21 +163,6 @@ namespace AnyFSE::App::AppSettings::Settings
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
-            case IDC_CUSTOM:
-                if (HIWORD(wParam) == BN_CLICKED)
-                {
-                    OnCustomChanged(hwnd);
-                }
-                break;
-            case IDC_NOT_AGGRESSIVE_MODE:
-                if (HIWORD(wParam) == BN_CLICKED)
-                {
-                    OnAggressiveChanged(hwnd);
-                }
-                break;
-            case IDC_BROWSE:
-                OnBrowseLauncher(hwnd, 0);
-                break;
             case IDOK:
                 OnOk();
                 EndDialog(hwnd, IDOK);
@@ -400,10 +404,18 @@ namespace AnyFSE::App::AppSettings::Settings
         EndDialog(m_hDialog, IDOK);
     }
 
+    void SettingsDialog::InitCustomControls()
+    {
+        INITCOMMONCONTROLSEX icex;
+        icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+        icex.dwICC = ICC_STANDARD_CLASSES;
+        ::InitCommonControlsEx(&icex);
+    }
+
     void SettingsDialog::OnUninstall()
     {
         // uninstall
-        AppSettings::InitCustomControls();
+        InitCustomControls();
         int nButtonClicked = 0;
         if (SUCCEEDED(TaskDialog(m_hDialog, GetModuleHandle(NULL),
                        L"Uninstall",
@@ -519,24 +531,24 @@ namespace AnyFSE::App::AppSettings::Settings
     }
     void SettingsDialog::SaveSettings()
     {
-        //const std::wstring gamingConfiguration = L"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration";
-        //const std::wstring startupToGamingHome = L"StartupToGamingHome";
-        //const std::wstring gamingHomeApp = L"GamingHomeApp";
-        //const std::wstring xboxApp = L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";
+        const std::wstring gamingConfiguration = L"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration";
+        const std::wstring startupToGamingHome = L"StartupToGamingHome";
+        const std::wstring gamingHomeApp = L"GamingHomeApp";
+        const std::wstring xboxApp = L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";
 
 
         bool removeAnyFSE = false;
 
         if (m_config.Type == LauncherType::None)
         {
-            // Registry::DeleteValue(gamingConfiguration, gamingHomeApp);
-            // Registry::WriteBool(gamingConfiguration, startupToGamingHome, false);
+            Registry::DeleteValue(gamingConfiguration, gamingHomeApp);
+            Registry::WriteBool(gamingConfiguration, startupToGamingHome, false);
             removeAnyFSE = true;
         }
         else
         {
-            // Registry::WriteBool(gamingConfiguration, startupToGamingHome, m_fseOnStartupToggle.GetCheck());
-            // Registry::WriteString(gamingConfiguration, gamingHomeApp, xboxApp);
+            Registry::WriteBool(gamingConfiguration, startupToGamingHome, m_fseOnStartupToggle.GetCheck());
+            Registry::WriteString(gamingConfiguration, gamingHomeApp, xboxApp);
 
             if (m_config.Type == LauncherType::Xbox)
             {

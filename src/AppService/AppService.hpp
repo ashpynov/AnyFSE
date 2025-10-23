@@ -26,7 +26,6 @@ namespace AnyFSE::App::AppService
     public:
         static int WINAPI ServiceMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine);
         static BOOL ExitService();
-        static BOOL ShouldRunAsService(LPSTR lpCmdLine);
 
     private:
         static BOOL LaunchAppInUserSession(DWORD sessionId);

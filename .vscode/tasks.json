@@ -29,10 +29,10 @@
             ],
             "group": {
                 "kind": "build",
-                "isDefault": true
+                "isDefault": false
             }
         },
-                {
+        {
             "type": "shell",
             "label": "Build AnyFSE.Service Release",
             "command": "msbuild.exe",
@@ -47,7 +47,7 @@
             ],
             "group": {
                 "kind": "build",
-                "isDefault": true
+                "isDefault": false
             }
         },
         {
@@ -65,7 +65,25 @@
             ],
             "group": {
                 "kind": "build",
-                "isDefault": true
+                "isDefault": false
+            }
+        },
+        {
+            "type": "shell",
+            "label": "Build AnyFSE Debug",
+            "command": "msbuild.exe",
+            "args": [
+                "AnyFSE.vcxproj",
+                "-property:Configuration=Debug",
+                "-property:Platform=x64",
+                "-target:Build"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
             }
         },
         {
@@ -83,7 +101,7 @@
             ],
             "group": {
                 "kind": "build",
-                "isDefault": true
+                "isDefault": false
             }
         },
         {
@@ -122,5 +140,23 @@
                 "isDefault": true
             }
         },
+        {
+            "type": "shell",
+            "label": "Build AnyFSE Debug",
+            "command": "msbuild.exe",
+            "args": [
+                "AnyFSE.sln",
+                "-property:Configuration=Debug",
+                "-property:Platform=x64",
+                "-target:Build"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
     ]
 }

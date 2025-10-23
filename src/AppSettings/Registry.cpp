@@ -22,7 +22,7 @@ namespace AnyFSE::Tools
 {
     namespace fs = std::filesystem;
 
-        HKEY Registry::GetRootKey(const std::wstring &subKey, std::wstring &actualPath)
+    HKEY Registry::GetRootKey(const std::wstring &subKey, std::wstring &actualPath)
     {
         // Extract root key from subKey (e.g., "HKEY_CURRENT_USER\\Software\\MyApp" -> HKEY_CURRENT_USER)
         size_t pos = subKey.find('\\');

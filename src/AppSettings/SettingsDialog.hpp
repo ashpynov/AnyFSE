@@ -87,6 +87,7 @@ namespace AnyFSE::App::AppSettings::Settings
     private:
         static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
         INT_PTR InstanceDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+        void InitCustomControls();
 
         void UpdateCombo();
         void UpdateCustomSettings();
@@ -96,6 +97,7 @@ namespace AnyFSE::App::AppSettings::Settings
         void OnBrowseLauncher(HWND hwnd, int editId);
         void OnLauncherChanged(HWND hwnd);
         void OnOk();
+
         void OnUninstall();
         void OnCustomChanged(HWND hwnd);
         void OnAggressiveChanged(HWND hwnd);

@@ -141,7 +141,7 @@ namespace AnyFSE::Logging
 
             for (const auto &line : lines)
             {
-                cout << left << setw(48) << consolePrefix << "| " << line << endl;
+                cout << left << setw(58) << consolePrefix << "| " << line << endl;
             }
             std::cout.flush();
         }

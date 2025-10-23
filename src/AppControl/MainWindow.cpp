@@ -202,7 +202,7 @@ namespace AnyFSE::App::AppControl::Window
         stData.hWnd = m_hWnd;
         stData.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
         stData.uCallbackMessage = WM_TRAY;
-        stData.hIcon = Tools::LoadIcon(Config::Launcher.IconFile, 16);
+        stData.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON));
         LoadStringSafe(IDS_TIP, stData.szTip, _countof(stData.szTip));
         if (!Shell_NotifyIcon(NIM_ADD, &stData))
         {
@@ -271,31 +271,20 @@ namespace AnyFSE::App::AppControl::Window
         switch (command)
         {
         case ID_CONFIGURE:
-            // {
-            //     if (!AppControl::IsRunningAsAdministrator(true, true))
-            //     {
-            //         return FALSE;
-            //     }
-            //     static bool inDialog = false;
-
-            //     if (inDialog) return FALSE;
-
-            //     inDialog = true;
-            //     SettingsDialog dialog; // Dialog Wipe
-            //     INT_PTR result = dialog.Show(WC.hInstance);
-            //     if ( result == IDOK)
-            //     {
-            //         FreeResources();
-            //         m_result = ERROR_RESTART_APPLICATION;
-            //         DestroyWindow(m_hWnd);
-            //     }
-            //     else if ( result == IDABORT)
-            //     {
-            //         m_result = ERROR_PRODUCT_UNINSTALLED;
-            //         DestroyWindow(m_hWnd);
-            //     }
-            //     inDialog = false;
-            // }
+            {
+                int result = AppControl::ShowSettings();
+                if ( result == IDOK)
+                {
+                    FreeResources();
+                    m_result = ERROR_RESTART_APPLICATION;
+                    DestroyWindow(m_hWnd);
+                }
+                else if ( result == IDABORT)
+                {
+                    m_result = ERROR_PRODUCT_UNINSTALLED;
+                    DestroyWindow(m_hWnd);
+                }
+            }
 
             return FALSE;
         case ID_QUIT:

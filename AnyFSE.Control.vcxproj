@@ -2,6 +2,8 @@
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="Globals">
     <TargetName>AnyFSE.Control</TargetName>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <TargetExt>.dll</TargetExt>
     <ProjectGuid>{A3B8C1D2-E4F5-6789-ABCD-EF0123456789}</ProjectGuid>
   </PropertyGroup>
   <Import Project="AnyFSE.vcxproj.props" />
@@ -9,6 +11,7 @@
   <ItemDefinitionGroup>
     <Link>
       <DelayLoadDLLs>api-ms-win-gaming-experience-l1-1-0.dll;GdiPlus.dll</DelayLoadDLLs>
+      <ModuleDefinitionFile>src\AppControl\AppControl.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
 
@@ -18,15 +21,15 @@
     <ClCompile Include="src\Configuration\*.cpp" />
     <ClCompile Include="src\Logging\*.cpp" />
     <ClCompile Include="src\Tools\*.cpp" />
+    <ClCompile Remove="src\App\Application.cpp" />
   </ItemGroup>
-  <!-- <ItemGroup>
+  <ItemGroup>
+    <None Include="src\AppControl\AppControl.def" />
+  </ItemGroup>
+  <ItemGroup>
     <ClInclude Include="src\resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\Resource.rc" />
   </ItemGroup>
-  <ItemGroup>
-    <Image Include="media\AnyFSEIcon.ico" />
-    <Image Include="media\playnite-logo-white-150.png" />
-  </ItemGroup> -->
 </Project>

@@ -5,29 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run AnyFSE.Service",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "AnyFSE.Service.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Debug",
-            "environment": [],
-            "preLaunchTask": "Build AnyFSE.Service Debug"
-        },
-        {
-            "name": "Run AnyFSE.Control",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "AnyFSE.Control.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Debug",
-            "environment": [],
-            "preLaunchTask": "Build AnyFSE.Control Debug"
-        },
-        {
-            "name": "Run AnyFSE.Settings",
+            "name": "Debug AnyFSE",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "AnyFSE.exe",
@@ -35,7 +13,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin/Debug",
             "environment": [],
-            "preLaunchTask": "Build AnyFSE.Settings Debug"
+            "preLaunchTask": "Build AnyFSE Debug"
         }
     ]
 }

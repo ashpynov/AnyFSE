@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <sddl.h>
 #include "App/IPCChannel.hpp"
+#include "IPCChannel.hpp"
 
 namespace AnyFSE::App
 {
@@ -76,6 +77,11 @@ namespace AnyFSE::App
         TRACE("Channel destroyed");
     }
 
+    bool IPCChannel::IsServerAvailable(const std::wstring& name)
+    {
+        std::wstring fullPipeName = L"\\\\.\\pipe\\Global\\" + name;
+        return WaitNamedPipe(fullPipeName.c_str(), 0);
+    }
 
     // Connection state queries
     IPCChannel::ConnectionState IPCChannel::GetConnectionState() const

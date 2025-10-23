@@ -20,7 +20,14 @@
 #pragma comment(lib, "wtsapi32.lib")
 #pragma comment(lib, "userenv.lib")
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
+{
+
+    return TRUE;
+}
+
+__declspec(dllexport)
+int WINAPI Main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     return AnyFSE::App::AppService::AppService::ServiceMain(hInstance, hPrevInstance, lpCmdLine);
 }
@@ -41,14 +48,9 @@ namespace AnyFSE::App::AppService
         return true;
     }
 
-    BOOL AppService::ShouldRunAsService(LPSTR lpCmdLine)
-    {
-        return !_strcmpi(lpCmdLine, "--service");
-    }
-
     int WINAPI AppService::ServiceMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine)
     {
-        AnyFSE::Logging::LogManager::Initialize("AnyFSEService");
+        AnyFSE::Logging::LogManager::Initialize("AnyFSE/Service");
         log.Debug("Service is started (hInstance=%08x)", hInstance);
 
         CreateBackgroundWindow();
@@ -71,12 +73,12 @@ namespace AnyFSE::App::AppService
         WNDCLASSEX wc = {};
         wc.cbSize = sizeof(WNDCLASSEX);
         wc.lpfnWndProc = BackgroundWindowProc;
-        wc.lpszClassName = L"AnyFSELogonMonitor";
+        wc.lpszClassName = L"AnyFSEService";
         wc.hInstance = GetModuleHandle(NULL);
 
         RegisterClassEx(&wc);
 
-        m_hwnd = CreateWindowEx(0, L"AnyFSELogonMonitor",
+        m_hwnd = CreateWindowEx(0, L"AnyFSEService",
                                   L"Early start of AnyFSE",  // Descriptive title
                                   0, 0, 0, 0, 0, HWND_MESSAGE, NULL, NULL, NULL);
 
@@ -142,7 +144,7 @@ namespace AnyFSE::App::AppService
         wchar_t modulePath[MAX_PATH];
         GetModuleFileName(NULL, modulePath, MAX_PATH);
 
-        std::wstring fullCommand = std::wstring(L"\"") + modulePath + L"\" --application";
+        std::wstring fullCommand = std::wstring(L"\"") + modulePath + L"\" /Control";
 
         // Create writable buffer for command line
         std::vector<wchar_t> cmdLine(MAX_PATH);

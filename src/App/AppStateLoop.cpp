@@ -9,7 +9,7 @@ namespace AnyFSE::App::StateLoop
 
     AppStateLoop::AppStateLoop(bool isServer)
         : m_ipcChannel(L"AnyFSEPipe", isServer)
-        , _log(LogManager::GetLogger(isServer ? "Manager/SrvCycle" :  "Manager/AppCycle" ))
+        , _log(LogManager::GetLogger("StateLoop"))
     {
         m_hQueueCondition = CreateEvent(NULL, FALSE, FALSE, NULL);
         m_ipcChannel.SetCancelEvent(m_hQueueCondition);

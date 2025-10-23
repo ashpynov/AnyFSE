@@ -29,6 +29,8 @@ namespace AnyFSE::App
         IPCChannel(const std::wstring &name, bool isServer, HANDLE cancelEvent = NULL);
         ~IPCChannel();
 
+        static bool IsServerAvailable(const std::wstring &name);
+
         // Connection state queries
         ConnectionState GetConnectionState() const;
         bool IsConnected() const;
