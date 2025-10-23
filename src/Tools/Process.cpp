@@ -46,14 +46,14 @@ namespace AnyFSE::Tools::Process
 
         // Convert to lowercase for case-insensitive comparison
         std::transform(targetName.begin(), targetName.end(), targetName.begin(), ::towlower);
-        
+
         std::set<std::wstring> targetNames;
         std::wstringstream ss(targetName);
         std::wstring token;
-        
-        while (std::getline(ss, token, L';')) 
-        { 
-            if (!token.empty()) 
+
+        while (std::getline(ss, token, L';'))
+        {
+            if (!token.empty())
             {
                 targetNames.insert(token);
             }
@@ -102,10 +102,10 @@ namespace AnyFSE::Tools::Process
         std::set<std::wstring> targetNames;
         std::wstringstream ss(targetName);
         std::wstring token;
-        
-        while (std::getline(ss, token, L';')) 
-        { 
-            if (!token.empty()) 
+
+        while (std::getline(ss, token, L';'))
+        {
+            if (!token.empty())
             {
                 targetNames.insert(token);
             }
@@ -124,41 +124,6 @@ namespace AnyFSE::Tools::Process
 
         CloseHandle(hSnapshot);
         return result.size();
-    }
-
-    HRESULT Kill(const std::wstring &processName)
-    {
-        DWORD processId = FindFirstByName(processName);
-        if (processId == 0)
-        {
-            return ERROR_PROC_NOT_FOUND;
-        }
-
-        return Kill(processId);
-    }
-
-    HRESULT Kill(DWORD processId)
-    {
-        if (processId == 0)
-        {
-            return ERROR_INVALID_PARAMETER;
-        }
-
-        HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, processId);
-        if (hProcess == NULL)
-        {
-            return GetLastError();
-        }
-
-        if (!TerminateProcess(hProcess, 0))
-        {
-            HRESULT error = GetLastError();
-            CloseHandle(hProcess);
-            return error;
-        }
-
-        CloseHandle(hProcess);
-        return ERROR_SUCCESS;
     }
 
     DWORD Start(const std::wstring &command, const std::wstring &arguments)

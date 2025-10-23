@@ -8,19 +8,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details. <https://www.gnu.org/licenses/>
 
-
-#pragma once
-
-#include <string>
-#include <set>
-#include <windows.h>
-
-namespace AnyFSE::Tools::Process
+namespace AnyFSE::App::AppSettings::TaskManager
 {
-    DWORD FindFirstByName(const std::wstring& processName);
-    DWORD Start(const std::wstring &command, const std::wstring &arguments);
-    HWND  GetWindow(const std::set<DWORD>& processIds, const std::wstring& title);
-    size_t FindAllByName(const std::wstring &processName, std::set<DWORD> & result);
-}
+    bool CreateTask();
 
-namespace Process = AnyFSE::Tools::Process;
+    bool RemoveTask();
+}

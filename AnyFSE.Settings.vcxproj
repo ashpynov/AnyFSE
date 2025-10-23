@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <TargetName>AnyFSE</TargetName>
+    <ProjectGuid>{7F3A9B1C-82D4-4E5F-91A6-B8C7D2E4F619}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="AnyFSE.vcxproj.props" />
+
+  <ItemDefinitionGroup>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <ClCompile Include="src\App\*.cpp" />
+    <ClCompile Include="src\AppSettings\**\*.cpp" />
+    <ClCompile Include="src\AppControl\GamingExperience.cpp" />
+    <ClCompile Include="src\Configuration\*.cpp" />
+    <ClCompile Include="src\Logging\*.cpp" />
+    <ClCompile Include="src\Tools\*.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="src\Resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="media\AnyFSEIcon.ico" />
+    <Image Include="media\playnite-logo-white-150.png" />
+  </ItemGroup>
+</Project>

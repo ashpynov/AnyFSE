@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <list>
 #include <map>
+#include "Logging/Logger.hpp"
 
 using namespace std;
 
@@ -30,9 +31,9 @@ namespace AnyFSE::Configuration
         wstring ProcessNameAlt;
         wstring WindowTitleAlt;
         wstring IconFile;
-        bool isTrayAggressive;
-        bool isCustom;
-        bool isPortable;
+        bool IsTrayAggressive;
+        bool IsCustom;
+        bool IsPortable;
     };
 
     class Config
@@ -42,11 +43,12 @@ namespace AnyFSE::Configuration
 
             Config() {};
 
-            static void SetDefault();
-
+            // Unsafe
+            static void GetStartupConfigured();
             static bool IsFseOnStartupConfigured();
             static bool IsXboxConfigured();
-
+            static bool FindInstalledLaunchers(list<wstring>& found);
+            static wstring GetXboxPath(const std::wstring &launcher);
             static void FindLocal(list<wstring>& found);
             static void FindPlaynite(list<wstring>& found);
             static void FindSteam(list<wstring>& found);
@@ -54,30 +56,26 @@ namespace AnyFSE::Configuration
             static void FindArmoryCrate(list<wstring>& found);
 
         public:
+            // Unsafe
+            static void UpdatePortableLauncher(LauncherConfig &out);
+            static bool FindLaunchers(std::list<wstring> &found);
 
+            // safe
             static wstring GetModulePath();
             static void Load();
+            static void Save();
 
             static bool IsConfigured();
 
-            static wstring GetCurrentLauncher();
-            static bool FindLaunchers(std::list<wstring>& found);
-            static bool FindInstalledLaunchers(list<wstring>& found);
             static bool GetLauncherDefaults(const wstring& path, LauncherConfig& out);
-            static bool GetLauncherSettings(const wstring& name, LauncherConfig& out);
+            static bool LoadLauncherSettings(const wstring& name, LauncherConfig& out);
 
-            static LauncherType Type;
-            static wstring LauncherName;
-            static bool    LauncherCustomSettings;
-            static wstring LauncherWindowName;
-            static wstring LauncherIcon;
-            static wstring LauncherProcessName;
-            static wstring LauncherStartCommand;
-            static wstring LauncherStartCommandArgs;
-            static wstring LauncherProcessNameAlt;
-            static wstring LauncherWindowNameAlt;
-            static bool LauncherIsTrayAggressive;
-            
+            static LauncherConfig Launcher;
+
+            static bool    CustomSettings;
+
+            static LogLevels LogLevel;
+            static wstring LogPath;
             static wstring XBoxProcessName;
 
             static bool AggressiveMode;
@@ -87,7 +85,7 @@ namespace AnyFSE::Configuration
             static bool ShowAnimation;
             static bool ShowLogo;
             static bool ShowText;
-            
+
     };
 }
 

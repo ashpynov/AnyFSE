@@ -13,14 +13,15 @@
 
 namespace AnyFSE::Logging
 {
-    enum class LogLevel
+    enum class LogLevels
     {
         Trace,
         Debug,
         Info,
         Warn,
         Error,
-        Critical
+        Critical,
+        Disabled
     };
 
     class Logger
@@ -28,7 +29,7 @@ namespace AnyFSE::Logging
         friend class LogManager;
     private:
         std::string m_loggerName;
-        void WriteMessage(LogLevel level, const char * format, va_list args = NULL);           
+        void WriteMessage(LogLevels level, const char * format, va_list args = NULL);
 
     public:
         Logger(const std::string& name);

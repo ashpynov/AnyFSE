@@ -9,18 +9,18 @@
 // GNU General Public License for more details. <https://www.gnu.org/licenses/>
 
 
-#pragma once
-
-#include <string>
-#include <set>
 #include <windows.h>
 
-namespace AnyFSE::Tools::Process
+namespace AnyFSE::App::AppSettings
 {
-    DWORD FindFirstByName(const std::wstring& processName);
-    DWORD Start(const std::wstring &command, const std::wstring &arguments);
-    HWND  GetWindow(const std::set<DWORD>& processIds, const std::wstring& title);
-    size_t FindAllByName(const std::wstring &processName, std::set<DWORD> & result);
-}
+    class AppSettings
+    {
+        private:
+            static BOOL RequestAdminElevation(bool configure = false);
 
-namespace Process = AnyFSE::Tools::Process;
+        public:
+            static void InitCustomControls();
+            static BOOL IsRunningAsAdministrator(bool elevate = false, bool configure = false);
+            static int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
+    };
+}

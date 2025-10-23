@@ -16,10 +16,28 @@
     "tasks": [
         {
             "type": "shell",
-            "label": "Build debug project",
+            "label": "Build AnyFSE.Service Debug",
             "command": "msbuild.exe",
             "args": [
-                "AnyFSE.vcxproj",
+                "AnyFSE.Service.vcxproj",
+                "-property:Configuration=Debug",
+                "-property:Platform=x64",
+                "-target:Build"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+                {
+            "type": "shell",
+            "label": "Build AnyFSE.Control Debug",
+            "command": "msbuild.exe",
+            "args": [
+                "AnyFSE.Control.vcxproj",
                 "-property:Configuration=Debug",
                 "-property:Platform=x64",
                 "-target:Build"
@@ -34,10 +52,28 @@
         },
         {
             "type": "shell",
-            "label": "Build release project",
+            "label": "Build AnyFSE.Settings Debug",
             "command": "msbuild.exe",
             "args": [
-                "AnyFSE.vcxproj",
+                "AnyFSE.Settings.vcxproj",
+                "-property:Configuration=Debug",
+                "-property:Platform=x64",
+                "-target:Build"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "Build AnyFSE Release",
+            "command": "msbuild.exe",
+            "args": [
+                "AnyFSE.sln",
                 "-property:Configuration=Release",
                 "-property:Platform=x64",
                 "-target:Clean;Build"
@@ -49,6 +85,24 @@
                 "kind": "build",
                 "isDefault": false
             }
-        }
+        },
+        {
+            "type": "shell",
+            "label": "Clean Debug",
+            "command": "msbuild.exe",
+            "args": [
+                "AnyFSE.sln",
+                "-property:Configuration=Debug",
+                "-property:Platform=x64",
+                "-target:Clean"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
     ]
 }

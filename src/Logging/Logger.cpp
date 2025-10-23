@@ -53,16 +53,16 @@ namespace AnyFSE::Logging
     {\
         va_list args;\
         va_start(args, format);\
-        WriteMessage(LogLevel::__level__, format, args);\
+        WriteMessage(LogLevels::__level__, format, args);\
         va_end(args);\
     }\
     void Logger::__level__(const std::exception &exception, const char * format, ...) \
     {\
         va_list args;\
         va_start(args, format);\
-        WriteMessage(LogLevel::__level__, format, args);\
+        WriteMessage(LogLevels::__level__, format, args);\
         va_end(args);\
-        WriteMessage(LogLevel::__level__, exception.what());\
+        WriteMessage(LogLevels::__level__, exception.what());\
     }
 
     LOGGER(Trace)
@@ -72,7 +72,7 @@ namespace AnyFSE::Logging
     LOGGER(Error)
     LOGGER(Critical)
 
-    void Logger::WriteMessage(LogLevel level, const char * format, va_list args)
+    void Logger::WriteMessage(LogLevels level, const char * format, va_list args)
     {
         LogManager::WriteMessage(level, m_loggerName, format, args);
     }

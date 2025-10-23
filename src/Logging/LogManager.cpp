@@ -21,11 +21,11 @@ namespace AnyFSE::Logging
 {
     std::ofstream LogManager::LogWriter;
     std::mutex LogManager::WriteLock;
-    LogLevel LogManager::Level;
+    LogLevels LogManager::Level;
     std::string LogManager::ApplicationName;
     bool LogManager::LogToConsole;
 
-    void LogManager::Initialize(const string &appName)
+    void LogManager::Initialize(const string &appName, LogLevels level, const std::wstring& filePath)
     {
         if (!ApplicationName.empty())
         {
@@ -34,17 +34,11 @@ namespace AnyFSE::Logging
 
         LogToConsole = IsDebuggerPresent() != 0;
         ApplicationName = appName;
-        Level = LogLevel::Trace;
+        Level = level;
 
-        if (!LogToConsole)
+        if (!LogToConsole && !filePath.empty() && level != LogLevels::Disabled)
         {
-            const wstring root = L"HKLM\\Software\\AnyFSE\\Logger\\" + Unicode::to_wstring(appName);
-            wstring filePath = Registry::ReadString(root, L"FilePath", L"");
-            Level = (LogLevel)Registry::ReadDWORD(root, L"Level", (DWORD)LogLevel::Error);
-            if (!filePath.empty())
-            {
-                LogWriter.open(filePath, ios::app | ios::out);
-            }
+            LogWriter.open(filePath, ios::app | ios::out);
         }
     }
 
@@ -54,21 +48,21 @@ namespace AnyFSE::Logging
     }
 
     // Helper methods
-    const char *LogManager::LogLevelToString(LogLevel level)
+    const char *LogManager::LogLevelToString(LogLevels level)
     {
         switch (level)
         {
-        case LogLevel::Trace:
+        case LogLevels::Trace:
             return "Trace";
-        case LogLevel::Debug:
+        case LogLevels::Debug:
             return "Debug";
-        case LogLevel::Info:
+        case LogLevels::Info:
             return "Info";
-        case LogLevel::Warn:
+        case LogLevels::Warn:
             return "Warn";
-        case LogLevel::Error:
+        case LogLevels::Error:
             return "Error";
-        case LogLevel::Critical:
+        case LogLevels::Critical:
             return "Critical";
         default:
             return "Unknown";
@@ -94,7 +88,7 @@ namespace AnyFSE::Logging
         return std::string(buffer.data(), size);
     }
     // Main logging method
-    void LogManager::WriteMessage(LogLevel level, const string &loggerName, const char *format, va_list args)
+    void LogManager::WriteMessage(LogLevels level, const string &loggerName, const char *format, va_list args)
     {
         if (level < Level || !(LogToConsole || LogWriter.is_open()))
         {
