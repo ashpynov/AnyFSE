@@ -20,6 +20,7 @@
 #include "Configuration/Config.hpp"
 #include "Tools/Process.hpp"
 
+#include "AppSettings/SettingsDialog.hpp"
 #include "AppSettings/AppSettings.hpp"
 #include "AppControl/GamingExperience.hpp"
 
@@ -112,8 +113,8 @@ namespace AnyFSE::App::AppSettings
 
         AnyFSE::Logging::LogManager::Initialize("AnyFSE");
 
-        LPCTSTR className = L"AnyFSE";
-        HWND hAppWnd = FindWindow(className, NULL);
+        // LPCTSTR className = L"AnyFSE";
+        // HWND hAppWnd = FindWindow(className, NULL);
 
         // if (hAppWnd)
         // {
@@ -122,20 +123,40 @@ namespace AnyFSE::App::AppSettings
         //     return 0;
         // }
 
-        if (!GamingExperience::ApiIsAvailable)
-        {
-            log.Critical("Fullscreen Gaming API is not detected, exiting\n");
-            InitCustomControls();
-            TaskDialog(NULL, hInstance,
-                       L"Error",
-                       L"Gaming Fullscreen Experiense API is not detected",
-                       L"Fullscreen experiense is not available on your version of windows.\n"
-                       L"It is supported since Windows 25H2 version for Handheld Devices",
-                       TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
-            return -1;
-        }
+        // if (!GamingExperience::ApiIsAvailable)
+        // {
+        //     log.Critical("Fullscreen Gaming API is not detected, exiting\n");
+        //     InitCustomControls();
+        //     TaskDialog(NULL, hInstance,
+        //                L"Error",
+        //                L"Gaming Fullscreen Experiense API is not detected",
+        //                L"Fullscreen experiense is not available on your version of windows.\n"
+        //                L"It is supported since Windows 25H2 version for Handheld Devices",
+        //                TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
+        //     return -1;
+        // }
 
         log.Debug("Application is started (hInstance=%08x)", hInstance);
+
+
+        static bool inDialog = false;
+
+        if (inDialog) return FALSE;
+
+        inDialog = true;
+        SettingsDialog dialog; // Dialog Wipe
+        INT_PTR result = dialog.Show(GetModuleHandle(NULL));
+        if ( result == IDOK)
+        {
+
+        }
+        else if ( result == IDABORT)
+        {
+
+        }
+        inDialog = false;
+
+        return 0;
     }
 };
 

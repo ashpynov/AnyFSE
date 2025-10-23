@@ -9,7 +9,6 @@
 #include <iomanip>
 #include <cstdarg>
 #include <vector>
-#include "Tools/Registry.hpp"
 #include "Tools/Unicode.hpp"
 
 using namespace std;

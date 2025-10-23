@@ -4,8 +4,10 @@
 #include <list>
 #include <map>
 #include "Logging/Logger.hpp"
+#include "nlohmann/json_fwd.hpp"
 
 using namespace std;
+using json = nlohmann::json;
 
 namespace AnyFSE::Configuration
 {
@@ -38,7 +40,7 @@ namespace AnyFSE::Configuration
 
     class Config
     {
-            static const wstring Root;
+            //static const wstring Root;
             static const map<LauncherType, LauncherConfig> LauncherConfigsMap;
 
             Config() {};
@@ -62,13 +64,16 @@ namespace AnyFSE::Configuration
 
             // safe
             static wstring GetModulePath();
+
+            static string GetConfigFileA();
             static void Load();
+            static bool LoadLauncherSettings(const nlohmann::json &config, const wstring &path, LauncherConfig &out);
+            static bool LoadLauncherSettings(const wstring &path, LauncherConfig &out);
             static void Save();
 
             static bool IsConfigured();
 
             static bool GetLauncherDefaults(const wstring& path, LauncherConfig& out);
-            static bool LoadLauncherSettings(const wstring& name, LauncherConfig& out);
 
             static LauncherConfig Launcher;
 

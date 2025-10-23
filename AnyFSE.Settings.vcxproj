@@ -7,6 +7,9 @@
   <Import Project="AnyFSE.vcxproj.props" />
 
   <ItemDefinitionGroup>
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary> <!-- Prevent Defender warn -->
+    </ClCompile>
   </ItemDefinitionGroup>
 
   <ItemGroup>

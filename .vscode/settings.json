@@ -8,9 +8,10 @@
     },
     "explorer.excludeGitIgnore": true,
     "files.associations": {
-        "*.reds": "redscript",
+        "Makefile": "makefile",
         "*.script": "lua",
         "*.xaml": "xml",
+        "*.reds": "redscript",
         "xtree": "cpp",
         "xutility": "cpp",
         "xstring": "cpp",
@@ -84,6 +85,12 @@
         "condition_variable": "cpp",
         "deque": "cpp",
         "queue": "cpp",
-        "set": "cpp"
+        "set": "cpp",
+        "any": "cpp",
+        "array": "cpp",
+        "numeric": "cpp",
+        "ranges": "cpp",
+        "span": "cpp",
+        "valarray": "cpp"
     }
 }

@@ -34,6 +34,24 @@
         },
                 {
             "type": "shell",
+            "label": "Build AnyFSE.Service Release",
+            "command": "msbuild.exe",
+            "args": [
+                "AnyFSE.Service.vcxproj",
+                "-property:Configuration=Release",
+                "-property:Platform=x64",
+                "-target:Clean;Build"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
             "label": "Build AnyFSE.Control Debug",
             "command": "msbuild.exe",
             "args": [
@@ -83,7 +101,7 @@
             ],
             "group": {
                 "kind": "build",
-                "isDefault": false
+                "isDefault": true
             }
         },
         {

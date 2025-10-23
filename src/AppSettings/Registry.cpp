@@ -15,8 +15,8 @@
 #include <filesystem>
 
 #include "Registry.hpp"
-#include "Tools.hpp"
-#include "Unicode.hpp"
+#include "Tools/Tools.hpp"
+#include "Tools/Unicode.hpp"
 
 namespace AnyFSE::Tools
 {

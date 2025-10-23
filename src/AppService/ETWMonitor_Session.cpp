@@ -189,21 +189,20 @@ namespace AnyFSE::App::AppService
         {
             if (m_pTraceProperties)
             {
-#if 0  // To prevent Defender Warn
-                EnableTraceEx2(
-                    m_sessionHandle,
-                    &ProcessProviderGuid,
-                    EVENT_CONTROL_CODE_DISABLE_PROVIDER,
-                    TRACE_LEVEL_INFORMATION,
-                    0x0, 0, 0, NULL);
+                // EnableTraceEx2(
+                //     m_sessionHandle,
+                //     &ProcessProviderGuid,
+                //     EVENT_CONTROL_CODE_DISABLE_PROVIDER,
+                //     TRACE_LEVEL_INFORMATION,
+                //     0x0, 0, 0, NULL);
 
-                EnableTraceEx2(
-                    m_sessionHandle,
-                    &RegistryProviderGuid,
-                    EVENT_CONTROL_CODE_DISABLE_PROVIDER,
-                    TRACE_LEVEL_INFORMATION,
-                    0x0, 0, 0, NULL);
-#endif
+                // EnableTraceEx2(
+                //     m_sessionHandle,
+                //     &RegistryProviderGuid,
+                //     EVENT_CONTROL_CODE_DISABLE_PROVIDER,
+                //     TRACE_LEVEL_INFORMATION,
+                //     0x0, 0, 0, NULL);
+
                 StopTrace(m_sessionHandle, m_sessionName.c_str(), m_pTraceProperties);
                 if (m_pTraceProperties) free(m_pTraceProperties);
                 m_pTraceProperties = nullptr;

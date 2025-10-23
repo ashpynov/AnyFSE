@@ -15,7 +15,6 @@
 #include <uxtheme.h>
 #include "Tools/Tools.hpp"
 #include "Tools/Unicode.hpp"
-// #include "Tools/Registry.hpp"
 #include "Logging/LogManager.hpp"
 #include "SettingsDialog.hpp"
 #include "Configuration/Config.hpp"

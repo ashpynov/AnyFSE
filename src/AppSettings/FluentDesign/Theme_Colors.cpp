@@ -15,7 +15,7 @@
 #include <dwmapi.h>
 #include <commctrl.h>
 #include <algorithm>
-#include "Tools/Registry.hpp"
+#include "AppSettings/Registry.hpp"
 
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "Gdiplus.lib")

@@ -8,7 +8,7 @@
 
   <ItemDefinitionGroup>
     <Link>
-      <DelayLoadDLLs>api-ms-win-gaming-experience-l1-1-0.dll;tdh.dll;dwmapi.dll;comctl32.dll;GdiPlus.dll;advapi32.dll</DelayLoadDLLs>
+      <DelayLoadDLLs>api-ms-win-gaming-experience-l1-1-0.dll;GdiPlus.dll</DelayLoadDLLs>
     </Link>
   </ItemDefinitionGroup>
 

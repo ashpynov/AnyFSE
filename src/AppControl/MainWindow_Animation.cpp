@@ -19,11 +19,13 @@
 #include "Tools/GdiPlus.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 
+#pragma comment(lib, "Gdiplus.lib")
 
 namespace AnyFSE::App::AppControl::Window
 {
     bool MainWindow::InitAnimationResources()
     {
+        m_pLogoImage = nullptr;
         Gdiplus::GdiplusStartupInput gdiplusStartupInput;
         GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
         LoadLogoImage();
