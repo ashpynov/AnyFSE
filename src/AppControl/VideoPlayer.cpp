@@ -1,4 +1,6 @@
+#include "Logging/LogManager.hpp"
 #include "VideoPlayer.hpp"
+#include "Tools/Unicode.hpp"
 
 #include <filesystem>
 #include <algorithm>
@@ -14,6 +16,8 @@
 
 namespace AnyFSE::App::AppControl::Window
 {
+    Logger log = LogManager::GetLogger("VideoPlayer");
+
     // IUnknown methods
     HRESULT SimpleVideoPlayer::QueryInterface(REFIID riid, void **ppv)
     {
@@ -51,8 +55,22 @@ namespace AnyFSE::App::AppControl::Window
     {
         switch (pEventHeader->eEventType)
         {
+            case MFP_EVENT_TYPE_MEDIAITEM_CREATED:
+            {
+                MFP_MEDIAITEM_CREATED_EVENT* pEvent = (MFP_MEDIAITEM_CREATED_EVENT*)pEventHeader;
+                if (pEventHeader->pMediaPlayer && pEvent->pMediaItem)
+                {
+                    HRESULT hr = pEventHeader->pMediaPlayer->SetMediaItem(pEvent->pMediaItem);
+                    if (FAILED(hr))
+                    {
+                        log.Error(log.APIError(), "Cant set media data:");
+                    }
+                }
+            }
+            break;
             case MFP_EVENT_TYPE_MEDIAITEM_SET:
             {
+                log.Debug("Video is loaded and ready to play");
                 SIZE screenSize, videoSize;
                 pEventHeader->pMediaPlayer->GetIdealVideoSize(nullptr, &screenSize);
                 pEventHeader->pMediaPlayer->GetNativeVideoSize(&videoSize, nullptr);
@@ -70,18 +88,36 @@ namespace AnyFSE::App::AppControl::Window
                 rect.bottom = 1.0f - zy;
 
                 pEventHeader->pMediaPlayer->SetVideoSourceRect(&rect);
+                log.Debug("Video margins applied: %f, %f", zx,zy);
+                
                 m_duration = GetDuration(pEventHeader->pMediaPlayer);
+                log.Debug("Video duration: %.3f s", (float)m_duration/1000);
             }
             break;
 
+            case MFP_EVENT_TYPE_MEDIAITEM_CLEARED:
+            {
+                log.Debug("Media cleared");
+                if (!m_nextVideo.empty())
+                {
+                    if (FAILED(m_pPlayer->CreateMediaItemFromURL(m_nextVideo.c_str(), FALSE, 0, NULL)))
+                    {
+                        log.Error(log.APIError(), "Cant create media item");
+                    }
+                }
+            }
+            break;
             case MFP_EVENT_TYPE_PLAYBACK_ENDED:
             {
+                log.Debug("Video Completed");
                 if (m_loop)
                 {
+                    log.Debug("Video Loop");
                     pEventHeader->pMediaPlayer->Play();
                 }
                 else if (m_startLoop != 0)
                 {
+                    log.Debug("Rewind to %dms", m_startLoop);
                     pEventHeader->pMediaPlayer->SetMute(m_mutedLoop);
                     Rewind(pEventHeader->pMediaPlayer, m_startLoop);
                 }
@@ -97,49 +133,82 @@ namespace AnyFSE::App::AppControl::Window
         , m_bInitialized(FALSE)
         , m_loop(false)
     {
-        MFStartup(MF_VERSION);
+
     }
 
     SimpleVideoPlayer::~SimpleVideoPlayer()
     {
         Close();
+        if (m_pPlayer)
+        {
+            log.Debug("Cleanup player");
+            HRESULT hr = m_pPlayer->Stop();
+
+            hr = m_pPlayer->Shutdown();
+            if (FAILED(hr))
+            {
+                log.Error(log.APIError(), "Cant Shutdown player");
+            }
+            
+            m_pPlayer->Release();
+            m_pPlayer = nullptr;
+        }
+
         MFShutdown();
+        m_bInitialized = FALSE;
     }
 
     HRESULT SimpleVideoPlayer::Load(const WCHAR *videoFile, bool mute, bool loop, HWND hwndParent)
     {
-        // Clean up any existing instance
+        log.Debug("Load Video: %s", Unicode::to_string(videoFile).c_str());
+
         if (m_bInitialized)
         {
+            log.Debug("Close old");
             Close();
         }
 
         m_loop = loop;
 
         ParseLoopTimings(videoFile);
-
+        
         HRESULT hr = S_OK;
 
-        hr = MFPCreateMediaPlayer(
-            videoFile,
-            FALSE,
-            MFP_OPTION_NO_MMCSS | MFP_OPTION_NO_REMOTE_DESKTOP_OPTIMIZATION,
-            this,
-            hwndParent,
-            &m_pPlayer);
+        if (!m_pPlayer)
+        {
+            MFStartup(MF_VERSION);
 
+            log.Trace("Creating Media Player");
+            hr = MFPCreateMediaPlayer(
+                NULL,
+                FALSE,
+                MFP_OPTION_NO_REMOTE_DESKTOP_OPTIMIZATION,
+                this,
+                hwndParent,
+                &m_pPlayer);       
+
+            if (FAILED(hr))
+            {
+                log.Error(log.APIError(), "Creating Media Player Failed");
+                return hr;
+            }
+
+            if (m_pPlayer)
+            {
+                
+                m_pPlayer->SetMute(mute);
+            }
+
+            m_bInitialized = TRUE;
+        }
+
+        m_nextVideo = videoFile;
+        
+        hr = m_pPlayer->CreateMediaItemFromURL(videoFile, FALSE, 0, NULL);
         if (FAILED(hr))
         {
-            return hr;
+            log.Error(log.APIError(), "Cant create media item");
         }
-
-        // Set volume to 100%
-        if (m_pPlayer)
-        {
-            m_pPlayer->SetMute(mute);
-        }
-
-        m_bInitialized = TRUE;
 
         return hr;
     }
@@ -149,10 +218,16 @@ namespace AnyFSE::App::AppControl::Window
 
         if (!m_pPlayer || !m_bInitialized)
         {
+            log.Error("Cannot play no player initialized");
             return E_FAIL;
         }
 
-        return m_pPlayer->Play();
+        HRESULT hr = m_pPlayer->Play();
+        if (FAILED(hr))
+        {
+            log.Error(log.APIError(), "Cannot play:");
+        }
+        return hr;
     }
 
     HRESULT SimpleVideoPlayer::Stop()
@@ -162,27 +237,15 @@ namespace AnyFSE::App::AppControl::Window
             return E_FAIL;
         }
 
+        log.Debug("Stopping");
         return m_pPlayer->Stop();
     }
 
     void SimpleVideoPlayer::Close()
     {
-        Cleanup();
-    }
-
-    void SimpleVideoPlayer::Cleanup()
-    {
-        if (m_pPlayer)
-        {
-            m_pPlayer->Shutdown();
-            m_pPlayer->Release();
-            m_pPlayer = nullptr;
-        }
-
-        if (m_bInitialized)
-        {
-            m_bInitialized = FALSE;
-        }
+        HRESULT hr = m_pPlayer->Stop();
+        hr = m_pPlayer->ClearMediaItem();
+        m_nextVideo = L"";
     }
 
     void SimpleVideoPlayer::ParseLoopTimings(const std::wstring &path)
@@ -239,7 +302,7 @@ namespace AnyFSE::App::AppControl::Window
 
         if ( SUCCEEDED(player->GetDuration(GUID_NULL, &varDuration)) )
         {
-            result = varDuration.hVal.QuadPart / 10000;
+            result = (DWORD)(varDuration.hVal.QuadPart / 10000);
         }
 
         PropVariantClear(&varDuration);

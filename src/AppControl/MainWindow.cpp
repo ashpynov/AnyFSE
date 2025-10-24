@@ -92,22 +92,25 @@ namespace AnyFSE::App::AppControl::Window
     {
         if (IsWindow(m_hWnd))
         {
-
             m_videoPlayer.Play();
             StartAnimation();
 
             AnimateWindow(m_hWnd, 0, AW_BLEND);
             ShowWindow(m_hWnd, SW_MAXIMIZE);
+            SetWindowPos(m_hWnd, HWND_TOPMOST,0,0,0,0, SWP_NOMOVE | SWP_NOSIZE);
         }
         return true;
     }
 
     bool MainWindow::Hide()
     {
-        AnimateWindow(m_hWnd, 200, AW_BLEND | AW_HIDE);
-        m_videoPlayer.Close();
-        PreloadNextVideo();
-        StopAnimation();
+        if (IsWindowVisible(m_hWnd))
+        {
+            AnimateWindow(m_hWnd, 200, AW_BLEND | AW_HIDE);
+            m_videoPlayer.Close();
+            PreloadNextVideo();
+            StopAnimation();
+        }
         return true;
     }
 
