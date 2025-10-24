@@ -92,6 +92,11 @@ namespace AnyFSE::Configuration
             static bool SpalshShowLogo;
             static bool SplashShowText;
             static std::wstring SplashCustomText;
+
+            static bool SplashShowVideo;
+            static std::wstring SplashVideoPath;
+            static bool SplashVideoMute;
+            static bool SplashVideoLoop;
     };
 }
 
