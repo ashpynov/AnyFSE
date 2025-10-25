@@ -53,6 +53,8 @@ namespace AnyFSE::App::AppControl::Window
     // IMFPMediaPlayerCallback methods
     void SimpleVideoPlayer::OnMediaPlayerEvent(MFP_EVENT_HEADER *pEventHeader)
     {
+        CriticalSectionLock lock(&m_cs);
+
         switch (pEventHeader->eEventType)
         {
             case MFP_EVENT_TYPE_MEDIAITEM_CREATED:
@@ -94,14 +96,12 @@ namespace AnyFSE::App::AppControl::Window
                 log.Debug("Video duration: %.3f s", (float)m_duration/1000);
 
                 HWND mediaHwnd = NULL;
-                if (SUCCEEDED(pEventHeader->pMediaPlayer->GetVideoWindow(&mediaHwnd))
-                    && IsWindowVisible(mediaHwnd))
+                if (m_desiredState == MFP_MEDIAPLAYER_STATE_PLAYING)
                 {
                     pEventHeader->pMediaPlayer->Play();
                 }
             }
             break;
-
             case MFP_EVENT_TYPE_PLAYBACK_ENDED:
             {
                 log.Debug("Video Completed");
@@ -118,6 +118,9 @@ namespace AnyFSE::App::AppControl::Window
                 }
             }
             break;
+            default:
+                //log.Debug("Event recieved: %d", pEventHeader->eEventType);
+                break;
         }
     }
 
@@ -127,34 +130,43 @@ namespace AnyFSE::App::AppControl::Window
         , m_hwndVideo(nullptr)
         , m_bInitialized(FALSE)
         , m_loop(false)
+        , m_desiredState(MFP_MEDIAPLAYER_STATE_EMPTY)
     {
-
+        CoInitializeEx(NULL, COINIT_MULTITHREADED);
+        InitializeCriticalSection(&m_cs);
     }
 
     SimpleVideoPlayer::~SimpleVideoPlayer()
     {
-        Close();
-        if (m_pPlayer)
         {
-            log.Debug("Cleanup player");
-            HRESULT hr = m_pPlayer->Stop();
-
-            hr = m_pPlayer->Shutdown();
-            if (FAILED(hr))
+            CriticalSectionLock lock(&m_cs);
+            Close();
+            if (m_pPlayer)
             {
-                log.Error(log.APIError(), "Cant Shutdown player");
-            }
-            
-            m_pPlayer->Release();
-            m_pPlayer = nullptr;
-        }
+                log.Debug("Cleanup player");
+                HRESULT hr = m_pPlayer->Stop();
 
-        MFShutdown();
-        m_bInitialized = FALSE;
+                hr = m_pPlayer->Shutdown();
+                if (FAILED(hr))
+                {
+                    log.Error(log.APIError(), "Cant Shutdown player");
+                }
+                
+                m_pPlayer->Release();
+                m_pPlayer = nullptr;
+            }
+
+            MFShutdown();
+            m_bInitialized = FALSE;
+        }
+        DeleteCriticalSection(&m_cs);
+        CoUninitialize();
     }
 
     HRESULT SimpleVideoPlayer::Load(const WCHAR *videoFile, bool mute, bool loop, HWND hwndParent)
     {
+        CriticalSectionLock lock(&m_cs);
+
         log.Debug("Load Video: %s", Unicode::to_string(videoFile).c_str());
 
         if (m_bInitialized)
@@ -176,16 +188,16 @@ namespace AnyFSE::App::AppControl::Window
 
         if (!m_pPlayer)
         {
-            MFStartup(MF_VERSION);
+            hr = MFStartup(MF_VERSION);
 
             log.Trace("Creating Media Player");
             hr = MFPCreateMediaPlayer(
                 NULL,
                 FALSE,
-                MFP_OPTION_NO_REMOTE_DESKTOP_OPTIMIZATION,
+                MFP_OPTION_FREE_THREADED_CALLBACK,
                 this,
                 hwndParent,
-                &m_pPlayer);       
+                &m_pPlayer);
 
             if (FAILED(hr))
             {
@@ -195,13 +207,11 @@ namespace AnyFSE::App::AppControl::Window
 
             if (m_pPlayer)
             {
-                
                 m_pPlayer->SetMute(mute);
             }
 
             m_bInitialized = TRUE;
         }
-
         m_nextVideo = videoFile;
         
         hr = m_pPlayer->CreateMediaItemFromURL(videoFile, FALSE, 0, NULL);
@@ -210,11 +220,15 @@ namespace AnyFSE::App::AppControl::Window
             log.Error(log.APIError(), "Cant create media item");
         }
 
+
         return hr;
     }
 
     HRESULT SimpleVideoPlayer::Play()
     {
+        CriticalSectionLock lock(&m_cs);
+
+        m_desiredState = MFP_MEDIAPLAYER_STATE_PLAYING;
 
         if (!m_pPlayer || !m_bInitialized)
         {
@@ -222,7 +236,16 @@ namespace AnyFSE::App::AppControl::Window
             return E_FAIL;
         }
 
-        HRESULT hr = m_pPlayer->Play();
+        MFP_MEDIAPLAYER_STATE state;
+        HRESULT hr = m_pPlayer->GetState(&state);
+        if (state == MFP_MEDIAPLAYER_STATE_EMPTY)
+        {
+            log.Debug("Play called while not loaded");
+            return S_OK;
+        }
+
+        hr = m_pPlayer->Play();
+
         if (FAILED(hr))
         {
             log.Error(log.APIError(), "Cannot play:");
@@ -232,9 +255,21 @@ namespace AnyFSE::App::AppControl::Window
 
     HRESULT SimpleVideoPlayer::Stop()
     {
+        CriticalSectionLock lock(&m_cs);
+
+        m_desiredState = MFP_MEDIAPLAYER_STATE_STOPPED;
+
         if (!m_pPlayer || !m_bInitialized)
-        {
+        {            
             return E_FAIL;
+        }
+
+        MFP_MEDIAPLAYER_STATE state;
+        HRESULT hr = m_pPlayer->GetState(&state);
+        if (state == MFP_MEDIAPLAYER_STATE_EMPTY)
+        {
+            log.Debug("Stop called while not loaded");
+            return S_OK;
         }
 
         log.Debug("Stopping");
@@ -243,8 +278,15 @@ namespace AnyFSE::App::AppControl::Window
 
     void SimpleVideoPlayer::Close()
     {
-        HRESULT hr = m_pPlayer->Stop();
-        hr = m_pPlayer->ClearMediaItem();
+        CriticalSectionLock lock(&m_cs);
+        m_desiredState = MFP_MEDIAPLAYER_STATE_STOPPED;
+        if (!m_pPlayer || !m_bInitialized)
+        {
+            return;
+        }
+
+        m_pPlayer->Stop();
+        m_pPlayer->ClearMediaItem();
         m_nextVideo = L"";
     }
 
@@ -308,7 +350,6 @@ namespace AnyFSE::App::AppControl::Window
         PropVariantClear(&varDuration);
         return result;
     }
-
     HRESULT SimpleVideoPlayer::Rewind(IMFPMediaPlayer *player, DWORD position)
     {
         PROPVARIANT varDuration;

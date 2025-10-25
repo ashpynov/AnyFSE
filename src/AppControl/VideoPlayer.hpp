@@ -8,6 +8,24 @@
 
 namespace AnyFSE::App::AppControl::Window
 {
+    class CriticalSectionLock {
+    private:
+        CRITICAL_SECTION* m_cs;
+        
+    public:
+        explicit CriticalSectionLock(CRITICAL_SECTION* cs) : m_cs(cs) {
+            EnterCriticalSection(m_cs);
+        }
+        
+        ~CriticalSectionLock() {
+            LeaveCriticalSection(m_cs);
+        }
+        
+        // Prevent copying
+        CriticalSectionLock(const CriticalSectionLock&) = delete;
+        CriticalSectionLock& operator=(const CriticalSectionLock&) = delete;
+    };
+
     class SimpleVideoPlayer : public IMFPMediaPlayerCallback
     {
     private:
@@ -25,40 +43,28 @@ namespace AnyFSE::App::AppControl::Window
 
         volatile long m_refCount;
 
+        MFP_MEDIAPLAYER_STATE m_desiredState;
+        CRITICAL_SECTION m_cs;
 
-        void Cleanup();
         void ParseLoopTimings(const std::wstring& path);
 
         DWORD   GetDuration(IMFPMediaPlayer *player);
         HRESULT Rewind(IMFPMediaPlayer *player, DWORD position);
-
-    public:
+        
+        public:
         SimpleVideoPlayer();
-        ~SimpleVideoPlayer();
-
-
-        // Initialize the player with a parent window
-        HRESULT Stop();
-
-        // Close and release all resources
-        void Close();
-
+        ~SimpleVideoPlayer();     
+        
         // Combined load and play
         HRESULT Load(const WCHAR *videoFile, bool mute, bool loop, HWND hwndParent);
         HRESULT Play();
+        HRESULT Stop();
+        void Close();
 
-        // Check if player is initialized
-        BOOL IsInitialized() const { return m_bInitialized; }
-
-        // Get the video window handle
-        HWND GetVideoWindow() const { return m_hwndVideo; }
-
-        // IUnknown
         ULONG AddRef();
         HRESULT QueryInterface(REFIID riid, void **ppv);
         ULONG Release();
 
-        // IMFPMediaPlayerCallback
         void OnMediaPlayerEvent(MFP_EVENT_HEADER *pEventHeader);
     };
 }
