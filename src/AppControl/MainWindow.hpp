@@ -45,7 +45,7 @@ namespace AnyFSE::App::AppControl::Window
         BOOL FreeResources();
         BOOL OnCommand(WORD command);
         void OnDestroy();
-        void PreloadNextVideo();
+        void SelectNextVideo();
 
         LRESULT CALLBACK HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 

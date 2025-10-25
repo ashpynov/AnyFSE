@@ -73,7 +73,13 @@ namespace AnyFSE::App::AppControl::Window
             return false;
         }
 
-        m_hWnd = CreateWindow((LPCTSTR)m_aClass, windowName, WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, NULL, NULL, hInstance, this);
+        m_hWnd = CreateWindowEx(
+            WS_EX_TOPMOST,
+            (LPCTSTR)m_aClass, windowName, 
+            WS_POPUP, 
+            CW_USEDEFAULT, CW_USEDEFAULT,
+            0, 0, 
+            NULL, NULL, hInstance, this);
 
         if (!IsWindow(m_hWnd))
         {
@@ -83,7 +89,7 @@ namespace AnyFSE::App::AppControl::Window
 
         log.Debug("Window is created (hWnd=%08x)", m_hWnd);
 
-        PreloadNextVideo();
+        SelectNextVideo();
 
         return true;
     };
@@ -92,6 +98,7 @@ namespace AnyFSE::App::AppControl::Window
     {
         if (IsWindow(m_hWnd))
         {
+            m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, m_hWnd);
             m_videoPlayer.Play();
             StartAnimation();
 
@@ -108,7 +115,7 @@ namespace AnyFSE::App::AppControl::Window
         {
             AnimateWindow(m_hWnd, 200, AW_BLEND | AW_HIDE);
             m_videoPlayer.Close();
-            PreloadNextVideo();
+            SelectNextVideo();
             StopAnimation();
         }
         return true;
@@ -316,7 +323,7 @@ namespace AnyFSE::App::AppControl::Window
         PostQuitMessage(m_result);
     }
 
-    void MainWindow::PreloadNextVideo()
+    void MainWindow::SelectNextVideo()
     {
 
         if (!Config::SplashShowVideo)
@@ -382,7 +389,6 @@ namespace AnyFSE::App::AppControl::Window
         }
 
         m_currentVideo = videoFiles[std::rand() % videoFiles.size()].wstring().c_str();
-        m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, m_hWnd);
     }
 }
 

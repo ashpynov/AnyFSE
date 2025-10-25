@@ -26,10 +26,10 @@ namespace AnyFSE::Configuration
     using jp = json::json_pointer;
 
     LogLevels       Config::LogLevel = LogLevels::Disabled;
-    std::wstring         Config::LogPath = L"";
+    std::wstring    Config::LogPath = L"";
     bool            Config::CustomSettings;
     LauncherConfig  Config::Launcher;
-    std::wstring         Config::XBoxProcessName;
+    std::wstring    Config::XBoxProcessName;
     bool            Config::AggressiveMode = false;
     bool            Config::SilentMode = false;
     bool            Config::FseOnStartup = false;

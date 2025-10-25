@@ -92,21 +92,16 @@ namespace AnyFSE::App::AppControl::Window
                 
                 m_duration = GetDuration(pEventHeader->pMediaPlayer);
                 log.Debug("Video duration: %.3f s", (float)m_duration/1000);
-            }
-            break;
 
-            case MFP_EVENT_TYPE_MEDIAITEM_CLEARED:
-            {
-                log.Debug("Media cleared");
-                if (!m_nextVideo.empty())
+                HWND mediaHwnd = NULL;
+                if (SUCCEEDED(pEventHeader->pMediaPlayer->GetVideoWindow(&mediaHwnd))
+                    && IsWindowVisible(mediaHwnd))
                 {
-                    if (FAILED(m_pPlayer->CreateMediaItemFromURL(m_nextVideo.c_str(), FALSE, 0, NULL)))
-                    {
-                        log.Error(log.APIError(), "Cant create media item");
-                    }
+                    pEventHeader->pMediaPlayer->Play();
                 }
             }
             break;
+
             case MFP_EVENT_TYPE_PLAYBACK_ENDED:
             {
                 log.Debug("Video Completed");
@@ -166,6 +161,11 @@ namespace AnyFSE::App::AppControl::Window
         {
             log.Debug("Close old");
             Close();
+        }
+
+        if (!videoFile || !videoFile[0])
+        {
+            return;
         }
 
         m_loop = loop;
