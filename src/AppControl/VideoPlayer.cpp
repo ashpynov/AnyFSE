@@ -165,7 +165,7 @@ namespace AnyFSE::App::AppControl::Window
 
         if (!videoFile || !videoFile[0])
         {
-            return;
+            return S_OK;
         }
 
         m_loop = loop;
