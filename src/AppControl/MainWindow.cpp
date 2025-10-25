@@ -12,6 +12,7 @@
 
 #include <tchar.h>
 #include <windows.h>
+#include <filesystem>
 #include "resource.h"
 #include "Logging/LogManager.hpp"
 #include "Configuration/Config.hpp"
@@ -19,6 +20,7 @@
 #include "Tools/Unicode.hpp"
 #include "AppControl/AppControl.hpp"
 #include "AppControl/MainWindow.hpp"
+#include "MainWindow.hpp"
 
 
 namespace AnyFSE::App::AppControl::Window
@@ -71,7 +73,13 @@ namespace AnyFSE::App::AppControl::Window
             return false;
         }
 
-        m_hWnd = CreateWindow((LPCTSTR)m_aClass, windowName, WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, NULL, NULL, hInstance, this);
+        m_hWnd = CreateWindowEx(
+            WS_EX_TOPMOST,
+            (LPCTSTR)m_aClass, windowName, 
+            WS_POPUP, 
+            CW_USEDEFAULT, CW_USEDEFAULT,
+            0, 0, 
+            NULL, NULL, hInstance, this);
 
         if (!IsWindow(m_hWnd))
         {
@@ -80,6 +88,9 @@ namespace AnyFSE::App::AppControl::Window
         }
 
         log.Debug("Window is created (hWnd=%08x)", m_hWnd);
+
+        SelectNextVideo();
+
         return true;
     };
 
@@ -87,16 +98,27 @@ namespace AnyFSE::App::AppControl::Window
     {
         if (IsWindow(m_hWnd))
         {
+            m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, m_hWnd);
+            m_videoPlayer.Play();
             StartAnimation();
-            AnimateWindow(m_hWnd, 200, AW_BLEND);
+
+            AnimateWindow(m_hWnd, 0, AW_BLEND);
             ShowWindow(m_hWnd, SW_MAXIMIZE);
+            SetWindowPos(m_hWnd, HWND_TOPMOST,0,0,0,0, SWP_NOMOVE | SWP_NOSIZE);
         }
         return true;
     }
 
     bool MainWindow::Hide()
     {
-        return !IsWindow(m_hWnd) || StopAnimation() && AnimateWindow(m_hWnd, 200, AW_BLEND|AW_HIDE);
+        if (IsWindowVisible(m_hWnd))
+        {
+            AnimateWindow(m_hWnd, 200, AW_BLEND | AW_HIDE);
+            m_videoPlayer.Close();
+            SelectNextVideo();
+            StopAnimation();
+        }
+        return true;
     }
 
     bool MainWindow::IsVisible()
@@ -300,4 +322,73 @@ namespace AnyFSE::App::AppControl::Window
         FreeResources();
         PostQuitMessage(m_result);
     }
+
+    void MainWindow::SelectNextVideo()
+    {
+
+        if (!Config::SplashShowVideo)
+        {
+            return;
+        }
+        m_currentVideo = L"";
+
+        namespace fs = std::filesystem;
+        std::wstring mediaPath = Config::SplashVideoPath.empty() ? Config::GetModulePath() + L"\\splash" : Config::SplashVideoPath;
+
+        std::vector<fs::path> videoFiles;
+
+        try
+        {
+            if (fs::exists(mediaPath) && fs::is_regular_file(mediaPath))
+            {
+                videoFiles.push_back(fs::path(mediaPath));
+            }
+            else
+            {
+            // Check if the directory exists
+            if (!fs::exists(mediaPath) || !fs::is_directory(mediaPath))
+            {
+                log.Error("Error: Directory does not exist or is not a directory: %s", Unicode::to_string(mediaPath).c_str());
+                return;
+            }
+
+            // Iterate through all files in the directory
+            for (const auto &entry : fs::directory_iterator(mediaPath))
+            {
+                if (fs::is_regular_file(entry))
+                {
+                    std::string extension = entry.path().extension().string();
+
+                    // Convert to lowercase for case-insensitive comparison
+                    std::transform(extension.begin(), extension.end(), extension.begin(),
+                                   [](unsigned char c)
+                                   { return std::tolower(c); });
+
+                    // Check if the file has .mp4 or .webm extension
+                    if (extension == ".mp4" || extension == ".webm")
+                    {
+                        videoFiles.push_back(entry.path());
+                    }
+                }
+            }
+            }
+        }
+        catch (const fs::filesystem_error &ex)
+        {
+            log.Error(ex, "Filesystem error:");
+        }
+        catch (const std::exception &ex)
+        {
+            log.Error(ex, "Error:");
+        }
+
+        if (!videoFiles.size())
+        {
+            log.Warn("No video files found");
+            return;
+        }
+
+        m_currentVideo = videoFiles[std::rand() % videoFiles.size()].wstring().c_str();
+    }
 }
+

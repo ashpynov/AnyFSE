@@ -152,7 +152,7 @@ namespace AnyFSE::App::AppControl::StateLoop
             else
             {
                 log.Debug("OnOpenHome: Launcher is need to run  => prevent xBox, launch home");
-                if (IsInFSEMode())
+                if (IsInFSEMode() || Config::SplashShowVideo)
                 {
                     ShowSplash();
                 }

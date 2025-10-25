@@ -13,6 +13,7 @@
 
 #include <windows.h>
 #include <string>
+#include "VideoPlayer.hpp"
 
 namespace Gdiplus { class Image; }
 
@@ -28,6 +29,8 @@ namespace AnyFSE::App::AppControl::Window
         HICON m_hIcon = NULL;
         HWND m_hWnd;
         ATOM m_aClass;
+        SimpleVideoPlayer m_videoPlayer;
+        std::wstring m_currentVideo;
 
         int m_result = ERROR_RESTART_APPLICATION;
 
@@ -42,6 +45,7 @@ namespace AnyFSE::App::AppControl::Window
         BOOL FreeResources();
         BOOL OnCommand(WORD command);
         void OnDestroy();
+        void SelectNextVideo();
 
         LRESULT CALLBACK HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 

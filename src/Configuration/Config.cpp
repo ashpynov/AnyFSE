@@ -26,10 +26,10 @@ namespace AnyFSE::Configuration
     using jp = json::json_pointer;
 
     LogLevels       Config::LogLevel = LogLevels::Disabled;
-    std::wstring         Config::LogPath = L"";
+    std::wstring    Config::LogPath = L"";
     bool            Config::CustomSettings;
     LauncherConfig  Config::Launcher;
-    std::wstring         Config::XBoxProcessName;
+    std::wstring    Config::XBoxProcessName;
     bool            Config::AggressiveMode = false;
     bool            Config::SilentMode = false;
     bool            Config::FseOnStartup = false;
@@ -37,6 +37,10 @@ namespace AnyFSE::Configuration
     bool            Config::SpalshShowLogo = true;
     bool            Config::SplashShowText = true;
     std::wstring    Config::SplashCustomText = L"";
+    bool            Config::SplashShowVideo = true;
+    std::wstring    Config::SplashVideoPath = L"";
+    bool            Config::SplashVideoMute = false;
+    bool            Config::SplashVideoLoop = false;
 
     std::wstring Config::GetModulePath()
     {
@@ -92,6 +96,11 @@ namespace AnyFSE::Configuration
         SplashShowText          = config.value(jp("/Splash/ShowText"),       true);
         SplashCustomText        = config.value(jp("/Splash/CustomText"),     std::wstring());
 
+        SplashShowVideo         = config.value(jp("/Splash/ShowVideo"),      true);
+        SplashVideoPath         = config.value(jp("/Splash/Video/Path"),     std::wstring());
+        SplashVideoMute         = config.value(jp("/Splash/Video/Mute"),     false);
+        SplashVideoLoop         = config.value(jp("/Splash/Video/Loop"),     false);
+
         std::wstring launcher   = config.value(jp("/Launcher/Path"),         std::wstring());
 
         LoadLauncherSettings(config, launcher, Launcher);
@@ -137,7 +146,12 @@ namespace AnyFSE::Configuration
         config["Splash"]["ShowAnimation"]       = SplashShowAnimation;
         config["Splash"]["ShowLogo"]            = SpalshShowLogo;
         config["Splash"]["ShowText"]            = SplashShowText;
+        config["Splash"]["ShowVideo"]           = SplashShowVideo;
         config["Splash"]["CustomText"]          = SplashCustomText;
+
+        config["Splash"]["Video"]["Path"]       = SplashVideoPath;
+        config["Splash"]["Video"]["Mute"]       = SplashVideoMute;
+        config["Splash"]["Video"]["Loop"]       = SplashVideoLoop;
 
         config["Log"]["Level"]                  = (int) LogLevel;
     //  config["Log"]["Path"]                   = LogPath;

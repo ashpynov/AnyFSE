@@ -198,6 +198,11 @@ namespace AnyFSE::App::AppControl
             return (int)GetLastError();
         }
 
+        if (DWORD xBoxProcess = Process::FindFirstByName(Config::XBoxProcessName))
+        {
+            log.Info("Xbox App is already ran: %x", xBoxProcess);
+        }
+
         if (GamingExperience::IsActive())
         {
             mainWindow.Show();
