@@ -59,6 +59,7 @@ namespace AnyFSE::App::AppControl::Window
         static int RunLoop();
 
         bool IsVisible();
+        int ExitOnError();
 
         Event OnExplorerDetected;
 

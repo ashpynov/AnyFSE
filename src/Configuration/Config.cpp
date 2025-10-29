@@ -41,6 +41,7 @@ namespace AnyFSE::Configuration
     std::wstring    Config::SplashVideoPath = L"";
     bool            Config::SplashVideoMute = false;
     bool            Config::SplashVideoLoop = false;
+    bool            Config::QuickStart = false;
 
     std::wstring Config::GetModulePath()
     {
@@ -89,6 +90,7 @@ namespace AnyFSE::Configuration
         LogLevel                = (LogLevels)config.value(jp("/Log/Level"),  (int)LogLevels::Disabled);
         LogPath                 = config.value(jp("/Log/Path"),              GetModulePath());
         AggressiveMode          = config.value(jp("/AggressiveMode"),        false);
+        QuickStart              = config.value(jp("/QuickStart"),            false);
         XBoxProcessName         = config.value(jp("/XBoxProcessName"),       std::wstring(L"XboxPcApp.exe"));
 
         SplashShowAnimation     = config.value(jp("/Splash/ShowAnimation"),  true);
@@ -153,7 +155,10 @@ namespace AnyFSE::Configuration
         config["Splash"]["Video"]["Mute"]       = SplashVideoMute;
         config["Splash"]["Video"]["Loop"]       = SplashVideoLoop;
 
-        config["Log"]["Level"]                  = (int) LogLevel;
+        config["Log"]["Level"]                  = (int)LogLevel;
+
+        config["QuickStart"]                    = QuickStart;
+
     //  config["Log"]["Path"]                   = LogPath;
 
     //  config["AggressiveMode"]                = AggressiveMode;

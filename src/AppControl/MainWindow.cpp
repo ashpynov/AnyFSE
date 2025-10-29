@@ -124,6 +124,16 @@ namespace AnyFSE::App::AppControl::Window
         return IsWindowVisible(m_hWnd);
     }
 
+    int MainWindow::ExitOnError()
+    {
+        DWORD error = GetLastError();
+        if (error)
+        {
+            SendMessage(m_hWnd, WM_DESTROY, (WPARAM)error, 0);
+        }
+        return error;
+    }
+
     // static
     int MainWindow::RunLoop()
     {
@@ -231,10 +241,7 @@ namespace AnyFSE::App::AppControl::Window
         }
 
         OnExplorerDetected.Notify();
-        if (GetLastError())
-        {
-            SendMessage(m_hWnd, WM_DESTROY, (WPARAM)GetLastError(), 0);
-        }
+        ExitOnError();
     }
 
     void MainWindow::OnPaint()

@@ -132,10 +132,9 @@ namespace AnyFSE::App::AppControl
     int AppControl::StartControl(AppControlStateLoop & AppControlStateLoop, Window::MainWindow& mainWindow)
     {
 
-        DWORD explorer = Process::FindFirstByName(L"explorer.exe");
-        if (!explorer)
+        if (Config::QuickStart && !Process::FindFirstByName(L"explorer.exe"))
         {
-            log.Info("Explorer not found delay start");
+            log.Info("Explorer not found => Delay start");
             return 0;
         }
 
@@ -261,24 +260,23 @@ namespace AnyFSE::App::AppControl
         if (!AppControlStateLoop.IsRunning())
         {
             SetLastError(StartControl(AppControlStateLoop, mainWindow));
-            if (int error = GetLastError())
-            {
-                return error;
-            }
+            mainWindow.ExitOnError();
         }
 
         GamingExperience fseMonitor;
 
-        fseMonitor.OnExperienseChanged += ([&AppControlStateLoop]()
+        fseMonitor.OnExperienseChanged += ([&AppControlStateLoop, &mainWindow]()
         {
             log.Debug(
                 "Mode is changed to %s\n",
                 GamingExperience::IsActive() ? "Fullscreeen experience" : "Windows Desktop"
             );
-            if (AppControlStateLoop.IsRunning())
+            if (!AppControlStateLoop.IsRunning())
             {
-                AppControlStateLoop.Notify(GamingExperience::IsActive() ? AppEvents::GAMEMODE_ENTER : AppEvents::GAMEMODE_EXIT);
+                SetLastError(StartControl(AppControlStateLoop, mainWindow));
+                mainWindow.ExitOnError();
             }
+            AppControlStateLoop.Notify(GamingExperience::IsActive() ? AppEvents::GAMEMODE_ENTER : AppEvents::GAMEMODE_EXIT);
         });
 
         log.Debug("Run window loop.");
