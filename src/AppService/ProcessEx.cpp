@@ -17,22 +17,27 @@
 #include <algorithm>
 #include <set>
 #include <sstream>
-
+#include "Logging/LogManager.hpp"
 #include "Tools/Process.hpp"
+#include "Tools/Unicode.hpp"
 #include "ProcessEx.hpp"
 
 #pragma comment(lib, "psapi.lib")
 
 namespace AnyFSE::Tools::ProcessEx
 {
+    static Logger log = LogManager::GetLogger("ProcessEx");
+
     HRESULT Kill(const std::wstring &processName)
     {
         DWORD processId = Process::FindFirstByName(processName);
         if (processId == 0)
         {
+            log.Error("Kill process failed: %s process tot found", Unicode::to_string(processName).c_str());
             return ERROR_PROC_NOT_FOUND;
         }
 
+        log.Debug("Process %s found with id: %u", Unicode::to_string(processName).c_str(), processId);
         return Kill(processId);
     }
 
@@ -46,11 +51,13 @@ namespace AnyFSE::Tools::ProcessEx
         HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, processId);
         if (hProcess == NULL)
         {
+            log.Error(log.APIError(), "Kill process. OpenProcess failed");
             return GetLastError();
         }
 
         if (!TerminateProcess(hProcess, 0))
         {
+            log.Error(log.APIError(), "Kill process. TerminateProcess failed");
             HRESULT error = GetLastError();
             CloseHandle(hProcess);
             return error;

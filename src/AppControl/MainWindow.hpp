@@ -14,6 +14,7 @@
 #include <windows.h>
 #include <string>
 #include "VideoPlayer.hpp"
+#include "Tools/Event.hpp"
 
 namespace Gdiplus { class Image; }
 
@@ -58,6 +59,8 @@ namespace AnyFSE::App::AppControl::Window
         static int RunLoop();
 
         bool IsVisible();
+
+        Event OnExplorerDetected;
 
     private: // Animation
 

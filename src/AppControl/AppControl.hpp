@@ -14,14 +14,16 @@
 
 namespace AnyFSE::App::AppControl
 {
+    namespace Window { class MainWindow; }
+    namespace StateLoop { class AppControlStateLoop; }
+
     class AppControl
     {
         private:
             static BOOL RequestAdminElevation(bool configure = false);
         public:
             static int ShowSettings();
-            static BOOL ShouldRunAsApplication(LPSTR lpCmdLine);
-            static BOOL ShouldRunAsConfiguration(LPSTR lpCmdLine);
+            static int StartControl(StateLoop::AppControlStateLoop & AppControlStateLoop, Window::MainWindow &mainWindow);
             static void InitCustomControls();
             static BOOL IsRunningAsAdministrator(bool elevate = false, bool configure = false);
             static bool AsControl(LPSTR lpCmdLine);

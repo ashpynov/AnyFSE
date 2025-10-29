@@ -43,6 +43,7 @@ namespace AnyFSE::App::StateLoop
         // Main control functions
         void Start();
         void Stop();
+        bool IsRunning() { return m_isRunning.load(); }
 
     protected:
         // Timer management - only available to derived classes in event handlers

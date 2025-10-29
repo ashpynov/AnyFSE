@@ -57,8 +57,6 @@ namespace AnyFSE::App::AppControl::Window
 
     bool MainWindow::Create(LPCWSTR className, HINSTANCE hInstance, LPCTSTR windowName)
     {
-
-
         WC.lpszClassName = className;
         WC.hInstance = hInstance;
         WC.lpfnWndProc = MainWndProc;
@@ -75,10 +73,10 @@ namespace AnyFSE::App::AppControl::Window
 
         m_hWnd = CreateWindowEx(
             WS_EX_TOPMOST,
-            (LPCTSTR)m_aClass, windowName, 
-            WS_POPUP, 
+            (LPCTSTR)m_aClass, windowName,
+            WS_POPUP,
             CW_USEDEFAULT, CW_USEDEFAULT,
-            0, 0, 
+            0, 0,
             NULL, NULL, hInstance, this);
 
         if (!IsWindow(m_hWnd))
@@ -230,6 +228,12 @@ namespace AnyFSE::App::AppControl::Window
         {
             log.Debug(log.APIError(), "Can not create tray icon");
             return; // oops
+        }
+
+        OnExplorerDetected.Notify();
+        if (GetLastError())
+        {
+            SendMessage(m_hWnd, WM_DESTROY, (WPARAM)GetLastError(), 0);
         }
     }
 
