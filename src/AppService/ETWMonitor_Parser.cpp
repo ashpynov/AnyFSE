@@ -79,6 +79,9 @@ namespace AnyFSE::App::AppService
             /*&& IsEqualGUID(eventRecord->EventHeader.ProviderId, ProcessProviderGuid)*/)
         {
             HandleStartProcessEvent(eventRecord);
+            #ifdef _TRACE
+            TraceEvent(eventRecord, count);
+            #endif
         }
         else if (eventRecord->EventHeader.EventDescriptor.Opcode == 38  // QueryValueKey
             && eventRecord->EventHeader.EventDescriptor.Task == 0       //
@@ -92,7 +95,7 @@ namespace AnyFSE::App::AppService
             count++;
 
             #ifdef _TRACE
-            TraceEvent(eventRecord, count);
+            // TraceEvent(eventRecord, count);
             #endif
         }
 
@@ -142,7 +145,7 @@ namespace AnyFSE::App::AppService
         if (isGamingApp && isExplorer)
         {
             #ifdef _TRACE
-            TRACE("(%d) Explorer has accessed to %s registry value", Unicode::to_string(valueName).c_str(), count);
+            TRACE("Explorer has accessed to %s registry value", Unicode::to_string(valueName).c_str());
             TraceEvent(eventRecord, 0);
             #endif
 
@@ -151,7 +154,7 @@ namespace AnyFSE::App::AppService
         else if (isDeviceForm && isExplorer)
         {
             #ifdef _TRACE
-            TRACE("(%d) Explorer has accessed to %s registry value", Unicode::to_string(valueName).c_str(), count);
+            TRACE("Explorer has accessed to %s registry value", Unicode::to_string(valueName).c_str());
             TraceEvent(eventRecord, 0);
             #endif
 

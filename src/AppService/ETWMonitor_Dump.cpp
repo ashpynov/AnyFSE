@@ -1,4 +1,4 @@
-#ifdef TRACE
+#ifdef _TRACE
 
 #include "ETWMonitor.hpp"
 #include "Logging/LogManager.hpp"
@@ -104,3 +104,4 @@ namespace AnyFSE::App::AppService
     }
 
 }
+#endif

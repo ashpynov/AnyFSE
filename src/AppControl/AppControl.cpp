@@ -129,6 +129,50 @@ namespace AnyFSE::App::AppControl
         return false;
     }
 
+    int AppControl::StartControl(AppControlStateLoop & AppControlStateLoop, Window::MainWindow& mainWindow)
+    {
+
+        if (Config::QuickStart && !Process::FindFirstByName(L"explorer.exe"))
+        {
+            log.Info("Explorer not found => Delay start");
+            return 0;
+        }
+
+        if (GamingExperience::IsActive())
+        {
+            mainWindow.Show();
+        }
+        else
+        {
+            mainWindow.Hide();
+        }
+
+        if (!AppControlStateLoop.NotifyRemote(AppEvents::CONNECT, 5000))
+        {
+            log.Error("Cant connect to service, exiting");
+            return -1;
+        }
+
+        if (!GamingExperience::ApiIsAvailable)
+        {
+            log.Critical("Fullscreen Gaming API is not detected, exiting\n");
+            AppControlStateLoop.NotifyRemote(AppEvents::EXIT_SERVICE);
+            return -1;
+        }
+
+        AppControlStateLoop.NotifyRemote(AppEvents::MONITOR_REGISTRY);
+
+        if (Config::Launcher.Type != LauncherType::None || Config::Launcher.Type != LauncherType::Xbox)
+        {
+            AppControlStateLoop.Notify(AppEvents::START);
+            AppControlStateLoop.Start();
+        }
+        else
+        {
+            AppControlStateLoop.NotifyRemote(AppEvents::EXIT_SERVICE);
+        }
+        return 0;
+    }
     void AppControl::InitCustomControls()
     {
         INITCOMMONCONTROLSEX icex;
@@ -191,61 +235,47 @@ namespace AnyFSE::App::AppControl
             });
         }
 
+        DWORD xBoxProcess = Process::FindFirstByName(Config::XBoxProcessName);
+        if (xBoxProcess)
+        {
+            log.Info("Xbox App is already ran: %x", xBoxProcess);
+        }
+
         Window::MainWindow mainWindow;
+        AppControlStateLoop AppControlStateLoop(mainWindow);
+
+        mainWindow.OnExplorerDetected += ([&AppControlStateLoop, &mainWindow]()
+        {
+            if (!AppControlStateLoop.IsRunning())
+            {
+                SetLastError(StartControl(AppControlStateLoop, mainWindow));
+            }
+        });
 
         if (!mainWindow.Create(className, hInstance, (Config::Launcher.Name + L" is launching").c_str()))
         {
             return (int)GetLastError();
         }
 
-        if (DWORD xBoxProcess = Process::FindFirstByName(Config::XBoxProcessName))
+        if (!AppControlStateLoop.IsRunning())
         {
-            log.Info("Xbox App is already ran: %x", xBoxProcess);
-        }
-
-        if (GamingExperience::IsActive())
-        {
-            mainWindow.Show();
-        }
-        else
-        {
-            mainWindow.Hide();
-        }
-
-        AppControlStateLoop AppControlStateLoop(mainWindow);
-        if (!AppControlStateLoop.NotifyRemote(AppEvents::CONNECT, 5000))
-        {
-            log.Error("Cant connect to service, exiting");
-            return -1;
-        }
-
-        if (!GamingExperience::ApiIsAvailable)
-        {
-            log.Critical("Fullscreen Gaming API is not detected, exiting\n");
-            AppControlStateLoop.NotifyRemote(AppEvents::EXIT_SERVICE);
-            return -1;
-        }
-
-        AppControlStateLoop.NotifyRemote(AppEvents::MONITOR_REGISTRY);
-
-        if (Config::Launcher.Type != LauncherType::None || Config::Launcher.Type != LauncherType::Xbox)
-        {
-            AppControlStateLoop.Notify(AppEvents::START);
-            AppControlStateLoop.Start();
-        }
-        else
-        {
-            AppControlStateLoop.NotifyRemote(AppEvents::EXIT_SERVICE);
+            SetLastError(StartControl(AppControlStateLoop, mainWindow));
+            mainWindow.ExitOnError();
         }
 
         GamingExperience fseMonitor;
 
-        fseMonitor.OnExperienseChanged += ([&AppControlStateLoop]()
+        fseMonitor.OnExperienseChanged += ([&AppControlStateLoop, &mainWindow]()
         {
             log.Debug(
                 "Mode is changed to %s\n",
                 GamingExperience::IsActive() ? "Fullscreeen experience" : "Windows Desktop"
             );
+            if (!AppControlStateLoop.IsRunning())
+            {
+                SetLastError(StartControl(AppControlStateLoop, mainWindow));
+                mainWindow.ExitOnError();
+            }
             AppControlStateLoop.Notify(GamingExperience::IsActive() ? AppEvents::GAMEMODE_ENTER : AppEvents::GAMEMODE_EXIT);
         });
 

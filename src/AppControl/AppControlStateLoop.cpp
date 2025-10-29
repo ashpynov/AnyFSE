@@ -178,7 +178,7 @@ namespace AnyFSE::App::AppControl::StateLoop
             PreventTimeout();
             CloseSplash();
         }
-        else if (!IsLauncherProcess() || GetTickCount() - m_waitStartTime > 600000)
+        else if (!IsLauncherProcess() || GetTickCount() - m_waitStartTime > 60000)
         {
             log.Debug("Launcher not started, starting");
             AppStateLoop::CancelTimer(m_waitLauncherTimer);
