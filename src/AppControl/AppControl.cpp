@@ -252,6 +252,16 @@ namespace AnyFSE::App::AppControl
             }
         });
 
+        mainWindow.OnQueryEndSession += ([&AppControlStateLoop]()
+        {
+            AppControlStateLoop.Notify(AppEvents::QUERY_END_SESSION);
+        });
+
+        mainWindow.OnEndSession += ([&AppControlStateLoop]()
+        {
+            AppControlStateLoop.Notify(AppEvents::END_SESSION);
+        });
+
         if (!mainWindow.Create(className, hInstance, (Config::Launcher.Name + L" is launching").c_str()))
         {
             return (int)GetLastError();

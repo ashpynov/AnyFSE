@@ -5,6 +5,7 @@
 #include "AppControl/AppControlStateLoop.hpp"
 #include "AppControl/GamingExperience.hpp"
 #include "AppControl/MainWindow.hpp"
+#include "AppControlStateLoop.hpp"
 
 namespace AnyFSE::App::AppControl::StateLoop
 {
@@ -15,6 +16,7 @@ namespace AnyFSE::App::AppControl::StateLoop
         , m_splash(splash)
         , m_preventTimer(0)
         , m_waitLauncherTimer(0)
+        , m_exitingTimer(0)
     {
 
     }
@@ -35,6 +37,8 @@ namespace AnyFSE::App::AppControl::StateLoop
             case AppEvents::GAMEMODE_EXIT:     return OnGameModeExit();
             case AppEvents::OPEN_HOME:         return OnOpenHome();
             case AppEvents::OPEN_DEVICE_FORM:  return OnDeviceForm();
+            case AppEvents::QUERY_END_SESSION: return OnQueryEndSession();
+            case AppEvents::END_SESSION:       return OnEndSession();
             default: break;
         }
     }
@@ -123,6 +127,16 @@ namespace AnyFSE::App::AppControl::StateLoop
         m_deviceFormAge = GetTickCount64();
     }
 
+    void AppControlStateLoop::OnQueryEndSession()
+    {
+        m_exitingTimer = AppStateLoop::SetTimer(std::chrono::seconds(30), [this](){ this->OnExitingTimer();}, false );
+    }
+
+    void AppControlStateLoop::OnEndSession()
+    {
+        
+    }
+
     void AppControlStateLoop::OnOpenHome()
     {
         if (!IsOnTaskSwitcher())
@@ -195,6 +209,13 @@ namespace AnyFSE::App::AppControl::StateLoop
         NotifyRemote(AppEvents::XBOX_ALLOW);
     }
 
+    void AppControlStateLoop::OnExitingTimer()
+    {
+        log.Debug("OnExitingTimer completed and we are still alive?????");
+        m_exitingTimer = 0;
+        CloseSplash();
+    }
+
     // State Checkers
     bool AppControlStateLoop::IsInFSEMode()
     {
@@ -249,11 +270,16 @@ namespace AnyFSE::App::AppControl::StateLoop
         return (GetTickCount64() - m_deviceFormAge) < 50;
     }
 
+    bool AppControlStateLoop::IsExiting()
+    {
+        return 0 != m_exitingTimer;
+    }
+
     // Actions
     void AppControlStateLoop::ShowSplash()
     {
         log.Debug("Show Splash");
-        m_splash.Show();
+        m_splash.Show(IsExiting());
     }
 
     void AppControlStateLoop::KillXbox()
@@ -264,7 +290,11 @@ namespace AnyFSE::App::AppControl::StateLoop
 
     void AppControlStateLoop::StartLauncher()
     {
-        if (!IsLauncherStarted())
+        if (IsExiting())
+        {
+            log.Debug("During exiting procedure ignore launcher start");
+        }
+        else if (!IsLauncherStarted())
         {
             log.Debug("Start Launcher");
             if (0 == Process::Start(Config::Launcher.StartCommand, Config::Launcher.StartArg))
@@ -280,7 +310,7 @@ namespace AnyFSE::App::AppControl::StateLoop
 
     void AppControlStateLoop::WaitLauncher()
     {
-        if (!m_waitLauncherTimer)
+        if (!m_waitLauncherTimer && !m_exitingTimer)
         {
             log.Debug("Set timer for await Launcher");
             m_waitStartTime = GetTickCount();

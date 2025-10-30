@@ -88,18 +88,21 @@ namespace AnyFSE::App::AppControl::Window
         log.Debug("Window is created (hWnd=%08x)", m_hWnd);
 
         SelectNextVideo();
+        m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, m_hWnd);
 
         return true;
     };
 
-    bool MainWindow::Show()
+    bool MainWindow::Show(bool empty)
     {
         if (IsWindow(m_hWnd))
         {
-            m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, m_hWnd);
-            m_videoPlayer.Play();
-            StartAnimation();
-
+            if (!empty)
+            {
+                m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, m_hWnd);
+                m_videoPlayer.Play();
+                StartAnimation();
+            }
             AnimateWindow(m_hWnd, 0, AW_BLEND);
             ShowWindow(m_hWnd, SW_MAXIMIZE);
             SetWindowPos(m_hWnd, HWND_TOPMOST,0,0,0,0, SWP_NOMOVE | SWP_NOSIZE);
@@ -205,6 +208,14 @@ namespace AnyFSE::App::AppControl::Window
                 return 0;
             }
             break;
+        case WM_QUERYENDSESSION:
+            log.Info("QueryEndSession recieved");
+            OnQueryEndSession.Notify();
+            break;
+        case WM_ENDSESSION:
+            log.Info("EndSession recieved");
+            OnEndSession.Notify();
+            break;
         }
         return DefWindowProc(m_hWnd, uMsg, wParam, lParam);
     }
@@ -236,8 +247,8 @@ namespace AnyFSE::App::AppControl::Window
         LoadStringSafe(IDS_TIP, stData.szTip, _countof(stData.szTip));
         if (!Shell_NotifyIcon(NIM_ADD, &stData))
         {
-            log.Debug(log.APIError(), "Can not create tray icon");
-            return; // oops
+            log.Debug("Can not create tray icon");
+            return;
         }
 
         OnExplorerDetected.Notify();

@@ -2,8 +2,7 @@
     "explorer.fileNesting.enabled": true,
     "explorer.fileNesting.patterns": {
         "*.cpp": "${basename}.h, ${basename}.hpp, ${basename}.cpp, ${basename}_*.cpp",
-        "*.vcxproj": "${basename}.vcxproj, ${basename}.vcxproj.*",
-        "*.sln": "${basename}.sln, ${basename}.suo",
+        "*.sln": "${basename}.*.vcxproj, ${basename}.vcxproj.*, ${basename}.vcxproj, ${basename}.sln, ${basename}.suo",
         "*.rc" : "${basename}.rc, ${basename}.h, ${basename}.aps"
     },
     "explorer.excludeGitIgnore": true,

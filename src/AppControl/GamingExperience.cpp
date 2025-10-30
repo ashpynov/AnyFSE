@@ -41,8 +41,8 @@ namespace AnyFSE::App::AppControl
             if (m_fseHandle != nullptr)
             {
                 log.Debug(
-                    "FullScreenExperienceChangeNotification is registered\n"
-                    "Current mode is %s\n",
+                    "FullScreenExperienceChangeNotification is registered. "
+                    "Current mode is %s",
                     GamingExperience::IsActive() ? "Fullscreeen experience" : "Windows Desktop"
                 );
             }

@@ -24,5 +24,5 @@
 #define STRINGIZE(x) STRINGIZE2(x)
 #define STRINGIZE2(x) #x
 
-#define VER_VERSION                   0,9,2,0
+#define VER_VERSION                   0,9,3,0
 #define VER_VERSION_STR               STRINGIZE(VER_VERSION) "\0"

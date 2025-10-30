@@ -53,7 +53,7 @@ namespace AnyFSE::App::AppControl::Window
     public:
         MainWindow();
         ~MainWindow();
-        bool Show();
+        bool Show(bool empty = false);
         bool Hide();
         bool Create(LPCWSTR className, HINSTANCE hInstance, LPCTSTR windowName);
         static int RunLoop();
@@ -62,6 +62,8 @@ namespace AnyFSE::App::AppControl::Window
         int ExitOnError();
 
         Event OnExplorerDetected;
+        Event OnQueryEndSession;
+        Event OnEndSession;
 
     private: // Animation
 

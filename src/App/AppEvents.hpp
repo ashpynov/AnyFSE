@@ -17,6 +17,8 @@ namespace AnyFSE::App
         XBOX_ALLOW,
         MONITOR_REGISTRY,
         EXIT_SERVICE,
+        QUERY_END_SESSION,
+        END_SESSION
     };
 }
 

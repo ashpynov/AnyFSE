@@ -39,7 +39,7 @@ namespace AnyFSE::App::AppControl::Window
         DWORD m_duration;
         bool m_mutedLoop;
 
-        std::wstring m_nextVideo;
+        std::wstring m_loadedVideo;
 
         volatile long m_refCount;
 

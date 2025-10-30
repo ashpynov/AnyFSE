@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "Win32",
+            "name": "x64",
             "includePath": [
                 "${workspaceFolder}/src"
             ],

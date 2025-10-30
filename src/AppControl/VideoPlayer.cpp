@@ -167,6 +167,12 @@ namespace AnyFSE::App::AppControl::Window
     {
         CriticalSectionLock lock(&m_cs);
 
+        if (m_bInitialized && videoFile && videoFile[0] && m_loadedVideo == videoFile)
+        {
+            log.Debug("Video: %s is preloaded already", Unicode::to_string(videoFile).c_str());
+            return S_OK;
+        }
+
         log.Debug("Load Video: %s", Unicode::to_string(videoFile).c_str());
 
         if (m_bInitialized)
@@ -212,14 +218,13 @@ namespace AnyFSE::App::AppControl::Window
 
             m_bInitialized = TRUE;
         }
-        m_nextVideo = videoFile;
         
         hr = m_pPlayer->CreateMediaItemFromURL(videoFile, FALSE, 0, NULL);
         if (FAILED(hr))
         {
             log.Error(log.APIError(), "Cant create media item");
         }
-
+        m_loadedVideo = videoFile;
 
         return hr;
     }
@@ -287,7 +292,7 @@ namespace AnyFSE::App::AppControl::Window
 
         m_pPlayer->Stop();
         m_pPlayer->ClearMediaItem();
-        m_nextVideo = L"";
+        m_loadedVideo = L"";
     }
 
     void SimpleVideoPlayer::ParseLoopTimings(const std::wstring &path)
