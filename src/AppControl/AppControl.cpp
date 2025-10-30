@@ -26,6 +26,7 @@
 #include "AppControl/AppControlStateLoop.hpp"
 #include "AppControl.hpp"
 #include "App/Application.hpp"
+#include "AppControl/Launchers.hpp"
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -223,7 +224,9 @@ namespace AnyFSE::App::AppControl
             return -1;
         }
 
-        log.Debug("Application control is started (hInstance=%08x)", hInstance);
+        log.Debug("\n\nApplication control is started (hInstance=%08x)", hInstance);
+
+        Launchers::LauncherOnBoot();
 
         std::thread serviceThread;
 

@@ -98,6 +98,8 @@ namespace AnyFSE::Configuration
             static std::wstring SplashVideoPath;
             static bool SplashVideoMute;
             static bool SplashVideoLoop;
+
+            static bool CleanupFailedStart;
     };
 }
 
