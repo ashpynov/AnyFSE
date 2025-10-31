@@ -43,6 +43,7 @@ namespace AnyFSE::Configuration
     bool            Config::SplashVideoLoop = false;
     bool            Config::QuickStart = false;
     bool            Config::CleanupFailedStart = true;
+    DWORD           Config::RestartDelay = 1000;
 
     std::wstring Config::GetModulePath()
     {
@@ -93,6 +94,7 @@ namespace AnyFSE::Configuration
         AggressiveMode          = config.value(jp("/AggressiveMode"),        false);
         QuickStart              = config.value(jp("/QuickStart"),            false);
         CleanupFailedStart      = config.value(jp("/CleanupFailedStart"),    true);
+        RestartDelay            = config.value(jp("/RestartDelay"),          (DWORD)1000);
         XBoxProcessName         = config.value(jp("/XBoxProcessName"),       std::wstring(L"XboxPcApp.exe"));
 
         SplashShowAnimation     = config.value(jp("/Splash/ShowAnimation"),  true);
@@ -161,9 +163,9 @@ namespace AnyFSE::Configuration
 
         config["QuickStart"]                    = QuickStart;
         config["CleanupFailedStart"]            = CleanupFailedStart;
+        config["RestartDelay"]                  = RestartDelay;
 
     //  config["Log"]["Path"]                   = LogPath;
-
     //  config["AggressiveMode"]                = AggressiveMode;
     //  config["XBoxProcessName"]               = XBoxProcessName;
 

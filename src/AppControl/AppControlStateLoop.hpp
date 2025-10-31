@@ -14,6 +14,7 @@ namespace AnyFSE::App::AppControl::StateLoop
             std::uint64_t m_preventTimer;
             std::uint64_t m_waitLauncherTimer;
             std::uint64_t m_exitingTimer;
+            std::uint64_t m_restartDelayTimer;
 
 
             LONGLONG m_xboxAge;
@@ -21,6 +22,7 @@ namespace AnyFSE::App::AppControl::StateLoop
 
             DWORD launcherPid;
             DWORD m_waitStartTime;
+            bool  m_isRestart;
 
 
         public:
@@ -53,8 +55,10 @@ namespace AnyFSE::App::AppControl::StateLoop
             bool IsExiting();
 
             void ShowSplash();
+            void StartSplash();
             void KillXbox();
             void StartLauncher();
+            void RestartLauncher();
             void WaitLauncher();
             void CloseSplash();
             void PreventTimeout();

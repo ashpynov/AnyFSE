@@ -17,6 +17,8 @@ namespace AnyFSE::App::AppControl::StateLoop
         , m_preventTimer(0)
         , m_waitLauncherTimer(0)
         , m_exitingTimer(0)
+        , m_restartDelayTimer(0)
+        , m_isRestart(false)
     {
 
     }
@@ -75,7 +77,7 @@ namespace AnyFSE::App::AppControl::StateLoop
                 {
                     ShowSplash();
                     KillXbox();
-                    StartLauncher();
+                    RestartLauncher();
                     WaitLauncher();
                 }
                 else
@@ -88,7 +90,7 @@ namespace AnyFSE::App::AppControl::StateLoop
                 log.Debug("OnXboxDetected: Aggressive mode => Kill It. Start Launcher with splash");
                 ShowSplash();
                 KillXbox();
-                StartLauncher();
+                RestartLauncher();
                 WaitLauncher();
             }
             else
@@ -103,6 +105,7 @@ namespace AnyFSE::App::AppControl::StateLoop
     {
         if (!IsLauncherStarted())
         {
+            m_isRestart = false;
             ShowSplash();
             StartLauncher();
             WaitLauncher();
@@ -134,7 +137,7 @@ namespace AnyFSE::App::AppControl::StateLoop
 
     void AppControlStateLoop::OnEndSession()
     {
-        
+
     }
 
     void AppControlStateLoop::OnOpenHome()
@@ -170,7 +173,7 @@ namespace AnyFSE::App::AppControl::StateLoop
                 {
                     ShowSplash();
                 }
-                StartLauncher();
+                RestartLauncher();
                 WaitLauncher();
             }
         }
@@ -279,7 +282,13 @@ namespace AnyFSE::App::AppControl::StateLoop
     void AppControlStateLoop::ShowSplash()
     {
         log.Debug("Show Splash");
-        m_splash.Show(IsExiting());
+        m_splash.Show(IsExiting() || m_isRestart);
+    }
+
+    void AppControlStateLoop::StartSplash()
+    {
+        log.Debug("Start Splash");
+        m_splash.Start();
     }
 
     void AppControlStateLoop::KillXbox()
@@ -305,6 +314,27 @@ namespace AnyFSE::App::AppControl::StateLoop
         else
         {
             log.Debug("Launcher is Active already");
+        }
+        m_isRestart = (bool)Config::RestartDelay;
+    }
+
+    void AppControlStateLoop::RestartLauncher()
+    {
+        if (!m_isRestart || !Config::RestartDelay)
+        {
+            return StartLauncher();
+        }
+        if (!m_restartDelayTimer )
+        {
+            m_restartDelayTimer = AppStateLoop::SetTimer(
+                std::chrono::milliseconds(Config::RestartDelay),
+                [this]()
+                {
+                    this->StartSplash();
+                    this->StartLauncher();
+                    this->m_restartDelayTimer = 0;
+                },
+                false );
         }
     }
 

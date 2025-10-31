@@ -34,6 +34,7 @@ namespace AnyFSE::App::AppControl::Window
         std::wstring m_currentVideo;
 
         int m_result = ERROR_RESTART_APPLICATION;
+        bool m_empty = false;
 
         static WNDCLASS WC;
         static LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -54,6 +55,7 @@ namespace AnyFSE::App::AppControl::Window
         MainWindow();
         ~MainWindow();
         bool Show(bool empty = false);
+        bool Start();
         bool Hide();
         bool Create(LPCWSTR className, HINSTANCE hInstance, LPCTSTR windowName);
         static int RunLoop();

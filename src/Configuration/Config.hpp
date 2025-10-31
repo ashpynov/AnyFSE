@@ -100,6 +100,7 @@ namespace AnyFSE::Configuration
             static bool SplashVideoLoop;
 
             static bool CleanupFailedStart;
+            static DWORD RestartDelay;
     };
 }
 
