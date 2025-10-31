@@ -133,7 +133,7 @@ namespace AnyFSE::App::AppControl
     int AppControl::StartControl(AppControlStateLoop & AppControlStateLoop, Window::MainWindow& mainWindow)
     {
 
-        if (Config::QuickStart && !Process::FindFirstByName(L"explorer.exe"))
+        if (!Config::QuickStart && !Process::FindFirstByName(L"explorer.exe"))
         {
             log.Info("Explorer not found => Delay start");
             return 0;
