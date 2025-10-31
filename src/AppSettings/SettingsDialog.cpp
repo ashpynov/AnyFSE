@@ -433,7 +433,7 @@ namespace AnyFSE::App::AppSettings::Settings
         int nButtonClicked = 0;
         if (SUCCEEDED(TaskDialog(m_hDialog, GetModuleHandle(NULL),
                        L"Uninstall",
-                       L"Uninstall Any Fullscreen Experiense?",
+                       L"Uninstall Any Fullscreen Experience?",
                        L"This will remove system task and all settings\n",
                        TDCBF_YES_BUTTON | TDCBF_CANCEL_BUTTON, TD_INFORMATION_ICON, &nButtonClicked))
             && nButtonClicked == IDYES)
