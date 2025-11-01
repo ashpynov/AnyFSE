@@ -114,7 +114,7 @@ namespace AnyFSE::App::AppControl::Window
     bool MainWindow::Start()
     {
         m_empty = false;
-        if (IsWindowVisible(m_hWnd) && m_empty)
+        if (IsWindowVisible(m_hWnd))
         {
             m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, m_hWnd);
             m_videoPlayer.Play();
