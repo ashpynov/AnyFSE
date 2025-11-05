@@ -31,7 +31,6 @@ namespace AnyFSE::Configuration
     LauncherConfig  Config::Launcher;
     std::wstring    Config::XBoxProcessName;
     bool            Config::AggressiveMode = false;
-    bool            Config::SilentMode = false;
     bool            Config::FseOnStartup = false;
     bool            Config::SplashShowAnimation = true;
     bool            Config::SpalshShowLogo = true;
@@ -86,7 +85,6 @@ namespace AnyFSE::Configuration
 
         json config = GetConfig();
 
-        SilentMode = false;
         FseOnStartup = true;
 
         LogLevel                = (LogLevels)config.value(jp("/Log/Level"),  (int)LogLevels::Disabled);
