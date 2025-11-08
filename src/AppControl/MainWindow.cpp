@@ -106,7 +106,17 @@ namespace AnyFSE::App::AppControl::Window
             }
             AnimateWindow(m_hWnd, 0, AW_BLEND);
             ShowWindow(m_hWnd, SW_MAXIMIZE);
-            SetWindowPos(m_hWnd, HWND_TOPMOST,0,0,0,0, SWP_NOMOVE | SWP_NOSIZE);
+            
+            HMONITOR hMonitor = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
+            MONITORINFOEX monitorInfo;
+            monitorInfo.cbSize = sizeof(monitorInfo);
+            GetMonitorInfo(hMonitor, &monitorInfo);
+
+            SetWindowPos(m_hWnd, HWND_TOPMOST,
+                0,0,
+                monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
+                monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
+                SWP_NONE);
         }
         return true;
     }

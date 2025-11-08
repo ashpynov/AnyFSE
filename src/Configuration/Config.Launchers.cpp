@@ -11,11 +11,14 @@ namespace AnyFSE::Configuration
                 L"Playnite Fullscreen",
                 L"Playnite.FullscreenApp.exe",
                 L"--hidesplashscreen",
-                L"Playnite.FullscreenApp.exe",
-                L"Playnite",
-                L"Playnite.DesktopApp.exe",
-                L"Playnite",
-                L""
+                WS_EX_APPWINDOW, 0,                 // ExStyle, NoStyle
+                L"Playnite.FullscreenApp.exe",      // ProcessName
+                L"",                                // ClassName
+                L"",                                // WindowsTitle
+                WS_EX_APPWINDOW, 0,                 // ExStyleAlt, NoStyleAlt
+                L"Playnite.DesktopApp.exe",         // ProcessNameAlt
+                L"",                                // ClassNameAlt
+                L"",                                // WindowTitleAlt
             }
         },
         {
@@ -24,11 +27,14 @@ namespace AnyFSE::Configuration
                 L"Playnite Desktop",
                 L"Playnite.DesktopApp.exe",
                 L"--hidesplashscreen",
+                WS_EX_APPWINDOW, 0,
                 L"Playnite.DesktopApp.exe",
-                L"Playnite",
+                L"",
+                L"",
+                WS_EX_APPWINDOW, 0,
                 L"Playnite.FullscreenApp.exe",
-                L"Playnite",
-                L""
+                L"",
+                L"",
             }
         },
         {
@@ -37,8 +43,12 @@ namespace AnyFSE::Configuration
                 L"Steam Big Picture Mode",
                 L"Steam.exe",
                 L"steam://open/bigpicture",
+                WS_EX_APPWINDOW, WS_THICKFRAME,
                 L"steamwebhelper.exe",
-                L"Steam Big Picture Mode",
+                L"SDL_app",
+                L"",
+                0, 0,
+                L"",
                 L"",
                 L"",
                 L"",
@@ -49,15 +59,10 @@ namespace AnyFSE::Configuration
             LauncherType::Xbox, {
                 LauncherType::Xbox,
                 L"Xbox",
-                L"XBoxPcApp.exe",
-                L"",
-                L"",
-                L"",
-                L"",
-                L"",
-                L""
+                L"XBoxPcApp.exe"
             }
-        }
+        },
+        
     };
 
     bool Config::GetLauncherDefaults(const std::wstring& path, LauncherConfig& out)

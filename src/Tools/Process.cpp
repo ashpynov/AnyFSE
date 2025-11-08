@@ -171,6 +171,10 @@ namespace AnyFSE::Tools::Process
     {
         const std::set<DWORD> * processIds;
         std::wstring windowTitle;
+        std::wstring className;
+        DWORD style;
+        DWORD noStyle;
+        DWORD exStyle;
         HWND foundWindow;
     };
 
@@ -182,38 +186,84 @@ namespace AnyFSE::Tools::Process
         GetWindowThreadProcessId(hwnd, &windowProcessId);
         if ( searchData->processIds->find(windowProcessId) != searchData->processIds->end())
         {
-            // If no specific window title provided, return the first main window found
-            if (searchData->windowTitle.empty())
+            BOOL classMatch = searchData->windowTitle.empty();
+            BOOL titleMatch = searchData->className.empty();
+            BOOL exStyleMatch = searchData->exStyle == 0;
+            BOOL styleMatch = searchData->style == 0;
+            BOOL noStyleMatch = searchData->noStyle == 0;
+            
+            if (!classMatch)
+            {
+                wchar_t className[MAX_PATH + 1];
+                int classNameLength = RealGetWindowClassW(hwnd, className, MAX_PATH);
+
+                if (classNameLength > 0)
+                {
+                    std::wstring classNameStr(className, classNameLength);
+
+                    // Compare titles (case-sensitive)
+                    if (classNameStr == searchData->className)
+                    {
+                        classMatch = true;
+                    }
+                }
+            }
+
+            if (!titleMatch)
+            {
+                wchar_t title[MAX_PATH + 1];
+                int titleLength = GetWindowTextW(hwnd, title, MAX_PATH);
+
+                if (titleLength > 0)
+                {
+                    std::wstring currentTitle(title, titleLength);
+
+                    // Compare titles (case-sensitive)
+                    if (currentTitle == searchData->windowTitle)
+                    {
+                        titleMatch = true;
+                    }
+                }
+            }
+
+            if (!exStyleMatch)
+            {
+                DWORD exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+                exStyleMatch = ((searchData->exStyle & exStyle) == searchData->exStyle );
+            }
+
+            if (!styleMatch)
+            {
+                DWORD style = GetWindowLong(hwnd, GWL_STYLE);
+                styleMatch = ((searchData->style & style) == searchData->style );
+            }
+            
+            if (!noStyleMatch)
+            {
+                DWORD style = GetWindowLong(hwnd, GWL_STYLE);
+                noStyleMatch = ((searchData->noStyle & style) == 0);
+            }
+
+            if (styleMatch && noStyleMatch && exStyleMatch && titleMatch && classMatch)
             {
                 searchData->foundWindow = hwnd;
                 return FALSE; // Stop enumeration
-            }
 
-            // if (GetParent(hwnd) != NULL || !IsWindowVisible(hwnd))
-            // {
-            //     return TRUE;
-            // }
-            // Get window title
-            wchar_t title[256];
-            int titleLength = GetWindowTextW(hwnd, title, sizeof(title));
-
-            if (titleLength > 0)
-            {
-                std::wstring currentTitle(title, titleLength);
-
-                // Compare titles (case-sensitive)
-                if (currentTitle == searchData->windowTitle)
-                {
-                    searchData->foundWindow = hwnd;
-                    return FALSE; // Stop enumeration
-                }
             }
         }
 
         return TRUE; // Continue enumeration
     }
 
-    HWND GetWindow(const std::set<DWORD>& processIds, const std::wstring &windowTitle)
+    HWND GetWindow(const std::wstring &processName, DWORD exStyle, const std::wstring &className, const std::wstring &windowTitle, DWORD style, DWORD noStyle)
+    {
+        std::set<DWORD> processIds;
+        return Process::FindAllByName(processName, processIds) 
+            ? GetWindow(processIds, exStyle, className, windowTitle, style, noStyle)
+            : NULL;
+    }
+
+    HWND GetWindow(const std::set<DWORD>& processIds, DWORD exStyle, const std::wstring &className, const std::wstring &windowTitle, DWORD style, DWORD noStyle)
     {
         if (processIds.size() == 0)
         {
@@ -223,6 +273,10 @@ namespace AnyFSE::Tools::Process
         WindowSearchData searchData;
         searchData.processIds = &processIds;
         searchData.windowTitle = windowTitle;
+        searchData.className = className;
+        searchData.exStyle = exStyle;
+        searchData.style = style;
+        searchData.noStyle = noStyle;
         searchData.foundWindow = NULL;
 
         EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&searchData));

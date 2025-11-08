@@ -27,9 +27,17 @@ namespace AnyFSE::Configuration
         std::wstring Name;
         std::wstring StartCommand;
         std::wstring StartArg;
+
+        DWORD ExStyle;
+        DWORD NoStyle;
         std::wstring ProcessName;
+        std::wstring ClassName;
         std::wstring WindowTitle;
+
+        DWORD ExStyleAlt;
+        DWORD NoStyleAlt;
         std::wstring ProcessNameAlt;
+        std::wstring ClassNameAlt;
         std::wstring WindowTitleAlt;
         std::wstring IconFile;
         bool IsTrayAggressive;

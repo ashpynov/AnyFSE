@@ -119,9 +119,15 @@ namespace AnyFSE::Configuration
         {
             out.StartCommand    = config.value(jp("/Launcher/StartCommand"),   out.StartCommand);
             out.StartArg        = config.value(jp("/Launcher/StartArg"),       out.StartArg);
+            out.ExStyle         = config.value(jp("/Launcher/ExStyle"),        out.ExStyle);
+            out.NoStyle         = config.value(jp("/Launcher/NoStyle"),        out.NoStyle);
             out.ProcessName     = config.value(jp("/Launcher/ProcessName"),    out.ProcessName);
+            out.ClassName       = config.value(jp("/Launcher/ClassName"),      out.ClassName);
             out.WindowTitle     = config.value(jp("/Launcher/WindowTitle"),    out.WindowTitle);
+            out.ExStyleAlt      = config.value(jp("/Launcher/ExStyleAlt"),     out.ExStyleAlt);
+            out.NoStyleAlt      = config.value(jp("/Launcher/NoStyleAlt"),     out.NoStyleAlt);
             out.ProcessNameAlt  = config.value(jp("/Launcher/ProcessNameAlt"), out.ProcessNameAlt);
+            out.ClassNameAlt    = config.value(jp("/Launcher/ClassNameAlt"),   out.ClassNameAlt);
             out.WindowTitleAlt  = config.value(jp("/Launcher/WindowTitleAlt"), out.WindowTitleAlt);
             out.IconFile        = config.value(jp("/Launcher/IconFile"),       out.IconFile);
         }
@@ -141,9 +147,15 @@ namespace AnyFSE::Configuration
         config["Launcher"]["CustomSettings"]    = CustomSettings;
         config["Launcher"]["StartCommand"]      = Launcher.StartCommand;
         config["Launcher"]["StartArg"]          = Launcher.StartArg;
+        config["Launcher"]["ExStyle"]           = Launcher.ExStyle;
+        config["Launcher"]["NoStyle"]           = Launcher.NoStyle;
         config["Launcher"]["ProcessName"]       = Launcher.ProcessName;
+        config["Launcher"]["ClassName"]         = Launcher.ClassName;
         config["Launcher"]["WindowTitle"]       = Launcher.WindowTitle;
+        config["Launcher"]["ExStyleAlt"]        = Launcher.ExStyleAlt;
+        config["Launcher"]["NoStyleAlt"]        = Launcher.NoStyleAlt;
         config["Launcher"]["ProcessNameAlt"]    = Launcher.ProcessNameAlt;
+        config["Launcher"]["ClassNameAlt"]      = Launcher.ClassNameAlt;
         config["Launcher"]["WindowTitleAlt"]    = Launcher.WindowTitleAlt;
         config["Launcher"]["IconFile"]          = Launcher.IconFile;
 

@@ -63,6 +63,8 @@ namespace AnyFSE::App::AppControl::StateLoop
             void CloseSplash();
             void PreventTimeout();
             void FocusLauncher();
+
+            HWND GetLauncherWindow();
     };
 }
 

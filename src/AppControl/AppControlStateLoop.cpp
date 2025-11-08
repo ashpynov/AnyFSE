@@ -228,14 +228,8 @@ namespace AnyFSE::App::AppControl::StateLoop
     bool AppControlStateLoop::IsLauncherActive()
     {
         std::set<DWORD> processIds;
-        return  (
-            Process::FindAllByName(Config::Launcher.ProcessName, processIds)
-            && Process::GetWindow(processIds, Config::Launcher.WindowTitle)
-        ) || (
-            !Config::Launcher.ProcessNameAlt.empty()
-            && Process::FindAllByName(Config::Launcher.ProcessNameAlt, processIds)
-            && Process::GetWindow(processIds, Config::Launcher.WindowTitleAlt)
-        );
+        const LauncherConfig& launcher = Config::Launcher;
+        return GetLauncherWindow();
     }
 
     bool AppControlStateLoop::IsLauncherStarted()
@@ -270,7 +264,7 @@ namespace AnyFSE::App::AppControl::StateLoop
 
     bool AppControlStateLoop::IsOnTaskSwitcher()
     {
-        return (GetTickCount64() - m_deviceFormAge) < 50;
+        return (GetTickCount64() - m_deviceFormAge) < 1000;
     }
 
     bool AppControlStateLoop::IsExiting()
@@ -367,18 +361,34 @@ namespace AnyFSE::App::AppControl::StateLoop
     {
         log.Debug("Focus Launcher");
 
-        std::set<DWORD> processIds;
-        if (Process::FindAllByName(Config::Launcher.ProcessName, processIds))
+        HWND launcherHwnd = GetLauncherWindow();
+        if (launcherHwnd)
         {
-            HWND launcher = Process::GetWindow(processIds, Config::Launcher.WindowTitle);
-            if (launcher)
-            {
-                ShowWindow(launcher, SW_RESTORE);
-                SetWindowPos(launcher, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-                SetForegroundWindow(launcher);
-                SetFocus(launcher);
-            }
+            ShowWindow(launcherHwnd, SW_RESTORE);
+            SetWindowPos(launcherHwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+            SetForegroundWindow(launcherHwnd);
+            SetFocus(launcherHwnd);
         }
+    }
+
+    HWND AppControlStateLoop::GetLauncherWindow()
+    {
+        const LauncherConfig& launcher = Config::Launcher;
+        HWND launcherHwnd = Process::GetWindow(
+            launcher.ProcessName, launcher.ExStyle, 
+            launcher.ClassName, launcher.WindowTitle, 
+            WS_VISIBLE, launcher.NoStyle
+        );
+        
+        if (!launcherHwnd)
+        {
+            launcherHwnd = Process::GetWindow(
+                launcher.ProcessNameAlt, launcher.ExStyleAlt, 
+                launcher.ClassNameAlt, launcher.WindowTitleAlt,
+                WS_VISIBLE, launcher.NoStyle
+            );
+        }
+        return launcherHwnd;
     }
 
     void SuppressXboxActivation()
