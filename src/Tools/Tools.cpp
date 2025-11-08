@@ -57,8 +57,8 @@ namespace AnyFSE::Tools
         HICON hIcon;
 
         HRESULT hr = SHDefExtractIconW(path.wstring().c_str(), index, 0, &hIcon, NULL, (DWORD)iconSize);
-
-        if (!SUCCEEDED(hr) || !hIcon)
+        
+        if (hr || !hIcon)
         {
             log.Warn(log.APIError(), "No icon with index %d", index);
             return NULL;

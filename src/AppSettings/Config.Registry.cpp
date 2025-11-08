@@ -16,7 +16,7 @@ namespace AnyFSE::Configuration
 
         if (out.Type == LauncherType::None
             || out.Type == LauncherType::Xbox
-            || out.Type == LauncherType::ArmoryCrate
+            || out.Type == LauncherType::ArmouryCrate
             || out.StartCommand.find(L'!') != std::wstring::npos)
         {
             return;
@@ -74,7 +74,31 @@ namespace AnyFSE::Configuration
 
     void Config::FindArmoryCrate(std::list<std::wstring>& found)
     {
+        namespace fs = std::filesystem;
 
+        std::wstring searchDirectory = L"C:\\Program Files\\WindowsApps\\";
+        std::wstring name = L"B9ECED6F.ArmouryCrateSE_";
+        std::wstring vendor = L"__qmba6cd70vzyy";
+
+        try
+        {
+            for (const auto &entry : std::filesystem::directory_iterator(searchDirectory))
+            {
+                std::wstring filename = entry.path().filename().wstring();
+                if (filename.find(name) == 0 && filename.find(vendor) == filename.size() - vendor.size())
+                {
+                    std::wstring ACPath = searchDirectory + filename + L"\\ArmouryCrateSE.exe";
+                    if (fs::exists(fs::path(ACPath)))
+                    {
+                        found.push_back(L"asusac://");
+                        return;
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+        }
     }
 
     bool Config::FindLaunchers(std::list<std::wstring>& found)
@@ -91,8 +115,8 @@ namespace AnyFSE::Configuration
         size_t existed = found.size();
         FindPlaynite(found);
         FindSteam(found);
-        FindXbox(found);
         FindArmoryCrate(found);
+        FindXbox(found);
         return found.size() > existed;
     }
 

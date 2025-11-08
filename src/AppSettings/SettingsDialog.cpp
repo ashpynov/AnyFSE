@@ -371,7 +371,7 @@ namespace AnyFSE::App::AppSettings::Settings
         bool customSettings = Config::CustomSettings;
         m_customSettingsState = customSettings ? FluentDesign::SettingsLine::Opened: FluentDesign::SettingsLine::Closed;
 
-        m_isCustom = (customSettings || m_config.IsCustom) && m_config.Type != LauncherType::Xbox || m_config.Type == LauncherType::Custom;
+        m_isCustom = (customSettings || m_config.IsCustom) && (m_config.Type != LauncherType::Xbox && m_config.Type != LauncherType::ArmouryCrate) || m_config.Type == LauncherType::Custom;
         m_isAgressive = Config::AggressiveMode && m_config.Type != LauncherType::Xbox;
 
         UpdateControls();
@@ -474,7 +474,7 @@ namespace AnyFSE::App::AppSettings::Settings
         }
 
         bool alwaysSettings = defaults.Type==LauncherType::Custom;
-        bool noSettings = defaults.Type == LauncherType::Xbox || defaults.Type == LauncherType::None;
+        bool noSettings = defaults.Type == LauncherType::Xbox ||  defaults.Type == LauncherType::ArmouryCrate || defaults.Type == LauncherType::None;
 
         bool haveSettings = m_isCustom && !noSettings || alwaysSettings;
         bool enableCheck = !alwaysSettings && !noSettings;

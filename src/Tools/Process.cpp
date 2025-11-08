@@ -18,12 +18,16 @@
 #include <set>
 #include <sstream>
 
+#include "Logging/LogManager.hpp"
+#include "Tools/Unicode.hpp"
 #include "Process.hpp"
 
 #pragma comment(lib, "psapi.lib")
 
 namespace AnyFSE::Tools::Process
 {
+    static Logger log = LogManager::GetLogger("Process");
+
     DWORD FindFirstByName(const std::wstring &processName)
     {
         HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -126,8 +130,19 @@ namespace AnyFSE::Tools::Process
         return result.size();
     }
 
-    DWORD Start(const std::wstring &command, const std::wstring &arguments)
+    DWORD StartProtocol(const std::wstring &ptorocol)
     {
+        HINSTANCE hInstance = ShellExecuteW(NULL, L"open", ptorocol.c_str(), NULL, NULL, SW_SHOWNORMAL);
+        return (INT_PTR)hInstance > 32 ? 1 : 0;
+    }
+
+    DWORD StartProcess(const std::wstring &command, const std::wstring &arguments)
+    {
+        if (command.find(L"://") != std::wstring::npos)
+        {
+            return StartProtocol(command);
+        }
+
         STARTUPINFOW si = {0};
         PROCESS_INFORMATION pi = {0};
         si.cb = sizeof(si);
@@ -186,11 +201,11 @@ namespace AnyFSE::Tools::Process
         GetWindowThreadProcessId(hwnd, &windowProcessId);
         if ( searchData->processIds->find(windowProcessId) != searchData->processIds->end())
         {
-            BOOL classMatch = searchData->windowTitle.empty();
-            BOOL titleMatch = searchData->className.empty();
+            BOOL classMatch = searchData->className.empty();
+            BOOL titleMatch = searchData->windowTitle.empty();
             BOOL exStyleMatch = searchData->exStyle == 0;
-            BOOL styleMatch = searchData->style == 0;
-            BOOL noStyleMatch = searchData->noStyle == 0;
+            BOOL styleMatch = searchData->style == 0 || (searchData->noStyle & WS_VISIBLE);
+            BOOL noStyleMatch = searchData->noStyle == 0 || (searchData->noStyle & WS_VISIBLE);
             
             if (!classMatch)
             {
@@ -200,6 +215,8 @@ namespace AnyFSE::Tools::Process
                 if (classNameLength > 0)
                 {
                     std::wstring classNameStr(className, classNameLength);
+
+                    TRACE("Class Name: %s", Unicode::to_string(classNameStr).c_str());
 
                     // Compare titles (case-sensitive)
                     if (classNameStr == searchData->className)
@@ -218,6 +235,7 @@ namespace AnyFSE::Tools::Process
                 {
                     std::wstring currentTitle(title, titleLength);
 
+                    log.Debug("Title Name: %s", Unicode::to_string(currentTitle).c_str());
                     // Compare titles (case-sensitive)
                     if (currentTitle == searchData->windowTitle)
                     {
@@ -231,11 +249,13 @@ namespace AnyFSE::Tools::Process
                 DWORD exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
                 exStyleMatch = ((searchData->exStyle & exStyle) == searchData->exStyle );
             }
+            TRACE("ExStyle %x -> %x", GetWindowLong(hwnd, GWL_EXSTYLE), searchData->exStyle);
 
             if (!styleMatch)
             {
                 DWORD style = GetWindowLong(hwnd, GWL_STYLE);
                 styleMatch = ((searchData->style & style) == searchData->style );
+                TRACE("Style %x -> %x", style, searchData->style);
             }
             
             if (!noStyleMatch)
@@ -246,6 +266,7 @@ namespace AnyFSE::Tools::Process
 
             if (styleMatch && noStyleMatch && exStyleMatch && titleMatch && classMatch)
             {
+                log.Debug("Found %x", hwnd);
                 searchData->foundWindow = hwnd;
                 return FALSE; // Stop enumeration
 

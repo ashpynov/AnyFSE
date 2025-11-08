@@ -339,7 +339,7 @@ namespace AnyFSE::App::AppControl
         {
             wchar_t modulePath[MAX_PATH];
             GetModuleFileName(NULL, modulePath, MAX_PATH);
-            Process::Start(modulePath, L"");
+            Process::StartProcess(modulePath, L"");
         }
         return (int)exitCode;
     }

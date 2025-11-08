@@ -300,7 +300,7 @@ namespace AnyFSE::App::AppControl::StateLoop
         else if (!IsLauncherStarted())
         {
             log.Debug("Start Launcher");
-            if (0 == Process::Start(Config::Launcher.StartCommand, Config::Launcher.StartArg))
+            if (0 == Process::StartProcess(Config::Launcher.StartCommand, Config::Launcher.StartArg))
             {
                 log.Error(log.APIError(), "Can't start launcher:" );
             }

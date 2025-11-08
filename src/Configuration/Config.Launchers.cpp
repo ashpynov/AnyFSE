@@ -56,6 +56,23 @@ namespace AnyFSE::Configuration
             }
         },
         {
+            LauncherType::ArmouryCrate, {
+                LauncherType::ArmouryCrate,
+                L"Armoury Crate",
+                L"asusac://",
+                L"",
+                0, WS_VISIBLE,
+                L"ArmouryCrateSe.exe",
+                L"Windows.UI.Core.CoreWindow",
+                L"",
+                0, WS_VISIBLE,
+                L"ArmouryCrateSe.exe",
+                L"MSCTFIME UI",
+                L"",
+                L"C:\\Program Files\\ASUS\\ARMOURY CRATE SE Service\\ArmouryCrateSE.UserSessionHelper.exe"
+            }
+        },
+        {
             LauncherType::Xbox, {
                 LauncherType::Xbox,
                 L"Xbox",
@@ -77,7 +94,11 @@ namespace AnyFSE::Configuration
             return true;
         }
 
-        const std::wstring exe = Unicode::to_lower(fs::path(path).filename().wstring());
+        std::wstring exe = Unicode::to_lower(fs::path(path).filename().wstring());
+        if (exe.empty()) 
+        {
+            exe = Unicode::to_lower(path);
+        }
         for (auto it = Config::LauncherConfigsMap.begin(); it != Config::LauncherConfigsMap.end(); ++it)
         {
             if (Unicode::to_lower(it->second.StartCommand) == exe)

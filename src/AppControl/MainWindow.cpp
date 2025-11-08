@@ -106,17 +106,7 @@ namespace AnyFSE::App::AppControl::Window
             }
             AnimateWindow(m_hWnd, 0, AW_BLEND);
             ShowWindow(m_hWnd, SW_MAXIMIZE);
-            
-            HMONITOR hMonitor = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
-            MONITORINFOEX monitorInfo;
-            monitorInfo.cbSize = sizeof(monitorInfo);
-            GetMonitorInfo(hMonitor, &monitorInfo);
-
-            SetWindowPos(m_hWnd, HWND_TOPMOST,
-                0,0,
-                monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
-                monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
-                SWP_NONE);
+            BringToFront();
         }
         return true;
     }
@@ -130,6 +120,25 @@ namespace AnyFSE::App::AppControl::Window
             m_videoPlayer.Play();
             StartAnimation();
         }
+        return true;
+    }
+
+    bool MainWindow::BringToFront()
+    {
+        HMONITOR hMonitor = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
+        MONITORINFOEX monitorInfo;
+        monitorInfo.cbSize = sizeof(monitorInfo);
+        GetMonitorInfo(hMonitor, &monitorInfo);
+
+        SetWindowPos(m_hWnd, HWND_TOPMOST,
+            0,0,
+            monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
+            monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
+            SWP_NONE);
+        
+        SetActiveWindow(m_hWnd);
+        SetForegroundWindow(m_hWnd);
+
         return true;
     }
 
@@ -371,7 +380,7 @@ namespace AnyFSE::App::AppControl::Window
     void MainWindow::SelectNextVideo()
     {
 
-        if (!Config::SplashShowVideo)
+        if (!Config::SplashShowVideo || Config::Launcher.Type == LauncherType::ArmouryCrate)
         {
             return;
         }

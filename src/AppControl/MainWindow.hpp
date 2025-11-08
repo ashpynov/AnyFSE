@@ -56,6 +56,7 @@ namespace AnyFSE::App::AppControl::Window
         ~MainWindow();
         bool Show(bool empty = false);
         bool Start();
+        bool BringToFront();
         bool Hide();
         bool Create(LPCWSTR className, HINSTANCE hInstance, LPCTSTR windowName);
         static int RunLoop();

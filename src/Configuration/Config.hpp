@@ -16,7 +16,7 @@ namespace AnyFSE::Configuration
         Custom,
         PlayniteFullscreen,
         PlayniteDesktop,
-        ArmoryCrate,
+        ArmouryCrate,
         Steam,
         Xbox
     };

@@ -269,6 +269,7 @@ namespace AnyFSE::App::AppControl::Window
             return E_FAIL;
         }
 
+        m_pPlayer->SetMute(TRUE);
         MFP_MEDIAPLAYER_STATE state;
         HRESULT hr = m_pPlayer->GetState(&state);
         if (state == MFP_MEDIAPLAYER_STATE_EMPTY)
