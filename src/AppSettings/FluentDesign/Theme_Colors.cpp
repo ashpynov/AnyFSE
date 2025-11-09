@@ -176,6 +176,11 @@ namespace FluentDesign
             m_colors[ScrollThumb] = GetGrey(157);
             m_colors[ScrollThumbStroke] = GetGrey(100);
             m_colors[ScrollTrack] = GetGrey(51);
+
+            m_colors[Breadcrumb] = GetGrey(255);
+            m_colors[BreadcrumbLink] = GetGrey(204);
+            m_colors[BreadcrumbLinkHover] = GetGrey(255);
+            m_colors[BreadcrumbLinkPressed] = GetGrey(150);
         }
         else
         {
@@ -237,6 +242,11 @@ namespace FluentDesign
             m_colors[ScrollThumb] = GetGrey(135);
             m_colors[ScrollThumbStroke] = GetGrey(200);
             m_colors[ScrollTrack] = GetGrey(251);
+
+            m_colors[Breadcrumb] = GetGrey(26);
+            m_colors[BreadcrumbLink] = GetGrey(92);
+            m_colors[BreadcrumbLinkHover] = GetGrey(26);
+            m_colors[BreadcrumbLinkPressed] = GetGrey(134);
         }
     }
 }

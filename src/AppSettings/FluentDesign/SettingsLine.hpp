@@ -28,7 +28,8 @@ namespace FluentDesign
             Closed,
             Opened,
             Next,
-            Link
+            Link,
+            Caption
         };
 
     private:
@@ -42,13 +43,19 @@ namespace FluentDesign
 
         std::wstring m_name;
         std::wstring m_description;
+        wchar_t m_icon;
 
         int m_left, m_top;
         int m_width, m_height;
 
+        int m_designHeight;
+        int m_designPadding;
+
+        bool m_visible;
         bool m_enabled;
         bool m_hovered;
         bool m_childFocused;
+        bool m_isGroupItem;
 
         UINT m_frameFlags;
 
@@ -70,12 +77,12 @@ namespace FluentDesign
 
         explicit SettingsLine(Theme &theme, HWND hParent,
             const std::wstring &name, const std::wstring &description,
-            int x, int y, int width, int height);
+            int x, int y, int width, int height, int padding);
 
         explicit SettingsLine(Theme &theme, HWND hParent,
             const std::wstring &name, const std::wstring &description,
-            int x, int y, int width, int height,
-             std::function<HWND(HWND)> createChild);
+            int x, int y, int width, int height, int padding,
+            std::function<HWND(HWND)> createChild);
 
         ~SettingsLine();
 
@@ -108,12 +115,19 @@ namespace FluentDesign
 
         // Sizing
         void SetSize(int width, int height);
+        int GetDesignHeight() const;
+        int GetDesignPadding() const;
+        void SetTop(int top);
         void SetLeftMargin(int margin);
 
         void SetState(State state);
         State GetState() { return m_state; }
 
         void AddGroupItem(SettingsLine *groupItem);
+        void UpdateLayout();
+        bool IsNested() const { return m_isGroupItem; }
+
+        void SetIcon(wchar_t icon);
 
         Event OnChanged;
 
@@ -137,10 +151,11 @@ namespace FluentDesign
 
         // Drawing methods
         void DrawText(HDC hdc);
+        void DrawIcon(HDC hdc);
         void DrawChevron(HDC hdc);
 
         // Layout management
-        void UpdateLayout();
+
         void PositionChildControl();
     };
 }

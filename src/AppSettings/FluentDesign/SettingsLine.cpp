@@ -36,6 +36,9 @@ namespace FluentDesign
         , m_state(State::Normal)
         , m_childFocused(false)
         , m_frameFlags(Gdiplus::FrameFlags::CORNER_ALL | Gdiplus::FrameFlags::SIDE_ALL)
+        , m_visible(true)
+        , m_isGroupItem(false)
+        , m_icon(L'\0')
     {
     }
 
@@ -44,9 +47,10 @@ namespace FluentDesign
             HWND hParent,
             const std::wstring &name,
             const std::wstring &description,
-            int x, int y, int width, int height)
+            int x, int y, int width, int height, int padding)
         : SettingsLine(theme)
     {
+        m_designPadding = padding;
         Create(hParent, name, description, x, y, width, height);
     }
 
@@ -55,9 +59,9 @@ namespace FluentDesign
             HWND hParent,
             const std::wstring &name,
             const std::wstring &description,
-            int x, int y, int width, int height,
+            int x, int y, int width, int height, int padding,
             std::function<HWND(HWND)> createChild)
-        : SettingsLine(theme, hParent, name, description, x,y, width, height)
+        : SettingsLine(theme, hParent, name, description, x,y, width, height, padding)
     {
         SetChildControl(createChild(GetHWnd()));
     }
@@ -83,6 +87,7 @@ namespace FluentDesign
         m_top = y;
         m_width = width;
         m_height = height;
+        m_designHeight = m_theme.DpiUnscale(height);
 
         // Register window class if needed
         if (!s_classRegistered)
@@ -229,6 +234,8 @@ namespace FluentDesign
 
         DrawBackground(paint.MemDC(), paint.ClientRect());
 
+        DrawIcon(paint.MemDC());
+
         // Draw text
         DrawText(paint.MemDC());
         if (m_state != Normal)
@@ -244,6 +251,11 @@ namespace FluentDesign
 
     void SettingsLine::DrawBackground(HDC hdc, const RECT &rect, bool frame)
     {
+        if (m_state == State::Caption)
+        {
+            return;
+        }
+
         using namespace Gdiplus;
         Graphics graphics(hdc);
 
@@ -280,10 +292,15 @@ namespace FluentDesign
         SetBkMode(hdc, TRANSPARENT);
 
         // Draw name
-        rect.left += m_theme.DpiScale(m_leftMargin);   // Margin
+        rect.left += (m_state != State::Caption) ? m_theme.DpiScale(m_leftMargin) : 0;   // Margin
+
+        if (m_icon)
+        {
+            rect.left += m_theme.GetSize_Icon() + m_theme.DpiScale(m_leftMargin);
+        }
         //rect.right -= 160; // Space for child control
 
-        SelectObject(hdc, m_theme.GetFont_Text());
+        SelectObject(hdc, (m_state != State::Caption) ? m_theme.GetFont_Text() : m_theme.GetFont_TextBold());
         SetTextColor(hdc, textColor);
 
         int height = m_theme.GetSize_Text();
@@ -293,7 +310,10 @@ namespace FluentDesign
         }
 
         RECT nameRect = rect;
-        nameRect.top = (rect.bottom - rect.top - height) / 2;
+        nameRect.top = (m_state != State::Caption)
+            ? (rect.bottom - rect.top - height) / 2
+            : (rect.bottom - height - m_theme.DpiScale(m_linePadding));
+
         nameRect.bottom = nameRect.top + m_theme.GetSize_Text();
 
         ::DrawText(hdc, m_name.c_str(), -1, &nameRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
@@ -309,6 +329,28 @@ namespace FluentDesign
         ::DrawText(hdc, m_description.c_str(), -1, &descRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE| DT_NOCLIP);
     }
 
+    void SettingsLine::DrawIcon(HDC hdc)
+    {
+        if (!m_icon)
+        {
+            return;
+        }
+
+        RECT rect;
+        GetClientRect(m_hWnd, &rect);
+
+        rect.left += (m_state != State::Caption) ? m_theme.DpiScale(m_leftMargin) : 0;
+
+        SetBkMode(hdc, TRANSPARENT);
+        SelectObject(hdc, m_theme.GetFont_Icon());
+        SetTextColor(hdc, m_theme.GetColorRef(m_enabled ? FluentDesign::Theme::Text : FluentDesign::Theme::TextDisabled));
+
+        rect.top = (rect.bottom - rect.top - m_theme.GetSize_Icon()) / 2;
+        rect.bottom = rect.top + m_theme.GetSize_Icon();
+
+        ::DrawText(hdc, &m_icon, 1, &rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
+
+    }
     void SettingsLine::DrawChevron(HDC hdc)
     {
         RECT rect;
@@ -347,6 +389,7 @@ namespace FluentDesign
     {
         m_width = width;
         m_height = height;
+        //m_designHeight = m_theme.DpiUnscale(height);
         UpdateLayout();
     }
 
@@ -410,6 +453,10 @@ namespace FluentDesign
             SetState(m_state == State::Closed ?  State::Opened : State::Closed);
             OnChanged.Notify();
         }
+        else if (m_state != State::Caption)
+        {
+            OnChanged.Notify();
+        }
 
 
         m_childFocused = false;
@@ -421,14 +468,21 @@ namespace FluentDesign
         PositionChildControl();
         if (m_groupItemsList.size() > 0)
         {
-            bool bShow = m_state == State::Opened;
+            bool bShow = m_state == State::Opened && IsWindowVisible(m_hWnd);
 
             for (auto& gr : m_groupItemsList)
             {
+                gr->m_visible = bShow;
                 ShowWindow(gr->m_hWnd, bShow ? SW_SHOW : SW_HIDE);
             }
         }
         Invalidate();
+    }
+
+    void SettingsLine::SetIcon(wchar_t icon)
+    {
+        m_icon = icon;
+        UpdateLayout();
     }
 
     void SettingsLine::PositionChildControl()
@@ -499,8 +553,31 @@ namespace FluentDesign
     {
         m_width = width;
         m_height = height;
+        //m_designHeight = m_theme.DpiUnscale(height);
         SetWindowPos(m_hWnd, NULL, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
     }
+
+    int SettingsLine::GetDesignHeight() const
+    {
+        return m_visible ? m_designHeight : 0;
+    }
+
+    int SettingsLine::GetDesignPadding() const
+    {
+        int padding = m_designPadding;
+        if (m_groupItemsList.size() > 0 && m_state != State::Opened)
+        {
+            padding = m_groupItemsList.back()->m_designPadding;
+        }
+        return m_visible ? padding : 0;
+    }
+
+    void SettingsLine::SetTop(int top)
+    {
+        m_top = top;
+        SetWindowPos(m_hWnd, NULL, m_left, m_top, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+    }
+
     void SettingsLine::SetLeftMargin(int margin)
     {
         m_leftMargin = margin;
@@ -529,5 +606,6 @@ namespace FluentDesign
         }
         m_groupItemsList.push_back(groupItem);
         groupItem->SetFrame(Gdiplus::FrameFlags::SIDE_ALL | Gdiplus::FrameFlags::CORNER_BOTTOM);
+        groupItem->m_isGroupItem = true;
     }
 }

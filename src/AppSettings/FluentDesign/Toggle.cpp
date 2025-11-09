@@ -73,8 +73,12 @@ namespace FluentDesign
 
     void Toggle::SetCheck(bool check)
     {
-        m_isChecked = check;
-        InvalidateRect(m_hToggle, NULL, true);
+        if ( m_isChecked != check)
+        {
+            m_isChecked = check;
+            InvalidateRect(m_hToggle, NULL, true);
+            OnChanged.Notify();
+        }
     }
 
     LRESULT Toggle::ToggleSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)

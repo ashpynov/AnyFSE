@@ -97,7 +97,7 @@ namespace AnyFSE::Configuration
             static bool QuickStart;
 
             static bool SplashShowAnimation;
-            static bool SpalshShowLogo;
+            static bool SplashShowLogo;
             static bool SplashShowText;
             static std::wstring SplashCustomText;
 

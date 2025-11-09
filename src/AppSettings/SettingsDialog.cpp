@@ -10,7 +10,7 @@
 
 
 #include "SettingsDialog.hpp"
-#include "Resource.h"
+#include "resource.h"
 #include <commdlg.h>
 #include <uxtheme.h>
 #include "Tools/Tools.hpp"
@@ -25,7 +25,7 @@
 
 #define byte ::byte
 
-#include "Tools/Gdiplus.hpp"
+#include "Tools/GdiPlus.hpp"
 
 
 #pragma comment(lib, "comctl32.lib")
@@ -75,7 +75,7 @@ namespace AnyFSE::App::AppSettings::Settings
         int screenWidth = GetSystemMetrics(SM_CXSCREEN);
         int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-        int cx = m_theme.DpiScale(700);
+        int cx = m_theme.DpiScale(900);
         int cy = m_theme.DpiScale(720);
 
         // Calculate center position
@@ -125,6 +125,36 @@ namespace AnyFSE::App::AppSettings::Settings
             }
             return TRUE;
 
+        case WM_MOUSEWHEEL:
+            {
+                return m_scrollView.OnMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam));
+            }
+            break;
+
+        case WM_NOTIFY:
+            {
+                LPNMHDR notification = (LPNMHDR)lParam;
+                if (notification->code == NM_SETFOCUS)
+                {
+                    RECT clientRect;
+                    HWND hFocused = notification->hwndFrom;
+                    for (HWND parent = GetParent(hFocused); parent; parent = GetParent(parent))
+                    {
+                        if (parent == m_scrollView.GetHwnd())
+                        {
+                            GetClientRect(notification->hwndFrom, &clientRect);
+                            MapWindowPoints(notification->hwndFrom, m_scrollView.GetHwnd(), (LPPOINT)&clientRect, 2);
+                            OffsetRect(&clientRect, 0, m_scrollView.GetScrollPos());
+                            m_scrollView.EnsureVisible(clientRect);
+                            break;
+                        }
+                    }
+
+                }
+            }
+
+            return FALSE;
+
         case WM_PAINT:
             {
                 FluentDesign::DoubleBuferedPaint paint(hwnd);
@@ -135,18 +165,41 @@ namespace AnyFSE::App::AppSettings::Settings
 
                 r.left += m_theme.DpiScale(Layout_MarginLeft);
 
-                WCHAR *text1 = L"Gaming > ";
-                WCHAR *text2 = L"Any Full Screen Experience";
-                SetTextColor(paint.MemDC(), m_theme.GetColorRef(FluentDesign::Theme::Colors::TextSecondary));
+                WCHAR *text1 = L"Any Full Screen Experience";
+
                 SetBkMode(paint.MemDC(), TRANSPARENT);
                 HGDIOBJ oldFont = SelectFont(paint.MemDC(), m_theme.GetFont_Title());
                 ::DrawText(paint.MemDC(), text1, -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP | DT_CALCRECT);
+
+                m_breadCrumbRect = r;
+
+                SetTextColor(paint.MemDC(), m_theme.GetColorRef(
+                    m_pageName.empty()  ? FluentDesign::Theme::Colors::Breadcrumb
+                    : m_buttonPressed   ? FluentDesign::Theme::Colors::BreadcrumbLinkPressed
+                    : m_buttonMouseOver ? FluentDesign::Theme::Colors::BreadcrumbLinkHover
+                    : FluentDesign::Theme::Colors::BreadcrumbLink
+                ));
+
                 ::DrawText(paint.MemDC(), text1, -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
 
-                r.left = r.right;
-                r.right = paint.ClientRect().right;
-                SetTextColor(paint.MemDC(), m_theme.GetColorRef(FluentDesign::Theme::Colors::Text));
-                ::DrawText(paint.MemDC(), text2, -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
+                if (!m_pageName.empty())
+                {
+                    r.left = r.right;
+                    r.right = paint.ClientRect().right;
+                    wchar_t *chevron = L" \xE00F ";
+                    SetTextColor(paint.MemDC(), m_theme.GetColorRef(FluentDesign::Theme::Colors::Text));
+                    SelectFont(paint.MemDC(), m_theme.GetFont_Icon());
+                    ::DrawText(paint.MemDC(), chevron, -1, &r, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP | DT_CALCRECT);
+
+                    r.top = m_breadCrumbRect.top;
+                    r.bottom = m_breadCrumbRect.bottom;
+                    ::DrawText(paint.MemDC(), chevron, -1, &r, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
+
+                    r.left = r.right;
+                    r.right = paint.ClientRect().right;
+                    SelectFont(paint.MemDC(), m_theme.GetFont_Title());
+                    ::DrawText(paint.MemDC(), m_pageName.c_str(), -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
+                }
 
                 m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_hButtonOk);
                 m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_hButtonClose);
@@ -156,6 +209,9 @@ namespace AnyFSE::App::AppSettings::Settings
             }
             return FALSE;
 
+        case WM_DPICHANGED:
+            UpdateDpiLayout();
+            break;
 
         case WM_DESTROY:
             break;
@@ -175,13 +231,51 @@ namespace AnyFSE::App::AppSettings::Settings
                 return TRUE;
             }
             break;
+
+        case WM_MOUSEMOVE:
+            if (!m_pageName.empty() && !m_buttonMouseOver && Tools::MouseInClientRect(m_hDialog, &m_breadCrumbRect))
+            {
+                m_buttonMouseOver = true;
+                InvalidateRect(m_hDialog, &m_breadCrumbRect, TRUE);
+
+                // Track mouse leave
+                TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT)};
+                tme.dwFlags = TME_LEAVE;
+                tme.hwndTrack = m_hDialog;
+                TrackMouseEvent(&tme);
+            }
+            break;
+
+        case WM_MOUSELEAVE:
+            m_buttonMouseOver = false;
+            InvalidateRect(m_hDialog, &m_breadCrumbRect, TRUE);
+            break;
+
+        case WM_LBUTTONDOWN:
+            if (!m_pageName.empty())
+            {
+                m_buttonPressed = true;
+                InvalidateRect(m_hDialog, &m_breadCrumbRect, TRUE);
+                SetCapture(m_hDialog);
+            }
+            break;
+
+        case WM_LBUTTONUP:
+            if (m_buttonPressed && Tools::MouseInClientRect(m_hDialog, &m_breadCrumbRect))
+            {
+                OpenSettingsPage();
+            }
+            m_buttonPressed = false;
+            InvalidateRect(m_hDialog, &m_breadCrumbRect, TRUE);
+            ReleaseCapture();
+            break;
         }
 
         return FALSE;
     }
 
     template<class T>
-    FluentDesign::SettingsLine& SettingsDialog::AddSettingsLine(
+    FluentDesign::SettingsLine& SettingsDialog::AddSettingsLine(std::list<SettingsLine>& page,
         ULONG &top, const std::wstring& name, const std::wstring& desc, T& control,
         int height, int padding, int contentMargin, int contentWidth, int contentHeight )
     {
@@ -191,27 +285,256 @@ namespace AnyFSE::App::AppSettings::Settings
             - m_theme.DpiScale(Layout_MarginLeft)
             - m_theme.DpiScale(Layout_MarginRight);
 
-        m_settingLinesList.emplace_back(
+        page.emplace_back(
             m_theme, m_hScrollView, name, desc,
             m_theme.DpiScale(Layout_MarginLeft),
             top, width,
             m_theme.DpiScale(height),
+            padding,
             [&](HWND parent) { return control.Create(parent, 0, 0,
                 m_theme.DpiScale(contentWidth), m_theme.DpiScale(contentHeight)); });
 
         top += m_theme.DpiScale(height + padding);
         if (contentMargin)
         {
-            m_settingLinesList.back().SetLeftMargin(contentMargin);
+            page.back().SetLeftMargin(contentMargin);
         }
 
-        return m_settingLinesList.back();
+        return page.back();
+    }
+
+    FluentDesign::SettingsLine& SettingsDialog::AddSettingsLine(
+        std::list<SettingsLine>& page,
+        ULONG &top, const std::wstring& name, const std::wstring& desc,
+        int height, int padding, int contentMargin, int contentWidth, int contentHeight )
+    {
+        RECT rect;
+        GetClientRect(m_hDialog, &rect);
+        int width = rect.right - rect.left
+            - m_theme.DpiScale(Layout_MarginLeft)
+            - m_theme.DpiScale(Layout_MarginRight);
+
+
+        page.emplace_back(
+            m_theme, m_hScrollView, name, desc,
+            m_theme.DpiScale(Layout_MarginLeft),
+            top, width,
+            m_theme.DpiScale(height),
+            padding
+        );
+
+        top += m_theme.DpiScale(height + padding);
+        if (contentMargin)
+        {
+            page.back().SetLeftMargin(contentMargin);
+        }
+
+        return page.back();
+    }
+
+    void SettingsDialog::SwitchActivePage(std::list<SettingsLine> * pPageList, bool back)
+    {
+        if (pPageList == m_pActivePageList)
+        {
+            return;
+        }
+
+        int invert = back ? -1 : 1;
+
+        RECT scrollRect;
+        GetClientRect(m_hScrollView, &scrollRect);
+        int width = scrollRect.right - scrollRect.left;
+        int steps = 10;
+        int delta = width / steps;
+
+        for (auto& line: *pPageList)
+        {
+            Tools::MoveWindow(line.GetHWnd(), width * invert, 0, FALSE);
+            if (!line.IsNested())
+            {
+                ShowWindow(line.GetHWnd(), SW_SHOW);
+                line.UpdateLayout();
+            }
+        }
+
+        RedrawWindow(m_hDialog, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+
+        for (int i = 0; i < steps; i++)
+        {
+            if (m_pActivePageList)
+            {
+                for (auto &line : *m_pActivePageList)
+                {
+                    Tools::MoveWindow(line.GetHWnd(), -delta * invert, 0, TRUE);
+                }
+            }
+            for (auto &line : *pPageList)
+            {
+                Tools::MoveWindow(line.GetHWnd(), -delta * invert, 0, TRUE);
+            }
+            RedrawWindow(m_hScrollView, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+            Sleep(5);
+        }
+
+        for (auto &line : *m_pActivePageList)
+        {
+            ShowWindow(line.GetHWnd(), SW_HIDE);
+            Tools::MoveWindow(line.GetHWnd(), width * invert, 0, FALSE);
+        }
+        m_pActivePageList = pPageList;
+        UpdateLayout();
+    }
+
+    void SettingsDialog::UpdateDpiLayout()
+    {
+
+        RECT rect;
+        GetClientRect(m_hDialog, &rect);
+        RECT scrollRect {
+            0,
+            rect.top + m_theme.DpiScale(Layout_MarginTop),
+            rect.right,
+            rect.bottom
+                - m_theme.DpiScale(Layout_MarginBottom)
+                - m_theme.DpiScale(Layout_ButtonHeight)
+                - m_theme.DpiScale(Layout_ButtonPadding)
+            };
+
+        Tools::MoveWindow(m_scrollView.GetHwnd(), &scrollRect, FALSE);
+
+        UpdateLayout();
+
+
+        GetClientRect(m_hDialog, &rect);
+        rect.top = rect.bottom
+            - m_theme.DpiScale(Layout_MarginBottom)
+            - m_theme.DpiScale(Layout_ButtonHeight);
+
+        rect.right -= m_theme.DpiScale(Layout_MarginRight);
+        rect.left  += m_theme.DpiScale(Layout_MarginLeft);
+
+        MoveWindow(m_hButtonRemove,
+            rect.left,
+            rect.top,
+            m_theme.DpiScale(Layout_UninstallWidth),
+            m_theme.DpiScale(Layout_ButtonHeight),
+            FALSE);
+
+        MoveWindow(m_hButtonOk,
+            rect.right
+                - m_theme.DpiScale(Layout_OKWidth)
+                - m_theme.DpiScale(Layout_ButtonPadding)
+                - m_theme.DpiScale(Layout_CloseWidth),
+            rect.top,
+            m_theme.DpiScale(Layout_OKWidth),
+            m_theme.DpiScale(Layout_ButtonHeight),
+            FALSE);
+
+        MoveWindow(m_hButtonClose,
+            rect.right - m_theme.DpiScale(Layout_CloseWidth),
+            rect.top,
+            m_theme.DpiScale(Layout_CloseWidth),
+            m_theme.DpiScale(Layout_ButtonHeight),
+            FALSE);
+
+        InvalidateRect(m_hDialog, NULL, FALSE);
+    }
+
+    void SettingsDialog::UpdateLayout()
+    {
+        for (auto &page: { &m_customSettingPageList, &m_splashSettingPageList, &m_troubleshootSettingPageList })
+        {
+            if (page != m_pActivePageList)
+            {
+                for (auto& line: *page)
+                {
+                    ShowWindow(line.GetHWnd(), SW_HIDE);
+                }
+            }
+        }
+
+        RECT rect;
+        GetClientRect(m_hDialog, &rect);
+        int width = rect.right - rect.left
+            - m_theme.DpiScale(Layout_MarginLeft)
+            - m_theme.DpiScale(Layout_MarginRight);
+
+        int left = m_theme.DpiScale(Layout_MarginLeft);
+
+        ULONG top = -m_scrollView.GetScrollPos();
+
+        for(auto& line : *m_pActivePageList)
+        {
+            line.UpdateLayout();
+            ::MoveWindow(line.GetHWnd(), left, top, width, m_theme.DpiScale(line.GetDesignHeight()), FALSE);
+            top += m_theme.DpiScale(line.GetDesignHeight() + line.GetDesignPadding());
+        }
+
+        m_scrollView.SetContentHeight(top + m_scrollView.GetScrollPos());
+    }
+
+    void SettingsDialog::AddCustomSettingsPage()
+    {
+    }
+
+    void SettingsDialog::AddSplashSettingsPage()
+    {
+        ULONG top = 0;
+        m_pSplashTextLine = &AddSettingsLine(m_splashSettingPageList, top,
+            L"Show Loading text",
+            L"",
+            m_splashShowTextToggle,
+            Layout_LineHeight, Layout_LinePaddingSmall, 0);
+
+        m_pSplashTextLine->AddGroupItem(&AddSettingsLine(m_splashSettingPageList, top,
+            L"Use Custom Text",
+            L"",
+            m_splashCustomTextEdit,
+            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin));
+
+        m_pSplashLogoLine = &AddSettingsLine(m_splashSettingPageList, top,
+            L"Show Home application Logo",
+            L"",
+            m_splashShowLogoToggle,
+            Layout_LineHeight, Layout_LinePaddingSmall, 0);
+
+        m_pSplashLogoLine->AddGroupItem(&AddSettingsLine(m_splashSettingPageList, top,
+            L"Animate Logo",
+            L"",
+            m_splashShowAnimationToggle,
+            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin));
+
+        m_pSplashVideoLine=&AddSettingsLine(m_splashSettingPageList, top,
+            L"Show Video",
+            L"",
+            m_splashShowVideoToggle,
+            Layout_LineHeight, Layout_LinePaddingSmall, 0);
+
+        m_pSplashVideoLine->AddGroupItem(&AddSettingsLine(m_splashSettingPageList, top,
+            L"Loop video",
+            L"",
+            m_splashShowVideoLoopToggle,
+            Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
+
+        m_pSplashVideoLine->AddGroupItem(&AddSettingsLine(m_splashSettingPageList, top,
+            L"Mute video",
+            L"",
+            m_splashShowVideoMuteToggle,
+            Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
+
+        m_pSplashVideoLine->AddGroupItem(&AddSettingsLine(m_splashSettingPageList, top,
+            L"Pause completed",
+            L"Show last frame when video completed earlier than home app start",
+            m_splashShowVideoPauseToggle,
+            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin));
+    }
+
+    void SettingsDialog::AddTroubleshootSettingsPage()
+    {
     }
 
     void SettingsDialog::OnInitDialog(HWND hwnd)
     {
-
-
         RECT rect;
         GetClientRect(m_hDialog, &rect);
 
@@ -228,7 +551,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         ULONG top = 0;
 
-        FluentDesign::SettingsLine &launcher = AddSettingsLine(top,
+        FluentDesign::SettingsLine &launcher = AddSettingsLine(m_settingPageList, top,
             L"Choose home app",
             L"Choose home application for full screen experience",
             m_launcherCombo,
@@ -237,7 +560,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         launcher.SetFrame(Gdiplus::FrameFlags::SIDE_NO_BOTTOM | Gdiplus::FrameFlags::CORNER_TOP);
 
-        FluentDesign::SettingsLine &browse = AddSettingsLine(top,
+        FluentDesign::SettingsLine &browse = AddSettingsLine(m_settingPageList, top,
             L"",
             L"",
             m_browseButton,
@@ -246,49 +569,74 @@ namespace AnyFSE::App::AppSettings::Settings
 
         browse.SetFrame(Gdiplus::FrameFlags::SIDE_NO_TOP | Gdiplus::FrameFlags::CORNER_BOTTOM);
 
-        m_pFseOnStartupLine = &AddSettingsLine(top,
+        m_pFseOnStartupLine = &AddSettingsLine(m_settingPageList, top,
             L"Enter full screen experience on startup",
             L"",
             m_fseOnStartupToggle,
             Layout_LineHeight, Layout_LinePadding, 0);
 
-        m_pCustomSettingsLine = &AddSettingsLine(top,
+        m_pCustomSettingsLine = &AddSettingsLine(m_settingPageList, top,
             L"Use custom settings",
             L"Change monitoring and startups settings for selected home application",
             m_customSettingsToggle,
             Layout_LineHeight, Layout_LinePaddingSmall, 0);
 
-        m_pCustomSettingsLine->AddGroupItem(&AddSettingsLine(top,
+        m_pCustomSettingsLine->SetIcon(L'\xE115');
+
+        m_pCustomSettingsLine->AddGroupItem(&AddSettingsLine(m_settingPageList, top,
             L"Additional arguments",
             L"Command line arguments passed to application",
             m_additionalArgumentsEdit,
             Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
 
-        m_pCustomSettingsLine->AddGroupItem(&AddSettingsLine(top,
+        m_pCustomSettingsLine->AddGroupItem(&AddSettingsLine(m_settingPageList, top,
             L"Primary process name",
             L"Name of home application process",
             m_processNameEdit,
             Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
 
-        m_pCustomSettingsLine->AddGroupItem(&AddSettingsLine(top,
+        m_pCustomSettingsLine->AddGroupItem(&AddSettingsLine(m_settingPageList, top,
             L"Primary window title",
             L"Title of app window when it have been activated",
             m_titleEdit,
             Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
 
-        m_pCustomSettingsLine->AddGroupItem(&AddSettingsLine(top,
+        m_pCustomSettingsLine->AddGroupItem(&AddSettingsLine(m_settingPageList, top,
             L"Secondary process name",
             L"Name of app process for alternative mode",
             m_processNameAltEdit,
             Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
 
-        m_pCustomSettingsLine->AddGroupItem(&AddSettingsLine(top,
+        m_pCustomSettingsLine->AddGroupItem(&AddSettingsLine(m_settingPageList, top,
             L"Secondary window title",
             L"Title of app window when it alternative mode have been activated",
             m_titleAltEdit,
-            Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
+            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin));
 
+        m_pSplashPageLine = &AddSettingsLine(m_settingPageList, top,
+            L"Splash screen settings",
+            L"Configure Look'n'Feel of splash screen during home app loading",
+            Layout_LineHeight, Layout_LinePadding, 0);
 
+        m_pSplashPageLine->SetState(FluentDesign::SettingsLine::Next);
+        m_pSplashPageLine->SetIcon(L'\xEB9F');
+        m_pSplashPageLine->OnChanged += delegate(OpenSplashSettingsPage);
+
+        AddSplashSettingsPage();
+
+        m_pTroubleshootPageLine = &AddSettingsLine(m_settingPageList, top,
+            L"Debug and Troubleshoot",
+            L"Configure logs and advanced parameters",
+            Layout_LineHeight, Layout_LinePadding, 0);
+
+        m_pTroubleshootPageLine->SetState(FluentDesign::SettingsLine::Next);
+        m_pTroubleshootPageLine->SetIcon(L'\xEBE8');
+        m_pTroubleshootPageLine->OnChanged += delegate(OpenTroubleshootSettingsPage);
+
+        AddTroubleshootSettingsPage();
+
+        m_pActivePageList = &m_settingPageList;
+        UpdateLayout();
 
         GetClientRect(m_hDialog, &rect);
         rect.top = rect.bottom
@@ -307,11 +655,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         m_removeButton.SetText(L"Uninstall");
 
-        m_removeButton.OnChanged += [This = this]()
-        {
-            This->OnUninstall();
-        };
-
+        m_removeButton.OnChanged += delegate(OnUninstall);
 
         m_hButtonOk = m_okButton.Create(m_hDialog,
             rect.right
@@ -324,10 +668,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         m_okButton.SetText(L"Save");
 
-        m_okButton.OnChanged += [This = this]()
-        {
-            This->OnOk();
-        };
+        m_okButton.OnChanged += delegate(OnOk);
 
         m_hButtonClose = m_closeButton.Create(m_hDialog,
             rect.right - m_theme.DpiScale(Layout_CloseWidth),
@@ -335,33 +676,26 @@ namespace AnyFSE::App::AppSettings::Settings
             m_theme.DpiScale(Layout_CloseWidth),
             m_theme.DpiScale(Layout_ButtonHeight));
 
-        m_closeButton.OnChanged += [This = this]()
-        {
-            EndDialog(This->m_hDialog, IDCANCEL);
-        };
+        m_closeButton.OnChanged += delegate(OnClose);
 
         m_closeButton.SetText(L"Discard and Close");
 
-        m_launcherCombo.OnChanged += [This = this]()
-        {
-            This->OnLauncherChanged(This->m_hDialog);
-        };
+        m_launcherCombo.OnChanged += delegate(OnLauncherChanged);
 
-        m_customSettingsToggle.OnChanged += [This = this]()
-        {
-            This->OnCustomChanged(This->m_hDialog);
-        };
+        m_customSettingsToggle.OnChanged += delegate(OnCustomChanged);
+        m_pCustomSettingsLine->OnChanged += delegate(OnCustomLineChanged);
 
-        m_pCustomSettingsLine->OnChanged += [This = this]()
-        {
-            This->m_customSettingsState = This->m_pCustomSettingsLine->GetState();
-        };
+        m_splashShowTextToggle.OnChanged += delegate(OnShowTextChanged);
+        m_pSplashTextLine->OnChanged += delegate(UpdateLayout);
+
+        m_splashShowLogoToggle.OnChanged += delegate(OnShowLogoChanged);
+        m_pSplashLogoLine->OnChanged += delegate(UpdateLayout);
+
+        m_splashShowVideoToggle.OnChanged += delegate(OnShowVideoChanged);
+        m_pSplashVideoLine->OnChanged += delegate(UpdateLayout);
 
         m_browseButton.SetText(L"Browse");
-        m_browseButton.OnChanged += [This = this]()
-        {
-            This->OnBrowseLauncher(This->m_hDialog, 0);
-        };
+        m_browseButton.OnChanged += delegate(OnBrowseLauncher);
 
         m_currentLauncherPath = Config::Launcher.StartCommand;
         Config::FindLaunchers(m_launchersList);
@@ -386,13 +720,13 @@ namespace AnyFSE::App::AppSettings::Settings
         // To do
     }
 
-    void SettingsDialog::OnBrowseLauncher(HWND hwnd, int editId)
+    void SettingsDialog::OnBrowseLauncher()
     {
         OPENFILENAME ofn = {};
         WCHAR szFile[260] = {};
 
         ofn.lStructSize = sizeof(ofn);
-        ofn.hwndOwner = hwnd;
+        ofn.hwndOwner = m_hDialog;
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = sizeof(szFile);
         ofn.lpstrFilter = L"Launchers (*.exe)\0*.exe\0\0";
@@ -416,6 +750,11 @@ namespace AnyFSE::App::AppSettings::Settings
     {
         SaveSettings();
         EndDialog(m_hDialog, IDOK);
+    }
+
+    void SettingsDialog::OnClose()
+    {
+        EndDialog(m_hDialog, IDCANCEL);
     }
 
     void SettingsDialog::InitCustomControls()
@@ -445,13 +784,72 @@ namespace AnyFSE::App::AppSettings::Settings
         }
     }
 
-    void SettingsDialog::OnCustomChanged(HWND hwnd)
+    void SettingsDialog::OnShowTextChanged()
+    {
+        m_pSplashTextLine->SetState(m_splashShowTextToggle.GetCheck()
+            ? FluentDesign::SettingsLine::Opened
+            : FluentDesign::SettingsLine::Normal);
+
+        UpdateLayout();
+    }
+
+    void SettingsDialog::OnShowLogoChanged()
+    {
+        m_pSplashLogoLine->SetState(m_splashShowLogoToggle.GetCheck()
+            ? FluentDesign::SettingsLine::Opened
+            : FluentDesign::SettingsLine::Normal);
+
+        UpdateLayout();
+    }
+
+    void SettingsDialog::OnShowVideoChanged()
+    {
+        m_pSplashVideoLine->SetState(m_splashShowVideoToggle.GetCheck()
+            ? FluentDesign::SettingsLine::Opened
+            : FluentDesign::SettingsLine::Normal);
+
+        UpdateLayout();
+    }
+
+    void SettingsDialog::OnCustomChanged()
     {
         m_isCustom = m_customSettingsToggle.GetCheck();
         UpdateControls();
+        UpdateLayout();
+        RedrawWindow(m_hDialog, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
     }
 
-    void SettingsDialog::OnAggressiveChanged(HWND hwnd)
+    void SettingsDialog::OnCustomLineChanged()
+    {
+        m_customSettingsState = m_pCustomSettingsLine->GetState();
+        UpdateLayout();
+    }
+
+    void SettingsDialog::OpenSettingsPage()
+    {
+        m_pageName = L"";
+        SwitchActivePage(&m_settingPageList, true);
+    }
+
+    void SettingsDialog::OpenCustomSettingsPage()
+    {
+        m_pageName = L"Custom settings";
+        SwitchActivePage(&m_customSettingPageList);
+    }
+
+    void SettingsDialog::OpenSplashSettingsPage()
+    {
+        m_pageName = L"Splash settings";
+        SwitchActivePage(&m_splashSettingPageList);
+    }
+
+    void SettingsDialog::OpenTroubleshootSettingsPage()
+    {
+        m_pageName = L"Troubleshoot";
+        SwitchActivePage(&m_troubleshootSettingPageList);
+    }
+
+    void SettingsDialog::OnAggressiveChanged()
     {
         // m_isAgressive = BST_CHECKED != SendDlgItemMessage(m_hDialog, IDC_NOT_AGGRESSIVE_MODE, BM_GETCHECK, 0, 0);
         // UpdateCustom();
@@ -495,9 +893,20 @@ namespace AnyFSE::App::AppSettings::Settings
             m_config = defaults;
             UpdateCustomSettings();
         }
+
+        m_splashShowTextToggle.SetCheck(Config::SplashShowText);
+        m_splashCustomTextEdit.SetText(Config::SplashCustomText);
+
+        m_splashShowLogoToggle.SetCheck(Config::SplashShowLogo);
+        m_splashShowAnimationToggle.SetCheck(Config::SplashShowAnimation);
+
+        m_splashShowVideoToggle.SetCheck(Config::SplashShowVideo);
+        m_splashShowVideoLoopToggle.SetCheck(Config::SplashVideoLoop);
+        m_splashShowVideoMuteToggle.SetCheck(Config::SplashVideoMute);
+        m_splashShowVideoPauseToggle.SetCheck(Config::SplashVideoPause);
     }
 
-    void SettingsDialog::OnLauncherChanged(HWND hwnd)
+    void SettingsDialog::OnLauncherChanged()
     {
         m_currentLauncherPath = m_launcherCombo.GetCurentValue();;
         Config::LoadLauncherSettings(m_currentLauncherPath, m_config);
@@ -583,6 +992,18 @@ namespace AnyFSE::App::AppSettings::Settings
         Config::Launcher.ProcessNameAlt = m_processNameAltEdit.GetText();
         Config::Launcher.WindowTitleAlt = m_titleAltEdit.GetText();
         Config::Launcher.IconFile = m_config.IconFile;
+
+
+        Config::SplashShowText = m_splashShowTextToggle.GetCheck();
+        Config::SplashCustomText = m_splashCustomTextEdit.GetText();
+
+        Config::SplashShowLogo = m_splashShowLogoToggle.GetCheck();
+        Config::SplashShowAnimation = m_splashShowAnimationToggle.GetCheck();
+
+        Config::SplashShowVideo = m_splashShowVideoToggle.GetCheck();
+        Config::SplashVideoLoop = m_splashShowVideoLoopToggle.GetCheck();
+        Config::SplashVideoMute = m_splashShowVideoMuteToggle.GetCheck();
+        Config::SplashVideoPause = m_splashShowVideoPauseToggle.GetCheck();
 
         Config::Save();
 

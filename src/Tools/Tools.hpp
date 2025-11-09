@@ -33,6 +33,11 @@ namespace AnyFSE::Tools
         auto it = std::find_if(list.begin(), list.end(), pred);
         return (it != list.end()) ? std::distance(list.begin(), it) : npos;
     }
+
+    BOOL GetChildRect(HWND hwnd, RECT *rect);
+    BOOL MoveWindow(HWND hwnd, RECT * rect, BOOL bRepaint);
+    BOOL MoveWindow(HWND hwnd, int dx, int dy, BOOL bRepaint);
+    BOOL MouseInClientRect(HWND, RECT *rect);
 }
 
 namespace Tools = AnyFSE::Tools;

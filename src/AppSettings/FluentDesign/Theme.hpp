@@ -78,6 +78,12 @@ namespace FluentDesign
             ScrollThumb,
             ScrollThumbStroke,
             ScrollTrack,
+
+            Breadcrumb,
+            BreadcrumbLink,
+            BreadcrumbLinkHover,
+            BreadcrumbLinkPressed,
+
             Max
         };
 
@@ -91,8 +97,10 @@ namespace FluentDesign
 
         HWND m_hParentWnd;
         HFONT m_hPrimaryFont;
+        HFONT m_hPrimaryBoldFont;
         HFONT m_hSecondaryFont;
         HFONT m_hGlyphFont;
+        HFONT m_hIconFont;
         HFONT m_hTitleFont;
         HFONT m_hGlyphNormalFont;
 
@@ -101,6 +109,7 @@ namespace FluentDesign
         static const int m_primarySize = 14;
         static const int m_secondarySize = 11;
         static const int m_glyphSize = 10;
+        static const int m_iconSize = 20;
         static const int m_titleSize = 28;
         static const int m_cornerSize = 16;
         static const int m_focusWidth = 2;
@@ -111,7 +120,6 @@ namespace FluentDesign
         bool m_isKeyboardFocus;
         HWND m_lastFocused;
         std::list<HWND> m_childsList;
-
         DWORD GetGrey(BYTE lumen);
 
         DWORD GetAccent(BYTE lumen);
@@ -123,6 +131,8 @@ namespace FluentDesign
         static LRESULT CALLBACK DialogSubclassProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
         static LRESULT ControlParentSublassProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
         static LRESULT ControlSublassProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+
+        void SendNotifyFocus(HWND hWnd);
 
     public:
         Theme(HWND hParentWnd = NULL);
@@ -157,10 +167,12 @@ namespace FluentDesign
         COLORREF GetAccentColor();
 
         const HFONT GetFont_Text() { return m_hPrimaryFont; }
+        const HFONT GetFont_TextBold() { return m_hPrimaryBoldFont; }
         const HFONT GetFont_TextSecondary() { return m_hSecondaryFont; }
         const HFONT GetFont_Glyph() { return m_hGlyphFont; }
         const HFONT GetFont_GlyphNormal() { return m_hGlyphNormalFont; }
         const HFONT GetFont_Title() { return m_hTitleFont; }
+        const HFONT GetFont_Icon() { return m_hIconFont; }
 
         // colors
         const DWORD ReverseRGB(DWORD rgb) { return RGB(rgb >> 16, rgb >> 8, rgb); }
@@ -171,6 +183,7 @@ namespace FluentDesign
         const int GetSize_Text() { return DpiScale(m_primarySize); }
         const int GetSize_TextSecondary() { return DpiScale(m_secondarySize); }
         const int GetSize_Glyph() { return DpiScale(m_glyphSize); }
+        const int GetSize_Icon() { return DpiScale(m_iconSize); }
         const int GetSize_Title() { return DpiScale(m_titleSize); }
         const int GetSize_Corner() { return DpiScale(m_cornerSize); }
 

@@ -96,6 +96,16 @@ namespace FluentDesign
         return DefSubclassProc(hWnd, msg, wParam, lParam);
     }
 
+    void Theme::SendNotifyFocus(HWND hWnd)
+    {
+        NMHDR nmhdr = {};
+        nmhdr.hwndFrom = hWnd;
+        nmhdr.idFrom = GetDlgCtrlID(hWnd);
+        nmhdr.code = NM_SETFOCUS;
+
+        SendMessage(m_hParentWnd, WM_NOTIFY, (WPARAM)nmhdr.idFrom, (LPARAM)&nmhdr);
+    }
+
     LRESULT CALLBACK Theme::ControlSublassProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
     {
         Theme *This = reinterpret_cast<Theme *>(dwRefData);
@@ -112,10 +122,10 @@ namespace FluentDesign
                 {
                     This->m_isKeyboardFocus = true;
                     SetFocus(last);
+                    This->SendNotifyFocus(last);
                     Invalidate(last);
                 }
-                else
-                if (last && last != next)
+                else if (last && last != next)
                 {
                     This->m_isKeyboardFocus = true;
                     This->m_lastFocused = next;
@@ -125,6 +135,7 @@ namespace FluentDesign
                     This->m_lastFocused = next;
                 }
                 Invalidate(next);
+                This->SendNotifyFocus(next);
             }
             break;
         case WM_LBUTTONDOWN:
@@ -133,6 +144,7 @@ namespace FluentDesign
                 This->m_lastFocused = hWnd;
                 This->m_isKeyboardFocus = false;
                 SetFocus(hWnd);
+                This->SendNotifyFocus(hWnd);
                 Invalidate(hWnd);
                 return 0;
             }
@@ -144,6 +156,15 @@ namespace FluentDesign
             break;
         case WM_DESTROY:
             RemoveWindowSubclass(hWnd, ControlSublassProc, uIdSubclass);
+            break;
+
+        case WM_NOTIFY:
+            {
+                if (((LPNMHDR)lParam)->code == NM_SETFOCUS)
+                {
+                    This->SendNotifyFocus(hWnd);
+                }
+            }
             break;
         }
         return DefSubclassProc(hWnd, msg, wParam, lParam);
@@ -172,19 +193,28 @@ namespace FluentDesign
             }
             case WM_DPICHANGED:
             {
+                ULONG oldDPI = This->m_dpi;
                 This->m_dpi = HIWORD(wParam);
                 This->CreateFonts();
+                RECT* const prcNewWindow = (RECT*)lParam;
+                SetWindowPos(hWnd,
+                    NULL,
+                    prcNewWindow->left,
+                    prcNewWindow->top,
+                    prcNewWindow->right - prcNewWindow->left,
+                    prcNewWindow->bottom - prcNewWindow->top,
+                    SWP_NOZORDER | SWP_NOACTIVATE);
 
                 This->OnDPIChanged.Notify();
 
-                HWND hChild = GetWindow(hWnd, GW_CHILD);
-                while (hChild)
-                {
-                    RECT rc;
-                    GetClientRect(hChild, &rc);
-                    SendMessage(hChild, WM_SIZE, 0, MAKELONG(rc.right - rc.left, rc.bottom - rc.top));
-                    hChild = GetWindow(hChild, GW_HWNDNEXT);
-                }
+                // HWND hChild = GetWindow(hWnd, GW_CHILD);
+                // while (hChild)
+                // {
+                //     RECT rc;
+                //     GetClientRect(hChild, &rc);
+                //     SendMessage(hChild, WM_SIZE, 0, MAKELONG(rc.right - rc.left, rc.bottom - rc.top));
+                //     hChild = GetWindow(hChild, GW_HWNDNEXT);
+                // }
             }
             break;
             case WM_CTLCOLORDLG:
@@ -314,6 +344,9 @@ namespace FluentDesign
         primaryFont.lfWeight = FW_NORMAL;
         m_hPrimaryFont = CreateFontIndirect(&primaryFont);
 
+        primaryFont.lfWeight = FW_BOLD;
+        m_hPrimaryBoldFont = CreateFontIndirect(&primaryFont);
+
         // Create description font (slightly smaller, normal weight)
         LOGFONT secondaryFont = ncm.lfMessageFont;
         secondaryFont.lfHeight = (LONG)(-GetSize_TextSecondary());
@@ -331,6 +364,12 @@ namespace FluentDesign
             CLEARTYPE_QUALITY, DEFAULT_PITCH,
             L"Segoe MDL2 Assets");
 
+        m_hIconFont = CreateFont(
+            GetSize_Icon(), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+            CLEARTYPE_QUALITY, DEFAULT_PITCH,
+            L"Segoe Fluent Icons");
+
         LOGFONT titleFont = ncm.lfMessageFont;
         titleFont.lfHeight = (LONG)(-GetSize_Title());
         titleFont.lfWeight = FW_BOLD;
@@ -341,6 +380,9 @@ namespace FluentDesign
     {
         if (m_hPrimaryFont)
             DeleteObject(m_hPrimaryFont);
+
+        if (m_hPrimaryBoldFont)
+            DeleteObject(m_hPrimaryBoldFont);
 
         if (m_hSecondaryFont)
             DeleteObject(m_hSecondaryFont);
@@ -354,11 +396,16 @@ namespace FluentDesign
         if (m_hTitleFont)
             DeleteObject(m_hTitleFont);
 
+        if (m_hIconFont)
+            DeleteObject(m_hIconFont);
+
         m_hPrimaryFont = NULL;
+        m_hPrimaryBoldFont = NULL;
         m_hSecondaryFont = NULL;
         m_hGlyphFont = NULL;
         m_hTitleFont = NULL;
         m_hGlyphNormalFont = NULL;
+        m_hIconFont = NULL;
     }
 
     const int Theme::DpiUnscale(int scaledSize)

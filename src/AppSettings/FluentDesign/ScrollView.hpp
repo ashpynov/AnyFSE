@@ -23,24 +23,38 @@ namespace FluentDesign
     class ScrollView
     {
         static LRESULT CALLBACK ScrollViewSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-            UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+                                                       UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+
+        
 
         Theme &m_theme;
 
         HWND m_hScrollView;
 
         int m_contentHeight;
-        int m_currectOffset;
+        int m_scrollPos;
+        int m_viewHeight;
 
         void SetOffset(int newOffset);
 
     public:
+        HWND GetHwnd() const { return m_hScrollView; }
         ScrollView(Theme& theme);
         ScrollView(Theme& theme, HWND hParent, int x, int y, int width, int height);
         HWND Create(HWND hParent, int x, int y, int width, int height);
 
         void SetContentHeight(int newHeight);
+        void UpdateScrollBar();
+        void ScrollTo(int newPos);
+        void EnsureVisible(const RECT &rcItem);
+        void ScrollBy(int delta);
+        int GetScrollPos() const;
+        void OnResize(int newWidth, int newHeight);
 
         ~ScrollView();
+        
+        LRESULT OnVScroll(int nScrollCode, int nPos);
+        LRESULT OnMouseWheel(int delta);
+        LRESULT OnNcPaint(HWND hWnd);
     };
 }

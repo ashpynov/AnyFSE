@@ -34,7 +34,7 @@ namespace AnyFSE::App::AppControl::Window
 
     BOOL MainWindow::LoadLogoImage()
     {
-        if (!Config::SpalshShowLogo)
+        if (!Config::SplashShowLogo)
         {
             return FALSE;
         }
@@ -64,7 +64,7 @@ namespace AnyFSE::App::AppControl::Window
         RectF rect = ToRectF(paint.ClientRect());
         graphics.FillRectangle(&backgroundBrush, 0.0f, 0.0f, rect.Width, rect.Height);
 
-        if (Config::SpalshShowLogo && m_pLogoImage && m_pLogoImage->GetLastStatus() == Gdiplus::Ok)
+        if (Config::SplashShowLogo && m_pLogoImage && m_pLogoImage->GetLastStatus() == Gdiplus::Ok)
         {
             REAL imageWidth = 150 /*pLogoImage->GetWidth()*/ * m_currentZoom;
             REAL imageHeight = 150 /*pLogoImage->GetHeight()*/ * m_currentZoom;
@@ -126,7 +126,7 @@ namespace AnyFSE::App::AppControl::Window
 
     BOOL MainWindow::StartAnimation()
     {
-        if (Config::SplashShowAnimation && Config::SpalshShowLogo && !m_hTimer && m_pLogoImage)
+        if (Config::SplashShowAnimation && Config::SplashShowLogo && !m_hTimer && m_pLogoImage)
         {
             m_hTimer = SetTimer(m_hWnd, m_animationTimerId, ZOOM_INTERVAL_MS, NULL);
         }

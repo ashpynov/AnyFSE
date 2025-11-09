@@ -33,7 +33,7 @@ namespace AnyFSE::Configuration
     bool            Config::AggressiveMode = false;
     bool            Config::FseOnStartup = false;
     bool            Config::SplashShowAnimation = true;
-    bool            Config::SpalshShowLogo = true;
+    bool            Config::SplashShowLogo = true;
     bool            Config::SplashShowText = true;
     std::wstring    Config::SplashCustomText = L"";
     bool            Config::SplashShowVideo = true;
@@ -97,7 +97,7 @@ namespace AnyFSE::Configuration
         XBoxProcessName         = config.value(jp("/XBoxProcessName"),       std::wstring(L"XboxPcApp.exe"));
 
         SplashShowAnimation     = config.value(jp("/Splash/ShowAnimation"),  true);
-        SpalshShowLogo          = config.value(jp("/Splash/ShowLogo"),       true);
+        SplashShowLogo          = config.value(jp("/Splash/ShowLogo"),       true);
         SplashShowText          = config.value(jp("/Splash/ShowText"),       true);
         SplashCustomText        = config.value(jp("/Splash/CustomText"),     std::wstring());
 
@@ -162,7 +162,7 @@ namespace AnyFSE::Configuration
         config["Launcher"]["IconFile"]          = Launcher.IconFile;
 
         config["Splash"]["ShowAnimation"]       = SplashShowAnimation;
-        config["Splash"]["ShowLogo"]            = SpalshShowLogo;
+        config["Splash"]["ShowLogo"]            = SplashShowLogo;
         config["Splash"]["ShowText"]            = SplashShowText;
         config["Splash"]["ShowVideo"]           = SplashShowVideo;
         config["Splash"]["CustomText"]          = SplashCustomText;

@@ -57,7 +57,7 @@ namespace AnyFSE::Tools
         HICON hIcon;
 
         HRESULT hr = SHDefExtractIconW(path.wstring().c_str(), index, 0, &hIcon, NULL, (DWORD)iconSize);
-        
+
         if (hr || !hIcon)
         {
             log.Warn(log.APIError(), "No icon with index %d", index);
@@ -65,5 +65,46 @@ namespace AnyFSE::Tools
         }
 
         return hIcon;
+    }
+
+    BOOL GetChildRect(HWND hwnd, RECT * rect)
+    {
+        GetWindowRect(hwnd, rect);
+        MapWindowPoints(NULL, GetParent(hwnd), (LPPOINT)rect, 2);
+        return TRUE;
+    }
+
+    BOOL MoveWindow(HWND hwnd, int dx, int dy, BOOL bRepaint)
+    {
+        RECT rect;
+        GetChildRect(hwnd, &rect);
+        OffsetRect(&rect, dx, dy);
+        ::MoveWindow(hwnd, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, bRepaint);
+        return TRUE;
+    }
+
+    BOOL MoveWindow(HWND hwnd, RECT* rect, BOOL bRepaint)
+    {
+        ::MoveWindow(hwnd, rect->left, rect->top, rect->right - rect->left, rect->bottom - rect->top, bRepaint);
+        return TRUE;
+    }
+
+    BOOL MouseInClientRect(HWND hWnd, RECT *rect)
+    {
+        RECT hitRect;
+        if (rect == NULL)
+        {
+            GetClientRect(hWnd, &hitRect);
+        }
+        else
+        {
+            hitRect = *rect;
+        }
+
+        POINT pt;
+        GetCursorPos(&pt);
+        MapWindowPoints(NULL, hWnd, &pt, 1);
+
+        return PtInRect(&hitRect, pt);
     }
 }

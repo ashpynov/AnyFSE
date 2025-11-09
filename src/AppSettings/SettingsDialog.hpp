@@ -84,6 +84,15 @@ namespace AnyFSE::App::AppSettings::Settings
             , m_okButton(m_theme)
             , m_closeButton(m_theme)
             , m_removeButton(m_theme)
+            , m_splashShowAnimationToggle(m_theme)
+            , m_splashShowLogoToggle(m_theme)
+            , m_splashShowTextToggle(m_theme)
+            , m_splashShowVideoToggle(m_theme)
+            , m_splashShowVideoLoopToggle(m_theme)
+            , m_splashShowVideoMuteToggle(m_theme)
+            , m_splashShowVideoPauseToggle(m_theme)
+            , m_splashCustomTextEdit(m_theme)
+            , m_splashCustomVideoEdit(m_theme)
         {}
 
     private:
@@ -96,13 +105,22 @@ namespace AnyFSE::App::AppSettings::Settings
         void SaveSettings();
 
         void OnInitDialog(HWND hwnd);
-        void OnBrowseLauncher(HWND hwnd, int editId);
-        void OnLauncherChanged(HWND hwnd);
+        void OnBrowseLauncher();
+        void OnLauncherChanged();
         void OnOk();
+        void OnClose();
 
         void OnUninstall();
-        void OnCustomChanged(HWND hwnd);
-        void OnAggressiveChanged(HWND hwnd);
+        void OnShowTextChanged();
+        void OnShowLogoChanged();
+        void OnShowVideoChanged();
+        void OnCustomChanged();
+        void OnCustomLineChanged();
+        void OpenSettingsPage();
+        void OpenCustomSettingsPage();
+        void OpenSplashSettingsPage();
+        void OpenTroubleshootSettingsPage();
+        void OnAggressiveChanged();
         void UpdateControls();
 
         HINSTANCE m_hInstance;
@@ -111,6 +129,11 @@ namespace AnyFSE::App::AppSettings::Settings
         bool m_isCustom;
         bool m_isAgressive;
         bool m_enterOnStartup;
+
+        std::wstring m_pageName = L"";
+        RECT m_breadCrumbRect = { 0 };
+        bool m_buttonMouseOver = false;
+        bool m_buttonPressed = false;
 
         LauncherConfig m_config;
         std::wstring m_currentLauncherPath;
@@ -121,6 +144,17 @@ namespace AnyFSE::App::AppSettings::Settings
         ComboBox m_launcherCombo;
         Toggle m_fseOnStartupToggle;
         Toggle m_customSettingsToggle;
+
+        Toggle m_splashShowAnimationToggle;
+        Toggle m_splashShowLogoToggle;
+        Toggle m_splashShowTextToggle;
+        Toggle m_splashShowVideoToggle;
+        Toggle m_splashShowVideoLoopToggle;
+        Toggle m_splashShowVideoMuteToggle;
+        Toggle m_splashShowVideoPauseToggle;
+
+        TextBox m_splashCustomTextEdit;
+        TextBox m_splashCustomVideoEdit;
         TextBox m_additionalArgumentsEdit;
         TextBox m_processNameEdit;
         TextBox m_titleEdit;
@@ -136,17 +170,47 @@ namespace AnyFSE::App::AppSettings::Settings
         HWND m_hButtonClose;
         HWND m_hButtonRemove;
 
-        std::list<SettingsLine> m_settingLinesList;
+        std::list<SettingsLine> m_settingPageList;
+        std::list<SettingsLine> m_customSettingPageList;
+        std::list<SettingsLine> m_splashSettingPageList;
+        std::list<SettingsLine> m_troubleshootSettingPageList;
+
+        std::list<SettingsLine> *m_pActivePageList;
 
         template <class T>
         SettingsLine& AddSettingsLine(
+            std::list<SettingsLine>& pageList,
             ULONG &top, const std::wstring &name, const std::wstring &desc,
             T &control, int height, int padding, int contentMargin,
             int contentWidth = Layout_CustomSettingsWidth,
             int contentHeight = Layout_Layout_CustomSettingsHeight);
 
+        SettingsLine& AddSettingsLine(
+            std::list<SettingsLine>& pageList,
+            ULONG &top, const std::wstring &name, const std::wstring &desc,
+            int height, int padding, int contentMargin,
+            int contentWidth = Layout_CustomSettingsWidth,
+            int contentHeight = Layout_Layout_CustomSettingsHeight);
+
+        void SwitchActivePage(std::list<SettingsLine> *pPageList, bool back = false);
+
+        void UpdateDpiLayout();
+
+        void UpdateLayout();
+
+        void AddCustomSettingsPage();
+        void AddSplashSettingsPage();
+        void AddTroubleshootSettingsPage();
+
         SettingsLine * m_pFseOnStartupLine;
         SettingsLine * m_pCustomSettingsLine;
+
+        SettingsLine * m_pSplashTextLine;
+        SettingsLine * m_pSplashLogoLine;
+        SettingsLine * m_pSplashVideoLine;
+
+        SettingsLine * m_pSplashPageLine;
+        SettingsLine * m_pTroubleshootPageLine;
 
         SettingsLine::State m_customSettingsState;
     };
