@@ -105,6 +105,7 @@ namespace AnyFSE::Configuration
             static std::wstring SplashVideoPath;
             static bool SplashVideoMute;
             static bool SplashVideoLoop;
+            static bool SplashVideoPause;
 
             static bool CleanupFailedStart;
             static DWORD RestartDelay;

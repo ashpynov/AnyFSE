@@ -33,6 +33,7 @@ namespace AnyFSE::App::AppControl::Window
         HWND m_hwndVideo;
         BOOL m_bInitialized;
         bool m_loop;
+        bool m_pause;
 
         DWORD m_startLoop;
         DWORD m_endLoop;
@@ -50,16 +51,18 @@ namespace AnyFSE::App::AppControl::Window
 
         DWORD   GetDuration(IMFPMediaPlayer *player);
         HRESULT Rewind(IMFPMediaPlayer *player, DWORD position);
-        
+        BOOL ShowVideo(bool bShow=true);
+
         public:
         SimpleVideoPlayer();
         ~SimpleVideoPlayer();     
         
         // Combined load and play
-        HRESULT Load(const WCHAR *videoFile, bool mute, bool loop, HWND hwndParent);
+        HRESULT Load(const WCHAR *videoFile, bool mute, bool loop, bool pause, HWND hwndParent);
         HRESULT Play();
         HRESULT Stop();
         void Close();
+        void Resize();
 
         ULONG AddRef();
         HRESULT QueryInterface(REFIID riid, void **ppv);

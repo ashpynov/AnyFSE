@@ -40,6 +40,7 @@ namespace AnyFSE::Configuration
     std::wstring    Config::SplashVideoPath = L"";
     bool            Config::SplashVideoMute = false;
     bool            Config::SplashVideoLoop = false;
+    bool            Config::SplashVideoPause = true;
     bool            Config::QuickStart = false;
     bool            Config::CleanupFailedStart = true;
     DWORD           Config::RestartDelay = 1000;
@@ -104,6 +105,7 @@ namespace AnyFSE::Configuration
         SplashVideoPath         = config.value(jp("/Splash/Video/Path"),     std::wstring());
         SplashVideoMute         = config.value(jp("/Splash/Video/Mute"),     false);
         SplashVideoLoop         = config.value(jp("/Splash/Video/Loop"),     false);
+        SplashVideoPause        = config.value(jp("/Splash/Video/Pause"),    true);
 
         std::wstring launcher   = config.value(jp("/Launcher/Path"),         std::wstring());
 
@@ -168,6 +170,7 @@ namespace AnyFSE::Configuration
         config["Splash"]["Video"]["Path"]       = SplashVideoPath;
         config["Splash"]["Video"]["Mute"]       = SplashVideoMute;
         config["Splash"]["Video"]["Loop"]       = SplashVideoLoop;
+        config["Splash"]["Video"]["Pause"]      = SplashVideoPause;
 
         config["Log"]["Level"]                  = (int)LogLevel;
 

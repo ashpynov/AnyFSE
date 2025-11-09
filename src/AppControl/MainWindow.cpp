@@ -88,7 +88,7 @@ namespace AnyFSE::App::AppControl::Window
         log.Debug("Window is created (hWnd=%08x)", m_hWnd);
 
         SelectNextVideo();
-        m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, m_hWnd);
+        m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, Config::SplashVideoPause, m_hWnd);
 
         return true;
     };
@@ -98,7 +98,7 @@ namespace AnyFSE::App::AppControl::Window
         m_empty = empty;
         if (IsWindow(m_hWnd))
         {
-            m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, m_hWnd);
+            m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, Config::SplashVideoPause, m_hWnd);
             if (!m_empty)
             {
                 m_videoPlayer.Play();
@@ -106,7 +106,8 @@ namespace AnyFSE::App::AppControl::Window
             }
             AnimateWindow(m_hWnd, 0, AW_BLEND);
             ShowWindow(m_hWnd, SW_MAXIMIZE);
-            BringToFront();
+            SetActiveWindow(m_hWnd);
+            SetForegroundWindow(m_hWnd);
         }
         return true;
     }
@@ -116,29 +117,10 @@ namespace AnyFSE::App::AppControl::Window
         m_empty = false;
         if (IsWindowVisible(m_hWnd))
         {
-            m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, m_hWnd);
+            m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, Config::SplashVideoPause, m_hWnd);
             m_videoPlayer.Play();
             StartAnimation();
         }
-        return true;
-    }
-
-    bool MainWindow::BringToFront()
-    {
-        HMONITOR hMonitor = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
-        MONITORINFOEX monitorInfo;
-        monitorInfo.cbSize = sizeof(monitorInfo);
-        GetMonitorInfo(hMonitor, &monitorInfo);
-
-        SetWindowPos(m_hWnd, HWND_TOPMOST,
-            0,0,
-            monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
-            monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
-            SWP_NONE);
-        
-        SetActiveWindow(m_hWnd);
-        SetForegroundWindow(m_hWnd);
-
         return true;
     }
 
@@ -234,6 +216,9 @@ namespace AnyFSE::App::AppControl::Window
         case WM_TIMER:
             OnTimer(wParam);
             return 0;
+        case WM_SIZE:
+            m_videoPlayer.Resize();
+            break;
         case WM_COMMAND:
             if (OnCommand(LOWORD(wParam)))
             {
@@ -442,7 +427,7 @@ namespace AnyFSE::App::AppControl::Window
             return;
         }
 
-        m_currentVideo = videoFiles[std::rand() % videoFiles.size()].wstring().c_str();
+        m_currentVideo = videoFiles[GetTickCount() % videoFiles.size()].wstring().c_str();
     }
 }
 

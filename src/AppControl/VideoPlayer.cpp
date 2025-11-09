@@ -99,6 +99,8 @@ namespace AnyFSE::App::AppControl::Window
                 if (m_desiredState == MFP_MEDIAPLAYER_STATE_PLAYING)
                 {
                     pEventHeader->pMediaPlayer->Play();
+                    log.Debug("Show in MFP_EVENT_TYPE_MEDIAITEM_SET");
+                    ShowVideo(true);
                 }
             }
             break;
@@ -116,8 +118,21 @@ namespace AnyFSE::App::AppControl::Window
                     pEventHeader->pMediaPlayer->SetMute(m_mutedLoop);
                     Rewind(pEventHeader->pMediaPlayer, m_startLoop);
                 }
+                else if (!m_pause)
+                {
+                    Close();
+                }
             }
             break;
+            case MFP_EVENT_TYPE_STOP:
+            {
+                log.Debug("Video Stopped");
+                if (m_desiredState == MFP_MEDIAPLAYER_STATE_EMPTY)
+                {
+                    log.Debug("Clearing Media item");
+                    pEventHeader->pMediaPlayer->ClearMediaItem();
+                }
+            }
             default:
                 //log.Debug("Event recieved: %d", pEventHeader->eEventType);
                 break;
@@ -130,6 +145,7 @@ namespace AnyFSE::App::AppControl::Window
         , m_hwndVideo(nullptr)
         , m_bInitialized(FALSE)
         , m_loop(false)
+        , m_pause(true)
         , m_desiredState(MFP_MEDIAPLAYER_STATE_EMPTY)
     {
         CoInitializeEx(NULL, COINIT_MULTITHREADED);
@@ -163,7 +179,7 @@ namespace AnyFSE::App::AppControl::Window
         CoUninitialize();
     }
 
-    HRESULT SimpleVideoPlayer::Load(const WCHAR *videoFile, bool mute, bool loop, HWND hwndParent)
+    HRESULT SimpleVideoPlayer::Load(const WCHAR *videoFile, bool mute, bool loop, bool pause, HWND hwndParent)
     {
         CriticalSectionLock lock(&m_cs);
 
@@ -187,6 +203,7 @@ namespace AnyFSE::App::AppControl::Window
         }
 
         m_loop = loop;
+        m_pause = pause;
 
         ParseLoopTimings(videoFile);
         
@@ -197,12 +214,29 @@ namespace AnyFSE::App::AppControl::Window
             hr = MFStartup(MF_VERSION);
 
             log.Trace("Creating Media Player");
+
+            RECT parentRect;
+            GetClientRect(hwndParent, &parentRect);
+
+
+            m_hwndVideo = CreateWindowExW(
+                0,
+                L"STATIC",
+                L"",
+                WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN,
+                0, 0,
+                parentRect.right, parentRect.bottom,
+                hwndParent,
+                NULL,
+                GetModuleHandle(NULL),
+                this);
+
             hr = MFPCreateMediaPlayer(
                 NULL,
                 FALSE,
                 MFP_OPTION_FREE_THREADED_CALLBACK,
                 this,
-                hwndParent,
+                m_hwndVideo,
                 &m_pPlayer);
 
             if (FAILED(hr))
@@ -218,7 +252,8 @@ namespace AnyFSE::App::AppControl::Window
 
             m_bInitialized = TRUE;
         }
-        
+        ShowVideo(false);
+
         hr = m_pPlayer->CreateMediaItemFromURL(videoFile, FALSE, 0, NULL);
         if (FAILED(hr))
         {
@@ -250,6 +285,8 @@ namespace AnyFSE::App::AppControl::Window
         }
 
         hr = m_pPlayer->Play();
+        log.Debug("Show in Play");
+        ShowVideo(true);
 
         if (FAILED(hr))
         {
@@ -268,7 +305,7 @@ namespace AnyFSE::App::AppControl::Window
         {            
             return E_FAIL;
         }
-
+        ShowVideo(false);
         m_pPlayer->SetMute(TRUE);
         MFP_MEDIAPLAYER_STATE state;
         HRESULT hr = m_pPlayer->GetState(&state);
@@ -285,15 +322,32 @@ namespace AnyFSE::App::AppControl::Window
     void SimpleVideoPlayer::Close()
     {
         CriticalSectionLock lock(&m_cs);
-        m_desiredState = MFP_MEDIAPLAYER_STATE_STOPPED;
+        m_desiredState = MFP_MEDIAPLAYER_STATE_EMPTY;
         if (!m_pPlayer || !m_bInitialized)
         {
             return;
         }
-
+        ShowVideo(false);
         m_pPlayer->Stop();
         m_pPlayer->ClearMediaItem();
         m_loadedVideo = L"";
+        if (FAILED(m_pPlayer->Shutdown()))
+        {
+            log.Error(log.APIError(), "Cant Shutdown player");
+        }
+        
+        m_pPlayer->Release();
+        m_pPlayer = nullptr;
+        m_bInitialized = false;
+    }
+
+    void SimpleVideoPlayer::Resize()
+    {
+        if (!m_hwndVideo) return;
+
+        RECT parentRect;
+        GetClientRect(GetParent(m_hwndVideo), &parentRect);
+        MoveWindow(m_hwndVideo, 0, 0, parentRect.right, parentRect.bottom, TRUE);
     }
 
     void SimpleVideoPlayer::ParseLoopTimings(const std::wstring &path)
@@ -371,5 +425,33 @@ namespace AnyFSE::App::AppControl::Window
         PropVariantClear(&varDuration);
         return hr;
 
+    }
+    
+    BOOL SimpleVideoPlayer::ShowVideo(bool bShow)
+    {
+        if (!m_pPlayer) 
+        {
+            return false;
+        }
+
+        HWND hVideoWin = NULL;
+        m_pPlayer->GetVideoWindow(&hVideoWin);
+        if (hVideoWin)
+        {
+            if (bShow)
+            {
+                log.Debug("Show Video Window");
+                Resize();
+                ShowWindow(hVideoWin, SW_SHOW);
+            }
+            else
+            {
+                log.Debug("Hide Video Window");
+                MoveWindow(hVideoWin, 0, 0, 0, 0, TRUE);
+                ShowWindow(hVideoWin, SW_HIDE);
+                UpdateWindow(GetParent(hVideoWin));
+            }
+        }
+        return hVideoWin ? TRUE : FALSE;
     }
 }
