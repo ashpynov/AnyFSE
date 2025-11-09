@@ -73,7 +73,7 @@ namespace AnyFSE::App::AppControl::StateLoop
             else if (!IsLauncherActive())
             {
                 log.Debug("OnXboxDetected: Launcher is not active => Kill It. Start Launcher with splash");
-                if (false)
+                if (IsInFSEMode())
                 {
                     ShowSplash();
                     KillXbox();
@@ -364,10 +364,20 @@ namespace AnyFSE::App::AppControl::StateLoop
         HWND launcherHwnd = GetLauncherWindow();
         if (launcherHwnd)
         {
-            ShowWindow(launcherHwnd, SW_RESTORE);
-            SetWindowPos(launcherHwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-            SetForegroundWindow(launcherHwnd);
-            SetFocus(launcherHwnd);
+            SetActiveWindow(launcherHwnd);
+
+            HMONITOR hMonitor = MonitorFromWindow(launcherHwnd, MONITOR_DEFAULTTONEAREST);
+            MONITORINFOEX monitorInfo = {};
+            monitorInfo.cbSize = sizeof(monitorInfo);
+    
+            if (GetMonitorInfo(hMonitor, &monitorInfo))
+            {
+                PostMessage(launcherHwnd, WM_DISPLAYCHANGE, 32,
+                    MAKELPARAM(
+                        monitorInfo.rcMonitor.right-monitorInfo.rcMonitor.left,
+                        monitorInfo.rcMonitor.bottom-monitorInfo.rcMonitor.top
+                ));
+            }
         }
     }
 
