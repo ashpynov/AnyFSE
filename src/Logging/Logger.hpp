@@ -22,6 +22,7 @@ namespace AnyFSE::Logging
         Info,
         Debug,
         Trace,
+        Max
     };
 
     class Logger

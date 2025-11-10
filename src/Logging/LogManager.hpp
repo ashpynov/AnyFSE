@@ -24,12 +24,12 @@ namespace AnyFSE::Logging
 
         static std::string FormatString(const char* format, va_list args);
         // Helper methods
-        static const char * LogLevelToString(LogLevels level);
         static void WriteMessage(LogLevels level, const std::string &loggerName, const char* format, va_list args);
 
     public:
         static void Initialize(const std::string &appName, LogLevels level = LogLevels::Trace, const std::wstring &filePath = L"");
         static Logger GetLogger(const std::string &loggerName = "");
+        static const char * LogLevelToString(LogLevels level);
     };
 }
 

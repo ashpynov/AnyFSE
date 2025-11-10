@@ -65,6 +65,8 @@ namespace AnyFSE::Logging
             return "Error";
         case LogLevels::Critical:
             return "Critical";
+        case LogLevels::Disabled:
+            return "Disabled";
         default:
             return "Unknown";
         }

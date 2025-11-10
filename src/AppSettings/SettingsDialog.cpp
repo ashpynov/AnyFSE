@@ -383,6 +383,7 @@ namespace AnyFSE::App::AppSettings::Settings
         }
         m_pActivePageList = pPageList;
         UpdateLayout();
+        RedrawWindow(m_hDialog, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
     }
 
     void SettingsDialog::UpdateDpiLayout()
@@ -531,6 +532,21 @@ namespace AnyFSE::App::AppSettings::Settings
 
     void SettingsDialog::AddTroubleshootSettingsPage()
     {
+        ULONG top = 0;
+        FluentDesign::SettingsLine &logLevel = AddSettingsLine(m_troubleshootSettingPageList,
+            top,
+            L"Log level",
+            L"Enable logs at specified level",
+            m_logLevelCombo,
+            Layout_LineHeight, Layout_LinePadding, 0,
+            Layout_LauncherComboWidth);
+
+        for (int i = (int)LogLevels::Disabled; i < (int)LogLevels::Max; i++)
+        {
+            std::wstring level = Unicode::to_wstring(LogManager::LogLevelToString((LogLevels)i));
+            wchar_t buff[2] = {(wchar_t)i, 0};
+            m_logLevelCombo.AddItem(level, L"", buff);
+        }
     }
 
     void SettingsDialog::OnInitDialog(HWND hwnd)
@@ -894,6 +910,8 @@ namespace AnyFSE::App::AppSettings::Settings
             UpdateCustomSettings();
         }
 
+        m_logLevelCombo.SelectItem(min(max((int)LogLevels::Disabled, (int)Config::LogLevel), (int)LogLevels::Max));
+
         m_splashShowTextToggle.SetCheck(Config::SplashShowText);
         m_splashCustomTextEdit.SetText(Config::SplashCustomText);
 
@@ -1004,6 +1022,8 @@ namespace AnyFSE::App::AppSettings::Settings
         Config::SplashVideoLoop = m_splashShowVideoLoopToggle.GetCheck();
         Config::SplashVideoMute = m_splashShowVideoMuteToggle.GetCheck();
         Config::SplashVideoPause = m_splashShowVideoPauseToggle.GetCheck();
+
+        Config::LogLevel = (LogLevels)m_logLevelCombo.GetSelectedIndex();
 
         Config::Save();
 

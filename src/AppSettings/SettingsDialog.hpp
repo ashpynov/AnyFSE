@@ -73,6 +73,7 @@ namespace AnyFSE::App::AppSettings::Settings
             , m_customSettingsState(FluentDesign::SettingsLine::Closed)
             , m_scrollView(m_theme)
             , m_launcherCombo(m_theme)
+            , m_logLevelCombo(m_theme)
             , m_fseOnStartupToggle(m_theme)
             , m_customSettingsToggle(m_theme)
             , m_additionalArgumentsEdit(m_theme)
@@ -142,6 +143,7 @@ namespace AnyFSE::App::AppSettings::Settings
         Theme m_theme;
         ScrollView m_scrollView;
         ComboBox m_launcherCombo;
+        ComboBox m_logLevelCombo;
         Toggle m_fseOnStartupToggle;
         Toggle m_customSettingsToggle;
 
