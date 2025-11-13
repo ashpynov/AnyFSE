@@ -15,7 +15,7 @@
 #include <dwmapi.h>
 #include <commctrl.h>
 #include <algorithm>
-#include "AppSettings/Registry.hpp"
+#include "Tools/Registry.hpp"
 
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "Gdiplus.lib")
@@ -121,6 +121,7 @@ namespace FluentDesign
             m_colors[Text] = GetGrey(255);
             m_colors[TextSecondary] = GetGrey(200);
             m_colors[TextDisabled] = GetGrey(128);
+            m_colors[TextAccented] = GetAccent(204);
 
             m_colors[FocusFrame] = GetGrey(200);
 
@@ -187,6 +188,7 @@ namespace FluentDesign
             m_colors[Text] = GetGrey(27);
             m_colors[TextSecondary] = GetGrey(96);
             m_colors[TextDisabled] = GetGrey(160);
+            m_colors[TextAccented] = GetAccent(128);
 
             m_colors[FocusFrame] = GetGrey(27);
 

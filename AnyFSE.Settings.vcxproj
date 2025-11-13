@@ -5,6 +5,7 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <TargetExt>.dll</TargetExt>
     <ProjectGuid>{7F3A9B1C-82D4-4E5F-91A6-B8C7D2E4F619}</ProjectGuid>
+    <AssemblyDescription>AnyFSE Settings module</AssemblyDescription>
 
   </PropertyGroup>
   <Import Project="AnyFSE.vcxproj.props" />
@@ -19,6 +20,7 @@
     <ClCompile Include="src\Configuration\*.cpp" />
     <ClCompile Include="src\Logging\*.cpp" />
     <ClCompile Include="src\Tools\*.cpp" />
+    <ClCompile Include="src\FluentDesign\*.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\AppSettings\AppSettings.def" />

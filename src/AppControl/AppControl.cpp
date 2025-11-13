@@ -27,6 +27,7 @@
 #include "AppControl.hpp"
 #include "App/Application.hpp"
 #include "AppControl/Launchers.hpp"
+#include "Tools/Admin.hpp"
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -46,11 +47,27 @@ namespace AnyFSE::App::AppControl
 {
     static Logger log = LogManager::GetLogger("AppControl");
 
+    int AppControl::ShowAdminError()
+    {
+        log.Critical("Application should be executed as Adminisrator, exiting\n");
+
+        InitCustomControls();
+
+        TaskDialog(NULL, GetModuleHandle(NULL),
+            L"Insufficient permissons",
+            L"Please run AnyFSE as Administrator",
+            L"Escalated privileges is required to monitor XBox application execution "
+            L"or instaling application as schedulled autorun task.\n\n",
+            TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
+
+        return FALSE;
+    }
+
     int AppControl::ShowSettings()
     {
-        return IsRunningAsAdministrator(true, true)
+        return Tools::Admin::IsRunningAsAdministrator() || Tools::Admin::RequestAdminElevation(L"/Settings")
             ? App::CallLibrary(L"AnyFSE.Settings.dll", GetModuleHandle(NULL), NULL, NULL, 0)
-            : FALSE;
+            : ShowAdminError();
     }
 
     bool AppControl::AsControl(LPSTR lpCmdLine)
@@ -72,62 +89,6 @@ namespace AnyFSE::App::AppControl
     bool AppControl::NeedAdmin(LPSTR lpCmdLine)
     {
         return AsSettings(lpCmdLine) || (!AsControl(lpCmdLine) && !IsServiceAvailable());
-    }
-
-    BOOL AppControl::IsRunningAsAdministrator(bool elevate, bool configure)
-    {
-        BOOL fRet = FALSE;
-        HANDLE hToken = NULL;
-
-        if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
-        {
-            TOKEN_ELEVATION Elevation;
-            DWORD cbSize = sizeof(TOKEN_ELEVATION);
-
-            if (GetTokenInformation(hToken, TokenElevation, &Elevation, sizeof(Elevation), &cbSize))
-            {
-                fRet = Elevation.TokenIsElevated;
-            }
-        }
-
-        if (hToken)
-        {
-            CloseHandle(hToken);
-        }
-
-        return fRet || (elevate && RequestAdminElevation(configure));
-    }
-
-    BOOL AppControl::RequestAdminElevation(bool configure) {
-        wchar_t modulePath[MAX_PATH];
-        GetModuleFileName(NULL, modulePath, MAX_PATH);
-
-        SHELLEXECUTEINFO sei = { sizeof(sei) };
-        sei.lpVerb = L"runas";  // Request UAC elevation
-        sei.lpFile = modulePath;
-        sei.nShow = SW_NORMAL;
-
-        if (configure)
-        {
-            sei.lpParameters = L"/Settings";
-        }
-
-        if (ShellExecuteEx(&sei))
-        {
-            exit(0);
-        }
-        log.Critical("Application should be executed as Adminisrator, exiting\n");
-
-        InitCustomControls();
-
-        TaskDialog(NULL, GetModuleHandle(NULL),
-            L"Insufficient permissons",
-            L"Please run AnyFSE as Administrator",
-            L"Escalated privileges is required to monitor XBox application execution "
-            L"or instaling application as schedulled autorun task.\n\n",
-            TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
-
-        return false;
     }
 
     int AppControl::StartControl(AppControlStateLoop & AppControlStateLoop, Window::MainWindow& mainWindow)
@@ -194,7 +155,7 @@ namespace AnyFSE::App::AppControl
 
         AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
 
-        ShowSettings();
+        // ShowSettings();
 
         LPCTSTR className = L"AnyFSE";
 
@@ -219,8 +180,13 @@ namespace AnyFSE::App::AppControl
             return -1;
         }
 
-        if (NeedAdmin(lpCmdLine) && !IsRunningAsAdministrator(true, AsSettings(lpCmdLine)))
+        if (
+            NeedAdmin(lpCmdLine)
+            && !Tools::Admin::IsRunningAsAdministrator()
+            && !Tools::Admin::RequestAdminElevation(AsSettings(lpCmdLine) ? L"/Settings" : L"")
+        )
         {
+            ShowAdminError();
             return -1;
         }
 

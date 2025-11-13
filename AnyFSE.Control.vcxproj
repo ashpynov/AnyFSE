@@ -5,6 +5,7 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <TargetExt>.dll</TargetExt>
     <ProjectGuid>{A3B8C1D2-E4F5-6789-ABCD-EF0123456789}</ProjectGuid>
+    <AssemblyDescription>AnyFSE Userspace logic module</AssemblyDescription>
   </PropertyGroup>
   <Import Project="AnyFSE.vcxproj.props" />
 
@@ -20,7 +21,7 @@
     <ClCompile Include="src\AppControl\*.cpp" />
     <ClCompile Include="src\Configuration\*.cpp" />
     <ClCompile Include="src\Logging\*.cpp" />
-    <ClCompile Include="src\Tools\*.cpp" />
+    <ClCompile Include="src\Tools\*.cpp" Exclude="src\Tools\ProcessEx.cpp" />
     <ClCompile Remove="src\App\Application.cpp" />
   </ItemGroup>
   <ItemGroup>

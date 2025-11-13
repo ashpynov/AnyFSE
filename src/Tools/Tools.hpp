@@ -12,10 +12,12 @@
 #pragma once
 #include <string>
 #include <Windows.h>
+#include "GdiPlus.hpp"
 
 namespace AnyFSE::Tools
 {
     HICON LoadIcon(const std::wstring& icon, int size = 256);
+    Gdiplus::Bitmap * LoadBitmapFromIcon(const std::wstring &icon, int iconSize = 256);
 
     template <typename T, typename V>
     size_t index_of(const T& list, const V &value);

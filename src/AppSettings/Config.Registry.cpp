@@ -1,6 +1,6 @@
 #include <filesystem>
 #include "Configuration/Config.hpp"
-#include "Registry.hpp"
+#include "Tools/Registry.hpp"
 #include "Tools/Unicode.hpp"
 
 namespace AnyFSE::Configuration

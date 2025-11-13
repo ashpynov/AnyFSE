@@ -8,9 +8,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details. <https://www.gnu.org/licenses/>
 
-namespace AnyFSE::App::AppSettings::TaskManager
+namespace AnyFSE::Tools::TaskManager
 {
-    bool CreateTask();
-
+    bool CreateTask(const std::wstring& exeFile = L"");
     bool RemoveTask();
+    std::wstring GetInstallPath();
 }

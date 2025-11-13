@@ -16,6 +16,7 @@
 #include <commctrl.h>
 #include <string>
 #include "Theme.hpp"
+#include "Tools/Event.hpp"
 
 namespace FluentDesign
 {
@@ -69,9 +70,8 @@ namespace FluentDesign
         // Setters
         void SetText(const std::wstring &text);
         void UpdateLayout();
-        void SetPlaceholder(const std::wstring &placeholder);
-        // Message handling
-        LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam);
+        Event OnChanged;
+
 
     private:
         void OnSize();

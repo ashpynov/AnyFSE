@@ -20,8 +20,8 @@
 #include "Configuration/Config.hpp"
 #include "FluentDesign/Theme.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
-#include "TaskManager.hpp"
-#include "Registry.hpp"
+#include "Tools/TaskManager.hpp"
+#include "Tools/Registry.hpp"
 
 #define byte ::byte
 
@@ -186,15 +186,17 @@ namespace AnyFSE::App::AppSettings::Settings
                 {
                     r.left = r.right;
                     r.right = paint.ClientRect().right;
-                    wchar_t *chevron = L" \xE00F ";
+                    wchar_t *chevron = L"  \xE00F  ";
                     SetTextColor(paint.MemDC(), m_theme.GetColorRef(FluentDesign::Theme::Colors::Text));
-                    SelectFont(paint.MemDC(), m_theme.GetFont_Icon());
+                    SelectFont(paint.MemDC(), m_theme.GetFont_GlyphNormal());
                     ::DrawText(paint.MemDC(), chevron, -1, &r, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP | DT_CALCRECT);
 
-                    r.top = m_breadCrumbRect.top;
+                    r.top = m_breadCrumbRect.top + m_theme.DpiScale(8);
                     r.bottom = m_breadCrumbRect.bottom;
                     ::DrawText(paint.MemDC(), chevron, -1, &r, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
 
+                    r.top = m_breadCrumbRect.top;
+                    r.bottom = m_breadCrumbRect.bottom;
                     r.left = r.right;
                     r.right = paint.ClientRect().right;
                     SelectFont(paint.MemDC(), m_theme.GetFont_Title());
@@ -839,6 +841,7 @@ namespace AnyFSE::App::AppSettings::Settings
     {
         m_customSettingsState = m_pCustomSettingsLine->GetState();
         UpdateLayout();
+        RedrawWindow(m_hDialog, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
     }
 
     void SettingsDialog::OpenSettingsPage()

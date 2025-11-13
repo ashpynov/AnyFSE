@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <shlobj_core.h>
 
+
 namespace AnyFSE::Tools
 {
     static Logger log = LogManager::GetLogger("Tools");
@@ -65,6 +66,45 @@ namespace AnyFSE::Tools
         }
 
         return hIcon;
+    }
+
+    Gdiplus::Bitmap * LoadBitmapFromIcon(const std::wstring &icon, int iconSize)
+    {
+        HICON hIcon = Tools::LoadIcon(icon, iconSize);
+        if (!hIcon)
+        {
+            return nullptr;
+        }
+
+        //get the icon info
+        ICONINFO ii;
+        GetIconInfo(hIcon, &ii);
+
+        using namespace Gdiplus;
+
+        //create a bitmap from the ICONINFO so we can access the bitmapData
+        Bitmap bmpIcon(ii.hbmColor, NULL);
+        Rect rectBounds(0, 0, bmpIcon.GetWidth(), bmpIcon.GetHeight() );
+
+        //get the BitmapData
+        BitmapData bmData;
+        bmpIcon.LockBits(&rectBounds, ImageLockModeRead, bmpIcon.GetPixelFormat(), &bmData);
+
+        Bitmap * tmp = new Bitmap(bmData.Width, bmData.Height, bmData.Stride, PixelFormat32bppARGB, (BYTE*)bmData.Scan0);
+
+        Bitmap * result = new Bitmap(bmpIcon.GetWidth(), bmpIcon.GetHeight(), PixelFormat32bppARGB);
+        Graphics graphics(result);
+        graphics.DrawImage(tmp, 0, 0, bmpIcon.GetWidth(), bmpIcon.GetHeight());
+
+        delete tmp;
+
+        bmpIcon.UnlockBits(&bmData);
+
+        DestroyIcon(hIcon);
+        DeleteObject(ii.hbmColor);
+        DeleteObject(ii.hbmMask);
+
+        return result;
     }
 
     BOOL GetChildRect(HWND hwnd, RECT * rect)

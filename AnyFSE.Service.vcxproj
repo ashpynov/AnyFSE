@@ -5,6 +5,7 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <TargetExt>.dll</TargetExt>
     <ProjectGuid>{4B2F1E9A-8C3D-4E76-9A1F-2D8C5A3B7E9F}</ProjectGuid>
+    <AssemblyDescription>AnyFSE System service module</AssemblyDescription>
   </PropertyGroup>
   <Import Project="AnyFSE.vcxproj.props" />
 
@@ -22,7 +23,7 @@
     <ClCompile Include="src\AppService\*.cpp" />
     <ClCompile Include="src\Configuration\*.cpp" />
     <ClCompile Include="src\Logging\*.cpp" />
-    <ClCompile Include="src\Tools\*.cpp" />
+    <ClCompile Include="src\Tools\*.cpp" Exclude="src\Tools\Tools.cpp"/>
     <ClCompile Remove="src\App\Application.cpp" />
   </ItemGroup>
   <ItemGroup>

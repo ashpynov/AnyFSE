@@ -11,9 +11,10 @@
 
 #pragma once
 
-#include "windows.h"
+#include <map>
+#include <windows.h>
 #include "Tools/Event.hpp"
-
+#include "Tools/GdiPlus.hpp"
 
 namespace FluentDesign
 {
@@ -25,6 +26,7 @@ namespace FluentDesign
             Text = 0 ,
             TextSecondary,
             TextDisabled,
+            TextAccented,
 
             FocusFrame,
 
@@ -98,6 +100,7 @@ namespace FluentDesign
         HWND m_hParentWnd;
         HFONT m_hPrimaryFont;
         HFONT m_hPrimaryBoldFont;
+        HFONT m_hLargeFont;
         HFONT m_hSecondaryFont;
         HFONT m_hGlyphFont;
         HFONT m_hIconFont;
@@ -107,6 +110,7 @@ namespace FluentDesign
         COLORREF m_colors[Colors::Max + 1];
 
         static const int m_primarySize = 14;
+        static const int m_largeSize = 20;
         static const int m_secondarySize = 11;
         static const int m_glyphSize = 10;
         static const int m_iconSize = 20;
@@ -159,9 +163,18 @@ namespace FluentDesign
         const bool IsDark() { return m_isDark; }
 
         const int DpiUnscale(int scaledSize);
+        const float DpiUnscaleF(int scaledSize);
+        const float DpiUnscaleF(float scaledSize);
+
         const int DpiScale(int designSize);
         const float DpiScaleF(int designSize);
         const float DpiScaleF(float designSize);
+
+        const Gdiplus::RectF DpiUnscaleF(const RECT &actualRect);
+        const RECT DpiScale(const Gdiplus::RectF &designRectF);
+
+        const void DpiUnscaleChilds(HWND parent, std::map<HWND,Gdiplus::RectF>& storage);
+        const void DpiScaleChilds(HWND parent, const std::map<HWND,Gdiplus::RectF>& storage);
 
         bool IsDarkThemeEnabled();
         COLORREF GetAccentColor();
@@ -169,6 +182,7 @@ namespace FluentDesign
         const HFONT GetFont_Text() { return m_hPrimaryFont; }
         const HFONT GetFont_TextBold() { return m_hPrimaryBoldFont; }
         const HFONT GetFont_TextSecondary() { return m_hSecondaryFont; }
+        const HFONT GetFont_TextLarge() { return m_hLargeFont; }
         const HFONT GetFont_Glyph() { return m_hGlyphFont; }
         const HFONT GetFont_GlyphNormal() { return m_hGlyphNormalFont; }
         const HFONT GetFont_Title() { return m_hTitleFont; }
@@ -181,6 +195,7 @@ namespace FluentDesign
 
         // Constants
         const int GetSize_Text() { return DpiScale(m_primarySize); }
+        const int GetSize_TextLarge() { return DpiScale(m_largeSize); }
         const int GetSize_TextSecondary() { return DpiScale(m_secondarySize); }
         const int GetSize_Glyph() { return DpiScale(m_glyphSize); }
         const int GetSize_Icon() { return DpiScale(m_iconSize); }

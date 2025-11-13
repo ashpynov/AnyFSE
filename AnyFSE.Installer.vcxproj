@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project InitialTargets="BeforeBuild"
+    DefaultTargets="Build" ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>Installer</ProjectName>
+    <ProjectGuid>{A3F1C4B2-8D9E-4F67-92A1-5B3C8D7E6F4A}</ProjectGuid>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <RootNamespace>AnyFSE</RootNamespace>
+    <AssemblyDescription>AnyFSE Installer</AssemblyDescription>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="AnyFSE.Version.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
+    <OutputDirectory>bin\$(Configuration)\</OutputDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
+    <OutputDirectory>bin\$(Configuration)\</OutputDirectory>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup>
+    <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>AnyFSE.Installer</TargetName>
+    <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ApplicationFiles Include="$(OutDir)*.dll" />
+    <ApplicationFiles Include="$(OutDir)splash" />
+    <ApplicationFiles Include="$(OutDir)*.exe" Exclude="$(OutDir)$(TargetName).exe" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <InstallFiles>@(ApplicationFiles->'&quot;%(RecursiveDir)%(Filename)%(Extension)&quot;', ' ')</InstallFiles>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_STATIC_CPPLIB;_DISABLE_DEPRECATE_STATIC_CPPLIB;WIN32;WIN64;_WIN64;_AMD64_;_DEBUG;WIN32;_WINDOWS;UNICODE;_UNICODE;VER_VERSION_STR="$(AssemblyVersion)";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)src</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <DelayLoadDLLs>api-ms-win-gaming-experience-l1-1-0.dll</DelayLoadDLLs>
+      <!-- <AdditionalDependencies>Shell32.lib;Ole32.lib;User32.lib;ComCtl32.lib;Advapi32.lib</AdditionalDependencies> -->
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+
+      <PreprocessorDefinitions>_STATIC_CPPLIB;_DISABLE_DEPRECATE_STATIC_CPPLIB;WIN32;WIN64;_WIN64;_AMD64_;NDEBUG;WIN32;_WINDOWS;UNICODE;_UNICODE;WIN32_LEAN_AND_MEAN;NOMINMAX;VER_VERSION_STR="$(AssemblyVersion)";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)src</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <DelayLoadDLLs>api-ms-win-gaming-experience-l1-1-0.dll</DelayLoadDLLs>
+      <!-- <AdditionalDependencies>delayimp.lib;Shell32.lib;Ole32.lib;User32.lib;ComCtl32.lib;Advapi32.lib</AdditionalDependencies> -->
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="src\AppInstaller\AppInstaller.cpp" />
+    <ClCompile Include="src\AppInstaller\InstallerPages\*.cpp" />
+    <ClCompile Include="src\FluentDesign\Theme.cpp" />
+    <ClCompile Include="src\FluentDesign\Theme_Colors.cpp" />
+    <ClCompile Include="src\FluentDesign\Button.cpp" />
+    <ClCompile Include="src\FluentDesign\Static.cpp" />
+    <ClCompile Include="src\FluentDesign\TextBox.cpp" />
+    <ClCompile Include="src\Tools\Event.cpp" />
+    <ClCompile Include="src\Tools\Registry.cpp" />
+    <ClCompile Include="src\Tools\Unicode.cpp" />
+    <ClCompile Include="src\Tools\Tools.cpp" />
+    <ClCompile Include="src\Tools\Process.cpp" />
+    <ClCompile Include="src\Tools\ProcessEx.cpp" />
+    <ClCompile Include="src\Tools\TaskManager.cpp" />
+    <ClCompile Include="src\Tools\Admin.cpp" />
+    <ClCompile Include="src\Logging\*.cpp" />
+    <ClCompile Include="src\AppControl\GamingExperience.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="src\AppInstaller\Installer.rc">
+        <PreprocessorDefinitions>
+            BUILD_ARCHIVE=\"$(OutDir.Replace('\', '\\'))$(AssemblyProduct).$(AssemblyVersion).zip\";
+            %(PreprocessorDefinitions)
+        </PreprocessorDefinitions>
+      <AdditionalOptions>/v /I&quot;$(ProjectDir)src\Installer&quot;/I&quot;$(ProjectDir)src&quot;</AdditionalOptions>
+    </ResourceCompile>
+  </ItemGroup>
+
+<ItemDefinitionGroup>
+    <CustomBuildStep>
+        <Message>Archive $(InstallFiles) to $(AssemblyProduct).$(AssemblyVersion).zip</Message>
+        <Command>cd &quot;$(OutDir)&quot; &amp;&amp; tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion).zip&quot; $(InstallFiles)</Command>
+        <Outputs>$(OutDir)\AnyFSE.zip</Outputs>
+    </CustomBuildStep>
+</ItemDefinitionGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

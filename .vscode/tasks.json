@@ -157,6 +157,40 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "type": "shell",
+            "label": "Build AnyFSE.Installer Release",
+            "command": "msbuild.exe",
+            "args": [
+                "AnyFSE.Installer.vcxproj",
+                "-property:Configuration=Release",
+                "-property:Platform=x64",
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+                {
+            "type": "shell",
+            "label": "Build AnyFSE.Installer Debug",
+            "command": "msbuild.exe",
+            "args": [
+                "AnyFSE.Installer.vcxproj",
+                "-property:Configuration=Debug",
+                "-property:Platform=x64",
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
         }
     ]
 }

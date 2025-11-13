@@ -73,6 +73,12 @@ namespace FluentDesign
         InvalidateRect(m_hButton, NULL, TRUE);
     }
 
+    void Button::Enable(bool bEnable)
+    {
+        EnableWindow(m_hButton, bEnable);
+        InvalidateRect(m_hButton, NULL, TRUE);
+    }
+
     Button::~Button()
     {
     }
@@ -193,13 +199,13 @@ namespace FluentDesign
         Color borderColor(
                 m_buttonPressed ? m_theme.GetColor(Theme::Colors::ButtonBorderPressed)
             : m_buttonMouseOver ? m_theme.GetColor(Theme::Colors::ButtonBorderHover)
-                              : m_theme.GetColor(Theme::Colors::ButtonBorder)
+                                : m_theme.GetColor(Theme::Colors::ButtonBorder)
         );
 
         Color backColor(
                 m_buttonPressed ? m_theme.GetColor(Theme::Colors::ButtonPressed)
             : m_buttonMouseOver ? m_theme.GetColor(Theme::Colors::ButtonHover)
-                              : m_theme.GetColor(Theme::Colors::Button)
+                                : m_theme.GetColor(Theme::Colors::Button)
         );
 
         // Draw outer rounded rectangle (track)
@@ -211,7 +217,8 @@ namespace FluentDesign
 
         // Create the font and brush
         Font font(hdc, m_theme.GetFont_Text());
-        SolidBrush textBrush(Color(m_theme.GetColor(Theme::Colors::Text)));
+
+        SolidBrush textBrush(Color(m_theme.GetColor( enabled ? Theme::Colors::Text : Theme::Colors::TextDisabled)));
 
         StringFormat format;
         format.SetAlignment(StringAlignmentCenter);

@@ -44,12 +44,12 @@ namespace FluentDesign
         m_designedWidth = m_theme.DpiUnscale(width);
 
         m_hContainer = CreateWindowEx(
-            0,
+            WS_EX_CONTROLPARENT,
             L"STATIC",
             L"",
-            WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN,
-            x, y - m_theme.DpiScale(m_marginTop),
-            width, height + m_theme.DpiScale(m_marginTop + m_marginBottom),
+            WS_CHILD | WS_VISIBLE,
+            x, y,
+            width, height,
             hParent,
             NULL,
             GetModuleHandle(NULL),
@@ -71,7 +71,7 @@ namespace FluentDesign
             WS_CHILD | WS_VISIBLE | ES_LEFT | ES_AUTOHSCROLL | WS_TABSTOP,
             m_theme.DpiScale(m_marginLeft), m_theme.DpiScale(m_marginTop),
             width - m_theme.DpiScale(m_marginLeft + m_marginRight),
-            height,
+            height - m_theme.DpiScale(m_marginTop + m_marginBottom),
             m_hContainer,
             NULL,
             GetModuleHandle(NULL),
@@ -86,8 +86,6 @@ namespace FluentDesign
 
         UpdateLayout();
 
-        // Subclass the TextBox for custom behavior
-        m_theme.RegisterChild(m_hTextBox);
         SetWindowSubclass(m_hTextBox, TextBoxSubclassProc, 0, (DWORD_PTR)this);
         UpdateTextBoxColors();
 
@@ -196,32 +194,6 @@ namespace FluentDesign
         }
     }
 
-    LRESULT TextBox::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
-    {
-        switch (msg)
-        {
-        case WM_SIZE:
-            OnSize();
-            break;
-
-        case WM_SETFOCUS:
-            if (m_hTextBox)
-            {
-                SetFocus(m_hTextBox);
-            }
-            break;
-
-        case WM_ENABLE:
-            if (m_hTextBox)
-            {
-                EnableWindow(m_hTextBox, wParam ? TRUE : FALSE);
-            }
-            Invalidate();
-            break;
-        }
-        return 0;
-    }
-
     // Container window procedure
     LRESULT CALLBACK TextBox::ContainerSubclassProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
     {
@@ -247,6 +219,9 @@ namespace FluentDesign
                     SetFocus(This->m_hTextBox);
                 }
                 break;
+            case WM_MOUSEACTIVATE:
+                SetFocus(This->m_hTextBox);
+                return MA_ACTIVATE;
 
             case WM_SIZE:
                 This->OnSize();
@@ -263,6 +238,11 @@ namespace FluentDesign
                 {
                     This->m_hasFocus = false;
                     This->Invalidate();
+                }
+                else if (HIWORD(wParam) == EN_CHANGE)
+                {
+                    This->OnChanged.Notify();
+                    break;
                 }
                 return SendMessage(This->m_hParent, msg, wParam, lParam);
             case WM_CTLCOLOREDIT:
@@ -311,7 +291,6 @@ namespace FluentDesign
 
             return 1;
         }
-
         case WM_DESTROY:
             RemoveWindowSubclass(hWnd, TextBoxSubclassProc, uIdSubclass);
             break;

@@ -5,6 +5,8 @@
 #include "Logging/LogManager.hpp"
 #include "GamingExperience.hpp"
 
+
+#pragma comment(lib, "delayimp.lib")
 #pragma comment(lib, "windowsapp.lib")
 #pragma comment(lib, "onecore.lib")
 

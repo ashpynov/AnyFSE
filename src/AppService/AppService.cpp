@@ -12,7 +12,7 @@
 #include "AppService/AppService.hpp"
 #include "AppService/ETWMonitor.hpp"
 #include "Logging/LogManager.hpp"
-#include "AppService/ProcessEx.hpp"
+#include "Tools/ProcessEx.hpp"
 
 #include "Configuration/Config.hpp"
 

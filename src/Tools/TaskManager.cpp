@@ -14,12 +14,13 @@
 #include <taskschd.h>
 #include <comdef.h>
 #include <string>
+#include <filesystem>
 #include "Logging/LogManager.hpp"
 
 #pragma comment(lib, "taskschd.lib")
 #include "TaskManager.hpp"
 
-namespace AnyFSE::App::AppSettings::TaskManager
+namespace AnyFSE::Tools::TaskManager
 {
 
     #define TRY(hr) if (FAILED((hr))) throw std::exception((std::string("Can't register task at ") + std::to_string(__LINE__)).c_str());
@@ -28,7 +29,7 @@ namespace AnyFSE::App::AppSettings::TaskManager
     static const std::wstring TaskName = L"AnyFSE home application";
     Logger log = LogManager::GetLogger("TaskManager");
 
-    bool CreateTask()
+    bool CreateTask(const std::wstring& exeFile)
     {
 
         bool result = false;
@@ -36,6 +37,8 @@ namespace AnyFSE::App::AppSettings::TaskManager
         // Get current executable path
         wchar_t modulePath[MAX_PATH];
         GetModuleFileNameW(NULL, modulePath, MAX_PATH);
+
+        std::wstring exePath = exeFile.empty() ? modulePath : exeFile;
 
         ITaskService *pService = NULL;
         ITaskFolder *pRootFolder = NULL;
@@ -74,7 +77,7 @@ namespace AnyFSE::App::AppSettings::TaskManager
             TRY( pTask->get_Actions(&pActionCollection));
             TRY( pActionCollection->Create(TASK_ACTION_EXEC, &pAction));
             TRY( pAction->QueryInterface(IID_IExecAction, (void **)&pExecAction));
-            TRY( pExecAction->put_Path(_bstr_t(modulePath)));                   // Use current process path:cite[2]
+            TRY( pExecAction->put_Path(_bstr_t(exePath.c_str())));                   // Use current process path:cite[2]
             TRY( pExecAction->put_Arguments(_bstr_t(L"/Service")));
 
             TRY(pTask->get_RegistrationInfo(&pRegInfo));
@@ -141,5 +144,53 @@ namespace AnyFSE::App::AppSettings::TaskManager
         FREE(pService);
         CoUninitialize();
         return true;
+    }
+
+    std::wstring GetInstallPath()
+    {
+        std::wstring result = L"";
+        ITaskService *pService = NULL;
+        ITaskFolder *pRootFolder = NULL;
+        IRegisteredTask* pTask = NULL;
+
+        ITaskDefinition* pTaskDef = NULL;
+        IActionCollection* pActionCollection = NULL;
+        IAction* pAction = NULL;
+        IExecAction* pExecAction = NULL;
+
+        BSTR bstrPath = NULL;
+
+        try
+        {
+            TRY( CoInitializeEx(NULL, COINIT_MULTITHREADED));
+            TRY( CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void **)&pService));
+            TRY( pService->Connect(_variant_t(), _variant_t(), _variant_t(), _variant_t()));
+            TRY( pService->GetFolder(_bstr_t(L"\\"), &pRootFolder));
+            TRY( pRootFolder->GetTask(_bstr_t(TaskName.c_str()), &pTask));
+            TRY( pTask->get_Definition(&pTaskDef));
+            TRY( pTaskDef->get_Actions(&pActionCollection));
+            TRY( pActionCollection->get_Item(1, &pAction));
+            TRY( pAction->QueryInterface(IID_IExecAction, (void**)&pExecAction));
+            TRY( pExecAction->get_Path(&bstrPath));
+
+            if(bstrPath)
+            {
+                result = bstrPath;
+                SysFreeString(bstrPath);
+            }
+
+        }
+        catch (...){}
+
+        FREE(pTaskDef);
+        FREE(pActionCollection);
+        FREE(pAction);
+        FREE(pExecAction);
+        FREE(pTask);
+        FREE(pRootFolder);
+        FREE(pService);
+        CoUninitialize();
+
+        return !result.empty() ? std::filesystem::path(result).parent_path().wstring() : L"";
     }
 }

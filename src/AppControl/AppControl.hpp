@@ -19,13 +19,11 @@ namespace AnyFSE::App::AppControl
 
     class AppControl
     {
-        private:
-            static BOOL RequestAdminElevation(bool configure = false);
         public:
+            static int ShowAdminError();
             static int ShowSettings();
             static int StartControl(StateLoop::AppControlStateLoop & AppControlStateLoop, Window::MainWindow &mainWindow);
             static void InitCustomControls();
-            static BOOL IsRunningAsAdministrator(bool elevate = false, bool configure = false);
             static bool AsControl(LPSTR lpCmdLine);
             static bool IsServiceAvailable();
             static bool AsSettings(LPSTR lpCmdLine);

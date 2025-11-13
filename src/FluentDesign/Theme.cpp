@@ -11,6 +11,7 @@
 
 #include "Theme.hpp"
 #include "Tools/GdiPlus.hpp"
+#include "Tools/Tools.hpp"
 #include "Logging/LogManager.hpp"
 #include <dwmapi.h>
 #include <commctrl.h>
@@ -146,9 +147,8 @@ namespace FluentDesign
                 SetFocus(hWnd);
                 This->SendNotifyFocus(hWnd);
                 Invalidate(hWnd);
-                return 0;
+                break;
             }
-            // fall down
         case WM_KILLFOCUS:
             {
                 Invalidate(hWnd, TRUE);
@@ -347,6 +347,11 @@ namespace FluentDesign
         primaryFont.lfWeight = FW_BOLD;
         m_hPrimaryBoldFont = CreateFontIndirect(&primaryFont);
 
+        primaryFont.lfHeight = (LONG)(-GetSize_TextLarge());
+        primaryFont.lfWeight = FW_NORMAL;
+        m_hLargeFont = CreateFontIndirect(&primaryFont);
+
+
         // Create description font (slightly smaller, normal weight)
         LOGFONT secondaryFont = ncm.lfMessageFont;
         secondaryFont.lfHeight = (LONG)(-GetSize_TextSecondary());
@@ -381,6 +386,9 @@ namespace FluentDesign
         if (m_hPrimaryFont)
             DeleteObject(m_hPrimaryFont);
 
+        if (m_hLargeFont)
+            DeleteObject(m_hLargeFont);
+
         if (m_hPrimaryBoldFont)
             DeleteObject(m_hPrimaryBoldFont);
 
@@ -400,6 +408,7 @@ namespace FluentDesign
             DeleteObject(m_hIconFont);
 
         m_hPrimaryFont = NULL;
+        m_hLargeFont = NULL;
         m_hPrimaryBoldFont = NULL;
         m_hSecondaryFont = NULL;
         m_hGlyphFont = NULL;
@@ -413,10 +422,21 @@ namespace FluentDesign
         return MulDiv(scaledSize, 96, m_dpi);
     }
 
+    const float Theme::DpiUnscaleF(int scaledSize)
+    {
+        return DpiUnscaleF((float)scaledSize);
+    }
+
+    const float Theme::DpiUnscaleF(float scaledSize)
+    {
+        return scaledSize * 96 / m_dpi;
+    }
+
     const int Theme::DpiScale(int designSize)
     {
         return MulDiv(designSize, m_dpi, 96);
     }
+
     const float Theme::DpiScaleF(int designSize)
     {
         return DpiScaleF((float)designSize);
@@ -425,6 +445,53 @@ namespace FluentDesign
     const float Theme::DpiScaleF(float designSize)
     {
         return designSize * m_dpi / 96;
-    };
+    }
+    const Gdiplus::RectF Theme::DpiUnscaleF(const RECT& scaledRect)
+    {
+        return Gdiplus::RectF(
+            DpiUnscaleF(scaledRect.left),
+            DpiUnscaleF(scaledRect.top),
+            DpiUnscaleF(scaledRect.right - scaledRect.left),
+            DpiUnscaleF(scaledRect.bottom - scaledRect.top)
+        );
+    }
 
+    const RECT Theme::DpiScale(const Gdiplus::RectF &designRect)
+    {
+        return RECT{
+            (LONG)DpiScaleF(designRect.X),
+            (LONG)DpiScaleF(designRect.Y),
+            (LONG)DpiScaleF(designRect.GetRight()),
+            (LONG)DpiScaleF(designRect.GetBottom()),
+        };
+    }
+
+    const void Theme::DpiUnscaleChilds(HWND parent, std::map<HWND, Gdiplus::RectF> &storage)
+    {
+        HWND hChild = GetWindow(parent, GW_CHILD);
+        while (hChild)
+        {
+            RECT rc;
+            Tools::GetChildRect(hChild, &rc);
+            storage[hChild] = DpiUnscaleF(rc);
+            hChild = GetWindow(hChild, GW_HWNDNEXT);
+        }
+    }
+
+    const void Theme::DpiScaleChilds(HWND parent, const std::map<HWND, Gdiplus::RectF> &storage)
+    {
+        HWND hChild = GetWindow(parent, GW_CHILD);
+        while (hChild)
+        {
+            RECT rc;
+            Tools::GetChildRect(hChild, &rc);
+            auto st = storage.find(hChild);
+            if (st != storage.end())
+            {
+                RECT rc = DpiScale(st->second);
+                MoveWindow(hChild, &rc, FALSE);
+            }
+            hChild = GetWindow(hChild, GW_HWNDNEXT);
+        }
+    };
 }
