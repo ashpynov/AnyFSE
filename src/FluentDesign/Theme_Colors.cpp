@@ -110,7 +110,7 @@ namespace FluentDesign
         m_isDark = IsDarkThemeEnabled();
         m_accentColor = GetAccentColor();
 
-         BOOL useDarkMode = IsDark() ? TRUE : FALSE;
+        BOOL useDarkMode = IsDark() ? TRUE : FALSE;
         DwmSetWindowAttribute(m_hParentWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &useDarkMode, sizeof(useDarkMode));
 
         COLORREF captionColor = GetColorRef(FluentDesign::Theme::Colors::Dialog);
@@ -130,6 +130,7 @@ namespace FluentDesign
             m_colors[PanelBorder] = GetGrey(32);
 
             m_colors[Dialog] = GetGrey(32);
+            m_colors[Footer] = GetGrey(38);
 
             m_colors[ToggleBorderOn] = GetAccent(204);          // accented color
             m_colors[ToggleBorderOff] = GetGrey(207);
@@ -197,6 +198,7 @@ namespace FluentDesign
             m_colors[PanelBorder] = GetGrey(229);
 
             m_colors[Dialog] = GetGrey(243);
+            m_colors[Footer] = GetGrey(230);
 
             m_colors[ToggleBorderOn] = GetAccent(128);             // accented color
             m_colors[ToggleBorderOff] = GetGrey(135);

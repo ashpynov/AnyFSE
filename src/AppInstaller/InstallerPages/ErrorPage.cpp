@@ -35,11 +35,11 @@ namespace AnyFSE
         ));
 
         page.push_back( m_errorCloseButton.Create(m_hDialog,
+            L"Close", delegate(OnCancel),
             rc.right - m_theme.DpiScale(Layout_ButtonWidth),
             rc.bottom - m_theme.DpiScale(Layout_ButtonHeight),
             m_theme.DpiScale(Layout_ButtonWidth),
             m_theme.DpiScale(Layout_ButtonHeight)
-
         ));
 
         m_errorImageStatic.LoadIcon(Icon_Error, 128);
@@ -49,9 +49,6 @@ namespace AnyFSE
         m_errorCaptionStatic.SetColor(Theme::Colors::TextAccented);
 
         m_errorCaptionStatic.SetText(std::wstring(L"Some error description Here"));
-
-        m_errorCloseButton.SetText(L"Close");
-        m_errorCloseButton.OnChanged += delegate(OnCancel);
 
         return page;
     }

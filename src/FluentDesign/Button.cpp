@@ -67,6 +67,14 @@ namespace FluentDesign
         return m_hButton;
     }
 
+    HWND Button::Create(HWND hParent, const std::wstring &text, const std::function<void()>& callback, int x, int y, int width, int height)
+    {
+        Create(hParent, x, y, width, height);
+        SetText(text);
+        OnChanged += callback;
+        return m_hButton;
+    }
+
     void Button::SetText(const std::wstring &text)
     {
         m_text = text;
@@ -77,6 +85,11 @@ namespace FluentDesign
     {
         EnableWindow(m_hButton, bEnable);
         InvalidateRect(m_hButton, NULL, TRUE);
+    }
+
+    void Button::Show(bool bShow)
+    {
+        ShowWindow(m_hButton, bShow ? SW_SHOW : SW_HIDE);
     }
 
     Button::~Button()

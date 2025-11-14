@@ -10,6 +10,8 @@
 
 namespace AnyFSE
 {
+    namespace fs = std::filesystem;
+
     std::list<HWND> AppInstaller::CreateProgressPage()
     {
         RECT rc;
@@ -43,11 +45,11 @@ namespace AnyFSE
         ));
 
         page.push_back( m_progressCancelButton.Create(m_hDialog,
+            L"Cancel", delegate(OnCancel),
             rc.right - m_theme.DpiScale(Layout_ButtonWidth),
             rc.bottom - m_theme.DpiScale(Layout_ButtonHeight),
             m_theme.DpiScale(Layout_ButtonWidth),
             m_theme.DpiScale(Layout_ButtonHeight)
-
         ));
 
         m_progressImageStatic.LoadIcon(Icon_Progress, 128);
@@ -58,9 +60,6 @@ namespace AnyFSE
 
         m_progressTextStatic.SetText(std::wstring(L"Preparation"));
 
-        m_progressCancelButton.SetText(L"Cancel");
-        m_progressCancelButton.OnChanged += delegate(OnCancel);
-
         return page;
     }
 
@@ -70,11 +69,10 @@ namespace AnyFSE
         RedrawWindow(m_hDialog, NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE | RDW_UPDATENOW);
     }
 
-    void AppInstaller::Install()
+    void AppInstaller::OnInstall()
     {
         try
         {
-            namespace fs = std::filesystem;
             fs::path path(m_pathEdit.GetText());
             if (fs::exists(path) && !fs::is_directory(path))
             {
@@ -87,7 +85,7 @@ namespace AnyFSE
             bool status = true;
             // Kill existing process
             SetCurrentProgress(L"Search and terminate existing application");
-            status &= TerminateActiveApp();
+            status &= TerminateAnyFSE();
 
             // Extract resource file
             SetCurrentProgress(L"Unpack files");
@@ -104,9 +102,11 @@ namespace AnyFSE
         }
 
         GoToPage(Pages::Complete);
+
+        m_completeDoneButton.Show(fs::exists(m_pathEdit.GetText() + L"\\AnyFSE.json"));
     }
 
-    bool AppInstaller::TerminateActiveApp()
+    bool AppInstaller::TerminateAnyFSE()
     {
         std::set<DWORD> handles;
         if (Process::FindAllByName(L"AnyFSE.exe", handles))

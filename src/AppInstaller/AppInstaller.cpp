@@ -53,8 +53,8 @@ namespace AnyFSE
 
         LPDLGTEMPLATE dlgTemplate = (LPDLGTEMPLATE)GlobalLock(hGlobal);
 
-        dlgTemplate->style = DS_MODALFRAME | WS_POPUP | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU;
-        dlgTemplate->dwExtendedStyle = WS_EX_TOPMOST | WS_EX_WINDOWEDGE;
+        dlgTemplate->style = DS_MODALFRAME | WS_POPUP | WS_CLIPCHILDREN | WS_CAPTION;
+        dlgTemplate->dwExtendedStyle = WS_EX_WINDOWEDGE;
         dlgTemplate->cdit = 0;  // No controls
         dlgTemplate->x = 0;
         dlgTemplate->y = 0;
@@ -143,9 +143,13 @@ namespace AnyFSE
             break;
         case WM_DPICHANGED:
             m_theme.DpiScaleChilds(hwnd, m_designedPositions);
+            RedrawWindow(m_hDialog, NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE);
             break;
         case WM_PAINT:
             OnPaint(hwnd);
+            return TRUE;
+        case WM_ERASEBKGND:
+            OnErase((HDC)wParam, (HWND)lParam);
             return TRUE;
         }
         return FALSE;
@@ -195,8 +199,8 @@ namespace AnyFSE
             ShowError(
                 L"Not supported",
                 L"Installation is interrupted as soon as "
-                L"Gaming Fullscreen Experiense API needed for AnyFSE\n"
-                L"was not detected on your version of windows.\n\n"
+                L"Fullscreen Experiense API "
+                L"was not detected on your system.\n\n"
                 L"It is supported since Windows 25H2 version for Handheld Devices.",
                 Icon_Error
             );
@@ -220,29 +224,73 @@ namespace AnyFSE
 
     void AppInstaller::OnPaint(HWND hwnd)
     {
+        FluentDesign::DoubleBuferedPaint paint(hwnd);
+        DrawDialog(paint.MemDC(), paint.ClientRect());
+    }
+
+    void AppInstaller::OnErase(HDC hdc, HWND child)
+    {
+        RECT dialogRect;
+        GetClientRect(m_hDialog, &dialogRect);
+
+        if(child)
+        {
+            RECT clientRect;
+            GetClientRect(child, &clientRect);
+
+            RECT childRect = clientRect;
+            GetChildRect(child, &childRect);
+
+            float panelHeight = dialogRect.bottom - m_theme.DpiScaleF(Layout_Margins + Layout_ButtonHeight + Layout_ButtonPadding);
+
+            HBRUSH hBrush = CreateSolidBrush(m_theme.GetColorRef(
+                childRect.top >= panelHeight ? Theme::Colors::Footer : Theme::Colors::Dialog
+            ));
+
+            FillRect(hdc, &clientRect, hBrush);
+            DeleteObject(hBrush);
+
+            if ( child == GetFocus())
+            {
+                m_theme.DrawChildFocus(hdc, child, child);
+            }
+        }
+        SetWindowLong(m_hDialog, DWLP_MSGRESULT, 1);
+    }
+
+    void AppInstaller::DrawDialog(HDC hdc, RECT clientRect)
+    {
         using namespace Gdiplus;
         using namespace FluentDesign;
-        FluentDesign::DoubleBuferedPaint paint(hwnd);
 
-        Graphics graphics(paint.MemDC());
-        RectF rect = ToRectF(paint.ClientRect());
+        Graphics graphics(hdc);
+        RectF rect = ToRectF(clientRect);
         rect.Inflate(1, 1);
+
         graphics.SetSmoothingMode(SmoothingModeAntiAlias);
-        SolidBrush backBrush(m_theme.GetColor(Theme::Colors::Dialog));
-        graphics.FillRectangle(&backBrush, rect);
+
+        float footerHeight = m_theme.DpiScaleF(Layout_Margins + Layout_ButtonHeight + Layout_ButtonPadding);
+
+        RectF panelRect = rect;
+        panelRect.Height = rect.Height - footerHeight + 1;
+
+        SolidBrush panelBrush(m_theme.GetColor(Theme::Colors::Dialog));
+        graphics.FillRectangle(&panelBrush, panelRect);
+
+        RectF footerRect = rect;
+        footerRect.Y = panelRect.GetBottom() - 1;
+        footerRect.Height = footerHeight;
+
+        SolidBrush footerBrush(m_theme.GetColor(Theme::Colors::Footer));
+        graphics.FillRectangle(&footerBrush, footerRect);
 
         for (auto &a : m_designedPositions)
         {
             if (IsWindowVisible(a.first))
             {
-                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, a.first);
+                m_theme.DrawChildFocus(hdc, m_hDialog, a.first);
             }
         }
-    }
-
-    void AppInstaller::OnCompleted()
-    {
-        GoToPage(Pages::Complete);
     }
 
     void AppInstaller::OnCancel()

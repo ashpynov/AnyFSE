@@ -14,7 +14,7 @@
 #include <vector>
 #include <functional>
 
-#define delegate(func) [This = this]() { This->func(); };
+#define delegate(func) [This = this]() { This->func(); }
 
 namespace AnyFSE::Tools
 {

@@ -1,4 +1,5 @@
 #include "AppInstaller/AppInstaller.hpp"
+#include "Tools/Process.hpp"
 
 namespace AnyFSE
 {
@@ -34,12 +35,20 @@ namespace AnyFSE
             rc.bottom - rc.top - m_theme.DpiScale(Layout_CaptionHeight + Layout_ButtonHeight + Layout_ButtonPadding)
         ));
 
-        page.push_back( m_completeCloseButton.Create(m_hDialog,
+        page.push_back( m_completeDoneButton.Create(m_hDialog,
+            L"Done", delegate(OnDone),
+            rc.right - m_theme.DpiScale(Layout_ButtonWidth * 2 + Layout_ButtonPadding),
+            rc.bottom - m_theme.DpiScale(Layout_ButtonHeight),
+            m_theme.DpiScale(Layout_ButtonWidth),
+            m_theme.DpiScale(Layout_ButtonHeight)
+        ));
+
+        page.push_back( m_completeSettingsButton.Create(m_hDialog,
+            L"Setup", delegate(OnSettings),
             rc.right - m_theme.DpiScale(Layout_ButtonWidth),
             rc.bottom - m_theme.DpiScale(Layout_ButtonHeight),
             m_theme.DpiScale(Layout_ButtonWidth),
             m_theme.DpiScale(Layout_ButtonHeight)
-
         ));
 
         m_completeImageStatic.LoadIcon(Icon_Done, 128);
@@ -50,9 +59,22 @@ namespace AnyFSE
 
         m_completeTextStatic.SetText(std::wstring(L"AnyFSE installation has been completed"));
 
-        m_completeCloseButton.SetText(L"Done");
-        m_completeCloseButton.OnChanged += delegate(OnCancel);
-
         return page;
+    }
+
+    void AppInstaller::OnSettings()
+    {
+        StartAnyFSE(true);
+    }
+
+    void AppInstaller::OnDone()
+    {
+        StartAnyFSE(false);
+    }
+
+    void AppInstaller::StartAnyFSE(bool bSettings)
+    {
+        Process::StartProcess(m_pathEdit.GetText() + L"\\AnyFSE.exe", bSettings ? L"/Settings" : L"");
+        EndDialog(m_hDialog, IDOK);
     }
 }

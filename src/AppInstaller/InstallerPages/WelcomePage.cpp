@@ -36,6 +36,7 @@ namespace AnyFSE
         ));
 
         page.push_back( m_welcomeNextButton.Create(m_hDialog,
+            L"Next", delegate(OnSelectPath),
             rc.right - m_theme.DpiScale(Layout_ButtonWidth * 2 + Layout_ButtonPadding),
             rc.bottom - m_theme.DpiScale(Layout_ButtonHeight),
             m_theme.DpiScale(Layout_ButtonWidth),
@@ -43,11 +44,11 @@ namespace AnyFSE
         ));
 
         page.push_back( m_welcomeCancelButton.Create(m_hDialog,
+            L"Cancel", delegate(OnCancel),
             rc.right - m_theme.DpiScale(Layout_ButtonWidth),
             rc.bottom - m_theme.DpiScale(Layout_ButtonHeight),
             m_theme.DpiScale(Layout_ButtonWidth),
             m_theme.DpiScale(Layout_ButtonHeight)
-
         ));
 
 
@@ -64,10 +65,6 @@ namespace AnyFSE
              Unicode::to_wstring(APP_VERSION) +
              std::wstring(L" to your system.\n\nClick Next to proceed or Cancel to exit.")
         );
-        m_welcomeNextButton.SetText(L"Next");
-        m_welcomeNextButton.OnChanged += delegate(GoToPathPage);
-        m_welcomeCancelButton.SetText(L"Cancel");
-        m_welcomeCancelButton.OnChanged += delegate(OnCancel);
 
         return page;
     }

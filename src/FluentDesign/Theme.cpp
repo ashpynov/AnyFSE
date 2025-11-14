@@ -206,15 +206,6 @@ namespace FluentDesign
                     SWP_NOZORDER | SWP_NOACTIVATE);
 
                 This->OnDPIChanged.Notify();
-
-                // HWND hChild = GetWindow(hWnd, GW_CHILD);
-                // while (hChild)
-                // {
-                //     RECT rc;
-                //     GetClientRect(hChild, &rc);
-                //     SendMessage(hChild, WM_SIZE, 0, MAKELONG(rc.right - rc.left, rc.bottom - rc.top));
-                //     hChild = GetWindow(hChild, GW_HWNDNEXT);
-                // }
             }
             break;
             case WM_CTLCOLORDLG:
@@ -222,12 +213,12 @@ namespace FluentDesign
                 static HBRUSH hBlackBrush = CreateSolidBrush(This->GetColorRef(FluentDesign::Theme::Colors::Dialog));
                 return (LRESULT)hBlackBrush;
             }
+
             case WM_ERASEBKGND:
             {
                 HWND child = (HWND)lParam;
-                if(child)
+                if(child && !DefSubclassProc(hWnd, msg, wParam, lParam))
                 {
-
                     RECT childRect;
                     GetClientRect(child, &childRect);
                     HBRUSH hBrush = CreateSolidBrush(This->GetColorRef(Theme::Colors::Dialog));
@@ -241,6 +232,7 @@ namespace FluentDesign
                 }
             }
             return 1;
+
             case WM_DESTROY:
                 RemoveWindowSubclass(hWnd, DialogSubclassProc, uIdSubclass);
                 break;

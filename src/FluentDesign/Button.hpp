@@ -53,9 +53,11 @@ namespace FluentDesign
             int width, int height);
 
         HWND Create(HWND hParent, int x, int y, int width, int height);
+        HWND Create(HWND hParent, const std::wstring& text, const std::function<void()>& callback, int x, int y, int width, int height);
 
         void SetText(const std::wstring& text);
         void Enable(bool bEnable);
+        void Show(bool bShow);
 
         ~Button();
 

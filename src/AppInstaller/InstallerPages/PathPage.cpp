@@ -51,6 +51,7 @@ namespace AnyFSE
         ));
 
         page.push_back(m_pathBrowseButton.Create(m_hDialog,
+            L"Browse", delegate(OnBrowse),
             rc.right - m_theme.DpiScale(Layout_BrowseButtonWidth),
             rc.top + m_theme.DpiScale(
                 Layout_CaptionHeight + Layout_TextHeight
@@ -61,6 +62,7 @@ namespace AnyFSE
         ));
 
         page.push_back( m_pathNextButton.Create(m_hDialog,
+            L"Install", delegate(OnInstall),
             rc.right - m_theme.DpiScale(Layout_ButtonWidth * 2 + Layout_ButtonPadding),
             rc.bottom - m_theme.DpiScale(Layout_ButtonHeight),
             m_theme.DpiScale(Layout_ButtonWidth),
@@ -68,11 +70,11 @@ namespace AnyFSE
         ));
 
         page.push_back( m_pathCancelButton.Create(m_hDialog,
+            L"Cancel", delegate(OnCancel),
             rc.right - m_theme.DpiScale(Layout_ButtonWidth),
             rc.bottom - m_theme.DpiScale(Layout_ButtonHeight),
             m_theme.DpiScale(Layout_ButtonWidth),
             m_theme.DpiScale(Layout_ButtonHeight)
-
         ));
 
         m_pathImageStatic.LoadIcon(Icon_Browse, 128);
@@ -88,19 +90,10 @@ namespace AnyFSE
 
         m_pathEdit.OnChanged += delegate(CheckPath);
 
-        m_pathBrowseButton.SetText(L"Browse");
-        m_pathBrowseButton.OnChanged += delegate(OnBrowse);
-
-        m_pathNextButton.SetText(L"Install");
-        m_pathNextButton.OnChanged += delegate(Install);
-
-        m_pathCancelButton.SetText(L"Cancel");
-        m_pathCancelButton.OnChanged += delegate(OnCancel);
-
         return page;
     }
 
-    void AppInstaller::GoToPathPage()
+    void AppInstaller::OnSelectPath()
     {
         std::wstring path = Tools::TaskManager::GetInstallPath();
         if (path.empty())

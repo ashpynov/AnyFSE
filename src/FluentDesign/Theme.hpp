@@ -35,6 +35,7 @@ namespace FluentDesign
             PanelBorder,
 
             Dialog,
+            Footer,
 
             ToggleBorderOn,
             ToggleBorderOff,

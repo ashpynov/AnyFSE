@@ -64,7 +64,8 @@ namespace AnyFSE
                 , m_completeImageStatic(m_theme)
                 , m_completeCaptionStatic(m_theme)
                 , m_completeTextStatic(m_theme)
-                , m_completeCloseButton(m_theme)
+                , m_completeDoneButton(m_theme)
+                , m_completeSettingsButton(m_theme)
 
                 , m_errorImageStatic(m_theme)
                 , m_errorCaptionStatic(m_theme)
@@ -123,7 +124,8 @@ namespace AnyFSE
             Static m_completeImageStatic;
             Static m_completeCaptionStatic;
             Static m_completeTextStatic;
-            Button m_completeCloseButton;
+            Button m_completeDoneButton;
+            Button m_completeSettingsButton;
 
             Static m_errorImageStatic;
             Static m_errorCaptionStatic;
@@ -147,16 +149,19 @@ namespace AnyFSE
 
             void OnInitDialog(HWND hwnd);
             void OnPaint(HWND hwnd);
-
-            void GoToPathPage();
+            void OnErase(HDC hdc, HWND child);
+            void DrawDialog(HDC hdc, RECT clientRect);
             void CheckPath();
             bool IsValidPath(const std::wstring &pathStr);
-            void OnCompleted();
 
+            void OnSelectPath();
             void OnBrowse();
             void OnCancel();
-            void Install();
-            bool TerminateActiveApp();
+            void OnInstall();
+            void OnSettings();
+            void OnDone();
+            void StartAnyFSE(bool bSettings);
+            bool TerminateAnyFSE();
             bool ExtractEmbeddedZip(const std::wstring &path);
     };
 }
