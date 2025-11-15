@@ -173,9 +173,12 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "dependsOn":[
+                "Build AnyFSE Release"
+            ]
         },
-                {
+        {
             "type": "shell",
             "label": "Build AnyFSE.Installer Debug",
             "command": "msbuild.exe",

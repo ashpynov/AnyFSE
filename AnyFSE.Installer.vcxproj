@@ -41,7 +41,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <PropertyGroup>
     <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)\obj\$(ProjectName)\$(Configuration)\</IntDir>
     <TargetName>AnyFSE.Installer</TargetName>
     <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
   </PropertyGroup>
@@ -80,7 +80,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
 
-      <PreprocessorDefinitions>_STATIC_CPPLIB;_DISABLE_DEPRECATE_STATIC_CPPLIB;WIN32;WIN64;_WIN64;_AMD64_;NDEBUG;WIN32;_WINDOWS;UNICODE;_UNICODE;WIN32_LEAN_AND_MEAN;NOMINMAX;VER_VERSION_STR="$(AssemblyVersion)";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_STATIC_CPPLIB;_DISABLE_DEPRECATE_STATIC_CPPLIB;WIN32;WIN64;_WIN64;_AMD64_;NDEBUG;WIN32;_WINDOWS;UNICODE;_UNICODE;VER_VERSION_STR="$(AssemblyVersion)";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)src</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
