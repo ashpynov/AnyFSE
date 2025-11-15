@@ -24,6 +24,7 @@ namespace AnyFSE::Tools
             std::vector<std::function<void()>> callbacks;
 
         public:
+            void operator =(std::function<void()> callback);
             void operator +=(std::function<void()> callback);
             void operator -=(const std::function<void()>& callback);
             void Notify();

@@ -1,3 +1,13 @@
+// AnyFSE is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// AnyFSE is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+
 #include <windows.h>
 #include <commctrl.h>
 #include <shellapi.h>
@@ -155,48 +165,16 @@ namespace AnyFSE
         return FALSE;
     }
 
-    void AppInstaller::CreatePages()
-    {
-        m_dialogPages.push_back(CreateWelcomePage());   // Page::Welcome    [v]
-        m_dialogPages.push_back(CreatePathPage());      // Page::Path       [?]
-        m_dialogPages.push_back(CreateProgressPage());  // Page::Progress   [?]
-        m_dialogPages.push_back(CreateCompletePage());  // Page::Complete   [?]
-        m_dialogPages.push_back(CreateErrorPage());     // Page::Error      [?]
-    }
-
-    void AppInstaller::GoToPage(Pages pageId)
-    {
-        for (int i = 0; i < m_dialogPages.size(); i++)
-        {
-            for (auto& hwnd: m_dialogPages[i])
-            {
-                ShowWindow(hwnd, i != pageId ? SW_HIDE : SW_SHOW);
-            }
-        }
-        m_currentPage = pageId;
-
-        RedrawWindow(m_hDialog, NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE | RDW_UPDATENOW);
-    }
-
-    void AppInstaller::ShowError(const std::wstring &caption, const std::wstring &text, const std::wstring &icon)
-    {
-        m_errorCaptionStatic.SetText(caption);
-        m_errorTextStatic.SetText(text);
-        m_errorImageStatic.LoadIcon(icon.empty() ? Icon_Error : icon, 128);
-        GoToPage(Pages::Error);
-    }
-
     void AppInstaller::OnInitDialog(HWND hwnd)
     {
         std::wstring title = L"AnyFSE Installer v" + Unicode::to_wstring(APP_VERSION);
         SetWindowText(hwnd, title.c_str());
 
-        CreatePages();
-
+        m_controls = CreatePage();
 
         if (!GamingExperience::ApiIsAvailable)
         {
-            ShowError(
+            ShowErrorPage(
                 L"Not supported",
                 L"Installation is interrupted as soon as "
                 L"Fullscreen Experiense API "
@@ -208,7 +186,7 @@ namespace AnyFSE
         else if (!Tools::Admin::IsRunningAsAdministrator() && !Tools::Admin::RequestAdminElevation()
         )
         {
-            ShowError(
+            ShowErrorPage(
                 L"Insufficient permissions",
                 L"Escalated privileges is required to install AnyFSE "
                 L"for schedulle autorun task.\n\n"
@@ -218,7 +196,7 @@ namespace AnyFSE
         }
         else
         {
-            GoToPage(Pages::Welcome);
+            ShowWelcomePage();
         }
     }
 

@@ -1,3 +1,13 @@
+// AnyFSE is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// AnyFSE is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+
 #include <filesystem>
 #include "Config.hpp"
 #include "Tools/Unicode.hpp"
@@ -79,7 +89,7 @@ namespace AnyFSE::Configuration
                 L"XBoxPcApp.exe"
             }
         },
-        
+
     };
 
     bool Config::GetLauncherDefaults(const std::wstring& path, LauncherConfig& out)
@@ -95,7 +105,7 @@ namespace AnyFSE::Configuration
         }
 
         std::wstring exe = Unicode::to_lower(fs::path(path).filename().wstring());
-        if (exe.empty()) 
+        if (exe.empty())
         {
             exe = Unicode::to_lower(path);
         }

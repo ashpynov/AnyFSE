@@ -16,6 +16,12 @@ namespace AnyFSE::Tools
 {
     static Logger log = LogManager::GetLogger("Event");
 
+    void Event::operator=(std::function<void()> callback)
+    {
+        callbacks.clear();
+        callbacks.push_back(callback);
+    }
+
     void Event::operator+=(std::function<void()> callback)
     {
         callbacks.push_back(callback);

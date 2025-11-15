@@ -95,7 +95,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\AppInstaller\AppInstaller.cpp" />
-    <ClCompile Include="src\AppInstaller\InstallerPages\*.cpp" />
+    <ClCompile Include="src\AppInstaller\AppInstaller_Page.cpp" />
     <ClCompile Include="src\FluentDesign\Theme.cpp" />
     <ClCompile Include="src\FluentDesign\Theme_Colors.cpp" />
     <ClCompile Include="src\FluentDesign\Button.cpp" />

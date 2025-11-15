@@ -70,6 +70,9 @@ namespace FluentDesign
         // Setters
         void SetText(const std::wstring &text);
         void UpdateLayout();
+
+        void Show(bool bShow);
+
         Event OnChanged;
 
 

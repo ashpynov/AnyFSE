@@ -8,6 +8,8 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details. <https://www.gnu.org/licenses/>
 
+#pragma once
+
 namespace AnyFSE::Tools::TaskManager
 {
     bool CreateTask(const std::wstring& exeFile = L"");

@@ -1,3 +1,13 @@
+// AnyFSE is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// AnyFSE is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+
 #include <list>
 #include <map>
 #include "FluentDesign/Theme.hpp"
@@ -40,43 +50,18 @@ namespace AnyFSE
 
             AppInstaller()
                 : m_theme()
-                , m_currentPage(Pages::None)
-
-                , m_welcomeImageStatic(m_theme)
-                , m_welcomeCaptionStatic(m_theme)
-                , m_welcomeTextStatic(m_theme)
-                , m_welcomeNextButton(m_theme)
-                , m_welcomeCancelButton(m_theme)
-
-                , m_pathCaptionStatic(m_theme)
-                , m_pathTextStatic(m_theme)
+                , m_captionStatic(m_theme)
+                , m_textStatic(m_theme)
                 , m_pathEdit(m_theme)
-                , m_pathImageStatic(m_theme)
-                , m_pathBrowseButton(m_theme)
-                , m_pathNextButton(m_theme)
-                , m_pathCancelButton(m_theme)
-
-                , m_progressImageStatic(m_theme)
-                , m_progressTextStatic(m_theme)
-                , m_progressCaptionStatic(m_theme)
-                , m_progressCancelButton(m_theme)
-
-                , m_completeImageStatic(m_theme)
-                , m_completeCaptionStatic(m_theme)
-                , m_completeTextStatic(m_theme)
-                , m_completeDoneButton(m_theme)
-                , m_completeSettingsButton(m_theme)
-
-                , m_errorImageStatic(m_theme)
-                , m_errorCaptionStatic(m_theme)
-                , m_errorTextStatic(m_theme)
-                , m_errorCloseButton(m_theme)
+                , m_imageStatic(m_theme)
+                , m_browseButton(m_theme)
+                , m_leftButton(m_theme)
+                , m_rightButton(m_theme)
             {}
 
         private:
             HINSTANCE m_hInstance;
             HWND m_hDialog;
-            Pages m_currentPage;
 
             const int Layout_DialogWidth = 480;
             const int Layout_DialogHeight = 280;
@@ -91,6 +76,7 @@ namespace AnyFSE
             const int Layout_EditHeight = 36;
             const int Layout_ButtonPadding = 16;
 
+            const wchar_t * Icon_EULA = L"C:\\Windows\\system32\\imageres.dll,-81";
             const wchar_t * Icon_Browse = L"C:\\Windows\\system32\\imageres.dll,-1025";
             const wchar_t * Icon_Error = L"C:\\Windows\\system32\\imageres.dll,-98";
             const wchar_t * Icon_Permission = L"C:\\Windows\\system32\\imageres.dll,-105";
@@ -98,61 +84,50 @@ namespace AnyFSE
             const wchar_t * Icon_Progress = L"C:\\Windows\\system32\\imageres.dll,-5357";
 
             Theme m_theme;
-            std::vector<std::list<HWND>> m_dialogPages;
 
             std::map<HWND, Gdiplus::RectF> m_designedPositions;
+            std::list<HWND> m_controls;
 
-            Static m_welcomeImageStatic;
-            Static m_welcomeCaptionStatic;
-            Static m_welcomeTextStatic;
-            Button m_welcomeNextButton;
-            Button m_welcomeCancelButton;
-
-            Static m_pathImageStatic;
-            Static m_pathCaptionStatic;
-            Static m_pathTextStatic;
+            Static m_imageStatic;
+            Static m_captionStatic;
+            Static m_textStatic;
             TextBox m_pathEdit;
-            Button m_pathBrowseButton;
-            Button m_pathNextButton;
-            Button m_pathCancelButton;
-
-            Static m_progressImageStatic;
-            Static m_progressCaptionStatic;
-            Static m_progressTextStatic;
-            Button m_progressCancelButton;
-
-            Static m_completeImageStatic;
-            Static m_completeCaptionStatic;
-            Static m_completeTextStatic;
-            Button m_completeDoneButton;
-            Button m_completeSettingsButton;
-
-            Static m_errorImageStatic;
-            Static m_errorCaptionStatic;
-            Static m_errorTextStatic;
-            Button m_errorCloseButton;
+            Button m_browseButton;
+            Button m_leftButton;
+            Button m_rightButton;
 
         private:
             void CenterDialog(HWND hwnd);
             static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
             INT_PTR InstanceDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-            void CreatePages();
-            std::list<HWND> CreateWelcomePage();
-            std::list<HWND> CreatePathPage();
-            std::list<HWND> CreateProgressPage();
-            std::list<HWND> CreateCompletePage();
-            std::list<HWND> CreateErrorPage();
-            void GoToPage(Pages pageId);
-            void SetCurrentProgress(const std::wstring &status);
 
-            void ShowError(const std::wstring& caption, const std::wstring& text, const std::wstring& icon = L"");
+            std::list<HWND> CreatePage();
+            void ShowPage(
+                const std::wstring &icon,
+                const std::wstring &caption,
+                const std::wstring &text,
+                const std::wstring &buttonRight,
+                const std::function<void()> &callbackRight,
+                const std::wstring &buttonLeft=L"",
+                const std::function<void()> &callbackLeft=[](){},
+                bool showBrowse=false
+            );
+            void ShowWelcomePage();
+            void ShowLicensePage();
+            void ShowPathPage();
+            void ShowProgressPage();
+            void ShowCompletePage();
+            void ShowErrorPage(const std::wstring& caption, const std::wstring& text, const std::wstring& icon = L"");
+
 
             void OnInitDialog(HWND hwnd);
             void OnPaint(HWND hwnd);
             void OnErase(HDC hdc, HWND child);
+
             void DrawDialog(HDC hdc, RECT clientRect);
             void CheckPath();
             bool IsValidPath(const std::wstring &pathStr);
+            void SetCurrentProgress(const std::wstring &status);
 
             void OnSelectPath();
             void OnBrowse();

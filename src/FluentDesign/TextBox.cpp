@@ -159,6 +159,11 @@ namespace FluentDesign
         OnSize();
     }
 
+    void TextBox::Show(bool bShow)
+    {
+        ShowWindow(m_hContainer, bShow ? SW_SHOW : SW_HIDE);
+    }
+
     void TextBox::OnSize()
     {
         if (!m_hContainer || !m_hTextBox)

@@ -1,4 +1,14 @@
 
+// AnyFSE is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// AnyFSE is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+
 #include "ScrollView.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/GdiPlus.hpp"
@@ -32,10 +42,10 @@ namespace FluentDesign
 
             case WM_VSCROLL:
                 return This->OnVScroll(LOWORD(wParam), HIWORD(wParam));
-            
+
             case WM_MOUSEWHEEL:
                 return This->OnMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam));
-            
+
 
             case WM_NCPAINT:
                 return This->OnNcPaint(hWnd);
@@ -81,7 +91,7 @@ namespace FluentDesign
             int height = rcWindow.bottom - rcWindow.top;
 
             // Calculate scrollbar rectangle (right side)
-            RECT rcScrollbar = 
+            RECT rcScrollbar =
             {
                 width - GetSystemMetrics(SM_CXVSCROLL),
                 0,
@@ -153,16 +163,16 @@ namespace FluentDesign
         {
             m_contentHeight = m_viewHeight;
             ScrollTo(0);
-        } 
-        else if (m_scrollPos + m_viewHeight > m_contentHeight) 
+        }
+        else if (m_scrollPos + m_viewHeight > m_contentHeight)
         {
             ScrollTo(m_contentHeight - m_viewHeight);
         }
         UpdateScrollBar();
-        
+
     }
 
-    void ScrollView::UpdateScrollBar() 
+    void ScrollView::UpdateScrollBar()
     {
         RedrawWindow(m_hScrollView, NULL, NULL, RDW_INVALIDATE | RDW_FRAME);
     }
