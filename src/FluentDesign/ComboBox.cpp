@@ -116,7 +116,9 @@ namespace FluentDesign
             case WM_LBUTTONDOWN:
             case WM_LBUTTONUP:
                 This->HandleMouse(hWnd, uMsg);
-                break;
+                return 0;
+            case WM_TOUCH:
+                return 0;
 
             case WM_GETDLGCODE:
                 // if (This->m_theme.IsKeyboardFocused() && wParam == VK_UP || wParam == VK_DOWN)
@@ -422,7 +424,7 @@ namespace FluentDesign
 
         case WM_LBUTTONDOWN:
         {
-            POINT pt = {LOWORD(lParam), HIWORD(lParam)};
+            POINT pt = {(short)LOWORD(lParam), (short)HIWORD(lParam)};
             int clickIndex = (int)SendMessage(hWnd, LB_ITEMFROMPOINT, 0, MAKELPARAM(pt.x, pt.y));
             if (clickIndex >= 0 && clickIndex < (int)SendMessage(hWnd, LB_GETCOUNT, 0, 0))
             {
