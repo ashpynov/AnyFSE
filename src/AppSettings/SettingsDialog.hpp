@@ -21,6 +21,7 @@
 #include "FluentDesign/Toggle.hpp"
 #include "FluentDesign/TextBox.hpp"
 #include "FluentDesign/Button.hpp"
+#include "FluentDesign/Static.hpp"
 #include "FluentDesign/SettingsLine.hpp"
 #include "FluentDesign/ScrollView.hpp"
 
@@ -63,6 +64,9 @@ namespace AnyFSE::App::AppSettings::Settings
         static const int Layout_LauncherBrowsePadding = -12;
         static const int Layout_LauncherBrowseLineHeight = 57;
 
+        static const int Layout_BackButtonSize = 34;
+        static const int Layout_BackButtonMargin = 4;
+
         void ShowGroup(int groupIdx, bool show);
 
     public:
@@ -70,6 +74,9 @@ namespace AnyFSE::App::AppSettings::Settings
         void CenterDialog(HWND hwnd);
         SettingsDialog()
             : m_theme()
+            , m_captionStatic(m_theme)
+            , m_captionBackButton(m_theme)
+            , m_captionCloseButton(m_theme)
             , m_customSettingsState(FluentDesign::SettingsLine::Closed)
             , m_scrollView(m_theme)
             , m_launcherCombo(m_theme)
@@ -141,6 +148,11 @@ namespace AnyFSE::App::AppSettings::Settings
         std::list<std::wstring> m_launchersList;
 
         Theme m_theme;
+
+        Static m_captionStatic;
+        Button m_captionBackButton;
+        Button m_captionCloseButton;
+
         ScrollView m_scrollView;
         ComboBox m_launcherCombo;
         ComboBox m_logLevelCombo;
@@ -168,9 +180,6 @@ namespace AnyFSE::App::AppSettings::Settings
         Button m_removeButton;
 
         HWND m_hScrollView;
-        HWND m_hButtonOk;
-        HWND m_hButtonClose;
-        HWND m_hButtonRemove;
 
         std::list<SettingsLine> m_settingPageList;
         std::list<SettingsLine> m_customSettingPageList;

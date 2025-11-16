@@ -28,6 +28,15 @@ namespace FluentDesign
         : m_theme(theme)
         , m_buttonMouseOver(false)
         , m_buttonPressed(false)
+        , m_isIconButton(false)
+        , m_bFlat(false)
+        , m_bSquare(false)
+        , m_textNormalColor(Theme::Colors::Text)
+        , m_backgroundNormalColor(Theme::Colors::Button)
+        , m_textHoverColor(Theme::Colors::Text)
+        , m_backgroundHoverColor(Theme::Colors::ButtonHover)
+        , m_textPressedColor(Theme::Colors::Text)
+        , m_backgroundPressedColor(Theme::Colors::ButtonPressed)
     {
     }
 
@@ -78,6 +87,14 @@ namespace FluentDesign
     void Button::SetText(const std::wstring &text)
     {
         m_text = text;
+        m_isIconButton = false;
+        InvalidateRect(m_hButton, NULL, TRUE);
+    }
+
+    void Button::SetIcon(const std::wstring &glyph)
+    {
+        m_text = glyph;
+        m_isIconButton = true;
         InvalidateRect(m_hButton, NULL, TRUE);
     }
 
@@ -90,6 +107,29 @@ namespace FluentDesign
     void Button::Show(bool bShow)
     {
         ShowWindow(m_hButton, bShow ? SW_SHOW : SW_HIDE);
+    }
+
+    void Button::SetFlat(bool isFlat)
+    {
+        m_bFlat = isFlat;
+        InvalidateRect(m_hButton, NULL, TRUE);
+    }
+
+    void Button::SetSquare(bool isSquare)
+    {
+        m_bSquare = isSquare;
+        InvalidateRect(m_hButton, NULL, TRUE);
+    }
+
+    void Button::SetColors(Theme::Colors textNornal, Theme::Colors backgroundNormal, Theme::Colors textHover, Theme::Colors backgroundHover, Theme::Colors textPressed, Theme::Colors backgroundPressed)
+    {
+        m_textNormalColor = textNornal == Theme::Colors::Default ? m_textNormalColor : textNornal;
+        m_backgroundNormalColor = backgroundNormal == Theme::Colors::Default ? m_backgroundNormalColor : backgroundNormal;
+        m_textHoverColor = textHover == Theme::Colors::Default ? m_textHoverColor : textHover;
+        m_backgroundHoverColor = backgroundHover == Theme::Colors::Default ? m_backgroundHoverColor : backgroundHover;
+        m_textPressedColor = textPressed == Theme::Colors::Default ? m_textPressedColor : textPressed;
+        m_backgroundPressedColor = backgroundPressed == Theme::Colors::Default ? m_backgroundPressedColor : backgroundPressed;
+        InvalidateRect(m_hButton, NULL, TRUE);
     }
 
     Button::~Button()
@@ -107,28 +147,38 @@ namespace FluentDesign
             case WM_LBUTTONDOWN:
             case WM_LBUTTONUP:
                 This->HandleMouse(hWnd, uMsg, lParam);
+                return 0;
+
+            case WM_GETDLGCODE:
+                if ( wParam == VK_SPACE || wParam ==VK_RETURN || wParam ==VK_GAMEPAD_A)
+                {
+                    return DLGC_WANTALLKEYS;
+                }
                 break;
 
             case WM_KEYDOWN:
-                if (This->m_theme.IsKeyboardFocused() && wParam == VK_SPACE || wParam == VK_GAMEPAD_A)
+                if ( This->m_theme.IsKeyboardFocused() &&
+                       wParam == VK_SPACE
+                    || wParam == VK_RETURN
+                    || wParam == VK_GAMEPAD_A)
                 {
                     This->OnChanged.Notify();
                 }
+
+            case WM_PAINT:
+                {
+                    FluentDesign::DoubleBuferedPaint paint(hWnd);
+
+                    RECT rect = paint.ClientRect();
+                    This->DrawButton(hWnd, paint.MemDC(), rect);
+                }
+                return 0;
+
+            case WM_ERASEBKGND:
+                return 1;
+            case WM_NCDESTROY:
+                RemoveWindowSubclass(hWnd, ButtonSubclassProc, uIdSubclass);
                 break;
-        case WM_PAINT:
-            {
-                FluentDesign::DoubleBuferedPaint paint(hWnd);
-
-                RECT rect = paint.ClientRect();
-                This->DrawButton(hWnd, paint.MemDC(), rect);
-            }
-            return 0;
-
-        case WM_ERASEBKGND:
-            return 1;
-        case WM_NCDESTROY:
-            RemoveWindowSubclass(hWnd, ButtonSubclassProc, uIdSubclass);
-            break;
         }
 
         // Call original window procedure for default handling
@@ -156,12 +206,12 @@ namespace FluentDesign
         case WM_MOUSELEAVE:
             m_buttonMouseOver = false;
             m_buttonPressed = false;
-            InvalidateRect(hWnd, NULL, TRUE);
+            InvalidateRect(hWnd, NULL, FALSE);
             break;
 
         case WM_LBUTTONDOWN:
             m_buttonPressed = true;
-            InvalidateRect(hWnd, NULL, TRUE);
+            InvalidateRect(hWnd, NULL, FALSE);
             SetCapture(hWnd);
             break;
 
@@ -170,7 +220,7 @@ namespace FluentDesign
             {
                 m_buttonPressed = false;
                 ReleaseCapture();
-                InvalidateRect(hWnd, NULL, TRUE);
+                InvalidateRect(hWnd, NULL, FALSE);
 
                 POINT pt;
                 GetCursorPos(&pt);
@@ -209,29 +259,55 @@ namespace FluentDesign
         br.Inflate(-m_theme.DpiScaleF(1), -m_theme.DpiScaleF(1));
 
         // Determine colors based on state
-        Color borderColor(
-                m_buttonPressed ? m_theme.GetColor(Theme::Colors::ButtonBorderPressed)
-            : m_buttonMouseOver ? m_theme.GetColor(Theme::Colors::ButtonBorderHover)
-                                : m_theme.GetColor(Theme::Colors::ButtonBorder)
-        );
+        Color borderColor(m_theme.GetColor(
+                m_buttonPressed ? Theme::Colors::ButtonBorderPressed
+            : m_buttonMouseOver ? Theme::Colors::ButtonBorderHover
+                                : Theme::Colors::ButtonBorder
+        ));
 
-        Color backColor(
-                m_buttonPressed ? m_theme.GetColor(Theme::Colors::ButtonPressed)
-            : m_buttonMouseOver ? m_theme.GetColor(Theme::Colors::ButtonHover)
-                                : m_theme.GetColor(Theme::Colors::Button)
-        );
+        Color backColor(m_theme.GetColor(
+                m_buttonPressed ? m_backgroundPressedColor
+            : m_buttonMouseOver ? m_backgroundHoverColor
+                                : m_backgroundNormalColor
+        ));
+        
+        if (m_bFlat)
+        {
+            borderColor = backColor;
+        }
 
-        // Draw outer rounded rectangle (track)
-        Pen borderPen(borderColor, (REAL)m_theme.DpiScale(1));
-        SolidBrush backBrush(backColor);
+        if (!m_bFlat || m_buttonPressed || m_buttonMouseOver)
+        {
+            // Draw outer rounded rectangle (track)
+            Pen borderPen(borderColor, (REAL)m_theme.DpiScale(1));
+            SolidBrush backBrush(backColor);
 
-        // For rounded rectangles in GDI+, we need to use GraphicsPath
-        Gdiplus::RoundRect(graphics, br, m_theme.DpiScaleF(m_cornerRadius), &backBrush, borderPen);
+            // For rounded rectangles in GDI+, we need to use GraphicsPath
+            if (m_bSquare)
+            {
+                graphics.FillRectangle(&backBrush, br);
+                if (!m_bFlat)
+                {
+                    graphics.DrawRectangle(&borderPen, br);
+                }
+            }
+            else
+            {
+                Gdiplus::RoundRect(graphics, br, m_theme.DpiScaleF(m_cornerRadius), &backBrush, borderPen);
+            }
+        }
 
         // Create the font and brush
-        Font font(hdc, m_theme.GetFont_Text());
+        Font font(hdc, m_isIconButton ? m_theme.GetFont_GlyphNormal() : m_theme.GetFont_Text());
 
-        SolidBrush textBrush(Color(m_theme.GetColor( enabled ? Theme::Colors::Text : Theme::Colors::TextDisabled)));
+        Color textColor(m_theme.GetColor(
+            ! enabled           ? Theme::Colors::TextDisabled
+            : m_buttonPressed   ? m_textPressedColor
+            : m_buttonMouseOver ? m_textHoverColor
+                                : m_textNormalColor
+        ));
+
+        SolidBrush textBrush(textColor);
 
         StringFormat format;
         format.SetAlignment(StringAlignmentCenter);

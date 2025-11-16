@@ -55,6 +55,7 @@ namespace FluentDesign
             int width, int height);
 
         HWND Create(HWND hParent, int x, int y, int width, int height);
+        HWND GetHwnd() const { return m_hStatic; }
 
         void SetText(const std::wstring& text);
 

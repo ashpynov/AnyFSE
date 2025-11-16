@@ -118,6 +118,7 @@ namespace FluentDesign
 
         if (m_isDark)
         {
+            m_colors[Transparent] = 0xFF000000;
             m_colors[Text] = GetGrey(255);
             m_colors[TextSecondary] = GetGrey(200);
             m_colors[TextDisabled] = GetGrey(128);
@@ -183,9 +184,14 @@ namespace FluentDesign
             m_colors[BreadcrumbLink] = GetGrey(204);
             m_colors[BreadcrumbLinkHover] = GetGrey(255);
             m_colors[BreadcrumbLinkPressed] = GetGrey(150);
+
+            m_colors[CloseButton] = 0xFF000000;
+            m_colors[CloseButtonHover] = RGB(0xC4, 0x2B, 0x1C);
+            m_colors[CloseButtonPressed] = RGB(0xB2, 0x27, 0x1C);
         }
         else
         {
+            m_colors[Transparent] = 0xFF000000;
             m_colors[Text] = GetGrey(27);
             m_colors[TextSecondary] = GetGrey(96);
             m_colors[TextDisabled] = GetGrey(160);
@@ -251,6 +257,10 @@ namespace FluentDesign
             m_colors[BreadcrumbLink] = GetGrey(92);
             m_colors[BreadcrumbLinkHover] = GetGrey(26);
             m_colors[BreadcrumbLinkPressed] = GetGrey(134);
+
+            m_colors[CloseButton] = 0xFF000000;
+            m_colors[CloseButtonHover] = RGB(0xC4, 0x2B, 0x1C);
+            m_colors[CloseButtonPressed] = RGB(0xB2, 0x27, 0x1C);
         }
     }
 }

@@ -31,7 +31,18 @@ namespace FluentDesign
 
         bool m_buttonPressed;
         bool m_buttonMouseOver;
+        bool m_isIconButton;
+        bool m_bFlat;
+        bool m_bSquare;
         int m_cornerRadius = 8;
+
+        Theme::Colors m_textNormalColor;
+        Theme::Colors m_backgroundNormalColor;
+        Theme::Colors m_textHoverColor;
+        Theme::Colors m_backgroundHoverColor;
+        Theme::Colors m_textPressedColor;
+        Theme::Colors m_backgroundPressedColor;
+
         std::wstring m_text;
 
         static LRESULT CALLBACK ButtonSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -55,9 +66,18 @@ namespace FluentDesign
         HWND Create(HWND hParent, int x, int y, int width, int height);
         HWND Create(HWND hParent, const std::wstring& text, const std::function<void()>& callback, int x, int y, int width, int height);
 
+        HWND GetHwnd() const { return m_hButton; }
         void SetText(const std::wstring& text);
+        void SetIcon(const std::wstring& glyph);
         void Enable(bool bEnable);
         void Show(bool bShow);
+
+        void SetFlat(bool isFlat);
+        void SetSquare(bool isSquare);
+
+        void SetColors(Theme::Colors textNornal, Theme::Colors backgroundNormal = Theme::Colors::Default,
+                       Theme::Colors textHover = Theme::Colors::Default, Theme::Colors backgroundHover = Theme::Colors::Default,
+                       Theme::Colors textPressed = Theme::Colors::Default, Theme::Colors backgroundPressed = Theme::Colors::Default);
 
         ~Button();
 

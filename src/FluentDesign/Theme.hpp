@@ -23,7 +23,9 @@ namespace FluentDesign
     public:
         enum Colors
         {
-            Text = 0 ,
+            Default = -1,
+            Transparent = 0,
+            Text,
             TextSecondary,
             TextDisabled,
             TextAccented,
@@ -87,6 +89,10 @@ namespace FluentDesign
             BreadcrumbLinkHover,
             BreadcrumbLinkPressed,
 
+            CloseButton,
+            CloseButtonHover,
+            CloseButtonPressed,
+
             Max
         };
 
@@ -114,6 +120,7 @@ namespace FluentDesign
         static const int m_largeSize = 20;
         static const int m_secondarySize = 11;
         static const int m_glyphSize = 10;
+        static const int m_glyphNormalSize = 14;
         static const int m_iconSize = 20;
         static const int m_titleSize = 28;
         static const int m_cornerSize = 16;
@@ -191,7 +198,7 @@ namespace FluentDesign
 
         // colors
         const DWORD ReverseRGB(DWORD rgb) { return RGB(rgb >> 16, rgb >> 8, rgb); }
-        const DWORD GetColor(Colors code) { return ReverseRGB(m_colors[code]) | 0xFF000000; }
+        const DWORD GetColor(Colors code) { return code ? ReverseRGB(m_colors[code]) | 0xFF000000 : 0; }
         const COLORREF GetColorRef(Colors code) { return m_colors[code]; }
 
         // Constants
@@ -199,6 +206,7 @@ namespace FluentDesign
         const int GetSize_TextLarge() { return DpiScale(m_largeSize); }
         const int GetSize_TextSecondary() { return DpiScale(m_secondarySize); }
         const int GetSize_Glyph() { return DpiScale(m_glyphSize); }
+        const int GetSize_GlyphNormal() { return DpiScale(m_glyphNormalSize); }
         const int GetSize_Icon() { return DpiScale(m_iconSize); }
         const int GetSize_Title() { return DpiScale(m_titleSize); }
         const int GetSize_Corner() { return DpiScale(m_cornerSize); }
@@ -206,6 +214,8 @@ namespace FluentDesign
         const int GetSize_FocusWidth() { return DpiScale(m_focusWidth); }
         const int GetSize_FocusCornerSize() { return DpiScale(m_focusCornerSize); }
         const int GetSize_FocusMargins() { return DpiScale(m_focusMargins); }
+
+        void KewboardNavigate(WORD direction);
     };
 
 }

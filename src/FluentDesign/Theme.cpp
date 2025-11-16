@@ -353,13 +353,13 @@ namespace FluentDesign
             GetSize_Glyph(), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
             CLEARTYPE_QUALITY, DEFAULT_PITCH,
-            L"Segoe MDL2 Assets");
+            L"Segoe Fluent Icons");
 
         m_hGlyphNormalFont = CreateFont(
-            GetSize_Text(), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+            GetSize_GlyphNormal(), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
             CLEARTYPE_QUALITY, DEFAULT_PITCH,
-            L"Segoe MDL2 Assets");
+            L"Segoe Fluent Icons");
 
         m_hIconFont = CreateFont(
             GetSize_Icon(), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
@@ -486,4 +486,129 @@ namespace FluentDesign
             hChild = GetWindow(hChild, GW_HWNDNEXT);
         }
     };
+
+    POINT GetCenterPoint(HWND hwnd)
+    {
+        RECT rc;
+        GetWindowRect(hwnd, &rc);
+        return POINT{(rc.right+rc.left) / 2, (rc.bottom+rc.top) / 2};
+    }
+
+    double GetDistance(POINT from, POINT to, POINT direction )
+    {
+        double rhs_x = from.x - from.x;
+        double rhs_y = from.y - from.y;
+        
+        // Calculate squared magnitude of rhs
+        double rhsSqrMag = rhs_x * rhs_x + rhs_y * rhs_y;
+        
+        // Normalize direction vector
+        double dirMag = sqrt((double)direction.x * direction.x + direction.y * direction.y);
+        if (dirMag == 0.0f) {
+            return -FLT_MAX;
+        }
+        double normDir_x = direction.x / dirMag;
+        double normDir_y = direction.y / dirMag;
+        
+        // Normalize rhs vector
+        double rhsMag = sqrt(rhsSqrMag);
+        if (rhsMag == 0.0f) {
+            return -FLT_MAX;
+        }
+        double normRhs_x = rhs_x / rhsMag;
+        double normRhs_y = rhs_y / rhsMag;
+        
+        // Calculate projection (dot product of normalized vectors)
+        double projectionNorm = normDir_x * normRhs_x + normDir_y * normRhs_y;
+        
+        // Check if projection is valid
+        if (projectionNorm <= 0.001f) {
+            return -FLT_MAX;
+        }
+        
+        // Calculate proximity
+        double angleFactor = 2.0f;
+        double angleScale = 1.0f / (1.0f + angleFactor - (angleFactor * projectionNorm * projectionNorm));
+        double prox = angleScale / (rhsSqrMag + 0.00001f);
+        
+        return prox;
+    }
+
+    void Theme::KewboardNavigate(WORD direction)
+    {
+        HWND focused = GetFocus();
+            std::list<HWND> focusable = {};
+        HWND hChild = GetWindow(m_hParentWnd, GW_CHILD);
+        
+        while (hChild)
+        {
+            if (IsWindowEnabled(hChild) && IsWindowVisible(hChild))
+            {
+                if ((GetWindowLongW(hChild, GWL_STYLE) & WS_TABSTOP) != 0 || focused == hChild)
+                {
+                    focusable.push_back(hChild);
+                }
+                if (/*(GetWindowLongW(hChild, GWL_EXSTYLE) & WS_EX_CONTROLPARENT) != 0 && */ GetWindow(hChild, GW_CHILD))
+                {
+                    hChild = GetWindow(hChild, GW_CHILD);
+                    continue;
+                }
+            }
+
+            if (!GetWindow(hChild, GW_HWNDNEXT) && GetParent(hChild) != m_hParentWnd)
+            {
+                hChild = GetParent(hChild);
+                hChild = GetWindow(hChild, GW_HWNDNEXT);
+            }
+            else
+            {
+                hChild = GetWindow(hChild, GW_HWNDNEXT);
+            }
+        }
+        if (focusable.size() == 0) return;
+
+        HWND next = 0;
+        auto pCurrent = std::find(focusable.begin(), focusable.end(), focused);
+        if ( direction == VK_PRIOR)
+        {
+            next = pCurrent == focusable.end() || pCurrent == focusable.begin()
+                ? focusable.back() : *(--pCurrent);
+        }
+        else if ( direction == VK_NEXT)
+        {
+            next = pCurrent == focusable.end() || *pCurrent == focusable.back()
+                ? focusable.front() : *(++pCurrent);
+        } 
+        else if (pCurrent == focusable.end()) 
+        {
+            next = focusable.front();
+        }
+        else
+        {
+            POINT dir = 
+                    direction == VK_UP ? POINT{0,-1}
+                :   direction == VK_DOWN ? POINT{0,1}
+                :   direction == VK_LEFT ? POINT{-1,0}
+                :   POINT{1,0};
+
+            POINT from = GetCenterPoint(focused);
+
+            next = focused;
+            double min_distance = FLT_MAX;
+
+            for (auto & hwnd : focusable)
+            {
+                if (hwnd == focused) continue;
+                double distance = GetDistance(from, GetCenterPoint(hwnd), dir);
+                if (distance > 0 && distance < min_distance )
+                {
+                    next = hwnd;
+                    min_distance = distance;
+                }
+            }
+        }
+        m_isKeyboardFocus = true;
+        m_lastFocused = next;
+        SetFocus(next);
+    }
 }

@@ -51,7 +51,7 @@ namespace FluentDesign
     {
         m_hToggle = CreateWindow(
             L"BUTTON",
-            L"TOGGLE",
+            L"",
             WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
             x, y, m_theme.DpiScale(Layout_ItemWidth + Layout_TextWidth), m_theme.DpiScale(Layout_ItemHeight+1),
             hParent, NULL, GetModuleHandle(NULL), NULL);
@@ -94,9 +94,16 @@ namespace FluentDesign
         case WM_LBUTTONDBLCLK:
             This->HandleMouse(hWnd, uMsg, lParam);
             break;
+        
+        case WM_GETDLGCODE:
+            if ( wParam == VK_SPACE || wParam ==VK_RETURN || wParam ==VK_GAMEPAD_A)
+            {
+                return DLGC_WANTALLKEYS;
+            }
+            break;
 
         case WM_KEYDOWN:
-            if ( This->m_theme.IsKeyboardFocused() && wParam == VK_SPACE || wParam == VK_GAMEPAD_A)
+            if ( This->m_theme.IsKeyboardFocused() && wParam == VK_SPACE || wParam == VK_RETURN || wParam == VK_GAMEPAD_A)
             {
                 This->m_isChecked = !This->m_isChecked;
                 InvalidateRect(hWnd, NULL, TRUE);

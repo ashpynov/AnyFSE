@@ -56,10 +56,8 @@ namespace AnyFSE::App::AppSettings::Settings
         *ptr++ = 0; // Default dialog class
         *ptr++ = 0; // No title
 
-        GlobalUnlock(hGlobal);
-
+        GlobalUnlock(hGlobal);    
         INT_PTR res = DialogBoxIndirectParam(hInstance, dlgTemplate, NULL, DialogProc, (LPARAM)this);
-
         GlobalFree(hGlobal);
         if (res == -1)
         {
@@ -124,13 +122,78 @@ namespace AnyFSE::App::AppSettings::Settings
                 OnInitDialog(hwnd);
             }
             return TRUE;
+         case WM_KEYDOWN:
+            if (   wParam == VK_LEFT 
+                || wParam == VK_UP 
+                || wParam == VK_RIGHT 
+                || wParam == VK_DOWN
+                || wParam == VK_TAB
+            )
+            {
+                //This->m_isKeyboardFocus = true;
+                if (wParam == VK_TAB && (GetKeyState(VK_SHIFT) & 0x8000))
+                {
+                    m_theme.KewboardNavigate(VK_PRIOR);
+                }
+                else if (wParam == VK_TAB)
+                {
+                    m_theme.KewboardNavigate(VK_NEXT);
+                }
+                else
+                {
+                    m_theme.KewboardNavigate((WORD)wParam);
+                }
+                return FALSE;
+            }
+            return TRUE;
 
+        case WM_NCCALCSIZE:
+            {
+                NCCALCSIZE_PARAMS* sz = reinterpret_cast< NCCALCSIZE_PARAMS* >( lParam );
+                InflateRect(&sz->rgrc[0], -1, -1);
+                SetWindowLong(m_hDialog, DWLP_MSGRESULT, 0);
+            }
+            return TRUE;
+
+        case WM_NCHITTEST:
+            {
+                LONG hit = (LONG)DefWindowProc(hwnd, WM_NCHITTEST, wParam, lParam);
+                // Get mouse position
+                POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+                ScreenToClient(hwnd, &pt);
+                
+                // Get client rect
+                RECT clientRect;
+                GetClientRect(hwnd, &clientRect);
+                
+                int captionHeight = m_theme.DpiScale(GetSystemMetrics(SM_CYCAPTION));
+                // If mouse is in top-right area where buttons are, treat as client
+                if (pt.y < captionHeight) 
+                {
+                    SetWindowLong(m_hDialog, DWLP_MSGRESULT, HTCAPTION);
+                    return TRUE;
+                }
+
+                SetWindowLong(m_hDialog, DWLP_MSGRESULT, hit);
+
+            }
+            return TRUE;
+        case WM_NCACTIVATE:
+            {
+                BOOL bActive = (BOOL)wParam;
+                m_captionCloseButton.SetColors(bActive ? Theme::Colors::Text : Theme::Colors::TextAccented);
+            }
+            return FALSE;
+        
         case WM_MOUSEWHEEL:
             {
                 return m_scrollView.OnMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam));
             }
             break;
 
+            case WM_ERASEBKGND:
+            SetWindowLong(m_hDialog, DWLP_MSGRESULT, 0);
+            return TRUE;
         case WM_NOTIFY:
             {
                 LPNMHDR notification = (LPNMHDR)lParam;
@@ -164,6 +227,7 @@ namespace AnyFSE::App::AppSettings::Settings
                 DeleteObject(back);
 
                 r.left += m_theme.DpiScale(Layout_MarginLeft);
+                r.top += m_theme.DpiScale(GetSystemMetrics(SM_CYCAPTION));
 
                 WCHAR *text1 = L"Any Full Screen Experience";
 
@@ -203,9 +267,11 @@ namespace AnyFSE::App::AppSettings::Settings
                     ::DrawText(paint.MemDC(), m_pageName.c_str(), -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
                 }
 
-                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_hButtonOk);
-                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_hButtonClose);
-                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_hButtonRemove);
+                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_okButton.GetHwnd());
+                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_closeButton.GetHwnd());
+                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_removeButton.GetHwnd());
+                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_captionBackButton.GetHwnd());
+                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_captionCloseButton.GetHwnd());
 
                 SelectObject(paint.MemDC(), oldFont);
             }
@@ -254,7 +320,7 @@ namespace AnyFSE::App::AppSettings::Settings
             break;
 
         case WM_LBUTTONDOWN:
-            if (!m_pageName.empty())
+            if (!m_pageName.empty() && !m_buttonPressed && Tools::MouseInClientRect(m_hDialog, &m_breadCrumbRect))
             {
                 m_buttonPressed = true;
                 InvalidateRect(m_hDialog, &m_breadCrumbRect, TRUE);
@@ -386,6 +452,8 @@ namespace AnyFSE::App::AppSettings::Settings
         m_pActivePageList = pPageList;
         UpdateLayout();
         RedrawWindow(m_hDialog, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+
+        m_captionBackButton.Enable(m_pActivePageList != &m_settingPageList);
     }
 
     void SettingsDialog::UpdateDpiLayout()
@@ -393,9 +461,31 @@ namespace AnyFSE::App::AppSettings::Settings
 
         RECT rect;
         GetClientRect(m_hDialog, &rect);
+
+        MoveWindow(m_captionStatic.GetHwnd(),
+            m_theme.DpiScale(Layout_BackButtonMargin * 2 + Layout_BackButtonSize),
+            m_theme.DpiScale(Layout_BackButtonMargin),
+            m_theme.DpiScale(200),
+            m_theme.DpiScale(Layout_BackButtonSize - 4),
+            FALSE);
+
+        MoveWindow(m_captionBackButton.GetHwnd(),
+            m_theme.DpiScale(Layout_BackButtonMargin),
+            m_theme.DpiScale(Layout_BackButtonMargin),
+            m_theme.DpiScale(Layout_BackButtonSize),
+            m_theme.DpiScale(Layout_BackButtonSize),
+            FALSE);
+
+        MoveWindow(m_captionCloseButton.GetHwnd(),
+            rect.right - m_theme.DpiScale(GetSystemMetrics(SM_CXSIZE)),
+            -1,
+            m_theme.DpiScale(GetSystemMetrics(SM_CXSIZE)),
+            m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)),
+            FALSE);
+
         RECT scrollRect {
             0,
-            rect.top + m_theme.DpiScale(Layout_MarginTop),
+            rect.top + m_theme.DpiScale(Layout_MarginTop + GetSystemMetrics(SM_CYCAPTION)),
             rect.right,
             rect.bottom
                 - m_theme.DpiScale(Layout_MarginBottom)
@@ -407,8 +497,8 @@ namespace AnyFSE::App::AppSettings::Settings
 
         UpdateLayout();
 
-
         GetClientRect(m_hDialog, &rect);
+        
         rect.top = rect.bottom
             - m_theme.DpiScale(Layout_MarginBottom)
             - m_theme.DpiScale(Layout_ButtonHeight);
@@ -416,14 +506,14 @@ namespace AnyFSE::App::AppSettings::Settings
         rect.right -= m_theme.DpiScale(Layout_MarginRight);
         rect.left  += m_theme.DpiScale(Layout_MarginLeft);
 
-        MoveWindow(m_hButtonRemove,
+        MoveWindow(m_removeButton.GetHwnd(),
             rect.left,
             rect.top,
             m_theme.DpiScale(Layout_UninstallWidth),
             m_theme.DpiScale(Layout_ButtonHeight),
             FALSE);
 
-        MoveWindow(m_hButtonOk,
+        MoveWindow(m_okButton.GetHwnd(),
             rect.right
                 - m_theme.DpiScale(Layout_OKWidth)
                 - m_theme.DpiScale(Layout_ButtonPadding)
@@ -433,7 +523,7 @@ namespace AnyFSE::App::AppSettings::Settings
             m_theme.DpiScale(Layout_ButtonHeight),
             FALSE);
 
-        MoveWindow(m_hButtonClose,
+        MoveWindow(m_closeButton.GetHwnd(),
             rect.right - m_theme.DpiScale(Layout_CloseWidth),
             rect.top,
             m_theme.DpiScale(Layout_CloseWidth),
@@ -556,16 +646,57 @@ namespace AnyFSE::App::AppSettings::Settings
         RECT rect;
         GetClientRect(m_hDialog, &rect);
 
+        m_captionBackButton.Create(m_hDialog,
+            m_theme.DpiScale(Layout_BackButtonMargin),
+            m_theme.DpiScale(Layout_BackButtonMargin),
+            m_theme.DpiScale(Layout_BackButtonSize),
+            m_theme.DpiScale(Layout_BackButtonSize));
+
+        m_captionStatic.Create(m_hDialog,
+            m_theme.DpiScale(Layout_BackButtonMargin * 2 + Layout_BackButtonSize),
+            m_theme.DpiScale(Layout_BackButtonMargin),
+            m_theme.DpiScale(200),
+            m_theme.DpiScale(Layout_BackButtonSize - 4));
+        m_captionStatic.Format().SetLineAlignment(Gdiplus::StringAlignment::StringAlignmentCenter);
+
+        m_captionStatic.SetText(L"Settings");
+        
+        m_captionBackButton.SetIcon(L"\xE64E");
+        m_captionBackButton.OnChanged += delegate(OpenSettingsPage);
+        m_captionBackButton.SetFlat(true);
+        m_captionBackButton.Enable(false);
+
+        m_captionCloseButton.Create(m_hDialog,
+            rect.right - m_theme.DpiScale(GetSystemMetrics(SM_CXSIZE)),
+            -1,
+            m_theme.DpiScale(GetSystemMetrics(SM_CXSIZE)),
+            m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)));
+        
+        SetWindowLong(m_captionCloseButton.GetHwnd(), GWL_STYLE,
+            GetWindowLong(m_captionCloseButton.GetHwnd(), GWL_STYLE) & ~WS_TABSTOP );
+        
+        m_captionCloseButton.SetIcon(L"\xE106");
+        m_captionCloseButton.OnChanged += delegate(OnClose);
+        m_captionCloseButton.SetFlat(true);
+        m_captionCloseButton.SetSquare(true);
+
+        m_captionCloseButton.SetColors(
+            Theme::Colors::Default, Theme::Colors::Default,
+            Theme::Colors::Default, Theme::Colors::CloseButtonHover,
+            Theme::Colors::Default, Theme::Colors::CloseButtonPressed);
+
         m_hScrollView = m_scrollView.Create(m_hDialog,
             0,
-            rect.top + m_theme.DpiScale(Layout_MarginTop),
+            rect.top + m_theme.DpiScale(Layout_MarginTop + GetSystemMetrics(SM_CYCAPTION)),
             rect.right,
             rect.bottom
                 - m_theme.DpiScale(Layout_MarginBottom)
-                - m_theme.DpiScale(Layout_MarginTop)
+                - m_theme.DpiScale(Layout_MarginTop + GetSystemMetrics(SM_CYCAPTION))
                 - m_theme.DpiScale(Layout_ButtonHeight)
                 - m_theme.DpiScale(Layout_ButtonPadding)
         );
+
+
 
         ULONG top = 0;
 
@@ -665,7 +796,7 @@ namespace AnyFSE::App::AppSettings::Settings
         rect.left  += m_theme.DpiScale(Layout_MarginLeft);
 
 
-        m_hButtonRemove = m_removeButton.Create(m_hDialog,
+        m_removeButton.Create(m_hDialog,
             rect.left,
             rect.top,
             m_theme.DpiScale(Layout_UninstallWidth),
@@ -675,7 +806,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         m_removeButton.OnChanged += delegate(OnUninstall);
 
-        m_hButtonOk = m_okButton.Create(m_hDialog,
+        m_okButton.Create(m_hDialog,
             rect.right
                 - m_theme.DpiScale(Layout_OKWidth)
                 - m_theme.DpiScale(Layout_ButtonPadding)
@@ -688,7 +819,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         m_okButton.OnChanged += delegate(OnOk);
 
-        m_hButtonClose = m_closeButton.Create(m_hDialog,
+        m_closeButton.Create(m_hDialog,
             rect.right - m_theme.DpiScale(Layout_CloseWidth),
             rect.top,
             m_theme.DpiScale(Layout_CloseWidth),
