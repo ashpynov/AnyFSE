@@ -23,8 +23,7 @@ namespace FluentDesign
     static Logger log = LogManager::GetLogger("SettingsLine");
 
     // Window class registration
-    static const wchar_t *SETTINGS_LINE_CLASS = L"SettingsLineClass";
-    static bool s_classRegistered = false;
+    static const wchar_t *SETTINGS_LINE_CLASS = L"AnyFSE_SettingsLineClass";
 
     SettingsLine::SettingsLine(FluentDesign::Theme& theme)
         : m_theme(theme)
@@ -89,25 +88,22 @@ namespace FluentDesign
         m_height = height;
         m_designHeight = m_theme.DpiUnscale(height);
 
-        // Register window class if needed
-        if (!s_classRegistered)
-        {
-            WNDCLASSEX wc = {};
-            wc.cbSize = sizeof(WNDCLASSEX);
-            wc.style = CS_HREDRAW | CS_VREDRAW;
-            wc.lpfnWndProc = SettingsLine::WndProc;
-            wc.cbClsExtra = 0;
-            wc.cbWndExtra = sizeof(SettingsLine *);
-            wc.hInstance = GetModuleHandle(NULL);
-            wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-            wc.hbrBackground = NULL; // We'll handle background drawing
-            wc.lpszClassName = SETTINGS_LINE_CLASS;
+        WNDCLASSEX wc = {};
+        wc.cbSize = sizeof(WNDCLASSEX);
+        wc.style = CS_HREDRAW | CS_VREDRAW;
+        wc.lpfnWndProc = SettingsLine::WndProc;
+        wc.cbClsExtra = 0;
+        wc.cbWndExtra = sizeof(SettingsLine *);
+        wc.hInstance = GetModuleHandle(NULL);
+        wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+        wc.hbrBackground = NULL; // We'll handle background drawing
+        wc.lpszClassName = SETTINGS_LINE_CLASS;
 
-            if (!RegisterClassEx(&wc))
-            {
-                return false;
-            }
-            s_classRegistered = true;
+        WNDCLASSEX existing = {0};
+        if (!GetClassInfoEx(wc.hInstance, wc.lpszClassName, &existing)
+            && !RegisterClassEx(&wc)) 
+        {
+            return false;
         }
 
         // Calculate position and size
