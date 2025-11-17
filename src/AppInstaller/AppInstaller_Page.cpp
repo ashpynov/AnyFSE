@@ -175,11 +175,10 @@ namespace AnyFSE
         ShowPage(Icon_EULA,
             L"End User License Agreements",
 
-            L"AnyFSE is free software, distributed under terms of GNU GPLv3 License "
+            L"AnyFSE is free software, distributed under terms of MIT License "
             L"in the hope that it will be useful, "
             L"but WITHOUT ANY WARRANTY; without even the implied warranty of "
-            L"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
-            L"See https://www.gnu.org/licenses/",
+            L"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
 
             L"Cancel", delegate(OnCancel),
             L"Accept", delegate(OnSelectPath)
