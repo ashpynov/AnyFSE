@@ -65,7 +65,7 @@ namespace FluentDesign
         m_hToggle = CreateWindow(
             L"BUTTON",
             L"",
-            WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+            WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP,
             x, y, m_theme.DpiScale(Layout_ItemWidth + Layout_TextWidth), m_theme.DpiScale(Layout_ItemHeight+1),
             hParent, NULL, GetModuleHandle(NULL), NULL);
 
@@ -122,7 +122,7 @@ namespace FluentDesign
                 InvalidateRect(hWnd, NULL, TRUE);
                 This->OnChanged.Notify();
             }
-            break;
+            return 0;
 
         case WM_PAINT:
             {

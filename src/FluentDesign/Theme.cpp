@@ -40,6 +40,7 @@ namespace FluentDesign
         , m_dpi(96)
         , m_isDark(false)
         , m_isKeyboardFocus(false)
+        , m_swappingFocus(false)
     {
         Gdiplus::GdiplusStartupInput gdiplusStartupInput;
         Gdiplus::GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
@@ -80,8 +81,7 @@ namespace FluentDesign
 
     static void Invalidate(HWND hwnd, BOOL bErase = FALSE)
     {
-        InvalidateRect(GetParent(hwnd), NULL, bErase);
-        InvalidateRect(hwnd, NULL, bErase);
+        RedrawWindow(GetParent(hwnd), NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE);
     }
 
     LRESULT CALLBACK Theme::ControlParentSublassProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
@@ -119,6 +119,12 @@ namespace FluentDesign
 
         SendMessage(m_hParentWnd, WM_NOTIFY, (WPARAM)nmhdr.idFrom, (LPARAM)&nmhdr);
     }
+    void Theme::SwapFocus(HWND hWnd)
+    {
+        m_swappingFocus = true;
+        SetFocus(hWnd);
+        m_swappingFocus = false;
+    }
 
     LRESULT CALLBACK Theme::ControlSublassProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
     {
@@ -132,7 +138,11 @@ namespace FluentDesign
                 HWND next = hWnd;
                 HWND prev = (HWND) wParam;
 
-                if (last && last != next && !This->m_isKeyboardFocus)
+                if (This->m_swappingFocus)
+                {
+                    This->m_lastFocused = next;
+                }
+                else if (last && last != next && !This->m_isKeyboardFocus)
                 {
                     This->m_isKeyboardFocus = true;
                     SetFocus(last);
@@ -155,12 +165,14 @@ namespace FluentDesign
         case WM_LBUTTONDOWN:
         case WM_LBUTTONDBLCLK:
             {
+                HWND lastFocused = This->m_lastFocused;
                 This->m_lastFocused = hWnd;
                 This->m_isKeyboardFocus = false;
                 SetFocus(hWnd);
                 This->SendNotifyFocus(hWnd);
+                Invalidate(lastFocused);
                 Invalidate(hWnd);
-                break;
+                return 0;
             }
         case WM_KILLFOCUS:
             {

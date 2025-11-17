@@ -999,6 +999,7 @@ namespace AnyFSE::App::AppSettings::Settings
     {
         m_pageName = L"";
         SwitchActivePage(&m_settingPageList, true);
+        m_theme.SwapFocus(m_settingPageList.front().GetHWnd());
     }
 
     void SettingsDialog::OpenCustomSettingsPage()

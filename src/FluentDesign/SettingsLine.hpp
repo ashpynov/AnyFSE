@@ -75,7 +75,7 @@ namespace FluentDesign
 
         State m_state;
 
-        const int CHEVRON_SIZE = 12;
+        const int CHEVRON_SIZE = 24;
 
         Button m_chevronButton;
 
@@ -140,6 +140,9 @@ namespace FluentDesign
         State GetState() { return m_state; }
 
         void AddGroupItem(SettingsLine *groupItem);
+        void EnsureChevron();
+        void SetChevron(State state);
+        bool HasChevron();
         void UpdateLayout();
         bool IsNested() const { return m_isGroupItem; }
 

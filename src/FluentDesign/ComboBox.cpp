@@ -66,7 +66,7 @@ namespace FluentDesign
         hCombo = CreateWindow(
             L"BUTTON",
             L"",
-            WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+            WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP,
             x, y, width, m_theme.DpiScale(Layout_ItemHeight),
             hParent, NULL, GetModuleHandle(NULL), NULL);
 
@@ -134,44 +134,44 @@ namespace FluentDesign
                 return 0;
 
             case WM_GETDLGCODE:
-                // if (This->m_theme.IsKeyboardFocused() && wParam == VK_UP || wParam == VK_DOWN)
-                // {
-                //     return DLGC_WANTARROWS;
-                // }
+                if (This->m_theme.IsKeyboardFocused() && wParam == VK_LEFT || wParam == VK_RIGHT)
+                {
+                    return DLGC_WANTARROWS;
+                }
                 break;
 
             case WM_KEYDOWN:
                 if (This->m_theme.IsKeyboardFocused())
                 {
-                    if (wParam == VK_SPACE || wParam == VK_GAMEPAD_A)
+                    if (wParam == VK_SPACE || wParam == VK_RETURN || wParam == VK_GAMEPAD_A)
                     {
                         This->m_buttonPressed = true;
                         InvalidateRect(hWnd, NULL, TRUE);
                         This->ShowPopup();
                         return 0;
                     }
-                    // else if (wParam == VK_UP || wParam == VK_GAMEPAD_DPAD_UP)
-                    // {
-                    //     if (This->m_selectedIndex >0 )
-                    //     {
-                    //         This->m_selectedIndex -= 1;
-                    //         InvalidateRect(This->hCombo, NULL, TRUE);
-                    //         This->m_theme.SetKeyboardFocused(This->hCombo);
-                    //         This->OnChanged.Notify();
-                    //         return 0;
-                    //     }
-                    // }
-                    // else if (wParam == VK_DOWN || wParam == VK_GAMEPAD_DPAD_DOWN)
-                    // {
-                    //     if (This->m_selectedIndex < This->comboItems.size() - 1 )
-                    //     {
-                    //         This->m_selectedIndex += 1;
-                    //         InvalidateRect(This->hCombo, NULL, TRUE);
-                    //         This->m_theme.SetKeyboardFocused(This->hCombo);
-                    //         This->OnChanged.Notify();
-                    //         return 0;
-                    //     }
-                    // }
+                    else if (wParam == VK_LEFT || wParam == VK_GAMEPAD_DPAD_LEFT)
+                    {
+                        if (This->m_selectedIndex > 0 )
+                        {
+                            This->m_selectedIndex -= 1;
+                            InvalidateRect(This->hCombo, NULL, TRUE);
+                            This->m_theme.SetKeyboardFocused(This->hCombo);
+                            This->OnChanged.Notify();
+                            return 0;
+                        }
+                    }
+                    else if (wParam == VK_RIGHT || wParam == VK_GAMEPAD_DPAD_RIGHT)
+                    {
+                        if (This->m_selectedIndex < This->m_comboItems.size() - 1 )
+                        {
+                            This->m_selectedIndex += 1;
+                            InvalidateRect(This->hCombo, NULL, TRUE);
+                            This->m_theme.SetKeyboardFocused(This->hCombo);
+                            This->OnChanged.Notify();
+                            return 0;
+                        }
+                    }
                 }
                 break;
             case WM_SETFOCUS:

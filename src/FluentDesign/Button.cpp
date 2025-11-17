@@ -44,6 +44,7 @@ namespace FluentDesign
         , m_isIconButton(false)
         , m_bFlat(false)
         , m_bSquare(false)
+        , m_hButton(nullptr)
         , m_textNormalColor(Theme::Colors::Text)
         , m_backgroundNormalColor(Theme::Colors::Button)
         , m_textHoverColor(Theme::Colors::Text)
@@ -160,7 +161,7 @@ namespace FluentDesign
             case WM_LBUTTONDOWN:
             case WM_LBUTTONUP:
                 This->HandleMouse(hWnd, uMsg, lParam);
-                return 0;
+                break;
 
             case WM_GETDLGCODE:
                 if ( wParam == VK_SPACE || wParam ==VK_RETURN || wParam ==VK_GAMEPAD_A)
@@ -175,6 +176,7 @@ namespace FluentDesign
                     || wParam == VK_RETURN
                     || wParam == VK_GAMEPAD_A)
                 {
+                    This->OnButtonDown.Notify();
                     This->OnChanged.Notify();
                 }
 
@@ -220,12 +222,14 @@ namespace FluentDesign
             m_buttonMouseOver = false;
             m_buttonPressed = false;
             InvalidateRect(hWnd, NULL, FALSE);
+            SendMessage(GetParent(hWnd), WM_NCMOUSELEAVE, 0, 0);
             break;
 
         case WM_LBUTTONDOWN:
             m_buttonPressed = true;
             InvalidateRect(hWnd, NULL, FALSE);
             SetCapture(hWnd);
+            OnButtonDown.Notify();
             break;
 
         case WM_LBUTTONUP:

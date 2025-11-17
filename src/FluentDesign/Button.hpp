@@ -95,5 +95,6 @@ namespace FluentDesign
         ~Button();
 
         Event OnChanged;
+        Event OnButtonDown;
     };
 }

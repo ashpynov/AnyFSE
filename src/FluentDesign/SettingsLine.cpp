@@ -40,13 +40,14 @@ namespace FluentDesign
 
     SettingsLine::SettingsLine(FluentDesign::Theme& theme)
         : m_theme(theme)
+        , m_chevronButton(theme)
         , m_enabled(true)
         , m_hovered(false)
         , m_hWnd(NULL)
         , m_linePadding(4)
         , m_leftMargin(16)
         , m_state(State::Normal)
-        , m_childFocused(false)
+        , m_hChildControl(nullptr)
         , m_frameFlags(Gdiplus::FrameFlags::CORNER_ALL | Gdiplus::FrameFlags::SIDE_ALL)
         , m_visible(true)
         , m_isGroupItem(false)
@@ -125,7 +126,7 @@ namespace FluentDesign
 
         // Create the window
         m_hWnd = CreateWindowEx(
-            0,
+            WS_EX_CONTROLPARENT,
             SETTINGS_LINE_CLASS,
             L"",
             WS_VISIBLE | WS_CHILD | WS_CLIPCHILDREN | WS_TABSTOP,
@@ -204,17 +205,14 @@ namespace FluentDesign
                     RECT childRect;
                     GetClientRect((HWND)lParam, &childRect);
                     DrawBackground((HDC)wParam, childRect, false);
-                    if (GetFocus() == m_hChildControl)
-                    {
-                        m_theme.DrawChildFocus((HDC)wParam, m_hChildControl, m_hChildControl);
-                    }
+                    m_theme.DrawChildFocus((HDC)wParam, (HWND)lParam, (HWND)lParam);
                 }
             }
             return 1; // We handle background in WM_PAINT
 
         case WM_SETFOCUS:
             {
-                SetFocus(m_hChildControl);
+                SetFocus(m_hChildControl ? m_hChildControl : m_chevronButton.GetHwnd());
                 Invalidate();
             }
             break;
@@ -229,11 +227,7 @@ namespace FluentDesign
 
     void SettingsLine::Invalidate(BOOL bErase)
     {
-        InvalidateRect(m_hWnd, NULL, bErase);
-        if (m_hChildControl)
-        {
-            InvalidateRect(m_hChildControl, NULL, bErase);
-        }
+        RedrawWindow(m_hWnd, NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE | RDW_UPDATENOW);
     }
 
     void SettingsLine::OnPaint()
@@ -247,15 +241,9 @@ namespace FluentDesign
 
         // Draw text
         DrawText(paint.MemDC());
-        if (m_state != Normal)
-        {
-            DrawChevron(paint.MemDC());
-        }
 
-        if (GetFocus() == m_hChildControl)
-        {
-            m_theme.DrawChildFocus(paint.MemDC(), m_hWnd, m_hChildControl);
-        }
+        m_theme.DrawChildFocus(paint.MemDC(), m_hWnd, m_hChildControl);
+        m_theme.DrawChildFocus(paint.MemDC(), m_hWnd, m_chevronButton.GetHwnd());
     }
 
     void SettingsLine::DrawBackground(HDC hdc, const RECT &rect, bool frame)
@@ -360,45 +348,11 @@ namespace FluentDesign
         ::DrawText(hdc, &m_icon, 1, &rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
 
     }
-    void SettingsLine::DrawChevron(HDC hdc)
-    {
-        RECT rect;
-        GetClientRect(m_hWnd, &rect);
-
-        rect.left = rect.right - m_theme.DpiScale(CHEVRON_SIZE + 20);
-        rect.right = rect.left + m_theme.DpiScale(CHEVRON_SIZE);
-        SetBkMode(hdc, TRANSPARENT);
-        SelectObject(hdc, m_theme.GetFont_GlyphNormal());
-        SetTextColor(hdc, m_theme.GetColorRef(m_enabled ? FluentDesign::Theme::Text : FluentDesign::Theme::TextDisabled));
-
-        rect.top = (rect.bottom - rect.top - m_theme.GetSize_Text()) / 2;
-        rect.bottom = rect.top + m_theme.GetSize_Text();
-
-        WCHAR *chevron = L"";
-        switch (m_state)
-        {
-            case State::Opened:
-                chevron = L"\xE70E";
-                break;
-            case State::Closed:
-                chevron = L"\xE70D";
-                break;
-            case State::Next:
-                chevron = L"\xE76c";
-                break;
-            case State::Link:
-                chevron = L"\xe8a7";
-                break;
-        }
-
-        ::DrawText(hdc, chevron, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
-    }
 
     void SettingsLine::OnSize(int width, int height)
     {
         m_width = width;
         m_height = height;
-        //m_designHeight = m_theme.DpiUnscale(height);
         UpdateLayout();
     }
 
@@ -417,7 +371,7 @@ namespace FluentDesign
 
     void SettingsLine::OnMouseLeave()
     {
-        if (m_hChildControl && m_state != State::Normal)
+        if ((m_hChildControl || HasChevron()) && m_state != State::Normal)
         {
             POINT pt;
             GetCursorPos(&pt);
@@ -428,7 +382,7 @@ namespace FluentDesign
                 TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT), TME_LEAVE, m_hWnd, 0};
                 TrackMouseEvent(&tme);
             }
-            else if (hWndUnderCursor != m_hChildControl)
+            else if (hWndUnderCursor != m_hChildControl && hWndUnderCursor != m_chevronButton.GetHwnd())
             {
                 Invalidate();
                 m_hovered = false;
@@ -449,7 +403,6 @@ namespace FluentDesign
             SendMessage(m_hChildControl, WM_SETREDRAW, FALSE, 0);
             EnableWindow(m_hChildControl, enabled);
             SendMessage(m_hChildControl, WM_SETREDRAW, TRUE, 0);
-
         }
         Invalidate();
     }
@@ -467,9 +420,64 @@ namespace FluentDesign
             OnChanged.Notify();
         }
 
-
-        m_childFocused = false;
         Invalidate();
+    }
+
+    void SettingsLine::EnsureChevron()
+    {
+        if (m_state != State::Normal && m_state != State::Caption && !m_chevronButton.GetHwnd())
+        {
+            m_chevronButton.Create(
+                m_hWnd,
+                m_width - m_theme.DpiScale(20) - m_theme.DpiScale(CHEVRON_SIZE),
+                (m_height - m_theme.DpiScale(CHEVRON_SIZE))/2,
+                m_theme.DpiScale(CHEVRON_SIZE),
+                m_theme.DpiScale(CHEVRON_SIZE)
+            );
+            m_chevronButton.SetFlat(true);
+            m_chevronButton.OnButtonDown += delegate(OnLButtonDown);
+            m_chevronButton.SetColors(
+                Theme::Colors::Default, Theme::Colors::Default,
+                Theme::Colors::Default, Theme::Colors::PanelHover,
+                Theme::Colors::Default, Theme::Colors::PanelHover
+            );
+        }
+    }
+
+    void SettingsLine::SetChevron(State state)
+    {
+        bool bShow = state != State::Normal && state != State::Caption;
+        if (bShow)
+        {
+            EnsureChevron();
+            std::wstring icon;
+            switch (state)
+            {
+                case State::Closed:
+                    icon = L"\xE70D";
+                    break;
+                case State::Opened:
+                    icon = L"\xE70E";
+                    break;
+                case State::Link:
+                    icon = L"\xe8a7";
+                    break;
+                case State::Next:
+                    icon = L"\xE76c";
+                    break;
+            }
+            m_chevronButton.SetIcon(icon);
+            ShowWindow(m_chevronButton.GetHwnd(), SW_SHOW);
+        }
+        else if (m_chevronButton.GetHwnd())
+        {
+            ShowWindow(m_chevronButton.GetHwnd(), SW_HIDE);
+        }
+    }
+
+    bool SettingsLine::HasChevron()
+    {
+        return m_chevronButton.GetHwnd() && IsWindowVisible(m_chevronButton.GetHwnd());
     }
 
     void SettingsLine::UpdateLayout()
@@ -508,9 +516,16 @@ namespace FluentDesign
         int controlY = (m_height - controlHeight) / 2;
 
         int marginRight = m_theme.DpiScale(20);
-        if( m_state != State::Normal )
+        if( HasChevron() )
         {
-            marginRight += m_theme.DpiScale(CHEVRON_SIZE * 2);
+            MoveWindow( m_chevronButton.GetHwnd(),
+                        m_width - marginRight - m_theme.DpiScale(CHEVRON_SIZE),
+                        (m_height - m_theme.DpiScale(CHEVRON_SIZE))/2,
+                        m_theme.DpiScale(CHEVRON_SIZE),
+                        m_theme.DpiScale(CHEVRON_SIZE),
+                        FALSE
+            );
+            marginRight += m_theme.DpiScale(CHEVRON_SIZE + 4);
         }
 
         SetWindowPos(m_hChildControl, NULL,
@@ -604,7 +619,7 @@ namespace FluentDesign
         {
             m_frameFlags = Gdiplus::FrameFlags::SIDE_ALL | Gdiplus::FrameFlags::CORNER_ALL;
         }
-
+        SetChevron(m_state);
         UpdateLayout();
     }
     void SettingsLine::AddGroupItem(SettingsLine *groupItem)

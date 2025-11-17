@@ -144,6 +144,7 @@ namespace FluentDesign
 
         bool m_isKeyboardFocus;
         HWND m_lastFocused;
+        bool m_swappingFocus;
         std::list<HWND> m_childsList;
         DWORD GetGrey(BYTE lumen);
 
@@ -159,7 +160,7 @@ namespace FluentDesign
 
         void SendNotifyFocus(HWND hWnd);
 
-    public:
+        public:
         Theme(HWND hParentWnd = NULL);
         void Attach(HWND hParentWnd);
 
@@ -170,6 +171,7 @@ namespace FluentDesign
             return m_isKeyboardFocus;
         }
         bool SetKeyboardFocused(HWND hwnd);
+        void SwapFocus(HWND hWnd);
 
         ~Theme();
 
