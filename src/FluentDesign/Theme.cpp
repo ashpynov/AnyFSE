@@ -1,12 +1,25 @@
-// AnyFSE is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// MIT License
 //
-// AnyFSE is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details. <https://www.gnu.org/licenses/>
+// Copyright (c) 2025 Artem Shpynov
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
 
 
 #include "Theme.hpp"
@@ -498,10 +511,10 @@ namespace FluentDesign
     {
         double rhs_x = from.x - from.x;
         double rhs_y = from.y - from.y;
-        
+
         // Calculate squared magnitude of rhs
         double rhsSqrMag = rhs_x * rhs_x + rhs_y * rhs_y;
-        
+
         // Normalize direction vector
         double dirMag = sqrt((double)direction.x * direction.x + direction.y * direction.y);
         if (dirMag == 0.0f) {
@@ -509,7 +522,7 @@ namespace FluentDesign
         }
         double normDir_x = direction.x / dirMag;
         double normDir_y = direction.y / dirMag;
-        
+
         // Normalize rhs vector
         double rhsMag = sqrt(rhsSqrMag);
         if (rhsMag == 0.0f) {
@@ -517,20 +530,20 @@ namespace FluentDesign
         }
         double normRhs_x = rhs_x / rhsMag;
         double normRhs_y = rhs_y / rhsMag;
-        
+
         // Calculate projection (dot product of normalized vectors)
         double projectionNorm = normDir_x * normRhs_x + normDir_y * normRhs_y;
-        
+
         // Check if projection is valid
         if (projectionNorm <= 0.001f) {
             return -FLT_MAX;
         }
-        
+
         // Calculate proximity
         double angleFactor = 2.0f;
         double angleScale = 1.0f / (1.0f + angleFactor - (angleFactor * projectionNorm * projectionNorm));
         double prox = angleScale / (rhsSqrMag + 0.00001f);
-        
+
         return prox;
     }
 
@@ -539,7 +552,7 @@ namespace FluentDesign
         HWND focused = GetFocus();
             std::list<HWND> focusable = {};
         HWND hChild = GetWindow(m_hParentWnd, GW_CHILD);
-        
+
         while (hChild)
         {
             if (IsWindowEnabled(hChild) && IsWindowVisible(hChild))
@@ -578,14 +591,14 @@ namespace FluentDesign
         {
             next = pCurrent == focusable.end() || *pCurrent == focusable.back()
                 ? focusable.front() : *(++pCurrent);
-        } 
-        else if (pCurrent == focusable.end()) 
+        }
+        else if (pCurrent == focusable.end())
         {
             next = focusable.front();
         }
         else
         {
-            POINT dir = 
+            POINT dir =
                     direction == VK_UP ? POINT{0,-1}
                 :   direction == VK_DOWN ? POINT{0,1}
                 :   direction == VK_LEFT ? POINT{-1,0}

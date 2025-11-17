@@ -1,3 +1,26 @@
+// MIT License
+//
+// Copyright (c) 2025 Artem Shpynov
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+
 #include "Logging/LogManager.hpp"
 #include "VideoPlayer.hpp"
 #include "Tools/Unicode.hpp"
@@ -91,7 +114,7 @@ namespace AnyFSE::App::AppControl::Window
 
                 pEventHeader->pMediaPlayer->SetVideoSourceRect(&rect);
                 log.Debug("Video margins applied: %f, %f", zx,zy);
-                
+
                 m_duration = GetDuration(pEventHeader->pMediaPlayer);
                 log.Debug("Video duration: %.3f s", (float)m_duration/1000);
 
@@ -167,7 +190,7 @@ namespace AnyFSE::App::AppControl::Window
                 {
                     log.Error(log.APIError(), "Cant Shutdown player");
                 }
-                
+
                 m_pPlayer->Release();
                 m_pPlayer = nullptr;
             }
@@ -206,7 +229,7 @@ namespace AnyFSE::App::AppControl::Window
         m_pause = pause;
 
         ParseLoopTimings(videoFile);
-        
+
         HRESULT hr = S_OK;
 
         if (!m_pPlayer)
@@ -302,7 +325,7 @@ namespace AnyFSE::App::AppControl::Window
         m_desiredState = MFP_MEDIAPLAYER_STATE_STOPPED;
 
         if (!m_pPlayer || !m_bInitialized)
-        {            
+        {
             return E_FAIL;
         }
         ShowVideo(false);
@@ -335,7 +358,7 @@ namespace AnyFSE::App::AppControl::Window
         {
             log.Error(log.APIError(), "Cant Shutdown player");
         }
-        
+
         m_pPlayer->Release();
         m_pPlayer = nullptr;
         m_bInitialized = false;
@@ -426,10 +449,10 @@ namespace AnyFSE::App::AppControl::Window
         return hr;
 
     }
-    
+
     BOOL SimpleVideoPlayer::ShowVideo(bool bShow)
     {
-        if (!m_pPlayer) 
+        if (!m_pPlayer)
         {
             return false;
         }
