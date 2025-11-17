@@ -77,10 +77,12 @@ namespace AnyFSE::App::AppControl::Window
         RectF rect = ToRectF(paint.ClientRect());
         graphics.FillRectangle(&backgroundBrush, 0.0f, 0.0f, rect.Width, rect.Height);
 
+        UINT dpi = GetDpiForWindow(m_hWnd);
+        
         if (Config::SplashShowLogo && m_pLogoImage && m_pLogoImage->GetLastStatus() == Gdiplus::Ok)
         {
-            REAL imageWidth = 150 /*pLogoImage->GetWidth()*/ * m_currentZoom;
-            REAL imageHeight = 150 /*pLogoImage->GetHeight()*/ * m_currentZoom;
+            REAL imageWidth = MulDiv(150 /*pLogoImage->GetWidth()*/ * m_currentZoom, dpi, 96);
+            REAL imageHeight = MulDiv(150 /*pLogoImage->GetHeight()*/ * m_currentZoom, dpi, 96);
             REAL xPos = (rect.Width - imageWidth) / 2;
             REAL yPos = (rect.Height - imageHeight) / 2;
 
@@ -91,7 +93,7 @@ namespace AnyFSE::App::AppControl::Window
         if (Config::SplashShowText)
         {
             // Display text
-            Font font(L"Segoe UI", 16);
+            Font font(L"Segoe UI", MulDiv(16, dpi, 96));
             SolidBrush textBrush(Gdiplus::Color::White);
             std::wstring name = Config::SplashCustomText.empty()
                 ? std::wstring(L"Launching ") + Config::Launcher.Name
@@ -104,7 +106,7 @@ namespace AnyFSE::App::AppControl::Window
 
             Gdiplus::RectF textArea = rect;
             textArea.Y = textArea.Height * 0.8f;
-            textArea.Height = 40;
+            textArea.Height = MulDiv(40, dpi, 96);
             graphics.DrawString(name.c_str(), -1, &font, textArea, &format, &textBrush);
         }
     }
