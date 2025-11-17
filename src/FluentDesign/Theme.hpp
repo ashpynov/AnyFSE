@@ -132,7 +132,7 @@ namespace FluentDesign
         static const int m_primarySize = 14;
         static const int m_largeSize = 20;
         static const int m_secondarySize = 11;
-        static const int m_glyphSize = 10;
+        static const int m_glyphSize = 12;
         static const int m_glyphNormalSize = 14;
         static const int m_iconSize = 20;
         static const int m_titleSize = 28;

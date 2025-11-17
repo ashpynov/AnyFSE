@@ -138,6 +138,7 @@ namespace AnyFSE::Configuration
         size_t existed = found.size();
         FindPlaynite(found);
         FindSteam(found);
+        FindBigBox(found);
         FindArmoryCrate(found);
         FindXbox(found);
         return found.size() > existed;
@@ -173,7 +174,16 @@ namespace AnyFSE::Configuration
         }
     }
 
-    void Config::FindXbox(std::list<std::wstring>& found)
+    void Config::FindBigBox(std::list<std::wstring> &found)
+    {
+        std::wstring installPath = Registry::SearchAppUserModel(L"LaunchBox");
+        if (!installPath.empty())
+        {
+            found.push_back(installPath + L"\\BigBox.exe");
+        }
+    }
+
+    void Config::FindXbox(std::list<std::wstring> &found)
     {
         namespace fs = std::filesystem;
 

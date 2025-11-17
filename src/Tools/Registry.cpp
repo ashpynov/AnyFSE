@@ -213,7 +213,56 @@ namespace AnyFSE::Tools
         size_t last = uninstallCommand.find(L'\"', pos + 1);
         last = uninstallCommand.find_last_of(L'\\', last);
         std::wstring name = last != std::string::npos ? uninstallCommand.substr(pos + 1, last - pos - 1) : uninstallCommand.substr(pos+1);
-       return name;
+        return name;
+    }
+
+    std::wstring Registry::SearchAppUserModel(const std::wstring &displayName)
+    {
+        std::wstring path = L"HKCU\\Software\\Classes\\AppUserModelId";
+        std::wstring exactDisplayName = Unicode::to_lower(displayName);
+
+        std::wstring actualPath;
+        HKEY root = GetRootKey(path, actualPath);
+
+        HKEY hKey;
+        if (RegOpenKeyExW(root, actualPath.c_str(), 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+        {
+            return L"";
+        }
+
+        DWORD subkeyIndex = 0;
+        WCHAR subkeyName[255];
+        DWORD subkeyNameSize = 255;
+
+        while (RegEnumKeyExW(hKey, subkeyIndex, subkeyName, &subkeyNameSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+        {
+            HKEY hSubKey;
+            std::wstring subkeyPath = actualPath + L"\\" + subkeyName;
+
+            if (RegOpenKeyExW(root, subkeyPath.c_str(), 0, KEY_READ, &hSubKey) == ERROR_SUCCESS)
+            {
+                WCHAR displayName[1024];
+                DWORD dataSize = sizeof(displayName);
+                DWORD type;
+
+                if (RegQueryValueExW(hSubKey, L"DisplayName", NULL, &type,
+                                    (LPBYTE)displayName, &dataSize) == ERROR_SUCCESS
+                    && type == REG_SZ
+                    && exactDisplayName == Unicode::to_lower(displayName)
+                    && fs::exists(subkeyName)
+                )
+                {
+                    RegCloseKey(hSubKey);
+                    RegCloseKey(hKey);
+                    return GetPathFromCommand(subkeyName);
+                }
+            }
+            RegCloseKey(hSubKey);
+            subkeyIndex++;
+            subkeyNameSize = 255;
+        }
+        RegCloseKey(hKey);
+        return L"";
     }
 
     std::wstring Registry::GetInstallPath(const std::wstring &displayName)
@@ -254,15 +303,17 @@ namespace AnyFSE::Tools
                     DWORD type;
 
                     if (RegQueryValueExW(hSubKey, L"DisplayName", NULL, &type,
-                                        (LPBYTE)displayName, &dataSize) == ERROR_SUCCESS &&
-                        type == REG_SZ &&
-                        exactDisplayName == Unicode::to_lower(displayName))
+                                        (LPBYTE)displayName, &dataSize) == ERROR_SUCCESS
+                        && type == REG_SZ
+                        && exactDisplayName == Unicode::to_lower(displayName))
                     {
 
                         dataSize = sizeof(uninstallString);
                         if (RegQueryValueExW(hSubKey, L"UninstallString", NULL, &type,
-                                            (LPBYTE)uninstallString, &dataSize) == ERROR_SUCCESS &&
-                            type == REG_SZ)
+                                            (LPBYTE)uninstallString, &dataSize) == ERROR_SUCCESS 
+                            && type == REG_SZ
+                            && fs::exists(uninstallString)
+                        )
                         {
                             RegCloseKey(hSubKey);
                             RegCloseKey(hKey);

@@ -79,6 +79,16 @@ namespace AnyFSE::Configuration
             }
         },
         {
+            LauncherType::BigBox, {
+                LauncherType::BigBox,
+                L"BigBox",
+                L"BigBox.exe",
+                L"",
+                WS_EX_APPWINDOW, 0,
+                L"BigBox.exe"
+            }
+        },
+        {
             LauncherType::ArmouryCrate, {
                 LauncherType::ArmouryCrate,
                 L"Armoury Crate",
