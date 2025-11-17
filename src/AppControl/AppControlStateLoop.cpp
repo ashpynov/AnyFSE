@@ -58,36 +58,21 @@ namespace AnyFSE::App::AppControl::StateLoop
 
     void AppControlStateLoop::OnXboxDetected()
     {
-        //if (IsInFSEMode() || Config::AggressiveMode)
-        {
-            log.Debug("OnXboxDetected: XBoxStartDetected in %s Mode", IsInFSEMode() ? "FSE" : "Desktop" );
+        log.Debug("OnXboxDetected: XBoxStartDetected in %s Mode", IsInFSEMode() ? "FSE" : "Desktop" );
 
-            if (IsSplashActive() || IsPreventIsActive() || IsWaitingLauncher())
+        if (IsSplashActive() || IsPreventIsActive() || IsWaitingLauncher())
+        {
+            log.Debug("OnXboxDetected: During %s => Kill it",
+                  IsSplashActive()      ? "Splash is Active"
+                : IsPreventIsActive()   ? "Prevent is Active"
+                : "Waiting Launcher");
+            KillXbox();
+        }
+        else if (!IsLauncherActive() && !Config::AggressiveMode)
+        {
+            log.Debug("OnXboxDetected: Launcher is not active => Kill It. Start Launcher with splash");
+            if (IsInFSEMode())
             {
-                log.Debug("OnXboxDetected: During %s => Kill it",
-                      IsSplashActive()    ? "Splash is Active"
-                    : IsPreventIsActive() ? "Prevent is Active"
-                    : "Waiting Launcher");
-                KillXbox();
-            }
-            else if (!IsLauncherActive())
-            {
-                log.Debug("OnXboxDetected: Launcher is not active => Kill It. Start Launcher with splash");
-                if (IsInFSEMode())
-                {
-                    ShowSplash();
-                    KillXbox();
-                    RestartLauncher();
-                    WaitLauncher();
-                }
-                else
-                {
-                    log.Debug("OnXboxDetected: Launcher is not active //// BUT DISABLED");
-                }
-            }
-            else if (Config::AggressiveMode)
-            {
-                log.Debug("OnXboxDetected: Aggressive mode => Kill It. Start Launcher with splash");
                 ShowSplash();
                 KillXbox();
                 RestartLauncher();
@@ -95,9 +80,22 @@ namespace AnyFSE::App::AppControl::StateLoop
             }
             else
             {
-                log.Debug("OnXboxDetected: Do nothing");
+                log.Debug("OnXboxDetected: Launcher is not active, In Desktop mode");
             }
         }
+        else if (Config::AggressiveMode)
+        {
+            log.Debug("OnXboxDetected: Aggressive mode => Kill It. Start Launcher with splash");
+            ShowSplash();
+            KillXbox();
+            RestartLauncher();
+            WaitLauncher();
+        }
+        else
+        {
+            log.Debug("OnXboxDetected: Do nothing");
+        }
+
         m_xboxAge = GetTickCount64();
     }
 
@@ -142,7 +140,11 @@ namespace AnyFSE::App::AppControl::StateLoop
 
     void AppControlStateLoop::OnOpenHome()
     {
-        if (!IsOnTaskSwitcher())
+        if (Config::AggressiveMode)
+        {
+            log.Debug("During AggressiveMode detection of Accessing to HomeApp is skipped");
+        }
+        else if (!IsOnTaskSwitcher())
         {
             log.Debug("OnOpenHome: Accessing to HomeApp registry key was Detected");
 
@@ -369,7 +371,7 @@ namespace AnyFSE::App::AppControl::StateLoop
             HMONITOR hMonitor = MonitorFromWindow(launcherHwnd, MONITOR_DEFAULTTONEAREST);
             MONITORINFOEX monitorInfo = {};
             monitorInfo.cbSize = sizeof(monitorInfo);
-    
+
             if (GetMonitorInfo(hMonitor, &monitorInfo))
             {
                 PostMessage(launcherHwnd, WM_DISPLAYCHANGE, 32,
@@ -385,15 +387,15 @@ namespace AnyFSE::App::AppControl::StateLoop
     {
         const LauncherConfig& launcher = Config::Launcher;
         HWND launcherHwnd = Process::GetWindow(
-            launcher.ProcessName, launcher.ExStyle, 
-            launcher.ClassName, launcher.WindowTitle, 
+            launcher.ProcessName, launcher.ExStyle,
+            launcher.ClassName, launcher.WindowTitle,
             WS_VISIBLE, launcher.NoStyle
         );
-        
+
         if (!launcherHwnd)
         {
             launcherHwnd = Process::GetWindow(
-                launcher.ProcessNameAlt, launcher.ExStyleAlt, 
+                launcher.ProcessNameAlt, launcher.ExStyleAlt,
                 launcher.ClassNameAlt, launcher.WindowTitleAlt,
                 WS_VISIBLE, launcher.NoStyle
             );

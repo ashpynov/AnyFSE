@@ -122,7 +122,10 @@ namespace AnyFSE::App::AppControl
             return -1;
         }
 
-        AppControlStateLoop.NotifyRemote(AppEvents::MONITOR_REGISTRY);
+        if (!Config::AggressiveMode)
+        {
+            AppControlStateLoop.NotifyRemote(AppEvents::MONITOR_REGISTRY);
+        }
 
         if (Config::Launcher.Type != LauncherType::None || Config::Launcher.Type != LauncherType::Xbox)
         {

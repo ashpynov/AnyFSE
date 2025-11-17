@@ -56,7 +56,7 @@ namespace AnyFSE::App::AppSettings::Settings
         *ptr++ = 0; // Default dialog class
         *ptr++ = 0; // No title
 
-        GlobalUnlock(hGlobal);    
+        GlobalUnlock(hGlobal);
         INT_PTR res = DialogBoxIndirectParam(hInstance, dlgTemplate, NULL, DialogProc, (LPARAM)this);
         GlobalFree(hGlobal);
         if (res == -1)
@@ -123,9 +123,9 @@ namespace AnyFSE::App::AppSettings::Settings
             }
             return TRUE;
          case WM_KEYDOWN:
-            if (   wParam == VK_LEFT 
-                || wParam == VK_UP 
-                || wParam == VK_RIGHT 
+            if (   wParam == VK_LEFT
+                || wParam == VK_UP
+                || wParam == VK_RIGHT
                 || wParam == VK_DOWN
                 || wParam == VK_TAB
             )
@@ -161,14 +161,14 @@ namespace AnyFSE::App::AppSettings::Settings
                 // Get mouse position
                 POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
                 ScreenToClient(hwnd, &pt);
-                
+
                 // Get client rect
                 RECT clientRect;
                 GetClientRect(hwnd, &clientRect);
-                
+
                 int captionHeight = m_theme.DpiScale(GetSystemMetrics(SM_CYCAPTION));
                 // If mouse is in top-right area where buttons are, treat as client
-                if (pt.y < captionHeight) 
+                if (pt.y < captionHeight)
                 {
                     SetWindowLong(m_hDialog, DWLP_MSGRESULT, HTCAPTION);
                     return TRUE;
@@ -184,7 +184,7 @@ namespace AnyFSE::App::AppSettings::Settings
                 m_captionCloseButton.SetColors(bActive ? Theme::Colors::Text : Theme::Colors::TextAccented);
             }
             return FALSE;
-        
+
         case WM_MOUSEWHEEL:
             {
                 return m_scrollView.OnMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam));
@@ -498,7 +498,7 @@ namespace AnyFSE::App::AppSettings::Settings
         UpdateLayout();
 
         GetClientRect(m_hDialog, &rect);
-        
+
         rect.top = rect.bottom
             - m_theme.DpiScale(Layout_MarginBottom)
             - m_theme.DpiScale(Layout_ButtonHeight);
@@ -629,7 +629,7 @@ namespace AnyFSE::App::AppSettings::Settings
             top,
             L"Log level",
             L"Enable logs at specified level",
-            m_logLevelCombo,
+            m_troubleLogLevelCombo,
             Layout_LineHeight, Layout_LinePadding, 0,
             Layout_LauncherComboWidth);
 
@@ -637,8 +637,15 @@ namespace AnyFSE::App::AppSettings::Settings
         {
             std::wstring level = Unicode::to_wstring(LogManager::LogLevelToString((LogLevels)i));
             wchar_t buff[2] = {(wchar_t)i, 0};
-            m_logLevelCombo.AddItem(level, L"", buff);
+            m_troubleLogLevelCombo.AddItem(level, L"", buff);
         }
+
+        AddSettingsLine(m_troubleshootSettingPageList,
+            top,
+            L"Agressive Mode",
+            L"Will react on XboxApp startup, with simple and robust logic, but you will lose any manual access of the XboxApp.",
+            m_troubleAgressiveToggle,
+            Layout_LineHeight, Layout_LinePadding, 0);
     }
 
     void SettingsDialog::OnInitDialog(HWND hwnd)
@@ -660,7 +667,7 @@ namespace AnyFSE::App::AppSettings::Settings
         m_captionStatic.Format().SetLineAlignment(Gdiplus::StringAlignment::StringAlignmentCenter);
 
         m_captionStatic.SetText(L"Settings");
-        
+
         m_captionBackButton.SetIcon(L"\xE64E");
         m_captionBackButton.OnChanged += delegate(OpenSettingsPage);
         m_captionBackButton.SetFlat(true);
@@ -671,10 +678,10 @@ namespace AnyFSE::App::AppSettings::Settings
             -1,
             m_theme.DpiScale(GetSystemMetrics(SM_CXSIZE)),
             m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)));
-        
+
         SetWindowLong(m_captionCloseButton.GetHwnd(), GWL_STYLE,
             GetWindowLong(m_captionCloseButton.GetHwnd(), GWL_STYLE) & ~WS_TABSTOP );
-        
+
         m_captionCloseButton.SetIcon(L"\xE106");
         m_captionCloseButton.OnChanged += delegate(OnClose);
         m_captionCloseButton.SetFlat(true);
@@ -1044,7 +1051,8 @@ namespace AnyFSE::App::AppSettings::Settings
             UpdateCustomSettings();
         }
 
-        m_logLevelCombo.SelectItem(min(max((int)LogLevels::Disabled, (int)Config::LogLevel), (int)LogLevels::Max));
+        m_troubleLogLevelCombo.SelectItem(min(max((int)LogLevels::Disabled, (int)Config::LogLevel), (int)LogLevels::Max));
+        m_troubleAgressiveToggle.SetCheck(Config::AggressiveMode);
 
         m_splashShowTextToggle.SetCheck(Config::SplashShowText);
         m_splashCustomTextEdit.SetText(Config::SplashCustomText);
@@ -1157,7 +1165,8 @@ namespace AnyFSE::App::AppSettings::Settings
         Config::SplashVideoMute = m_splashShowVideoMuteToggle.GetCheck();
         Config::SplashVideoPause = m_splashShowVideoPauseToggle.GetCheck();
 
-        Config::LogLevel = (LogLevels)m_logLevelCombo.GetSelectedIndex();
+        Config::LogLevel = (LogLevels)m_troubleLogLevelCombo.GetSelectedIndex();
+        Config::AggressiveMode = m_troubleAgressiveToggle.GetCheck();
 
         Config::Save();
 

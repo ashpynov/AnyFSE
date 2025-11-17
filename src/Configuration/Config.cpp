@@ -188,8 +188,9 @@ namespace AnyFSE::Configuration
         config["CleanupFailedStart"]            = CleanupFailedStart;
         config["RestartDelay"]                  = RestartDelay;
 
+        config["AggressiveMode"]                = AggressiveMode;
+
     //  config["Log"]["Path"]                   = LogPath;
-    //  config["AggressiveMode"]                = AggressiveMode;
     //  config["XBoxProcessName"]               = XBoxProcessName;
 
         std::ofstream file(GetConfigFileA());
