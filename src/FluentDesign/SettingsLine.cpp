@@ -468,16 +468,23 @@ namespace FluentDesign
             }
             m_chevronButton.SetIcon(icon);
             ShowWindow(m_chevronButton.GetHwnd(), SW_SHOW);
+            UpdateLayout();
         }
         else if (m_chevronButton.GetHwnd())
         {
             ShowWindow(m_chevronButton.GetHwnd(), SW_HIDE);
+            UpdateLayout();
         }
+    }
+
+    static bool IsSelfVisible(HWND hwnd)
+    {
+        return hwnd && (GetWindowLong(hwnd, GWL_STYLE) & WS_VISIBLE);
     }
 
     bool SettingsLine::HasChevron()
     {
-        return m_chevronButton.GetHwnd() && IsWindowVisible(m_chevronButton.GetHwnd());
+        return m_chevronButton.GetHwnd() && IsSelfVisible(m_chevronButton.GetHwnd());
     }
 
     void SettingsLine::UpdateLayout()
@@ -485,7 +492,7 @@ namespace FluentDesign
         PositionChildControl();
         if (m_groupItemsList.size() > 0)
         {
-            bool bShow = m_state == State::Opened && IsWindowVisible(m_hWnd);
+            bool bShow = m_state == State::Opened && IsSelfVisible(m_hWnd);
 
             for (auto& gr : m_groupItemsList)
             {

@@ -508,7 +508,6 @@ namespace AnyFSE::App::AppSettings::Settings
 
         Tools::MoveWindow(m_scrollView.GetHwnd(), &scrollRect, FALSE);
 
-        UpdateLayout();
 
         GetClientRect(m_hDialog, &rect);
 
@@ -543,7 +542,8 @@ namespace AnyFSE::App::AppSettings::Settings
             m_theme.DpiScale(Layout_ButtonHeight),
             FALSE);
 
-        InvalidateRect(m_hDialog, NULL, FALSE);
+            
+        UpdateLayout();
     }
 
     void SettingsDialog::UpdateLayout()
@@ -571,12 +571,18 @@ namespace AnyFSE::App::AppSettings::Settings
 
         for(auto& line : *m_pActivePageList)
         {
+            if (!line.IsNested())
+            {
+                ShowWindow(line.GetHWnd(), SW_SHOW);
+            }
             line.UpdateLayout();
             ::MoveWindow(line.GetHWnd(), left, top, width, m_theme.DpiScale(line.GetDesignHeight()), FALSE);
             top += m_theme.DpiScale(line.GetDesignHeight() + line.GetDesignPadding());
         }
 
         m_scrollView.SetContentHeight(top + m_scrollView.GetScrollPos());
+
+        RedrawWindow(m_hDialog, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
     }
 
     void SettingsDialog::AddCustomSettingsPage()
@@ -985,14 +991,12 @@ namespace AnyFSE::App::AppSettings::Settings
         m_isCustom = m_customSettingsToggle.GetCheck();
         UpdateControls();
         UpdateLayout();
-        RedrawWindow(m_hDialog, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
     }
 
     void SettingsDialog::OnCustomLineChanged()
     {
         m_customSettingsState = m_pCustomSettingsLine->GetState();
         UpdateLayout();
-        RedrawWindow(m_hDialog, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
     }
 
     void SettingsDialog::OpenSettingsPage()
