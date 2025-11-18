@@ -35,6 +35,7 @@
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/TaskManager.hpp"
 #include "Tools/Registry.hpp"
+#include "Tools/Process.hpp"
 
 #define byte ::byte
 
@@ -55,8 +56,8 @@ namespace AnyFSE::App::AppSettings::Settings
 
         LPDLGTEMPLATE dlgTemplate = (LPDLGTEMPLATE)GlobalLock(hGlobal);
 
-        dlgTemplate->style = DS_MODALFRAME | WS_POPUP | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU;
-        dlgTemplate->dwExtendedStyle = WS_EX_TOPMOST | WS_EX_WINDOWEDGE;
+        dlgTemplate->style = WS_POPUP | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+        dlgTemplate->dwExtendedStyle = WS_EX_WINDOWEDGE;
         dlgTemplate->cdit = 0;  // No controls
         dlgTemplate->x = 0;
         dlgTemplate->y = 0;
@@ -194,6 +195,7 @@ namespace AnyFSE::App::AppSettings::Settings
         case WM_NCACTIVATE:
             {
                 BOOL bActive = (BOOL)wParam;
+                m_captionMinimizeButton.SetColors(bActive ? Theme::Colors::Text : Theme::Colors::TextAccented);
                 m_captionCloseButton.SetColors(bActive ? Theme::Colors::Text : Theme::Colors::TextAccented);
             }
             return FALSE;
@@ -284,7 +286,9 @@ namespace AnyFSE::App::AppSettings::Settings
                 m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_closeButton.GetHwnd());
                 m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_removeButton.GetHwnd());
                 m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_captionBackButton.GetHwnd());
+                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_captionMinimizeButton.GetHwnd());
                 m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_captionCloseButton.GetHwnd());
+
 
                 SelectObject(paint.MemDC(), oldFont);
             }
@@ -489,10 +493,17 @@ namespace AnyFSE::App::AppSettings::Settings
             m_theme.DpiScale(Layout_BackButtonSize),
             FALSE);
 
-        MoveWindow(m_captionCloseButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(GetSystemMetrics(SM_CXSIZE)),
+        MoveWindow(m_captionMinimizeButton.GetHwnd(),
+            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 2),
             -1,
-            m_theme.DpiScale(GetSystemMetrics(SM_CXSIZE)),
+            m_theme.DpiScale(Layout_CaptionButtonWidth),
+            m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)),
+            FALSE);
+
+        MoveWindow(m_captionCloseButton.GetHwnd(),
+            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth),
+            -1,
+            m_theme.DpiScale(Layout_CaptionButtonWidth),
             m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)),
             FALSE);
 
@@ -542,7 +553,7 @@ namespace AnyFSE::App::AppSettings::Settings
             m_theme.DpiScale(Layout_ButtonHeight),
             FALSE);
 
-            
+
         UpdateLayout();
     }
 
@@ -587,6 +598,58 @@ namespace AnyFSE::App::AppSettings::Settings
 
     void SettingsDialog::AddCustomSettingsPage()
     {
+        ULONG top = 0;
+
+        SettingsLine & parametersSettingsLine = AddSettingsLine(m_customSettingPageList, top,
+            L"Additional arguments",
+            L"Command line arguments passed to application",
+            m_additionalArgumentsEdit,
+            Layout_LineHeight, Layout_LinePadding, 0);
+
+        parametersSettingsLine.SetIcon(L'\xE62F');
+
+        SettingsLine & primarySettingsLine = AddSettingsLine(m_customSettingPageList, top,
+            L"Home application detection",
+            L"Parameters to detect home application is started",
+            Layout_LineHeightSmall, 0, 0);
+
+
+        primarySettingsLine.SetState(SettingsLine::State::Closed);
+        primarySettingsLine.OnChanged += delegate(UpdateLayout);
+        primarySettingsLine.SetIcon(L'\xF8A5');
+
+        primarySettingsLine.AddGroupItem(&AddSettingsLine(m_customSettingPageList, top,
+            L"Process name",
+            L"Name of home application process",
+            m_processNameEdit,
+            Layout_LineHeightSmall, 0, Layout_LineSmallMargin));
+
+        primarySettingsLine.AddGroupItem(&AddSettingsLine(m_customSettingPageList, top,
+            L"Window title",
+            L"Title of app window when it have been activated",
+            m_titleEdit,
+            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin));
+
+        SettingsLine & secondarySettingsLine = AddSettingsLine(m_customSettingPageList, top,
+            L"Alternative mode detection",
+            L"Parameters to detect home application is started in alternative mode",
+            Layout_LineHeightSmall, 0, 0);
+
+        secondarySettingsLine.SetState(SettingsLine::State::Closed);
+        secondarySettingsLine.OnChanged += delegate(UpdateLayout);
+        secondarySettingsLine.SetIcon(L'\xE737');
+
+        secondarySettingsLine.AddGroupItem(&AddSettingsLine(m_customSettingPageList, top,
+            L"Secondary process name",
+            L"Name of app process for alternative mode",
+            m_processNameAltEdit,
+            Layout_LineHeightSmall, 0, Layout_LineSmallMargin));
+
+        secondarySettingsLine.AddGroupItem(&AddSettingsLine(m_customSettingPageList, top,
+            L"Secondary window title",
+            L"Title of app window when it alternative mode have been activated",
+            m_titleAltEdit,
+            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin));
     }
 
     void SettingsDialog::AddSplashSettingsPage()
@@ -596,7 +659,7 @@ namespace AnyFSE::App::AppSettings::Settings
             L"Show Loading text",
             L"",
             m_splashShowTextToggle,
-            Layout_LineHeight, Layout_LinePaddingSmall, 0);
+            Layout_LineHeight, 0, 0);
 
         m_pSplashTextLine->AddGroupItem(&AddSettingsLine(m_splashSettingPageList, top,
             L"Use Custom Text",
@@ -608,7 +671,7 @@ namespace AnyFSE::App::AppSettings::Settings
             L"Show Home application Logo",
             L"",
             m_splashShowLogoToggle,
-            Layout_LineHeight, Layout_LinePaddingSmall, 0);
+            Layout_LineHeight, 0, 0);
 
         m_pSplashLogoLine->AddGroupItem(&AddSettingsLine(m_splashSettingPageList, top,
             L"Animate Logo",
@@ -620,19 +683,19 @@ namespace AnyFSE::App::AppSettings::Settings
             L"Show Video",
             L"",
             m_splashShowVideoToggle,
-            Layout_LineHeight, Layout_LinePaddingSmall, 0);
+            Layout_LineHeight, 0, 0);
 
         m_pSplashVideoLine->AddGroupItem(&AddSettingsLine(m_splashSettingPageList, top,
             L"Loop video",
             L"",
             m_splashShowVideoLoopToggle,
-            Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
+            Layout_LineHeightSmall, 0, Layout_LineSmallMargin));
 
         m_pSplashVideoLine->AddGroupItem(&AddSettingsLine(m_splashSettingPageList, top,
             L"Mute video",
             L"",
             m_splashShowVideoMuteToggle,
-            Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
+            Layout_LineHeightSmall, 0, Layout_LineSmallMargin));
 
         m_pSplashVideoLine->AddGroupItem(&AddSettingsLine(m_splashSettingPageList, top,
             L"Pause completed",
@@ -661,9 +724,9 @@ namespace AnyFSE::App::AppSettings::Settings
 
         AddSettingsLine(m_troubleshootSettingPageList,
             top,
-            L"Agressive Mode",
+            L"Aggressive Mode",
             L"Will react on XboxApp startup, with simple and robust logic, but you will lose any manual access of the XboxApp.",
-            m_troubleAgressiveToggle,
+            m_troubleAggressiveToggle,
             Layout_LineHeight, Layout_LinePadding, 0);
     }
 
@@ -692,10 +755,29 @@ namespace AnyFSE::App::AppSettings::Settings
         m_captionBackButton.SetFlat(true);
         m_captionBackButton.Enable(false);
 
-        m_captionCloseButton.Create(m_hDialog,
-            rect.right - m_theme.DpiScale(GetSystemMetrics(SM_CXSIZE)),
+        m_captionMinimizeButton.Create(m_hDialog,
+            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 2 + Layout_CaptionButtonPad ),
             -1,
-            m_theme.DpiScale(GetSystemMetrics(SM_CXSIZE)),
+            m_theme.DpiScale(Layout_CaptionButtonWidth),
+            m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)));
+
+        SetWindowLong(m_captionMinimizeButton.GetHwnd(), GWL_STYLE,
+            GetWindowLong(m_captionMinimizeButton.GetHwnd(), GWL_STYLE) & ~WS_TABSTOP );
+
+        m_captionMinimizeButton.SetIcon(L"\xE108");
+        m_captionMinimizeButton.OnChanged += delegate(OnMinimize);
+        m_captionMinimizeButton.SetFlat(true);
+        m_captionMinimizeButton.SetSquare(true);
+
+        m_captionMinimizeButton.SetColors(
+            Theme::Colors::Default, Theme::Colors::Default,
+            Theme::Colors::Default, Theme::Colors::TextAccented,
+            Theme::Colors::Default, Theme::Colors::TextAccented);
+
+        m_captionCloseButton.Create(m_hDialog,
+            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth),
+            -1,
+            m_theme.DpiScale(Layout_CaptionButtonWidth),
             m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)));
 
         SetWindowLong(m_captionCloseButton.GetHwnd(), GWL_STYLE,
@@ -754,39 +836,13 @@ namespace AnyFSE::App::AppSettings::Settings
             L"Use custom settings",
             L"Change monitoring and startups settings for selected home application",
             m_customSettingsToggle,
-            Layout_LineHeight, Layout_LinePaddingSmall, 0);
+            Layout_LineHeight, Layout_LinePadding, 0);
 
+        m_pCustomSettingsLine->SetState(FluentDesign::SettingsLine::Next);
         m_pCustomSettingsLine->SetIcon(L'\xE115');
+        m_pCustomSettingsLine->OnChanged += delegate(OpenCustomSettingsPage);
 
-        m_pCustomSettingsLine->AddGroupItem(&AddSettingsLine(m_settingPageList, top,
-            L"Additional arguments",
-            L"Command line arguments passed to application",
-            m_additionalArgumentsEdit,
-            Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
-
-        m_pCustomSettingsLine->AddGroupItem(&AddSettingsLine(m_settingPageList, top,
-            L"Primary process name",
-            L"Name of home application process",
-            m_processNameEdit,
-            Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
-
-        m_pCustomSettingsLine->AddGroupItem(&AddSettingsLine(m_settingPageList, top,
-            L"Primary window title",
-            L"Title of app window when it have been activated",
-            m_titleEdit,
-            Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
-
-        m_pCustomSettingsLine->AddGroupItem(&AddSettingsLine(m_settingPageList, top,
-            L"Secondary process name",
-            L"Name of app process for alternative mode",
-            m_processNameAltEdit,
-            Layout_LineHeightSmall, Layout_LinePaddingSmall, Layout_LineSmallMargin));
-
-        m_pCustomSettingsLine->AddGroupItem(&AddSettingsLine(m_settingPageList, top,
-            L"Secondary window title",
-            L"Title of app window when it alternative mode have been activated",
-            m_titleAltEdit,
-            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin));
+        AddCustomSettingsPage();
 
         m_pSplashPageLine = &AddSettingsLine(m_settingPageList, top,
             L"Splash screen settings",
@@ -809,6 +865,15 @@ namespace AnyFSE::App::AppSettings::Settings
         m_pTroubleshootPageLine->OnChanged += delegate(OpenTroubleshootSettingsPage);
 
         AddTroubleshootSettingsPage();
+
+        m_pStartupAppLinkLine = &AddSettingsLine(m_settingPageList, top,
+            L"Startup",
+            L"Apps that start automatically when you sign in full screen experience",
+            Layout_LineHeight, Layout_LinePadding, 0);
+
+        m_pStartupAppLinkLine->SetState(FluentDesign::SettingsLine::Link);
+        m_pStartupAppLinkLine->SetIcon(L'\xE18C');
+        m_pStartupAppLinkLine->OnChanged += delegate(OpenStartupAppsSettings);
 
         m_pActivePageList = &m_settingPageList;
         UpdateLayout();
@@ -858,7 +923,6 @@ namespace AnyFSE::App::AppSettings::Settings
         m_launcherCombo.OnChanged += delegate(OnLauncherChanged);
 
         m_customSettingsToggle.OnChanged += delegate(OnCustomChanged);
-        m_pCustomSettingsLine->OnChanged += delegate(OnCustomLineChanged);
 
         m_splashShowTextToggle.OnChanged += delegate(OnShowTextChanged);
         m_pSplashTextLine->OnChanged += delegate(UpdateLayout);
@@ -878,16 +942,16 @@ namespace AnyFSE::App::AppSettings::Settings
         Config::LoadLauncherSettings(m_currentLauncherPath, m_config);
 
         bool customSettings = Config::CustomSettings;
-        m_customSettingsState = customSettings ? FluentDesign::SettingsLine::Opened: FluentDesign::SettingsLine::Closed;
+        m_customSettingsState = customSettings ? FluentDesign::SettingsLine::Next: FluentDesign::SettingsLine::Normal;
 
         m_isCustom = (customSettings || m_config.IsCustom) && (m_config.Type != LauncherType::Xbox && m_config.Type != LauncherType::ArmouryCrate) || m_config.Type == LauncherType::Custom;
-        m_isAgressive = Config::AggressiveMode && m_config.Type != LauncherType::Xbox;
+        m_isAggressive = Config::AggressiveMode && m_config.Type != LauncherType::Xbox;
 
         UpdateControls();
         UpdateCustomSettings();
-        m_customSettingsState = m_pCustomSettingsLine->GetState() != FluentDesign::SettingsLine::Normal
-                                ? m_pCustomSettingsLine->GetState()
-                                : FluentDesign::SettingsLine::Opened;
+        // m_customSettingsState = m_pCustomSettingsLine->GetState() != FluentDesign::SettingsLine::Normal
+        //                         ? m_pCustomSettingsLine->GetState()
+        //                         : FluentDesign::SettingsLine::Opened;
     }
 
     void SettingsDialog::ShowGroup(int groupIdx, bool show)
@@ -926,6 +990,12 @@ namespace AnyFSE::App::AppSettings::Settings
         SaveSettings();
         EndDialog(m_hDialog, IDOK);
     }
+
+    void SettingsDialog::OnMinimize()
+    {
+        ShowWindow(m_hDialog, SW_MINIMIZE);
+    }
+
 
     void SettingsDialog::OnClose()
     {
@@ -989,13 +1059,9 @@ namespace AnyFSE::App::AppSettings::Settings
     void SettingsDialog::OnCustomChanged()
     {
         m_isCustom = m_customSettingsToggle.GetCheck();
-        UpdateControls();
-        UpdateLayout();
-    }
-
-    void SettingsDialog::OnCustomLineChanged()
-    {
-        m_customSettingsState = m_pCustomSettingsLine->GetState();
+        m_pCustomSettingsLine->SetState(m_customSettingsToggle.GetCheck()
+            ? FluentDesign::SettingsLine::Next
+            : FluentDesign::SettingsLine::Normal);
         UpdateLayout();
     }
 
@@ -1024,10 +1090,9 @@ namespace AnyFSE::App::AppSettings::Settings
         SwitchActivePage(&m_troubleshootSettingPageList);
     }
 
-    void SettingsDialog::OnAggressiveChanged()
+    void SettingsDialog::OpenStartupAppsSettings()
     {
-        // m_isAgressive = BST_CHECKED != SendDlgItemMessage(m_hDialog, IDC_NOT_AGGRESSIVE_MODE, BM_GETCHECK, 0, 0);
-        // UpdateCustom();
+        Process::StartProtocol(L"ms-settings:gaming-gamebar");
     }
 
     void SettingsDialog::UpdateControls()
@@ -1056,12 +1121,22 @@ namespace AnyFSE::App::AppSettings::Settings
 
         FluentDesign::SettingsLine::State state = haveSettings
                 ? alwaysSettings
-                    ? FluentDesign::SettingsLine::Opened
+                    ? FluentDesign::SettingsLine::Next
                     : m_customSettingsState
                 : FluentDesign::SettingsLine::Normal;
 
         m_pCustomSettingsLine->SetState(state);
-        m_pCustomSettingsLine->Enable(enableCheck);
+
+        if (m_isCustom && !enableCheck)
+        {
+            EnableWindow(m_pCustomSettingsLine->GetChildControl(), enableCheck);
+            m_pCustomSettingsLine->Invalidate();
+        }
+        else
+        {
+            m_pCustomSettingsLine->Enable(enableCheck);
+        }
+
 
         if (!haveSettings)
         {
@@ -1070,7 +1145,7 @@ namespace AnyFSE::App::AppSettings::Settings
         }
 
         m_troubleLogLevelCombo.SelectItem(min(max((int)LogLevels::Disabled, (int)Config::LogLevel), (int)LogLevels::Max));
-        m_troubleAgressiveToggle.SetCheck(Config::AggressiveMode);
+        m_troubleAggressiveToggle.SetCheck(Config::AggressiveMode);
 
         m_splashShowTextToggle.SetCheck(Config::SplashShowText);
         m_splashCustomTextEdit.SetText(Config::SplashCustomText);
@@ -1126,9 +1201,6 @@ namespace AnyFSE::App::AppSettings::Settings
         m_processNameAltEdit.SetText(m_config.ProcessNameAlt);
         m_titleEdit.SetText(m_config.WindowTitle);
         m_titleAltEdit.SetText(m_config.WindowTitleAlt);
-
-        // SendDlgItemMessage(m_hDialog, IDC_NOT_AGGRESSIVE_MODE, BM_SETCHECK, (WPARAM)(m_isAgressive && config.Type != LauncherType::Xbox) ? BST_UNCHECKED : BST_CHECKED, 0 );
-        // EnableWindow(GetDlgItem(m_hDialog, IDC_NOT_AGGRESSIVE_MODE), config.Type != LauncherType::Xbox);
     }
     void SettingsDialog::SaveSettings()
     {
@@ -1184,7 +1256,7 @@ namespace AnyFSE::App::AppSettings::Settings
         Config::SplashVideoPause = m_splashShowVideoPauseToggle.GetCheck();
 
         Config::LogLevel = (LogLevels)m_troubleLogLevelCombo.GetSelectedIndex();
-        Config::AggressiveMode = m_troubleAgressiveToggle.GetCheck();
+        Config::AggressiveMode = m_troubleAggressiveToggle.GetCheck();
 
         Config::Save();
 

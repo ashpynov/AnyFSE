@@ -358,14 +358,24 @@ namespace FluentDesign
 
     void SettingsLine::OnMouseMove()
     {
-        if (!m_hovered && m_state != State::Normal)
+        if (!m_hovered && (m_hChildControl || HasChevron()) && m_state != State::Normal)
         {
-            m_hovered = true;
-            Invalidate();
+            POINT pt;
+            GetCursorPos(&pt);
+            HWND hWndUnderCursor = WindowFromPoint(pt);
 
-            // Track mouse leave
-            TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT), TME_LEAVE, m_hWnd, 0};
-            TrackMouseEvent(&tme);
+            if (hWndUnderCursor == m_hWnd)
+            {
+                m_hovered = true;
+                Invalidate();
+                TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT), TME_LEAVE, m_hWnd, 0};
+                TrackMouseEvent(&tme);
+            }
+            else if (hWndUnderCursor == m_hChildControl || hWndUnderCursor == m_chevronButton.GetHwnd())
+            {
+                m_hovered = true;
+                Invalidate();
+            }
         }
     }
 
@@ -384,14 +394,15 @@ namespace FluentDesign
             }
             else if (hWndUnderCursor != m_hChildControl && hWndUnderCursor != m_chevronButton.GetHwnd())
             {
-                Invalidate();
                 m_hovered = false;
+                Invalidate();
+
             }
         }
         else
         {
-            Invalidate();
             m_hovered = false;
+            Invalidate();
         }
     }
 
@@ -415,7 +426,7 @@ namespace FluentDesign
             SetState(m_state == State::Closed ?  State::Opened : State::Closed);
             OnChanged.Notify();
         }
-        else if (m_state != State::Caption)
+        else if (HasChevron())
         {
             OnChanged.Notify();
         }
@@ -469,11 +480,13 @@ namespace FluentDesign
             m_chevronButton.SetIcon(icon);
             ShowWindow(m_chevronButton.GetHwnd(), SW_SHOW);
             UpdateLayout();
+            OnMouseMove();
         }
         else if (m_chevronButton.GetHwnd())
         {
             ShowWindow(m_chevronButton.GetHwnd(), SW_HIDE);
             UpdateLayout();
+            OnMouseLeave();
         }
     }
 

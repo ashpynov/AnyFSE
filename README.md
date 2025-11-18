@@ -66,7 +66,7 @@ As soon as this tool does not actually ***replace*** XboxApp and does not so dee
 ### Xbox is sometimes executed
 For sure I do not catch every case how Xbox may start in FSE way. And sometimes it bypass my filter (e.g. I saw how it is bypass via Update execution after Hibernating).
 
-There is '***Agressive mode***' in my backlog to forcefully prevent **Any** XboxPcApp appearence, but in will make impossible to work with Xbox at all.
+There is '***Aggressive mode***' to forcefully prevent **Any** XboxPcApp appearence, but in will make impossible to work with Xbox at all.
 
 
 # Technical Description

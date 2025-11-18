@@ -67,8 +67,8 @@ namespace AnyFSE::App::AppSettings::Settings
         static const int Layout_LineHeight = 67;
         static const int Layout_LinePadding = 8;
         static const int Layout_LineHeightSmall = 45;
-        static const int Layout_LinePaddingSmall = 0;
-        static const int Layout_LineSmallMargin = 40;
+        static const int Layout_LinePaddingSmall = 4;
+        static const int Layout_LineSmallMargin = 52;
 
         static const int Layout_CustomSettingsWidth = 220;
         static const int Layout_Layout_CustomSettingsHeight = 44;
@@ -80,6 +80,9 @@ namespace AnyFSE::App::AppSettings::Settings
         static const int Layout_BackButtonSize = 34;
         static const int Layout_BackButtonMargin = 4;
 
+        static const int Layout_CaptionButtonWidth = 50;
+        static const int Layout_CaptionButtonPad = 4;
+
         void ShowGroup(int groupIdx, bool show);
 
     public:
@@ -90,6 +93,7 @@ namespace AnyFSE::App::AppSettings::Settings
             , m_captionStatic(m_theme)
             , m_captionBackButton(m_theme)
             , m_captionCloseButton(m_theme)
+            , m_captionMinimizeButton(m_theme)
             , m_customSettingsState(FluentDesign::SettingsLine::Closed)
             , m_scrollView(m_theme)
             , m_launcherCombo(m_theme)
@@ -114,7 +118,7 @@ namespace AnyFSE::App::AppSettings::Settings
             , m_splashShowVideoPauseToggle(m_theme)
             , m_splashCustomTextEdit(m_theme)
             , m_splashCustomVideoEdit(m_theme)
-            , m_troubleAgressiveToggle(m_theme)
+            , m_troubleAggressiveToggle(m_theme)
         {}
 
     private:
@@ -130,6 +134,7 @@ namespace AnyFSE::App::AppSettings::Settings
         void OnBrowseLauncher();
         void OnLauncherChanged();
         void OnOk();
+        void OnMinimize();
         void OnClose();
 
         void OnUninstall();
@@ -137,19 +142,18 @@ namespace AnyFSE::App::AppSettings::Settings
         void OnShowLogoChanged();
         void OnShowVideoChanged();
         void OnCustomChanged();
-        void OnCustomLineChanged();
         void OpenSettingsPage();
         void OpenCustomSettingsPage();
         void OpenSplashSettingsPage();
         void OpenTroubleshootSettingsPage();
-        void OnAggressiveChanged();
+        void OpenStartupAppsSettings();
         void UpdateControls();
 
         HINSTANCE m_hInstance;
         HWND m_hDialog;
 
         bool m_isCustom;
-        bool m_isAgressive;
+        bool m_isAggressive;
         bool m_enterOnStartup;
 
         std::wstring m_pageName = L"";
@@ -165,12 +169,13 @@ namespace AnyFSE::App::AppSettings::Settings
 
         Static m_captionStatic;
         Button m_captionBackButton;
+        Button m_captionMinimizeButton;
         Button m_captionCloseButton;
 
         ScrollView m_scrollView;
         ComboBox m_launcherCombo;
         ComboBox m_troubleLogLevelCombo;
-        Toggle m_troubleAgressiveToggle;
+        Toggle m_troubleAggressiveToggle;
         Toggle m_fseOnStartupToggle;
         Toggle m_customSettingsToggle;
 
@@ -237,6 +242,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         SettingsLine * m_pSplashPageLine;
         SettingsLine * m_pTroubleshootPageLine;
+        SettingsLine * m_pStartupAppLinkLine;
 
         SettingsLine::State m_customSettingsState;
     };

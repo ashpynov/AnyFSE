@@ -145,6 +145,7 @@ namespace FluentDesign
         bool HasChevron();
         void UpdateLayout();
         bool IsNested() const { return m_isGroupItem; }
+        void Invalidate(BOOL bErase = FALSE);
 
         void SetIcon(wchar_t icon);
 
@@ -155,7 +156,6 @@ namespace FluentDesign
         static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
         LRESULT HandleMessage(UINT message, WPARAM wParam, LPARAM lParam);
 
-        void Invalidate(BOOL bErase = FALSE);
 
         // Message handlers
         void OnPaint();
@@ -171,7 +171,6 @@ namespace FluentDesign
         // Drawing methods
         void DrawText(HDC hdc);
         void DrawIcon(HDC hdc);
-        void DrawChevron(HDC hdc);
 
         // Layout management
 
