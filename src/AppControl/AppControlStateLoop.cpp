@@ -389,6 +389,8 @@ namespace AnyFSE::App::AppControl::StateLoop
         HWND launcherHwnd = GetLauncherWindow();
         if (launcherHwnd)
         {
+            BringWindowToTop(launcherHwnd);
+            SetForegroundWindow(launcherHwnd);
             SetActiveWindow(launcherHwnd);
 
             HMONITOR hMonitor = MonitorFromWindow(launcherHwnd, MONITOR_DEFAULTTONEAREST);
