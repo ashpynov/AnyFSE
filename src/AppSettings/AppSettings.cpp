@@ -48,18 +48,22 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 __declspec(dllexport)
 int WINAPI Main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-        static bool inDialog = false;
-        if (inDialog) return 0;
-        inDialog = true;
+    HWND hDialogWnd = Process::GetWindow(std::set<DWORD>{GetCurrentProcessId()}, 0 , L"#32770", L"");
+    if (hDialogWnd)
+    {
+        ShowWindow(hDialogWnd, SW_SHOWNORMAL);
+        SetForegroundWindow(hDialogWnd);
+        SetActiveWindow(hDialogWnd);
+        return 0;
+    }
 
-        Config::Load();
-        Config::GetStartupConfigured();
+    Config::Load();
+    Config::GetStartupConfigured();
 
-        AnyFSE::Logging::LogManager::Initialize("AnyFSE.Settings", Config::LogLevel, Config::LogPath);
-        SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+    AnyFSE::Logging::LogManager::Initialize("AnyFSE.Settings", Config::LogLevel, Config::LogPath);
+    SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
-        int result = (int)AnyFSE::App::AppSettings::Settings::SettingsDialog().Show(hInstance);
-        inDialog = false;
-        return result;
+    int result = (int)AnyFSE::App::AppSettings::Settings::SettingsDialog().Show(hInstance);
+    return result;
 };
 

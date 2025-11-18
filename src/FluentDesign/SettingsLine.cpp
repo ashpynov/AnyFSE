@@ -102,24 +102,6 @@ namespace FluentDesign
         m_height = height;
         m_designHeight = m_theme.DpiUnscale(height);
 
-        WNDCLASSEX wc = {};
-        wc.cbSize = sizeof(WNDCLASSEX);
-        wc.style = CS_HREDRAW | CS_VREDRAW;
-        wc.lpfnWndProc = SettingsLine::WndProc;
-        wc.cbClsExtra = 0;
-        wc.cbWndExtra = sizeof(SettingsLine *);
-        wc.hInstance = GetModuleHandle(NULL);
-        wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-        wc.hbrBackground = NULL; // We'll handle background drawing
-        wc.lpszClassName = SETTINGS_LINE_CLASS;
-
-        WNDCLASSEX existing = {0};
-        if (!GetClassInfoEx(wc.hInstance, wc.lpszClassName, &existing)
-            && !RegisterClassEx(&wc))
-        {
-            return false;
-        }
-
         // Calculate position and size
         RECT parentRect;
         GetClientRect(m_hParent, &parentRect);
@@ -127,7 +109,7 @@ namespace FluentDesign
         // Create the window
         m_hWnd = CreateWindowEx(
             WS_EX_CONTROLPARENT,
-            SETTINGS_LINE_CLASS,
+            L"STATIC",
             L"",
             WS_VISIBLE | WS_CHILD | WS_CLIPCHILDREN | WS_TABSTOP,
             m_left, m_top, m_width, m_height,
@@ -140,33 +122,22 @@ namespace FluentDesign
         {
             return NULL;
         }
+        SetWindowSubclass(m_hWnd, WndProc, 0, (DWORD_PTR)this);
 
         return m_hWnd;
     }
 
     // Window procedure
-    LRESULT CALLBACK SettingsLine::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+    LRESULT CALLBACK SettingsLine::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
     {
-        SettingsLine *pThis = nullptr;
+        SettingsLine *This = reinterpret_cast<SettingsLine *>(dwRefData);
 
-        if (message == WM_NCCREATE)
+        if (message == WM_NCDESTROY)
         {
-            CREATESTRUCT *pCreate = reinterpret_cast<CREATESTRUCT *>(lParam);
-            pThis = reinterpret_cast<SettingsLine *>(pCreate->lpCreateParams);
-            SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
-            pThis->m_hWnd = hWnd;
+            RemoveWindowSubclass(hWnd, WndProc, uIdSubclass);
+            return DefSubclassProc(hWnd, message, wParam, lParam);
         }
-        else
-        {
-            pThis = reinterpret_cast<SettingsLine *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
-        }
-
-        if (pThis)
-        {
-            return pThis->HandleMessage(message, wParam, lParam);
-        }
-
-        return DefWindowProc(hWnd, message, wParam, lParam);
+        return This->HandleMessage(message, wParam, lParam);
     }
 
     LRESULT SettingsLine::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam)
@@ -222,7 +193,7 @@ namespace FluentDesign
 
         }
 
-        return DefWindowProc(m_hWnd, message, wParam, lParam);
+        return DefSubclassProc(m_hWnd, message, wParam, lParam);
     }
 
     void SettingsLine::Invalidate(BOOL bErase)

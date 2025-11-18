@@ -298,8 +298,7 @@ namespace AnyFSE::App::AppSettings::Settings
             UpdateDpiLayout();
             break;
 
-        case WM_DESTROY:
-            break;
+
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
@@ -494,7 +493,14 @@ namespace AnyFSE::App::AppSettings::Settings
             FALSE);
 
         MoveWindow(m_captionMinimizeButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 2),
+            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 2 - Layout_CaptionButtonPad),
+            -1,
+            m_theme.DpiScale(Layout_CaptionButtonWidth - Layout_CaptionButtonPad *2 ),
+            m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)),
+            FALSE);
+        
+        MoveWindow(m_captionMaximizeButton.GetHwnd(),
+            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 3),
             -1,
             m_theme.DpiScale(Layout_CaptionButtonWidth),
             m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)),
@@ -755,8 +761,18 @@ namespace AnyFSE::App::AppSettings::Settings
         m_captionBackButton.SetFlat(true);
         m_captionBackButton.Enable(false);
 
+        m_captionMaximizeButton.Create(m_hDialog,
+            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 2 - Layout_CaptionButtonPad ),
+            -1,
+            m_theme.DpiScale(Layout_CaptionButtonWidth - Layout_CaptionButtonPad * 2),
+            m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)));
+
+        m_captionMaximizeButton.SetIcon(L"\xF12A");
+        m_captionMaximizeButton.SetFlat(true);
+        m_captionMaximizeButton.Enable(false);
+        
         m_captionMinimizeButton.Create(m_hDialog,
-            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 2 + Layout_CaptionButtonPad ),
+            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 3 ),
             -1,
             m_theme.DpiScale(Layout_CaptionButtonWidth),
             m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)));

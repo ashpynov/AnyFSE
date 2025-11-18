@@ -80,7 +80,7 @@ namespace AnyFSE::App::AppSettings::Settings
         static const int Layout_BackButtonSize = 34;
         static const int Layout_BackButtonMargin = 4;
 
-        static const int Layout_CaptionButtonWidth = 50;
+        static const int Layout_CaptionButtonWidth = 48;
         static const int Layout_CaptionButtonPad = 4;
 
         void ShowGroup(int groupIdx, bool show);
@@ -94,6 +94,7 @@ namespace AnyFSE::App::AppSettings::Settings
             , m_captionBackButton(m_theme)
             , m_captionCloseButton(m_theme)
             , m_captionMinimizeButton(m_theme)
+            , m_captionMaximizeButton(m_theme)
             , m_customSettingsState(FluentDesign::SettingsLine::Closed)
             , m_scrollView(m_theme)
             , m_launcherCombo(m_theme)
@@ -170,6 +171,7 @@ namespace AnyFSE::App::AppSettings::Settings
         Static m_captionStatic;
         Button m_captionBackButton;
         Button m_captionMinimizeButton;
+        Button m_captionMaximizeButton;
         Button m_captionCloseButton;
 
         ScrollView m_scrollView;

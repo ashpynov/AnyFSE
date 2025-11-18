@@ -153,7 +153,7 @@ namespace FluentDesign
 
     protected:
         // Window procedure and message handlers
-        static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+        static LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
         LRESULT HandleMessage(UINT message, WPARAM wParam, LPARAM lParam);
 
 
