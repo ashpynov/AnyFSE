@@ -434,6 +434,7 @@ namespace AnyFSE::App
                 m_connectionState = ConnectionState::Disconnected;
                 TRACE("IPCChannel::StartAsyncReadAndWait: Pipe disconnected due to error");
             }
+            Sleep(1000);
             return false;
         }
     }

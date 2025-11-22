@@ -224,7 +224,7 @@ namespace AnyFSE::Configuration
 
     std::wstring Config::GetApplicationName(const std::wstring &filePath)
     {
-        std::wstring name = GetProductName(filePath);
+        std::wstring name = GetFileDescription(filePath);
 
         if (name.empty())
         {
@@ -235,7 +235,7 @@ namespace AnyFSE::Configuration
         return name;
     }
 
-    std::wstring Config::GetProductName(const std::wstring &filePath)
+    std::wstring Config::GetFileDescription(const std::wstring &filePath)
     {
         DWORD dummy;
         DWORD size = GetFileVersionInfoSize(filePath.c_str(), &dummy);
@@ -269,7 +269,7 @@ namespace AnyFSE::Configuration
         {
             wchar_t subBlock[256];
             swprintf(subBlock, 256,
-                     L"\\StringFileInfo\\%04x%04x\\ProductName",
+                     L"\\StringFileInfo\\%04x%04x\\FileDescription",
                      lpTranslate[i].language, lpTranslate[i].codePage);
 
             wchar_t *buffer = nullptr;

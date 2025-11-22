@@ -147,7 +147,9 @@ namespace AnyFSE::App::AppControl
         }
         else
         {
+            log.Info("Launcher is Not configured. Exiting\n");
             AppControlStateLoop.NotifyRemote(AppEvents::EXIT_SERVICE);
+            return -1;
         }
         return 0;
     }
@@ -286,6 +288,7 @@ namespace AnyFSE::App::AppControl
 
         if (exitCode != ERROR_RESTART_APPLICATION)
         {
+            log.Info("Stopping application, notify service exit");
             AppControlStateLoop.NotifyRemote(AppEvents::EXIT_SERVICE);
         }
 

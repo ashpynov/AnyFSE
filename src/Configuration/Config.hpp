@@ -115,7 +115,7 @@ namespace AnyFSE::Configuration
 
             static std::wstring GetApplicationName(const std::wstring & filePath);
 
-            static std::wstring GetProductName(const std::wstring &filePath);
+            static std::wstring GetFileDescription(const std::wstring &filePath);
 
             static bool IsConfigured();
 
