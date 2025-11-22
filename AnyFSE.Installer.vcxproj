@@ -101,6 +101,7 @@
     <ClCompile Include="src\FluentDesign\Button.cpp" />
     <ClCompile Include="src\FluentDesign\Static.cpp" />
     <ClCompile Include="src\FluentDesign\TextBox.cpp" />
+    <ClCompile Include="src\FluentDesign\Popup.cpp" />
     <ClCompile Include="src\Tools\Event.cpp" />
     <ClCompile Include="src\Tools\Registry.cpp" />
     <ClCompile Include="src\Tools\Unicode.cpp" />
