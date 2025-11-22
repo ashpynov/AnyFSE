@@ -235,6 +235,7 @@ namespace AnyFSE::App::AppControl
             {
                 SetLastError(StartControl(AppControlStateLoop, mainWindow));
             }
+            AppControlStateLoop.Notify(AppEvents::START_APPS);
         });
 
         mainWindow.OnQueryEndSession += ([&AppControlStateLoop]()

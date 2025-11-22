@@ -72,6 +72,7 @@ namespace FluentDesign
 
         ~Toggle();
 
+        HWND GetHwnd() const { return m_hToggle; }
         void SetCheck(bool isChecked);
         bool GetCheck();
         Event OnChanged;

@@ -146,8 +146,28 @@ namespace FluentDesign
         InvalidateRect(m_hButton, NULL, TRUE);
     }
 
+    void Button::SetMenu(const std::vector<Popup::PopupItem> &items)
+    {
+        m_menuItems = items;
+    }
+
+    void Button::ShowMenu()
+    {
+        static Popup popup(m_theme);
+
+        RECT rect;
+        GetWindowRect(m_hButton, &rect);
+        popup.Show(m_hButton, rect.right, rect.bottom, m_menuItems, 300);
+        m_theme.SwapFocus(popup.GetHwnd());
+    }
+
     Button::~Button()
     {
+        if (m_hButton)
+        {
+            DestroyWindow(m_hButton);
+            m_hButton = nullptr;
+        }
     }
 
     LRESULT Button::ButtonSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
@@ -161,6 +181,10 @@ namespace FluentDesign
             case WM_LBUTTONDOWN:
             case WM_LBUTTONUP:
                 This->HandleMouse(hWnd, uMsg, lParam);
+                if (This->m_menuItems.size())
+                {
+                    return 0;
+                }
                 break;
 
             case WM_GETDLGCODE:
@@ -176,9 +200,17 @@ namespace FluentDesign
                     || wParam == VK_RETURN
                     || wParam == VK_GAMEPAD_A)
                 {
-                    This->OnButtonDown.Notify();
-                    This->OnChanged.Notify();
+                    if (This->m_menuItems.size())
+                    {
+                        This->ShowMenu();
+                    }
+                    else
+                    {
+                        This->OnButtonDown.Notify();
+                        This->OnChanged.Notify();
+                    }
                 }
+                return 0;
 
             case WM_PAINT:
                 {
@@ -229,7 +261,16 @@ namespace FluentDesign
             m_buttonPressed = true;
             InvalidateRect(hWnd, NULL, FALSE);
             SetCapture(hWnd);
-            OnButtonDown.Notify();
+
+            if (m_menuItems.size())
+            {
+                m_theme.SwapFocus(hWnd);
+                ShowMenu();
+            }
+            else
+            {
+                OnButtonDown.Notify();
+            }
             break;
 
         case WM_LBUTTONUP:
@@ -245,7 +286,7 @@ namespace FluentDesign
 
                 RECT rc;
                 GetClientRect(m_hButton, &rc);
-                if (PtInRect(&rc, pt))
+                if (PtInRect(&rc, pt) && !m_menuItems.size())
                 {
                     OnChanged.Notify();
                 }

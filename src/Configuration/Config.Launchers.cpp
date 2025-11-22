@@ -147,7 +147,7 @@ namespace AnyFSE::Configuration
             }
         }
 
-        out.Name = fs::path(path).filename().replace_extension("").wstring();
+        out.Name = Config::GetApplicationName(path);
         out.IconFile = path;
         out.StartCommand = path;
         out.ProcessName = fs::path(path).filename().wstring();

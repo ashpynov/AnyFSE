@@ -55,6 +55,7 @@ namespace AnyFSE::App::AppControl::StateLoop
         private:
             virtual void ProcessEvent(AppEvents event);
             void OnStart();
+            void OnStartApps();
             void OnXboxDetected();
             void OnGameModeEnter();
             void OnGameModeExit();

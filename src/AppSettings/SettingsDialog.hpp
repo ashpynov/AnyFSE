@@ -57,6 +57,12 @@ namespace AnyFSE::App::AppSettings::Settings
         static const int Layout_BrowseWidth = 130;
         static const int Layout_BrowseHeight = 32;
 
+        static const int Layout_StartupMenuButtonWidth = 24;
+        static const int Layout_StartupMenuButtonHeight = 36;
+
+        static const int Layout_StartupAddWidth = 100;
+        static const int Layout_StartupAddHeight = 32;
+
         static const int Layout_MarginLeft = 32;
         static const int Layout_MarginTop = 60;
         static const int Layout_MarginRight = 32;
@@ -120,6 +126,7 @@ namespace AnyFSE::App::AppSettings::Settings
             , m_splashCustomTextEdit(m_theme)
             , m_splashCustomVideoEdit(m_theme)
             , m_troubleAggressiveToggle(m_theme)
+            , m_startupAddButton(m_theme)
         {}
 
     private:
@@ -147,7 +154,8 @@ namespace AnyFSE::App::AppSettings::Settings
         void OpenCustomSettingsPage();
         void OpenSplashSettingsPage();
         void OpenTroubleshootSettingsPage();
-        void OpenStartupAppsSettings();
+        void OpenStartupSettingsPage();
+        void OpenMSSettingsStartupApps();
         void UpdateControls();
 
         HINSTANCE m_hInstance;
@@ -207,8 +215,13 @@ namespace AnyFSE::App::AppSettings::Settings
         std::list<SettingsLine> m_customSettingPageList;
         std::list<SettingsLine> m_splashSettingPageList;
         std::list<SettingsLine> m_troubleshootSettingPageList;
+        std::list<SettingsLine> m_startupSettingPageList;
 
         std::list<SettingsLine> *m_pActivePageList;
+
+        Button m_startupAddButton;
+        std::list<Toggle> m_startupToggles;
+        std::list<SettingsLine *> m_pStartupAppLines;
 
         template <class T>
         SettingsLine& AddSettingsLine(
@@ -234,6 +247,14 @@ namespace AnyFSE::App::AppSettings::Settings
         void AddCustomSettingsPage();
         void AddSplashSettingsPage();
         void AddTroubleshootSettingsPage();
+        void AddStartupAppLine(const std::wstring &path, const std::wstring &args, bool enabled);
+        Toggle *GetStartupLineToggle(SettingsLine *pLine);
+        std::wstring GetProductName(const std::wstring &filePath);
+        void SetStartupAppLine(SettingsLine *pLine, const std::wstring &path, const std::wstring &args);
+        void OnStartupAdd();
+        void OnStartupModify(SettingsLine *pLine);
+        void OnStartupDelete(SettingsLine *pLine);
+        void AddStartupSettingsPage();
 
         SettingsLine * m_pFseOnStartupLine;
         SettingsLine * m_pCustomSettingsLine;
@@ -244,7 +265,8 @@ namespace AnyFSE::App::AppSettings::Settings
 
         SettingsLine * m_pSplashPageLine;
         SettingsLine * m_pTroubleshootPageLine;
-        SettingsLine * m_pStartupAppLinkLine;
+        SettingsLine * m_pStartupPageLine;
+        SettingsLine * m_pStartupPageAppsHeader;
 
         SettingsLine::State m_customSettingsState;
     };

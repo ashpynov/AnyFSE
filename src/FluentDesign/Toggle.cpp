@@ -42,6 +42,7 @@ namespace FluentDesign
         , m_buttonMouseOver(false)
         , m_buttonPressed(false)
         , m_isChecked(false)
+        , m_hToggle(nullptr)
     {
         theme.OnDPIChanged += [This = this]() { This->UpdateLayout(); };
     }
@@ -77,6 +78,11 @@ namespace FluentDesign
 
     Toggle::~Toggle()
     {
+        if (m_hToggle)
+        {
+            DestroyWindow(m_hToggle);
+            m_hToggle = nullptr;
+        }
     }
 
     bool Toggle::GetCheck()

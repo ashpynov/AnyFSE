@@ -26,16 +26,19 @@
 #include "resource.h"
 #include <commdlg.h>
 #include <uxtheme.h>
+#include <filesystem>
 #include "Tools/Tools.hpp"
 #include "Tools/Unicode.hpp"
 #include "Logging/LogManager.hpp"
 #include "SettingsDialog.hpp"
 #include "Configuration/Config.hpp"
 #include "FluentDesign/Theme.hpp"
+#include "FluentDesign/Popup.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/TaskManager.hpp"
 #include "Tools/Registry.hpp"
 #include "Tools/Process.hpp"
+#include "StartupAppEditor.hpp"
 
 #define byte ::byte
 
@@ -492,14 +495,14 @@ namespace AnyFSE::App::AppSettings::Settings
             m_theme.DpiScale(Layout_BackButtonSize),
             FALSE);
 
-        MoveWindow(m_captionMinimizeButton.GetHwnd(),
+        MoveWindow(m_captionMaximizeButton.GetHwnd(),
             rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 2 - Layout_CaptionButtonPad),
             -1,
             m_theme.DpiScale(Layout_CaptionButtonWidth - Layout_CaptionButtonPad *2 ),
             m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)),
             FALSE);
-        
-        MoveWindow(m_captionMaximizeButton.GetHwnd(),
+
+        MoveWindow(m_captionMinimizeButton.GetHwnd(),
             rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 3),
             -1,
             m_theme.DpiScale(Layout_CaptionButtonWidth),
@@ -565,7 +568,14 @@ namespace AnyFSE::App::AppSettings::Settings
 
     void SettingsDialog::UpdateLayout()
     {
-        for (auto &page: { &m_customSettingPageList, &m_splashSettingPageList, &m_troubleshootSettingPageList })
+        for (auto &page:
+            {
+                &m_customSettingPageList,
+                &m_splashSettingPageList,
+                &m_troubleshootSettingPageList,
+                &m_startupSettingPageList
+            }
+        )
         {
             if (page != m_pActivePageList)
             {
@@ -591,10 +601,10 @@ namespace AnyFSE::App::AppSettings::Settings
             if (!line.IsNested())
             {
                 ShowWindow(line.GetHWnd(), SW_SHOW);
+                ::MoveWindow(line.GetHWnd(), left, top, width, m_theme.DpiScale(line.GetDesignHeight()), FALSE);
+                line.UpdateLayout();
+                top += line.GetTotalHeight();
             }
-            line.UpdateLayout();
-            ::MoveWindow(line.GetHWnd(), left, top, width, m_theme.DpiScale(line.GetDesignHeight()), FALSE);
-            top += m_theme.DpiScale(line.GetDesignHeight() + line.GetDesignPadding());
         }
 
         m_scrollView.SetContentHeight(top + m_scrollView.GetScrollPos());
@@ -736,6 +746,121 @@ namespace AnyFSE::App::AppSettings::Settings
             Layout_LineHeight, Layout_LinePadding, 0);
     }
 
+    void SettingsDialog::AddStartupAppLine(const std::wstring& path, const std::wstring& args, bool enabled )
+    {
+        ULONG top = 0;
+        m_startupToggles.emplace_back(m_theme);
+        Toggle &startToggle = m_startupToggles.back();
+
+        SettingsLine & line = AddSettingsLine(m_startupSettingPageList, top,
+            L"",
+            L"",
+            startToggle,
+            Layout_LineHeight, Layout_LinePaddingSmall, 0,
+            Layout_StartupMenuButtonWidth, Layout_StartupMenuButtonHeight
+        );
+
+        SetStartupAppLine(&line, path, args);
+
+        line.SetMenu(
+            std::vector<FluentDesign::Popup::PopupItem>
+            {
+                FluentDesign::Popup::PopupItem(L"\xE13E", L"Modify",[This = this, pLine = &line](){This->OnStartupModify(pLine);}),
+                FluentDesign::Popup::PopupItem(L"\xE107", L"Delete",[This = this, pLine = &line](){This->OnStartupDelete(pLine);})
+            }
+        );
+        startToggle.SetCheck(enabled);
+        m_pStartupPageAppsHeader->AddGroupItem(&line);
+
+        m_pStartupAppLines.push_back(&line);
+    }
+
+    Toggle * SettingsDialog::GetStartupLineToggle(SettingsLine * pLine)
+    {
+        auto it = std::find_if(m_startupToggles.begin(), m_startupToggles.end(),
+             [pLine](const Toggle& obj) {return obj.GetHwnd() == pLine->GetChildControl();});
+        return it != m_startupToggles.end() ? &(*it) : nullptr;
+    }
+
+    void SettingsDialog::SetStartupAppLine(SettingsLine *pLine, const std::wstring& path, const std::wstring& args)
+    {
+        pLine->SetData(0, path);
+        pLine->SetData(1, args);
+
+
+        pLine->SetName(Config::GetApplicationName(path));
+        pLine->SetDescription(path + L" " + args);
+
+        if (!path.empty())
+        {
+            pLine->SetIcon(path);
+        }
+    }
+
+    void SettingsDialog::OnStartupAdd()
+    {
+        OnStartupModify(NULL);
+    }
+
+    void SettingsDialog::OnStartupModify(SettingsLine * pLine)
+    {
+        std::wstring path = pLine ? pLine->GetData(0) : L"";
+        std::wstring args = pLine ? pLine->GetData(1) : L"";
+        if (IDOK == StartupAppEditor::EditApp(m_hDialog, path, args))
+        {
+            pLine ? SetStartupAppLine(pLine, path, args) : AddStartupAppLine(path, args, true);
+            UpdateLayout();
+        }
+    }
+
+    void SettingsDialog::OnStartupDelete(SettingsLine * pLine)
+    {
+        if (pLine->GetGroupHeader())
+        {
+            pLine->GetGroupHeader()->DeleteGroupItem(pLine);
+        }
+        m_startupToggles.remove_if([pLine](const Toggle& obj) {return obj.GetHwnd() == pLine->GetChildControl();});
+        m_pStartupAppLines.remove_if([pLine](const SettingsLine* obj) {return obj == pLine;});
+        m_startupSettingPageList.remove_if([pLine](const SettingsLine& obj) {return &obj == pLine;});
+        UpdateLayout();
+    }
+
+    void SettingsDialog::AddStartupSettingsPage()
+    {
+        ULONG top = 0;
+        SettingsLine &startupAppLinkLine = AddSettingsLine(m_startupSettingPageList, top,
+            L"Native startup settings",
+            L"Configure startup apps using native windows settings",
+            Layout_LineHeight, Layout_LinePadding, 0);
+
+        startupAppLinkLine.SetState(FluentDesign::SettingsLine::Link);
+        startupAppLinkLine.SetIcon(L'\xE18C');
+        startupAppLinkLine.OnChanged += delegate(OpenMSSettingsStartupApps);
+
+        m_pStartupPageAppsHeader = &AddSettingsLine(m_startupSettingPageList, top,
+            L"Additional startup applications",
+            L"Configure specific applications to be executed by AnyFSE on fullscreen experience enter",
+            Layout_LineHeight, 0, 0
+        );
+
+        m_pStartupPageAppsHeader->SetState(FluentDesign::SettingsLine::Caption);
+
+        SettingsLine & line = AddSettingsLine(m_startupSettingPageList, top,
+            L"",
+            L"",
+            m_startupAddButton,
+            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin,
+            Layout_StartupAddWidth, Layout_StartupAddHeight
+        );
+
+        m_startupAddButton.SetText(L"Add");
+        m_startupAddButton.OnChanged = delegate(OnStartupAdd);
+        line.SetState(FluentDesign::SettingsLine::Caption);
+
+        //AddStartupAppLine(L"Playnite", L"C:\\Tools\\playnite\\PlayniteInstaller.exe", L"--hiddensplash");
+        //AddStartupAppLine(L"Explorer", L"c:\\windows\\explorer.exe", L"ms-settings:startupapps");
+    }
+
     void SettingsDialog::OnInitDialog(HWND hwnd)
     {
         RECT rect;
@@ -770,7 +895,7 @@ namespace AnyFSE::App::AppSettings::Settings
         m_captionMaximizeButton.SetIcon(L"\xF12A");
         m_captionMaximizeButton.SetFlat(true);
         m_captionMaximizeButton.Enable(false);
-        
+
         m_captionMinimizeButton.Create(m_hDialog,
             rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 3 ),
             -1,
@@ -882,14 +1007,16 @@ namespace AnyFSE::App::AppSettings::Settings
 
         AddTroubleshootSettingsPage();
 
-        m_pStartupAppLinkLine = &AddSettingsLine(m_settingPageList, top,
+        m_pStartupPageLine = &AddSettingsLine(m_settingPageList, top,
             L"Startup",
             L"Apps that start automatically when you sign in full screen experience",
             Layout_LineHeight, Layout_LinePadding, 0);
 
-        m_pStartupAppLinkLine->SetState(FluentDesign::SettingsLine::Link);
-        m_pStartupAppLinkLine->SetIcon(L'\xE18C');
-        m_pStartupAppLinkLine->OnChanged += delegate(OpenStartupAppsSettings);
+        m_pStartupPageLine->SetState(FluentDesign::SettingsLine::Next);
+        m_pStartupPageLine->SetIcon(L'\xE18C');
+        m_pStartupPageLine->OnChanged += delegate(OpenStartupSettingsPage);
+
+        AddStartupSettingsPage();
 
         m_pActivePageList = &m_settingPageList;
         UpdateLayout();
@@ -963,6 +1090,12 @@ namespace AnyFSE::App::AppSettings::Settings
         m_isCustom = (customSettings || m_config.IsCustom) && (m_config.Type != LauncherType::Xbox && m_config.Type != LauncherType::ArmouryCrate) || m_config.Type == LauncherType::Custom;
         m_isAggressive = Config::AggressiveMode && m_config.Type != LauncherType::Xbox;
 
+        for (auto app : Config::StartupApps)
+        {
+            AddStartupAppLine(app.Path, app.Args, app.Enabled);
+        }
+
+        UpdateLayout();
         UpdateControls();
         UpdateCustomSettings();
         // m_customSettingsState = m_pCustomSettingsLine->GetState() != FluentDesign::SettingsLine::Normal
@@ -978,7 +1111,9 @@ namespace AnyFSE::App::AppSettings::Settings
     void SettingsDialog::OnBrowseLauncher()
     {
         OPENFILENAME ofn = {};
-        WCHAR szFile[260] = {};
+        WCHAR szFile[MAX_PATH] = {};
+
+        wcsncpy_s(szFile, m_currentLauncherPath.c_str(), MAX_PATH);
 
         ofn.lStructSize = sizeof(ofn);
         ofn.hwndOwner = m_hDialog;
@@ -1106,9 +1241,15 @@ namespace AnyFSE::App::AppSettings::Settings
         SwitchActivePage(&m_troubleshootSettingPageList);
     }
 
-    void SettingsDialog::OpenStartupAppsSettings()
+    void SettingsDialog::OpenStartupSettingsPage()
     {
-        Process::StartProtocol(L"ms-settings:gaming-gamebar");
+        m_pageName = L"Startup";
+        SwitchActivePage(&m_startupSettingPageList);
+    }
+
+    void SettingsDialog::OpenMSSettingsStartupApps()
+    {
+        Process::StartProtocol(L"ms-settings:startupapps");
     }
 
     void SettingsDialog::UpdateControls()
@@ -1273,6 +1414,21 @@ namespace AnyFSE::App::AppSettings::Settings
 
         Config::LogLevel = (LogLevels)m_troubleLogLevelCombo.GetSelectedIndex();
         Config::AggressiveMode = m_troubleAggressiveToggle.GetCheck();
+
+        Config::StartupApps.clear();
+
+        for (auto pLine : m_pStartupAppLines)
+        {
+            Toggle *toggle = GetStartupLineToggle(pLine);
+
+            Config::StartupApps.push_back(
+                StartupApp {
+                    pLine->GetData(0),
+                    pLine->GetData(1),
+                    toggle ? toggle->GetCheck() : true
+                }
+            );
+        }
 
         Config::Save();
 

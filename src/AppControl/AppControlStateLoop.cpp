@@ -29,6 +29,7 @@
 #include "AppControl/GamingExperience.hpp"
 #include "AppControl/MainWindow.hpp"
 #include "AppControlStateLoop.hpp"
+#include "Tools/Unicode.hpp"
 
 namespace AnyFSE::App::AppControl::StateLoop
 {
@@ -57,6 +58,7 @@ namespace AnyFSE::App::AppControl::StateLoop
         switch (event)
         {
             case AppEvents::START:             return OnStart();
+            case AppEvents::START_APPS:        return OnStartApps();
             case AppEvents::XBOX_DETECTED:     return OnXboxDetected();
             case AppEvents::GAMEMODE_ENTER:    return OnGameModeEnter();
             case AppEvents::GAMEMODE_EXIT:     return OnGameModeExit();
@@ -76,6 +78,24 @@ namespace AnyFSE::App::AppControl::StateLoop
             KillXbox();
             StartLauncher();
             WaitLauncher();
+        }
+    }
+
+    void AppControlStateLoop::OnStartApps()
+    {
+        if (!IsInFSEMode())
+        {
+            return;
+        }
+
+        log.Debug("Launching Startup Applications" );
+        for (auto app : Config::StartupApps)
+        {
+            if (app.Enabled)
+            {
+                log.Debug("Launching: %s %s", Unicode::to_string(app.Path).c_str(), Unicode::to_string(app.Args).c_str() );
+                Process::StartProcess(app.Path, app.Args);
+            }
         }
     }
 

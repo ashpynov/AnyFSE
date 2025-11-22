@@ -166,6 +166,8 @@ namespace FluentDesign
 
         void RegisterChild(HWND hChild);
 
+        const HWND GetHwnd() const { return m_hParentWnd; }
+
         bool IsKeyboardFocused()
         {
             return m_isKeyboardFocus;

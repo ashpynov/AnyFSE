@@ -44,6 +44,7 @@ namespace AnyFSE::App::AppControl::Window
     MainWindow::MainWindow()
         : m_hWnd(NULL)
         , m_aClass(NULL)
+        , m_pLogoImage(nullptr)
         , WM_TASKBARCREATED(RegisterWindowMessage(L"TaskbarCreated"))
     {
 

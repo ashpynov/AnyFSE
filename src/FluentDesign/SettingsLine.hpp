@@ -30,6 +30,7 @@
 #include "Theme.hpp"
 #include "Tools/Event.hpp"
 #include "Button.hpp"
+#include "Popup.hpp"
 
 namespace FluentDesign
 {
@@ -43,7 +44,8 @@ namespace FluentDesign
             Opened,
             Next,
             Link,
-            Caption
+            Caption,
+            Menu
         };
 
     private:
@@ -53,11 +55,17 @@ namespace FluentDesign
     protected:
         HWND m_hWnd;
         HWND m_hParent;
-        HWND m_hChildControl;
+
+        std::list<HWND> m_childControlsList;
 
         std::wstring m_name;
         std::wstring m_description;
+
+        std::map<int, std::wstring> m_data;
+
         wchar_t m_icon;
+
+        HICON m_hIcon;
 
         int m_left, m_top;
         int m_width, m_height;
@@ -69,7 +77,7 @@ namespace FluentDesign
         bool m_enabled;
         bool m_hovered;
         bool m_childFocused;
-        bool m_isGroupItem;
+        SettingsLine *m_groupLine;
 
         UINT m_frameFlags;
 
@@ -109,8 +117,8 @@ namespace FluentDesign
         HWND GetHWnd() const { return m_hWnd; }
 
         // Child control management
-        void SetChildControl(HWND hChildControl);
-        HWND GetChildControl() const { return m_hChildControl; }
+        void AddChildControl(HWND hChildControl);
+        HWND GetChildControl(int n = 0);
 
         // Text management
         void SetName(const std::wstring &name);
@@ -133,6 +141,8 @@ namespace FluentDesign
         void SetSize(int width, int height);
         int GetDesignHeight() const;
         int GetDesignPadding() const;
+
+        int GetTotalHeight() const;
         void SetTop(int top);
         void SetLeftMargin(int margin);
 
@@ -140,14 +150,21 @@ namespace FluentDesign
         State GetState() { return m_state; }
 
         void AddGroupItem(SettingsLine *groupItem);
+        void DeleteGroupItem(SettingsLine *groupItem);
+        SettingsLine *GetGroupHeader() { return m_groupLine; }
         void EnsureChevron();
         void SetChevron(State state);
         bool HasChevron();
         void UpdateLayout();
-        bool IsNested() const { return m_isGroupItem; }
+        bool IsNested() const { return m_groupLine; }
         void Invalidate(BOOL bErase = FALSE);
 
         void SetIcon(wchar_t icon);
+        void SetIcon(const std::wstring& path);
+
+        void SetMenu(const std::vector<Popup::PopupItem> &items);
+        void SetData(int index, const std::wstring &data) { m_data[index] = data; }
+        std::wstring GetData(int index);
 
         Event OnChanged;
 
@@ -175,5 +192,6 @@ namespace FluentDesign
         // Layout management
 
         void PositionChildControl();
+
     };
 }

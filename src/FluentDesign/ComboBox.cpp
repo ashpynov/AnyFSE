@@ -41,6 +41,8 @@ namespace FluentDesign
         , m_selectedIndex(-1)
         , m_hoveredIndex(-1)
         , m_hImageList(NULL)
+        , m_hCombo(nullptr)
+        , m_hPopupList(nullptr)
     {
         theme.OnDPIChanged += [This = this]() { This->UpdateLayout(); };
     }
@@ -63,7 +65,7 @@ namespace FluentDesign
     {
         m_designWidth = m_theme.DpiUnscale(width);
 
-        hCombo = CreateWindow(
+        m_hCombo = CreateWindow(
             L"BUTTON",
             L"",
             WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP,
@@ -75,15 +77,25 @@ namespace FluentDesign
             ILC_COLOR32 | ILC_MASK, 3, 1);
 
 
-        m_theme.RegisterChild(hCombo);
-        SetWindowSubclass(hCombo, ComboBoxSubclassProc, 0, (DWORD_PTR)this);
-        return hCombo;
+        m_theme.RegisterChild(m_hCombo);
+        SetWindowSubclass(m_hCombo, ComboBoxSubclassProc, 0, (DWORD_PTR)this);
+        return m_hCombo;
     }
 
     ComboBox::~ComboBox()
     {
         ImageList_RemoveAll(m_hImageList);
         ImageList_Destroy(m_hImageList);
+        if (m_hPopupList)
+        {
+            DestroyWindow(m_hPopupList);
+            m_hPopupList = nullptr;
+        }
+        if (m_hCombo)
+        {
+            DestroyWindow(m_hPopupList);
+            m_hPopupList = nullptr;
+        }
     }
 
     int ComboBox::AddItem(const std::wstring &name, const std::wstring &icon, const std::wstring &value, int pos)
@@ -93,7 +105,7 @@ namespace FluentDesign
         HICON hIcon = Tools::LoadIcon(cb.icon, 32);
         cb.iconIndex = hIcon ? ImageList_AddIcon(m_hImageList, hIcon) : -1;
 
-        InvalidateRect(hCombo, NULL, FALSE);
+        InvalidateRect(m_hCombo, NULL, FALSE);
         return pos == -1 ? (int)m_comboItems.size() : pos;
     }
 
@@ -101,7 +113,7 @@ namespace FluentDesign
     {
         m_comboItems.clear();
         ImageList_RemoveAll(m_hImageList);
-        InvalidateRect(hCombo, NULL, FALSE);
+        InvalidateRect(m_hCombo, NULL, FALSE);
         return 0;
     }
 
@@ -155,8 +167,8 @@ namespace FluentDesign
                         if (This->m_selectedIndex > 0 )
                         {
                             This->m_selectedIndex -= 1;
-                            InvalidateRect(This->hCombo, NULL, TRUE);
-                            This->m_theme.SetKeyboardFocused(This->hCombo);
+                            InvalidateRect(This->m_hCombo, NULL, TRUE);
+                            This->m_theme.SetKeyboardFocused(This->m_hCombo);
                             This->OnChanged.Notify();
                             return 0;
                         }
@@ -166,8 +178,8 @@ namespace FluentDesign
                         if (This->m_selectedIndex < This->m_comboItems.size() - 1 )
                         {
                             This->m_selectedIndex += 1;
-                            InvalidateRect(This->hCombo, NULL, TRUE);
-                            This->m_theme.SetKeyboardFocused(This->hCombo);
+                            InvalidateRect(This->m_hCombo, NULL, TRUE);
+                            This->m_theme.SetKeyboardFocused(This->m_hCombo);
                             This->OnChanged.Notify();
                             return 0;
                         }
@@ -322,7 +334,7 @@ namespace FluentDesign
 
         // Calculate popup position (below the button)
         RECT buttonRect;
-        GetWindowRect(hCombo, &buttonRect);
+        GetWindowRect(m_hCombo, &buttonRect);
 
         int popupWidth = buttonRect.right - buttonRect.left;
         int popupHeight = min(m_theme.DpiScale(400), (int)m_comboItems.size() * m_theme.DpiScale(Layout_ItemHeight)); // Calculate height based on items
@@ -337,7 +349,7 @@ namespace FluentDesign
             buttonRect.bottom + 2,
             popupWidth,
             popupHeight,
-            hCombo,//GetParent(hCombo),
+            m_hCombo,//GetParent(hCombo),
             NULL,
             GetModuleHandle(NULL),
             NULL);
@@ -380,8 +392,8 @@ namespace FluentDesign
             m_hPopupList = NULL;
             m_popupVisible = false;
             m_hoveredIndex = -1;
-            SetFocus(hCombo);
-            InvalidateRect(hCombo, NULL, TRUE); // Redraw main button
+            SetFocus(m_hCombo);
+            InvalidateRect(m_hCombo, NULL, TRUE); // Redraw main button
         }
     }
 
@@ -458,7 +470,7 @@ namespace FluentDesign
 
         case WM_CAPTURECHANGED:
             // If we lose capture, hide the popup
-            if ((HWND)lParam != hWnd && (HWND)lParam != This->hCombo )
+            if ((HWND)lParam != hWnd && (HWND)lParam != This->m_hCombo )
             {
                 This->HidePopup();
             }
@@ -486,7 +498,7 @@ namespace FluentDesign
                 {
                     This->m_selectedIndex -= 1;
                     InvalidateRect(This->m_hPopupList, NULL, TRUE);
-                    InvalidateRect(This->hCombo, NULL, TRUE);
+                    InvalidateRect(This->m_hCombo, NULL, TRUE);
                 }
             }
             else if (wParam == VK_DOWN || wParam == VK_GAMEPAD_DPAD_DOWN)
@@ -495,7 +507,7 @@ namespace FluentDesign
                 {
                     This->m_selectedIndex += 1;
                     InvalidateRect(This->m_hPopupList, NULL, TRUE);
-                    InvalidateRect(This->hCombo, NULL, TRUE);
+                    InvalidateRect(This->m_hCombo, NULL, TRUE);
                 }
             }
             This->m_theme.SetKeyboardFocused(This->m_hPopupList);
@@ -575,14 +587,14 @@ namespace FluentDesign
         {
             m_selectedIndex = index;
             // Update your main button display here
-            InvalidateRect(hCombo, NULL, TRUE);
+            InvalidateRect(m_hCombo, NULL, TRUE);
 
             OnChanged.Notify();
         }
     }
     void ComboBox::UpdateLayout()
     {
-        SetWindowPos(hCombo, 0, 0, 0,
+        SetWindowPos(m_hCombo, 0, 0, 0,
                      m_theme.DpiScale(m_designWidth),
                      m_theme.DpiScale(Layout_ItemHeight + 1),
                      SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);

@@ -99,7 +99,6 @@ namespace AnyFSE
             Theme m_theme;
 
             std::map<HWND, Gdiplus::RectF> m_designedPositions;
-            std::list<HWND> m_controls;
 
             Static m_imageStatic;
             Static m_captionStatic;

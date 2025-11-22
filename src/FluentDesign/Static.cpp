@@ -43,6 +43,7 @@ namespace FluentDesign
         , m_large(false)
         , m_colorId(Theme::Colors::Text)
         , m_pImage(nullptr)
+        , m_hStatic(nullptr)
     {
         m_format.SetAlignment(Gdiplus::StringAlignmentNear);
         m_format.SetLineAlignment(Gdiplus::StringAlignmentNear);
@@ -58,11 +59,14 @@ namespace FluentDesign
         Create(hParent, x, y, width, height);
     }
 
-    HWND Static::Create(
-        HWND hParent,
-        int x, int y,
-        int width, int height
-    )
+    HWND Static::Create(HWND hParent, const std::wstring& text, int x, int y, int width, int height )
+    {
+        Create(hParent, x, y, width, height);
+        SetText(text);
+        return m_hStatic;
+    }
+
+    HWND Static::Create(HWND hParent, int x, int y, int width, int height )
     {
 
         m_designHeight = m_theme.DpiUnscale(height);
@@ -125,6 +129,11 @@ namespace FluentDesign
         {
             delete m_pImage;
             m_pImage = nullptr;
+        }
+        if (m_hStatic)
+        {
+            DestroyWindow(m_hStatic);
+            m_hStatic = nullptr;
         }
     }
 

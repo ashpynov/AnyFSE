@@ -75,8 +75,8 @@ namespace FluentDesign
     void Theme::RegisterChild(HWND hChild)
     {
         m_childsList.push_back(hChild);
-        SetWindowSubclass(hChild, ControlSublassProc, 0, (DWORD_PTR)this);
-        SetWindowSubclass(GetParent(hChild), ControlParentSublassProc, 0, (DWORD_PTR)this);
+        SetWindowSubclass(hChild, ControlSublassProc, 1, (DWORD_PTR)this);
+        SetWindowSubclass(GetParent(hChild), ControlParentSublassProc, 1, (DWORD_PTR)this);
     }
 
     static void Invalidate(HWND hwnd, BOOL bErase = FALSE)

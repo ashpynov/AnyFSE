@@ -70,6 +70,13 @@ namespace AnyFSE::Configuration
         bool IsPortable;
     };
 
+    struct StartupApp
+    {
+        std::wstring Path;
+        std::wstring Args;
+        bool Enabled;
+    };
+
     class Config
     {
             //static const wstring Root;
@@ -106,7 +113,12 @@ namespace AnyFSE::Configuration
             static json GetConfig();
             static void Save();
 
+            static std::wstring GetApplicationName(const std::wstring & filePath);
+
+            static std::wstring GetProductName(const std::wstring &filePath);
+
             static bool IsConfigured();
+
 
             static bool GetLauncherDefaults(const std::wstring& path, LauncherConfig& out);
 
@@ -135,6 +147,8 @@ namespace AnyFSE::Configuration
 
             static bool CleanupFailedStart;
             static DWORD RestartDelay;
+
+            static std::list<StartupApp> StartupApps;
     };
 }
 

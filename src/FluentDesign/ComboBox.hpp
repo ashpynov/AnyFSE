@@ -51,7 +51,7 @@ namespace FluentDesign
         static const int Layout_ChevronMargin = 16;
         static const int Layout_CornerRadius = 8;
 
-        HWND hCombo;
+        HWND m_hCombo;
         HIMAGELIST m_hImageList = NULL;
 
         std::vector<ComboItem> m_comboItems;

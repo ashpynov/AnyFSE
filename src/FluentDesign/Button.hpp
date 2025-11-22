@@ -30,6 +30,7 @@
 #include <functional>
 #include "Tools/Event.hpp"
 #include "Theme.hpp"
+#include "Popup.hpp"
 
 namespace FluentDesign
 {
@@ -48,6 +49,8 @@ namespace FluentDesign
         bool m_bFlat;
         bool m_bSquare;
         int m_cornerRadius = 8;
+
+        std::vector<Popup::PopupItem> m_menuItems;
 
         Theme::Colors m_textNormalColor;
         Theme::Colors m_backgroundNormalColor;
@@ -91,6 +94,9 @@ namespace FluentDesign
         void SetColors(Theme::Colors textNornal, Theme::Colors backgroundNormal = Theme::Colors::Default,
                        Theme::Colors textHover = Theme::Colors::Default, Theme::Colors backgroundHover = Theme::Colors::Default,
                        Theme::Colors textPressed = Theme::Colors::Default, Theme::Colors backgroundPressed = Theme::Colors::Default);
+
+        void SetMenu(const std::vector<Popup::PopupItem> &items);
+        void ShowMenu();
 
         ~Button();
 

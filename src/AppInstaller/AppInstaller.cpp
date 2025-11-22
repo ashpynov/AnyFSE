@@ -183,7 +183,7 @@ namespace AnyFSE
         std::wstring title = L"AnyFSE Installer v" + Unicode::to_wstring(APP_VERSION);
         SetWindowText(hwnd, title.c_str());
 
-        m_controls = CreatePage();
+        CreatePage();
 
         if (!GamingExperience::ApiIsAvailable)
         {

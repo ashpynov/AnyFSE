@@ -29,6 +29,11 @@ namespace AnyFSE::Tools
 {
     static Logger log = LogManager::GetLogger("Event");
 
+    Event::Event(std::function<void()> callback)
+    {
+        callbacks.push_back(callback);
+    }
+
     void Event::operator=(std::function<void()> callback)
     {
         callbacks.clear();
@@ -64,5 +69,4 @@ namespace AnyFSE::Tools
             }
         }
     }
-
 }

@@ -29,6 +29,7 @@ namespace AnyFSE::App
     {
         CONNECT = 0,
         START,
+        START_APPS,
         XBOX_DETECTED,
         PLAYNITE_LAUNCHED,
         GAMEMODE_ENTER,

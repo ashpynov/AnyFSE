@@ -35,7 +35,9 @@ namespace FluentDesign
 {
 
     TextBox::TextBox(FluentDesign::Theme& theme)
-    : m_theme(theme)
+        : m_theme(theme)
+        , m_hContainer(nullptr)
+        , m_hTextBox(nullptr)
     {
         theme.OnDPIChanged += [This = this]() { This->UpdateLayout(); };
     }

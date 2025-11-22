@@ -41,6 +41,9 @@ namespace AnyFSE::Tools
             void operator +=(std::function<void()> callback);
             void operator -=(const std::function<void()>& callback);
             void Notify();
+
+        Event() {};
+        Event(std::function<void()> callback);
     };
 }
 using namespace AnyFSE::Tools;

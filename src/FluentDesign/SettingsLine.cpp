@@ -26,6 +26,7 @@
 #include "Logging/LogManager.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/GdiPlus.hpp"
+#include "Tools/Tools.hpp"
 #include <commctrl.h>
 #include <uxtheme.h>
 #include <dwmapi.h>
@@ -43,15 +44,15 @@ namespace FluentDesign
         , m_chevronButton(theme)
         , m_enabled(true)
         , m_hovered(false)
-        , m_hWnd(NULL)
+        , m_hWnd(nullptr)
         , m_linePadding(4)
         , m_leftMargin(16)
         , m_state(State::Normal)
-        , m_hChildControl(nullptr)
         , m_frameFlags(Gdiplus::FrameFlags::CORNER_ALL | Gdiplus::FrameFlags::SIDE_ALL)
         , m_visible(true)
-        , m_isGroupItem(false)
+        , m_groupLine(nullptr)
         , m_icon(L'\0')
+        , m_hIcon(nullptr)
     {
     }
 
@@ -76,12 +77,21 @@ namespace FluentDesign
             std::function<HWND(HWND)> createChild)
         : SettingsLine(theme, hParent, name, description, x,y, width, height, padding)
     {
-        SetChildControl(createChild(GetHWnd()));
+        AddChildControl(createChild(GetHWnd()));
     }
 
     SettingsLine::~SettingsLine()
     {
-        log.Debug("SetingsLineDestroy");
+        if (m_hIcon)
+        {
+            DestroyIcon(m_hIcon);
+            m_hIcon = nullptr;
+        }
+        if (m_hWnd)
+        {
+            DestroyWindow(m_hWnd);
+            m_hWnd = nullptr;
+        }
     }
 
     HWND SettingsLine::Create(
@@ -109,7 +119,7 @@ namespace FluentDesign
         // Create the window
         m_hWnd = CreateWindowEx(
             WS_EX_CONTROLPARENT,
-            L"STATIC",
+            L"BUTTON",
             L"",
             WS_VISIBLE | WS_CHILD | WS_CLIPCHILDREN | WS_TABSTOP,
             m_left, m_top, m_width, m_height,
@@ -183,13 +193,10 @@ namespace FluentDesign
 
         case WM_SETFOCUS:
             {
-                SetFocus(m_hChildControl ? m_hChildControl : m_chevronButton.GetHwnd());
+                SetFocus(m_childControlsList.size() ? m_childControlsList.front() : m_chevronButton.GetHwnd());
                 Invalidate();
             }
             break;
-
-        case WM_DRAWITEM:
-            return OnDrawItem(m_hChildControl, (LPDRAWITEMSTRUCT)lParam);
 
         }
 
@@ -213,7 +220,11 @@ namespace FluentDesign
         // Draw text
         DrawText(paint.MemDC());
 
-        m_theme.DrawChildFocus(paint.MemDC(), m_hWnd, m_hChildControl);
+        for (auto child : m_childControlsList)
+        {
+            m_theme.DrawChildFocus(paint.MemDC(), m_hWnd, child);
+        }
+
         m_theme.DrawChildFocus(paint.MemDC(), m_hWnd, m_chevronButton.GetHwnd());
     }
 
@@ -262,7 +273,7 @@ namespace FluentDesign
         // Draw name
         rect.left += (m_state != State::Caption) ? m_theme.DpiScale(m_leftMargin) : 0;   // Margin
 
-        if (m_icon)
+        if (m_icon || m_hIcon)
         {
             rect.left += m_theme.GetSize_Icon() + m_theme.DpiScale(m_leftMargin);
         }
@@ -299,7 +310,7 @@ namespace FluentDesign
 
     void SettingsLine::DrawIcon(HDC hdc)
     {
-        if (!m_icon)
+        if (!m_icon && !m_hIcon)
         {
             return;
         }
@@ -308,15 +319,23 @@ namespace FluentDesign
         GetClientRect(m_hWnd, &rect);
 
         rect.left += (m_state != State::Caption) ? m_theme.DpiScale(m_leftMargin) : 0;
-
-        SetBkMode(hdc, TRANSPARENT);
-        SelectObject(hdc, m_theme.GetFont_Icon());
-        SetTextColor(hdc, m_theme.GetColorRef(m_enabled ? FluentDesign::Theme::Text : FluentDesign::Theme::TextDisabled));
-
         rect.top = (rect.bottom - rect.top - m_theme.GetSize_Icon()) / 2;
         rect.bottom = rect.top + m_theme.GetSize_Icon();
 
-        ::DrawText(hdc, &m_icon, 1, &rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
+
+        if (m_hIcon)
+        {
+            ::DrawIconEx(hdc, rect.left, rect.top, m_hIcon, m_theme.GetSize_Icon(), m_theme.GetSize_Icon(), 0, nullptr, DI_NORMAL);
+        }
+        else
+        {
+            SetBkMode(hdc, TRANSPARENT);
+            SelectObject(hdc, m_theme.GetFont_Icon());
+            SetTextColor(hdc, m_theme.GetColorRef(m_enabled ? FluentDesign::Theme::Text : FluentDesign::Theme::TextDisabled));
+
+
+            ::DrawText(hdc, &m_icon, 1, &rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
+        }
 
     }
 
@@ -329,7 +348,7 @@ namespace FluentDesign
 
     void SettingsLine::OnMouseMove()
     {
-        if (!m_hovered && (m_hChildControl || HasChevron()) && m_state != State::Normal)
+        if (!m_hovered && (m_childControlsList.size() || HasChevron()) && m_state != State::Normal && m_state != State::Menu)
         {
             POINT pt;
             GetCursorPos(&pt);
@@ -342,7 +361,8 @@ namespace FluentDesign
                 TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT), TME_LEAVE, m_hWnd, 0};
                 TrackMouseEvent(&tme);
             }
-            else if (hWndUnderCursor == m_hChildControl || hWndUnderCursor == m_chevronButton.GetHwnd())
+            else if (Tools::index_of(m_childControlsList, hWndUnderCursor) != Tools::npos
+                || hWndUnderCursor == m_chevronButton.GetHwnd())
             {
                 m_hovered = true;
                 Invalidate();
@@ -352,7 +372,7 @@ namespace FluentDesign
 
     void SettingsLine::OnMouseLeave()
     {
-        if ((m_hChildControl || HasChevron()) && m_state != State::Normal)
+        if ((m_childControlsList.size() || HasChevron()) && m_state != State::Normal && m_state != State::Menu)
         {
             POINT pt;
             GetCursorPos(&pt);
@@ -363,11 +383,11 @@ namespace FluentDesign
                 TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT), TME_LEAVE, m_hWnd, 0};
                 TrackMouseEvent(&tme);
             }
-            else if (hWndUnderCursor != m_hChildControl && hWndUnderCursor != m_chevronButton.GetHwnd())
+            else if (Tools::index_of(m_childControlsList, hWndUnderCursor) == Tools::npos
+                 && hWndUnderCursor != m_chevronButton.GetHwnd())
             {
                 m_hovered = false;
                 Invalidate();
-
             }
         }
         else
@@ -380,11 +400,11 @@ namespace FluentDesign
     void SettingsLine::OnEnable(bool enabled)
     {
         m_enabled = enabled;
-        if (m_hChildControl)
+        for (auto hwnd: m_childControlsList)
         {
-            SendMessage(m_hChildControl, WM_SETREDRAW, FALSE, 0);
-            EnableWindow(m_hChildControl, enabled);
-            SendMessage(m_hChildControl, WM_SETREDRAW, TRUE, 0);
+            SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
+            EnableWindow(hwnd, enabled);
+            SendMessage(hwnd, WM_SETREDRAW, TRUE, 0);
         }
         Invalidate();
     }
@@ -397,7 +417,7 @@ namespace FluentDesign
             SetState(m_state == State::Closed ?  State::Opened : State::Closed);
             OnChanged.Notify();
         }
-        else if (HasChevron())
+        else if (m_state != State::Menu && HasChevron())
         {
             OnChanged.Notify();
         }
@@ -447,6 +467,9 @@ namespace FluentDesign
                 case State::Next:
                     icon = L"\xE76c";
                     break;
+                case State::Menu:
+                    icon = L"\xE712";
+                    break;
             }
             m_chevronButton.SetIcon(icon);
             ShowWindow(m_chevronButton.GetHwnd(), SW_SHOW);
@@ -474,14 +497,26 @@ namespace FluentDesign
     void SettingsLine::UpdateLayout()
     {
         PositionChildControl();
+
+        RECT rect;
+        Tools::GetChildRect(m_hWnd, &rect);
+        UINT top = rect.top + m_theme.DpiScale(GetDesignHeight() + GetDesignPadding());
+        int width = rect.right - rect.left;
+
         if (m_groupItemsList.size() > 0)
         {
-            bool bShow = m_state == State::Opened && IsSelfVisible(m_hWnd);
+            bool bShow = m_state != State::Closed && m_state != State::Normal && IsSelfVisible(m_hWnd);
 
             for (auto& gr : m_groupItemsList)
             {
                 gr->m_visible = bShow;
                 ShowWindow(gr->m_hWnd, bShow ? SW_SHOW : SW_HIDE);
+                if (bShow)
+                {
+                    ::MoveWindow(gr->m_hWnd, rect.left, top, width, m_theme.DpiScale(gr->GetDesignHeight()), FALSE);
+                    gr->UpdateLayout();
+                    top += gr->GetTotalHeight();
+                }
             }
         }
         Invalidate();
@@ -493,47 +528,85 @@ namespace FluentDesign
         UpdateLayout();
     }
 
+    void SettingsLine::SetIcon(const std::wstring &path)
+    {
+        m_hIcon = Tools::LoadIcon(path);
+        UpdateLayout();
+    }
+
+    void SettingsLine::SetMenu(const std::vector<Popup::PopupItem> &items)
+    {
+        SetState(State::Menu);
+        m_chevronButton.SetMenu(items);
+        UpdateLayout();
+    }
+
     void SettingsLine::PositionChildControl()
     {
-        if (!m_hChildControl)
+        if (m_childControlsList.size()==0)
             return;
 
-        RECT rc;
-        GetWindowRect(m_hChildControl, &rc);
-        MapWindowPoints(HWND_DESKTOP, m_hWnd, (LPPOINT)&rc, 2);
+        int rightPos = m_width - (m_state != State::Caption ? m_theme.DpiScale(20) : 0);
 
-        int controlWidth = rc.right - rc.left;
-        int controlHeight = rc.bottom - rc.top;
-        int controlY = (m_height - controlHeight) / 2;
-
-        int marginRight = m_theme.DpiScale(20);
         if( HasChevron() )
         {
             MoveWindow( m_chevronButton.GetHwnd(),
-                        m_width - marginRight - m_theme.DpiScale(CHEVRON_SIZE),
+                        rightPos - m_theme.DpiScale(CHEVRON_SIZE),
                         (m_height - m_theme.DpiScale(CHEVRON_SIZE))/2,
                         m_theme.DpiScale(CHEVRON_SIZE),
                         m_theme.DpiScale(CHEVRON_SIZE),
                         FALSE
             );
-            marginRight += m_theme.DpiScale(CHEVRON_SIZE + 4);
+            rightPos -= m_theme.DpiScale(CHEVRON_SIZE + 4);
         }
 
-        SetWindowPos(m_hChildControl, NULL,
-                     m_width - controlWidth - marginRight,
-                     controlY,
-                     0, 0,
-                     SWP_NOZORDER | SWP_SHOWWINDOW | SWP_NOSIZE);
+        for (auto it = m_childControlsList.rbegin(); it != m_childControlsList.rend(); ++it)
+        {
+            HWND hChildControl = *it;
+
+            RECT rc;
+            GetWindowRect(hChildControl, &rc);
+            MapWindowPoints(HWND_DESKTOP, m_hWnd, (LPPOINT)&rc, 2);
+
+            int controlWidth = rc.right - rc.left;
+            int controlHeight = rc.bottom - rc.top;
+            int controlY = (m_height - controlHeight) / 2;
+
+            SetWindowPos(hChildControl, NULL,
+                        rightPos - controlWidth,
+                        controlY,
+                        0, 0,
+                        SWP_NOZORDER | SWP_SHOWWINDOW | SWP_NOSIZE);
+
+            rightPos -= controlWidth + m_theme.DpiScale(4);
+        }
+    }
+
+    std::wstring SettingsLine::GetData(int index)
+    {
+        auto d = m_data.find(index);
+        return d != m_data.end() ? d->second : L"";
     }
 
     // Public methods implementation
-    void SettingsLine::SetChildControl(HWND hChildControl)
+    void SettingsLine::AddChildControl(HWND hChildControl)
     {
-        m_hChildControl = hChildControl;
-        SetParent(m_hChildControl, m_hWnd);
+        SetParent(hChildControl, m_hWnd);
         PositionChildControl();
-        EnableWindow(m_hChildControl, m_enabled);
-        ShowWindow(m_hChildControl, SW_SHOWNOACTIVATE);
+        EnableWindow(hChildControl, m_enabled);
+        ShowWindow(hChildControl, SW_SHOWNOACTIVATE);
+        m_childControlsList.push_back(hChildControl);
+    }
+
+    HWND SettingsLine::GetChildControl(int n)
+    {
+        if (n < 0 || n > m_childControlsList.size())
+        {
+            return nullptr;
+        }
+        auto it = m_childControlsList.begin();
+        std::advance(it, n);
+        return *it;
     }
 
     void SettingsLine::SetName(const std::wstring &name)
@@ -552,9 +625,9 @@ namespace FluentDesign
     {
         m_enabled = enable;
         EnableWindow(m_hWnd, enable);
-        if (m_hChildControl)
+        for (auto hwnd: m_childControlsList)
         {
-            EnableWindow(m_hChildControl, enable);
+            EnableWindow(hwnd, enable);
         }
         Invalidate();
     }
@@ -587,6 +660,22 @@ namespace FluentDesign
         return m_visible ? padding : 0;
     }
 
+    int SettingsLine::GetTotalHeight() const
+    {
+        UINT height = m_theme.DpiScale(GetDesignHeight() + GetDesignPadding());
+        if (m_groupItemsList.size() > 0)
+        {
+            for (auto& gr : m_groupItemsList)
+            {
+                if (gr->m_visible)
+                {
+                    height += m_theme.DpiScale(gr->GetDesignHeight() + gr->GetDesignPadding());
+                }
+            }
+        }
+        return height;
+    }
+
     void SettingsLine::SetTop(int top)
     {
         m_top = top;
@@ -602,25 +691,37 @@ namespace FluentDesign
     {
         m_state = state;
 
-        if (m_state == State::Opened)
+        if (m_state == State::Opened && m_groupItemsList.size())
         {
             m_frameFlags = Gdiplus::FrameFlags::SIDE_ALL | Gdiplus::FrameFlags::CORNER_TOP;
+
+            for (auto& gr : m_groupItemsList)
+            {
+                if (gr->m_visible)
+                {
+                    gr->SetFrame(Gdiplus::FrameFlags::SIDE_ALL | Gdiplus::FrameFlags::CORNER_BOTTOM);
+                }
+            }
+            m_groupItemsList.back()->SetFrame(Gdiplus::FrameFlags::SIDE_NO_BOTTOM);
+
         }
         else if (m_state == State::Closed)
         {
             m_frameFlags = Gdiplus::FrameFlags::SIDE_ALL | Gdiplus::FrameFlags::CORNER_ALL;
         }
         SetChevron(m_state);
+
         UpdateLayout();
     }
+
     void SettingsLine::AddGroupItem(SettingsLine *groupItem)
     {
-        if (m_groupItemsList.size())
-        {
-            m_groupItemsList.back()->SetFrame(Gdiplus::FrameFlags::SIDE_NO_BOTTOM);
-        }
         m_groupItemsList.push_back(groupItem);
-        groupItem->SetFrame(Gdiplus::FrameFlags::SIDE_ALL | Gdiplus::FrameFlags::CORNER_BOTTOM);
-        groupItem->m_isGroupItem = true;
+        groupItem->m_groupLine = this;
+    }
+
+    void SettingsLine::DeleteGroupItem(SettingsLine *groupItem)
+    {
+        m_groupItemsList.remove_if([groupItem](const SettingsLine* obj) {return obj == groupItem;});
     }
 }

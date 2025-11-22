@@ -28,6 +28,8 @@
 #include "Tools/Unicode.hpp"
 #include "nlohmann/json.hpp"
 
+#pragma comment(lib, "version.lib")
+
 namespace nlohmann
 {
     template<>
@@ -41,12 +43,16 @@ namespace nlohmann
             value = Unicode::to_wstring(narrow_str);
         }
     };
+
+
 }
 
 namespace AnyFSE::Configuration
 {
     namespace fs = std::filesystem;
     using jp = json::json_pointer;
+
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(StartupApp, Path, Args, Enabled)
 
     LogLevels       Config::LogLevel = LogLevels::Disabled;
     std::wstring    Config::LogPath = L"";
@@ -67,6 +73,7 @@ namespace AnyFSE::Configuration
     bool            Config::QuickStart = false;
     bool            Config::CleanupFailedStart = true;
     DWORD           Config::RestartDelay = 1000;
+    std::list<StartupApp> Config::StartupApps;
 
     std::wstring Config::GetModulePath()
     {
@@ -129,8 +136,11 @@ namespace AnyFSE::Configuration
         SplashVideoMute         = config.value(jp("/Splash/Video/Mute"),     false);
         SplashVideoLoop         = config.value(jp("/Splash/Video/Loop"),     false);
         SplashVideoPause        = config.value(jp("/Splash/Video/Pause"),    true);
+        StartupApps             = config.value(jp("/StartupApps"),           std::list<StartupApp>());
 
         std::wstring launcher   = config.value(jp("/Launcher/Path"),         std::wstring());
+
+
 
         LoadLauncherSettings(config, launcher, Launcher);
         CustomSettings = config.value(jp("/Launcher/CustomSettings"), Launcher.IsCustom);
@@ -202,6 +212,7 @@ namespace AnyFSE::Configuration
         config["RestartDelay"]                  = RestartDelay;
 
         config["AggressiveMode"]                = AggressiveMode;
+        config["StartupApps"]                   = StartupApps;
 
     //  config["Log"]["Path"]                   = LogPath;
     //  config["XBoxProcessName"]               = XBoxProcessName;
@@ -209,5 +220,66 @@ namespace AnyFSE::Configuration
         std::ofstream file(GetConfigFileA());
         file << config.dump(4);
         file.close();
+    }
+
+    std::wstring Config::GetApplicationName(const std::wstring &filePath)
+    {
+        std::wstring name = GetProductName(filePath);
+
+        if (name.empty())
+        {
+            namespace fs = std::filesystem;
+            fs::path p(filePath);
+            name = p.filename().replace_extension(L"").wstring();
+        }
+        return name;
+    }
+
+    std::wstring Config::GetProductName(const std::wstring &filePath)
+    {
+        DWORD dummy;
+        DWORD size = GetFileVersionInfoSize(filePath.c_str(), &dummy);
+        if (size == 0)
+        {
+            return L"";
+        }
+
+        std::vector<BYTE> data(size);
+        if (!GetFileVersionInfo(filePath.c_str(), 0, size, data.data()))
+        {
+            return L"";
+        }
+
+        // Get the file description
+        struct LANGANDCODEPAGE
+        {
+            WORD language;
+            WORD codePage;
+        } *lpTranslate;
+
+        UINT cbTranslate;
+        if (!VerQueryValue(data.data(), TEXT("\\VarFileInfo\\Translation"),
+                           (LPVOID *)&lpTranslate, &cbTranslate))
+        {
+            return L"";
+        }
+
+        // Try each language and code page
+        for (UINT i = 0; i < (cbTranslate / sizeof(LANGANDCODEPAGE)); i++)
+        {
+            wchar_t subBlock[256];
+            swprintf(subBlock, 256,
+                     L"\\StringFileInfo\\%04x%04x\\ProductName",
+                     lpTranslate[i].language, lpTranslate[i].codePage);
+
+            wchar_t *buffer = nullptr;
+            UINT dwBytes;
+            if (VerQueryValue(data.data(), subBlock, (LPVOID *)&buffer, &dwBytes))
+            {
+                return std::wstring(buffer);
+            }
+        }
+
+        return L"";
     }
 }
