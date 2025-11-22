@@ -1276,16 +1276,16 @@ namespace AnyFSE::App::AppSettings::Settings
 
         m_customSettingsToggle.SetCheck(haveSettings);
 
-        FluentDesign::SettingsLine::State state = haveSettings
-                ? alwaysSettings
-                    ? FluentDesign::SettingsLine::Next
-                    : m_customSettingsState
+        FluentDesign::SettingsLine::State state =
+            haveSettings
+                ? FluentDesign::SettingsLine::Next
                 : FluentDesign::SettingsLine::Normal;
 
         m_pCustomSettingsLine->SetState(state);
 
-        if (m_isCustom && !enableCheck)
+        if (haveSettings && !enableCheck)
         {
+            m_pCustomSettingsLine->Enable(haveSettings);
             EnableWindow(m_pCustomSettingsLine->GetChildControl(), enableCheck);
             m_pCustomSettingsLine->Invalidate();
         }
