@@ -245,7 +245,7 @@ namespace AnyFSE::App::AppSettings::Settings
                 DeleteObject(back);
 
                 r.left += m_theme.DpiScale(Layout_MarginLeft);
-                r.top += m_theme.DpiScale(GetSystemMetrics(SM_CYCAPTION));
+                r.top += m_theme.DpiScale(Layout_CaptionHeight);
 
                 WCHAR *text1 = L"Any Full Screen Experience";
 
@@ -499,21 +499,21 @@ namespace AnyFSE::App::AppSettings::Settings
             rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 2 - Layout_CaptionButtonPad),
             -1,
             m_theme.DpiScale(Layout_CaptionButtonWidth - Layout_CaptionButtonPad *2 ),
-            m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)),
+            m_theme.DpiScale(Layout_CaptionHeight),
             FALSE);
 
         MoveWindow(m_captionMinimizeButton.GetHwnd(),
             rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 3),
             -1,
             m_theme.DpiScale(Layout_CaptionButtonWidth),
-            m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)),
+            m_theme.DpiScale(Layout_CaptionHeight),
             FALSE);
 
         MoveWindow(m_captionCloseButton.GetHwnd(),
             rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth),
             -1,
             m_theme.DpiScale(Layout_CaptionButtonWidth),
-            m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)),
+            m_theme.DpiScale(Layout_CaptionHeight),
             FALSE);
 
         RECT scrollRect {
@@ -890,7 +890,7 @@ namespace AnyFSE::App::AppSettings::Settings
             rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 2 - Layout_CaptionButtonPad ),
             -1,
             m_theme.DpiScale(Layout_CaptionButtonWidth - Layout_CaptionButtonPad * 2),
-            m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)));
+            m_theme.DpiScale(Layout_CaptionHeight));
 
         m_captionMaximizeButton.SetIcon(L"\xF12A");
         m_captionMaximizeButton.SetFlat(true);
@@ -900,7 +900,7 @@ namespace AnyFSE::App::AppSettings::Settings
             rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 3 ),
             -1,
             m_theme.DpiScale(Layout_CaptionButtonWidth),
-            m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)));
+            m_theme.DpiScale(Layout_CaptionHeight));
 
         SetWindowLong(m_captionMinimizeButton.GetHwnd(), GWL_STYLE,
             GetWindowLong(m_captionMinimizeButton.GetHwnd(), GWL_STYLE) & ~WS_TABSTOP );
@@ -919,7 +919,7 @@ namespace AnyFSE::App::AppSettings::Settings
             rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth),
             -1,
             m_theme.DpiScale(Layout_CaptionButtonWidth),
-            m_theme.DpiScale(GetSystemMetrics(SM_CYSIZE)));
+            m_theme.DpiScale(Layout_CaptionHeight));
 
         SetWindowLong(m_captionCloseButton.GetHwnd(), GWL_STYLE,
             GetWindowLong(m_captionCloseButton.GetHwnd(), GWL_STYLE) & ~WS_TABSTOP );

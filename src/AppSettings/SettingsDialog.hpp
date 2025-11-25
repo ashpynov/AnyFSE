@@ -87,6 +87,7 @@ namespace AnyFSE::App::AppSettings::Settings
         static const int Layout_BackButtonMargin = 4;
 
         static const int Layout_CaptionButtonWidth = 48;
+        static const int Layout_CaptionHeight = 36;
         static const int Layout_CaptionButtonPad = 4;
 
         void ShowGroup(int groupIdx, bool show);
