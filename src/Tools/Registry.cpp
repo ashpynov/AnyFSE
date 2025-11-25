@@ -202,16 +202,15 @@ namespace AnyFSE::Tools
     }
 
 
-    std::wstring GetPathFromCommand(const std::wstring &uninstallCommand)
+    std::wstring GetBinaryFromCommand(const std::wstring &uninstallCommand)
     {
         size_t pos = uninstallCommand.find(L'\"');
         if (pos == std::string::npos)
         {
-            return fs::path(uninstallCommand).parent_path().wstring();
+            return fs::path(uninstallCommand).wstring();
         }
 
         size_t last = uninstallCommand.find(L'\"', pos + 1);
-        last = uninstallCommand.find_last_of(L'\\', last);
         std::wstring name = last != std::string::npos ? uninstallCommand.substr(pos + 1, last - pos - 1) : uninstallCommand.substr(pos+1);
         return name;
     }
@@ -254,7 +253,7 @@ namespace AnyFSE::Tools
                 {
                     RegCloseKey(hSubKey);
                     RegCloseKey(hKey);
-                    return GetPathFromCommand(subkeyName);
+                    return fs::path(GetBinaryFromCommand(subkeyName)).parent_path().wstring();
                 }
             }
             RegCloseKey(hSubKey);
@@ -310,14 +309,18 @@ namespace AnyFSE::Tools
 
                         dataSize = sizeof(uninstallString);
                         if (RegQueryValueExW(hSubKey, L"UninstallString", NULL, &type,
-                                            (LPBYTE)uninstallString, &dataSize) == ERROR_SUCCESS 
+                                            (LPBYTE)uninstallString, &dataSize) == ERROR_SUCCESS
                             && type == REG_SZ
-                            && fs::exists(uninstallString)
                         )
                         {
+                            std::wstring binary = GetBinaryFromCommand(uninstallString);
+                            if ( !fs::exists(binary))
+                            {
+                                continue;
+                            }
                             RegCloseKey(hSubKey);
                             RegCloseKey(hKey);
-                            return GetPathFromCommand(uninstallString);
+                            return fs::path(binary).parent_path().wstring();
                         }
                     }
                     RegCloseKey(hSubKey);
