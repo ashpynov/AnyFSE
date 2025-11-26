@@ -31,12 +31,30 @@
 #include "Tools.hpp"
 #include <algorithm>
 #include <shlobj_core.h>
+#include "Packages.hpp"
 
 
 namespace AnyFSE::Tools
 {
     static Logger log = LogManager::GetLogger("Tools");
 
+    HICON LoadIconFromPNG(const std::wstring &pngPath, int size)
+    {
+        // Load the PNG image
+        Gdiplus::Bitmap *bitmap = Gdiplus::Bitmap::FromFile(pngPath.c_str());
+        if (!bitmap || bitmap->GetLastStatus() != Gdiplus::Ok)
+        {
+            delete bitmap;
+            return nullptr;
+        }
+
+        // Convert to HICON
+        HICON hIcon = nullptr;
+        bitmap->GetHICON(&hIcon);
+        delete bitmap;
+
+        return hIcon;
+    }
     HICON LoadIcon(const std::wstring &icon, int iconSize)
     {
         if (icon.empty())
@@ -45,9 +63,28 @@ namespace AnyFSE::Tools
         }
 
         int index = 0;
-        std::filesystem::path path(icon);
 
-        size_t commaPos = icon.find(L',');
+        std::wstring iconPath = icon;
+
+        if (icon[0]==L'@')
+        {
+            size_t slashPos = iconPath.find(L'\\');
+            slashPos = slashPos != std::wstring::npos ? slashPos : iconPath.find(L'/');
+
+            if (slashPos == std::wstring::npos)
+            {
+                return 0;
+            }
+            std::wstring appPath = Packages::GetAppxInstallLocation(iconPath.substr(1, slashPos - 1));
+            if (appPath.empty())
+            {
+                return 0;
+            }
+            iconPath = appPath + iconPath.substr(slashPos);
+        }
+        std::filesystem::path path(iconPath);
+
+        size_t commaPos = iconPath.find(L',');
         if (commaPos != std::wstring::npos)
         {
             path = icon.substr(0, commaPos);
@@ -69,6 +106,19 @@ namespace AnyFSE::Tools
         }
 
         HICON hIcon;
+        if (_wcsicmp(path.extension().wstring().c_str(), L".png") == 0)
+        {
+            hIcon = LoadIconFromPNG(path.wstring().c_str(), iconSize);
+            if (!hIcon)
+            {
+                log.Warn(log.APIError(), "Cant load icon from PNG");
+                return NULL;
+            }
+            else
+            {
+                return hIcon;
+            }
+        }
 
         HRESULT hr = SHDefExtractIconW(path.wstring().c_str(), index, 0, &hIcon, NULL, (DWORD)iconSize);
 

@@ -25,6 +25,7 @@
 #include "Configuration/Config.hpp"
 #include "Tools/Registry.hpp"
 #include "Tools/Unicode.hpp"
+#include "Tools/Packages.hpp"
 
 namespace AnyFSE::Configuration
 {
@@ -40,6 +41,7 @@ namespace AnyFSE::Configuration
         if (out.Type == LauncherType::None
             || out.Type == LauncherType::Xbox
             || out.Type == LauncherType::ArmouryCrate
+            || out.Type == LauncherType::OneGameLauncher
             || out.StartCommand.find(L'!') != std::wstring::npos)
         {
             return;
@@ -97,30 +99,12 @@ namespace AnyFSE::Configuration
 
     void Config::FindArmoryCrate(std::list<std::wstring>& found)
     {
-        namespace fs = std::filesystem;
+        std::wstring installPath =
+            Packages::GetAppxInstallLocation(L"B9ECED6F.ArmouryCrateSE_qmba6cd70vzyy");
 
-        std::wstring searchDirectory = L"C:\\Program Files\\WindowsApps\\";
-        std::wstring name = L"B9ECED6F.ArmouryCrateSE_";
-        std::wstring vendor = L"__qmba6cd70vzyy";
-
-        try
+        if (!installPath.empty())
         {
-            for (const auto &entry : std::filesystem::directory_iterator(searchDirectory))
-            {
-                std::wstring filename = entry.path().filename().wstring();
-                if (filename.find(name) == 0 && filename.find(vendor) == filename.size() - vendor.size())
-                {
-                    std::wstring ACPath = searchDirectory + filename + L"\\ArmouryCrateSE.exe";
-                    if (fs::exists(fs::path(ACPath)))
-                    {
-                        found.push_back(L"asusac://");
-                        return;
-                    }
-                }
-            }
-        }
-        catch (...)
-        {
+            found.push_back(L"asusac://");
         }
     }
 
@@ -139,6 +123,7 @@ namespace AnyFSE::Configuration
         FindPlaynite(found);
         FindSteam(found);
         FindBigBox(found);
+        FindOneGameLauncher(found);
         FindArmoryCrate(found);
         FindXbox(found);
         return found.size() > existed;
@@ -183,32 +168,23 @@ namespace AnyFSE::Configuration
         }
     }
 
+    void Config::FindOneGameLauncher(std::list<std::wstring> &found)
+    {
+        std::wstring installPath = Packages::GetAppxInstallLocation(L"62269AlexShats.OneGameLauncher_gghb1w55myjr2");
+        if (!installPath.empty())
+        {
+            found.push_back(L"ogl://");
+        }
+    }
+
     void Config::FindXbox(std::list<std::wstring> &found)
     {
         namespace fs = std::filesystem;
 
-        std::wstring searchDirectory = L"C:\\Program Files\\WindowsApps\\";
-        std::wstring name = L"Microsoft.GamingApp_";
-        std::wstring vendor = L"__8wekyb3d8bbwe";
-
-        try
+        std::wstring installPath = Packages::GetAppxInstallLocation(L"Microsoft.GamingApp_8wekyb3d8bbwe");
+        if (!installPath.empty())
         {
-            for (const auto &entry : std::filesystem::directory_iterator(searchDirectory))
-            {
-                std::wstring filename = entry.path().filename().wstring();
-                if (filename.find(name) == 0 && filename.find(vendor) == filename.size() - vendor.size())
-                {
-                    std::wstring XboxPath = searchDirectory + filename + L"\\XboxPcApp.exe";
-                    if (fs::exists(fs::path(XboxPath)))
-                    {
-                        found.push_back(XboxPath);
-                        return;
-                    }
-                }
-            }
-        }
-        catch (...)
-        {
+            found.push_back(installPath + L"\\XboxPcApp.exe");
         }
     }
 }

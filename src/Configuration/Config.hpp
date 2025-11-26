@@ -43,6 +43,7 @@ namespace AnyFSE::Configuration
         ArmouryCrate,
         Steam,
         BigBox,
+        OneGameLauncher,
         Xbox
     };
 
@@ -95,6 +96,7 @@ namespace AnyFSE::Configuration
             static void FindPlaynite(std::list<std::wstring>& found);
             static void FindSteam(std::list<std::wstring>& found);
             static void FindBigBox(std::list<std::wstring>& found);
+            static void FindOneGameLauncher(std::list<std::wstring>& found);
             static void FindXbox(std::list<std::wstring>& found);
             static void FindArmoryCrate(std::list<std::wstring>& found);
 

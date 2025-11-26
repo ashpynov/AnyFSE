@@ -89,6 +89,23 @@ namespace AnyFSE::Configuration
             }
         },
         {
+            LauncherType::OneGameLauncher, {
+                LauncherType::OneGameLauncher,
+                L"One Game Launcher",
+                L"ogl://",
+                L"",
+                0, WS_VISIBLE,
+                L"OneGameLauncher.exe",
+                L"Windows.UI.Core.CoreWindow",
+                L"",
+                0, 0,
+                L"",
+                L"",
+                L"",
+                L"@62269AlexShats.OneGameLauncher_gghb1w55myjr2\\Assets\\StoreLogo.png"
+            }
+        },
+        {
             LauncherType::ArmouryCrate, {
                 LauncherType::ArmouryCrate,
                 L"Armoury Crate",
@@ -102,7 +119,7 @@ namespace AnyFSE::Configuration
                 L"ArmouryCrateSe.exe",
                 L"MSCTFIME UI",
                 L"",
-                L"C:\\Program Files\\ASUS\\ARMOURY CRATE SE Service\\ArmouryCrateSE.UserSessionHelper.exe"
+                L"@B9ECED6F.ArmouryCrateSE_qmba6cd70vzyy\\Assets\\StoreLogo.png"
             }
         },
         {
