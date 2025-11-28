@@ -699,10 +699,10 @@ namespace FluentDesign
             {
                 if (gr->m_visible)
                 {
-                    gr->SetFrame(Gdiplus::FrameFlags::SIDE_ALL | Gdiplus::FrameFlags::CORNER_BOTTOM);
+                    gr->SetFrame(Gdiplus::FrameFlags::SIDE_NO_BOTTOM);
                 }
             }
-            m_groupItemsList.back()->SetFrame(Gdiplus::FrameFlags::SIDE_NO_BOTTOM);
+            m_groupItemsList.back()->SetFrame(Gdiplus::FrameFlags::SIDE_ALL | Gdiplus::FrameFlags::CORNER_BOTTOM);
 
         }
         else if (m_state == State::Closed)
