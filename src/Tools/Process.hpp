@@ -36,6 +36,8 @@ namespace AnyFSE::Tools::Process
     HWND  GetWindow(const std::wstring &processName, DWORD exStyle, const std::wstring &className, const std::wstring &windowTitle, DWORD style=0, DWORD noStyle=0);
     HWND  GetWindow(const std::set<DWORD>& processIds, DWORD exStyle, const std::wstring &className, const std::wstring &windowTitle, DWORD style=0, DWORD noStyle=0);
     size_t FindAllByName(const std::wstring &processName, std::set<DWORD> & result);
+    BOOL EnumWindowsAlt(HWND start, BOOL (*callback)(HWND, LPARAM), LPARAM lParam);
+    bool BringWindowToForeground(HWND hWnd);
 }
 
 namespace Process = AnyFSE::Tools::Process;

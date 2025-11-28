@@ -75,7 +75,8 @@ namespace AnyFSE::Configuration
                 L"",
                 L"",
                 L"",
-                true // trayable
+                true,
+                L"@"
             }
         },
         {
@@ -102,7 +103,9 @@ namespace AnyFSE::Configuration
                 L"",
                 L"",
                 L"",
-                L"@62269AlexShats.OneGameLauncher_gghb1w55myjr2\\Assets\\StoreLogo.png"
+                L"@62269AlexShats.OneGameLauncher_gghb1w55myjr2\\Assets\\StoreLogo.png",
+                false,
+                L"@",
             }
         },
         {
@@ -116,10 +119,12 @@ namespace AnyFSE::Configuration
                 L"Windows.UI.Core.CoreWindow",
                 L"",
                 0, WS_VISIBLE,
-                L"ArmouryCrateSe.exe",
-                L"MSCTFIME UI",
                 L"",
-                L"@B9ECED6F.ArmouryCrateSE_qmba6cd70vzyy\\Assets\\StoreLogo.png"
+                L"",
+                L"",
+                L"@B9ECED6F.ArmouryCrateSE_qmba6cd70vzyy\\Assets\\AppIcon\\Square44x44Logo.scale-400.png",
+                false,
+                L"@"
             }
         },
         {

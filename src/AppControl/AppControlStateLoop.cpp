@@ -110,6 +110,7 @@ namespace AnyFSE::App::AppControl::StateLoop
                 : IsPreventIsActive()   ? "Prevent is Active"
                 : "Waiting Launcher");
             KillXbox();
+            FocusLauncher();
         }
         else if (!IsLauncherActive() && !Config::AggressiveMode)
         {
@@ -404,14 +405,23 @@ namespace AnyFSE::App::AppControl::StateLoop
 
     void AppControlStateLoop::FocusLauncher()
     {
-        log.Debug("Focus Launcher");
+        if (!Config::Launcher.ActivationProtocol.empty())
+        {
+            if (Config::Launcher.ActivationProtocol[0]==L'@')
+            {
+                Process::StartProcess(Config::Launcher.StartCommand, Config::Launcher.StartArg);
+            }
+            else
+            {
+                Process::StartProtocol(Config::Launcher.ActivationProtocol);
+            }
+            return;
+        }
 
         HWND launcherHwnd = GetLauncherWindow();
         if (launcherHwnd)
         {
-            BringWindowToTop(launcherHwnd);
-            SetForegroundWindow(launcherHwnd);
-            SetActiveWindow(launcherHwnd);
+            Process::BringWindowToForeground(launcherHwnd);
 
             HMONITOR hMonitor = MonitorFromWindow(launcherHwnd, MONITOR_DEFAULTTONEAREST);
             MONITORINFOEX monitorInfo = {};

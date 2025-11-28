@@ -279,7 +279,7 @@ namespace AnyFSE::Tools::Process
 
             if (styleMatch && noStyleMatch && exStyleMatch && titleMatch && classMatch)
             {
-                log.Debug("Found %x", hwnd);
+                log.Debug("Found launcher window 0x%x", hwnd);
                 searchData->foundWindow = hwnd;
                 return FALSE; // Stop enumeration
 
@@ -297,6 +297,28 @@ namespace AnyFSE::Tools::Process
             : NULL;
     }
 
+    BOOL EnumWindowsAlt(HWND start, BOOL (*callback)(HWND, LPARAM), LPARAM lParam)
+    {
+        if (!callback)
+            return FALSE;
+
+        HWND hwnd = FindWindowEx(start, NULL, nullptr, nullptr);
+
+        if (!hwnd)
+            return TRUE;
+
+        while (hwnd != NULL)
+        {
+            if (!callback(hwnd, lParam) || !EnumWindowsAlt(hwnd, callback, lParam))
+            {
+                return FALSE;
+            }
+
+            hwnd = FindWindowEx(start, hwnd, nullptr, nullptr);
+        }
+
+        return TRUE;
+    }
     HWND GetWindow(const std::set<DWORD>& processIds, DWORD exStyle, const std::wstring &className, const std::wstring &windowTitle, DWORD style, DWORD noStyle)
     {
         if (processIds.size() == 0)
@@ -313,8 +335,50 @@ namespace AnyFSE::Tools::Process
         searchData.noStyle = noStyle;
         searchData.foundWindow = NULL;
 
-        EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&searchData));
-
+        EnumWindowsAlt(NULL, EnumWindowsProc, reinterpret_cast<LPARAM>(&searchData));
         return searchData.foundWindow;
+    }
+
+    bool BringWindowToForeground(HWND hWnd)
+    {
+        if (!IsWindow(hWnd))
+        {
+            return false;
+        }
+
+        if (IsIconic(hWnd))
+        {
+            ShowWindow(hWnd, SW_SHOWMAXIMIZED);
+        }
+
+        if (GetForegroundWindow() == hWnd)
+        {
+            return true;
+        }
+
+        DWORD currentThread = GetCurrentThreadId();
+        DWORD foregroundThread = GetWindowThreadProcessId(GetForegroundWindow(), 0);
+
+        if (currentThread != foregroundThread)
+        {
+            AttachThreadInput(currentThread, foregroundThread, TRUE);
+            SetForegroundWindow(hWnd);
+            AttachThreadInput(currentThread, foregroundThread, FALSE);
+        }
+        else
+        {
+            SetForegroundWindow(hWnd);
+        }
+
+        // Final verification and attempt
+        if (GetForegroundWindow() != hWnd)
+        {
+            // Simulate Alt key press as last resort
+            keybd_event(VK_MENU, 0, 0, 0);
+            keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, 0);
+            SetForegroundWindow(hWnd);
+        }
+
+        return (GetForegroundWindow() == hWnd);
     }
 }

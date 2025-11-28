@@ -67,6 +67,7 @@ namespace AnyFSE::Configuration
         std::wstring WindowTitleAlt;
         std::wstring IconFile;
         bool IsTrayAggressive;
+        std::wstring ActivationProtocol;
         bool IsCustom;
         bool IsPortable;
     };
