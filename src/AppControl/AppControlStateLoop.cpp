@@ -429,7 +429,7 @@ namespace AnyFSE::App::AppControl::StateLoop
 
             if (GetMonitorInfo(hMonitor, &monitorInfo))
             {
-                PostMessage(launcherHwnd, WM_DISPLAYCHANGE, 32,
+                PostMessage(HWND_BROADCAST, WM_DISPLAYCHANGE, 32,
                     MAKELPARAM(
                         monitorInfo.rcMonitor.right-monitorInfo.rcMonitor.left,
                         monitorInfo.rcMonitor.bottom-monitorInfo.rcMonitor.top
