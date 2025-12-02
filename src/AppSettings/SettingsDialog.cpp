@@ -285,9 +285,17 @@ namespace AnyFSE::App::AppSettings::Settings
                     ::DrawText(paint.MemDC(), m_pageName.c_str(), -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
                 }
 
+                {
+                    r.bottom = paint.ClientRect().bottom - m_theme.DpiScale(Layout_MarginBottom);
+                    r.top = r.bottom - m_theme.DpiScale(Layout_ButtonHeight);
+                    SelectFont(paint.MemDC(), m_theme.GetFont_TextSecondary());
+                    SetTextColor(paint.MemDC(), m_theme.GetColorRef(FluentDesign::Theme::Colors::TextSecondary));
+                    const wchar_t *rebootRecomendation = L"* Please consider to reboot Windows to de-escalate priveleges each time after configuration";
+                    ::DrawText(paint.MemDC(), rebootRecomendation, -1, &r, DT_LEFT | DT_BOTTOM | DT_SINGLELINE | DT_NOCLIP);
+                }
+
                 m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_okButton.GetHwnd());
                 m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_closeButton.GetHwnd());
-                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_removeButton.GetHwnd());
                 m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_captionBackButton.GetHwnd());
                 m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_captionMinimizeButton.GetHwnd());
                 m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_captionCloseButton.GetHwnd());
@@ -537,13 +545,6 @@ namespace AnyFSE::App::AppSettings::Settings
 
         rect.right -= m_theme.DpiScale(Layout_MarginRight);
         rect.left  += m_theme.DpiScale(Layout_MarginLeft);
-
-        MoveWindow(m_removeButton.GetHwnd(),
-            rect.left,
-            rect.top,
-            m_theme.DpiScale(Layout_UninstallWidth),
-            m_theme.DpiScale(Layout_ButtonHeight),
-            FALSE);
 
         MoveWindow(m_okButton.GetHwnd(),
             rect.right
@@ -1029,17 +1030,6 @@ namespace AnyFSE::App::AppSettings::Settings
         rect.right -= m_theme.DpiScale(Layout_MarginRight);
         rect.left  += m_theme.DpiScale(Layout_MarginLeft);
 
-
-        m_removeButton.Create(m_hDialog,
-            rect.left,
-            rect.top,
-            m_theme.DpiScale(Layout_UninstallWidth),
-            m_theme.DpiScale(Layout_ButtonHeight));
-
-        m_removeButton.SetText(L"Uninstall");
-
-        m_removeButton.OnChanged += delegate(OnUninstall);
-
         m_okButton.Create(m_hDialog,
             rect.right
                 - m_theme.DpiScale(Layout_OKWidth)
@@ -1163,25 +1153,6 @@ namespace AnyFSE::App::AppSettings::Settings
         icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
         icex.dwICC = ICC_STANDARD_CLASSES;
         ::InitCommonControlsEx(&icex);
-    }
-
-    void SettingsDialog::OnUninstall()
-    {
-        // uninstall
-        InitCustomControls();
-        int nButtonClicked = 0;
-        if (SUCCEEDED(TaskDialog(m_hDialog, GetModuleHandle(NULL),
-                       L"Uninstall",
-                       L"Uninstall Any Fullscreen Experience?",
-                       L"This will remove system task and all settings\n",
-                       TDCBF_YES_BUTTON | TDCBF_CANCEL_BUTTON, TD_INFORMATION_ICON, &nButtonClicked))
-            && nButtonClicked == IDYES)
-
-        {
-            //Registry::DeleteKey(L"HKCU\\Software\\AnyFSE");
-            TaskManager::RemoveTask();
-            EndDialog(m_hDialog, IDABORT);
-        }
     }
 
     void SettingsDialog::OnShowTextChanged()

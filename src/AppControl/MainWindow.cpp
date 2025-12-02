@@ -353,14 +353,9 @@ namespace AnyFSE::App::AppControl::Window
                     FreeResources();
                     m_result = ERROR_RESTART_APPLICATION;
                     DestroyWindow(m_hWnd);
-                }
-                else if ( result == IDABORT)
-                {
-                    m_result = ERROR_PRODUCT_UNINSTALLED;
-                    DestroyWindow(m_hWnd);
+                    return TRUE;
                 }
             }
-
             return FALSE;
         case ID_QUIT:
             m_result = 0;

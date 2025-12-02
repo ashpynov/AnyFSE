@@ -116,7 +116,6 @@ namespace AnyFSE::App::AppSettings::Settings
             , m_browseButton(m_theme)
             , m_okButton(m_theme)
             , m_closeButton(m_theme)
-            , m_removeButton(m_theme)
             , m_splashShowAnimationToggle(m_theme)
             , m_splashShowLogoToggle(m_theme)
             , m_splashShowTextToggle(m_theme)
@@ -146,7 +145,6 @@ namespace AnyFSE::App::AppSettings::Settings
         void OnMinimize();
         void OnClose();
 
-        void OnUninstall();
         void OnShowTextChanged();
         void OnShowLogoChanged();
         void OnShowVideoChanged();
@@ -208,7 +206,6 @@ namespace AnyFSE::App::AppSettings::Settings
         Button m_browseButton;
         Button m_okButton;
         Button m_closeButton;
-        Button m_removeButton;
 
         HWND m_hScrollView;
 

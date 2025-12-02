@@ -160,6 +160,40 @@
         },
         {
             "type": "shell",
+            "label": "Build AnyFSE.Uninstaller Debug",
+            "command": "msbuild.exe",
+            "args": [
+                "AnyFSE.Uninstaller.vcxproj",
+                "-property:Configuration=Debug",
+                "-property:Platform=x64",
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "type": "shell",
+            "label": "Build AnyFSE.Uninstaller Release",
+            "command": "msbuild.exe",
+            "args": [
+                "AnyFSE.Uninstaller.vcxproj",
+                "-property:Configuration=Release",
+                "-property:Platform=x64",
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
             "label": "Build AnyFSE.Installer Release",
             "command": "msbuild.exe",
             "args": [
@@ -175,7 +209,8 @@
                 "isDefault": true
             },
             "dependsOn":[
-                "Build AnyFSE Release"
+                "Build AnyFSE Release",
+                "Build AnyFSE.Uninstaller Release"
             ]
         },
         {

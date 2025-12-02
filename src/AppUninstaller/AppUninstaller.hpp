@@ -35,14 +35,6 @@ namespace AnyFSE
 #define VER_VERSION_STR "1.2.3"
 #endif
 
-#ifndef VER_COMPANY_NAME
-#define VER_COMPANY_NAME "Artem Shpynov"
-#endif
-
-#ifndef VER_PRODUCT_NAME
-#define VER_PRODUCT_NAME "AnyFSE"
-#endif
-
 #define IDR_EMBEDDED_ZIP 3
 
 #ifndef APP_VERSION
@@ -51,31 +43,28 @@ namespace AnyFSE
 
     using namespace FluentDesign;
 
-    class AppInstaller
+    class AppUninstaller
     {
         private:
 
         public:
             INT_PTR Show(HINSTANCE hInstance);
+            void Uninstall();
 
             enum Pages : int
             {
                 None = -1,
                 Welcome = 0,
-                Path,
-                Progress,
                 Complete,
                 Error,
                 Count
             };
 
-            AppInstaller()
+            AppUninstaller()
                 : m_theme()
                 , m_captionStatic(m_theme)
                 , m_textStatic(m_theme)
-                , m_pathEdit(m_theme)
                 , m_imageStatic(m_theme)
-                , m_browseButton(m_theme)
                 , m_leftButton(m_theme)
                 , m_rightButton(m_theme)
             {}
@@ -92,19 +81,13 @@ namespace AnyFSE
             const int Layout_CaptionHeight = 48;
             const int Layout_TextHeight = 48;
             const int Layout_ButtonWidth = 100;
-            const int Layout_BrowseButtonWidth = 80;
             const int Layout_ButtonHeight = 32;
-            const int Layout_EditHeight = 36;
             const int Layout_ButtonPadding = 16;
 
-            const wchar_t * registryPath = L"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AnyFSE";
-
-            const wchar_t * Icon_EULA = L"C:\\Windows\\system32\\imageres.dll,-81";
-            const wchar_t * Icon_Browse = L"C:\\Windows\\system32\\imageres.dll,-1025";
+            const wchar_t * Icon_Delete = L"C:\\Windows\\system32\\imageres.dll,-55";
             const wchar_t * Icon_Error = L"C:\\Windows\\system32\\imageres.dll,-98";
             const wchar_t * Icon_Permission = L"C:\\Windows\\system32\\imageres.dll,-105";
             const wchar_t * Icon_Done = L"C:\\Windows\\system32\\imageres.dll,-1400";
-            const wchar_t * Icon_Progress = L"C:\\Windows\\system32\\imageres.dll,-5357";
 
             Theme m_theme;
 
@@ -113,8 +96,6 @@ namespace AnyFSE
             Static m_imageStatic;
             Static m_captionStatic;
             Static m_textStatic;
-            TextBox m_pathEdit;
-            Button m_browseButton;
             Button m_leftButton;
             Button m_rightButton;
 
@@ -131,13 +112,9 @@ namespace AnyFSE
                 const std::wstring &buttonRight,
                 const std::function<void()> &callbackRight,
                 const std::wstring &buttonLeft=L"",
-                const std::function<void()> &callbackLeft=[](){},
-                bool showBrowse=false
+                const std::function<void()> &callbackLeft=[](){}
             );
             void ShowWelcomePage();
-            void ShowLicensePage();
-            void ShowPathPage();
-            void ShowProgressPage();
             void ShowCompletePage();
             void ShowErrorPage(const std::wstring& caption, const std::wstring& text, const std::wstring& icon = L"");
 
@@ -147,20 +124,13 @@ namespace AnyFSE
             void OnErase(HDC hdc, HWND child);
 
             void DrawDialog(HDC hdc, RECT clientRect);
-            void CheckPath();
-            bool IsValidPath(const std::wstring &pathStr);
-            void SetCurrentProgress(const std::wstring &status);
 
-            void OnSelectPath();
-            void OnBrowse();
             void OnCancel();
-            void OnInstall();
-            void OnSettings();
-            void OnDone();
-            void StartAnyFSE(bool bSettings);
-            bool DeleteOldVersion();
+            void OnUninstall();
+            std::list<std::wstring> ListDir(const std::wstring &path, const std::wstring &mask);
+            bool DeleteFiles(const std::wstring &path);
+            bool AutoDeleteSelf(const std::wstring &path, bool deleteFolder);
             bool TerminateAnyFSE();
-            bool AddUninstallRegistry(const std::wstring &path);
-            bool ExtractEmbeddedZip(const std::wstring &path);
+            void OnDone();
     };
 }

@@ -38,6 +38,7 @@
 #include "Tools/TaskManager.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/TaskManager.hpp"
+#include "Tools/Registry.hpp"
 #include "AppInstaller.hpp"
 
 namespace AnyFSE
@@ -209,8 +210,9 @@ namespace AnyFSE
     {
         ShowPage(Icon_Done,
             L"Done",
-            L"AnyFSE installation has been completed",
-            L"Setup", delegate(OnSettings),
+            L"AnyFSE installation has been completed.\nPress Configure change settings.\n\n"
+            L"It is highly recomended to restart your PC to de-escalate priveleges after configuration",
+            L"Configure", delegate(OnSettings),
             fs::exists(m_pathEdit.GetText() + L"\\AnyFSE.json") ? L"Done" : L"", delegate(OnDone)
         );
     }
@@ -225,7 +227,8 @@ namespace AnyFSE
 
     void AppInstaller::OnSelectPath()
     {
-        std::wstring path = Tools::TaskManager::GetInstallPath();
+        std::wstring path = Registry::ReadString(registryPath, L"InstallLocation", Tools::TaskManager::GetInstallPath());
+
         if (path.empty())
         {
             wchar_t programFiles[MAX_PATH] = {0};
@@ -346,6 +349,14 @@ namespace AnyFSE
             SetCurrentProgress(L"Search and terminate existing application");
             status &= TerminateAnyFSE();
 
+            SetCurrentProgress(L"Remove old version");
+
+            std::wstring oldPath = Registry::ReadString(registryPath, L"InstallLocation");
+            if (!oldPath.empty() && _wcsicmp(oldPath.c_str(), path.wstring().c_str()))
+            {
+                status &= DeleteOldVersion();
+            }
+
             // Extract resource file
             SetCurrentProgress(L"Unpack files");
             status &= ExtractEmbeddedZip(path);
@@ -353,6 +364,10 @@ namespace AnyFSE
             // Set task
             SetCurrentProgress(L"Register scheduled task");
             status &= Tools::TaskManager::CreateTask(path.wstring() + L"\\AnyFSE.exe");
+
+            // Set task
+            SetCurrentProgress(L"Register uninstaller");
+            status &= AddUninstallRegistry(path);
         }
         catch(const std::exception& e)
         {
@@ -361,6 +376,28 @@ namespace AnyFSE
         }
 
         ShowCompletePage();
+    }
+
+    bool AppInstaller::DeleteOldVersion()
+    {
+        std::wstring uninstaller = Registry::ReadString(registryPath, L"UninstallString");
+        if (uninstaller.empty())
+        {
+            return true;
+        }
+        // Execute uninstaller
+        SHELLEXECUTEINFOW sei = { sizeof(sei) };
+        sei.lpFile = uninstaller.c_str();
+        sei.lpParameters = L"/s";
+        sei.nShow = SW_HIDE;
+        sei.fMask = SEE_MASK_NOCLOSEPROCESS;
+
+        if (ShellExecuteExW(&sei))
+        {
+            WaitForSingleObject(sei.hProcess, 30000);
+            CloseHandle(sei.hProcess);
+        }
+        return true;
     }
 
     bool AppInstaller::TerminateAnyFSE()
@@ -373,6 +410,37 @@ namespace AnyFSE
                 ProcessEx::Kill(handle);
             }
         }
+
+        Process::FindAllByName(L"AnyFSE.exe", handles);
+
+        for (int i = 0; handles.size() && i < 10; i++)
+        {
+            Sleep(1000);
+            Process::FindAllByName(L"AnyFSE.exe", handles);
+        }
+
+        return true;
+    }
+
+    bool AppInstaller::AddUninstallRegistry(const std::wstring &path)
+    {
+        SYSTEMTIME st;
+        GetLocalTime(&st);
+        wchar_t date[9];
+        // Format: YYYYMMDD
+        wsprintf(date, TEXT("%04d%02d%02d"), st.wYear, st.wMonth, st.wDay);
+
+        Registry::WriteString(registryPath, L"DisplayName", Unicode::to_wstring(VER_PRODUCT_NAME));
+        Registry::WriteString(registryPath, L"DisplayVersion", Unicode::to_wstring(APP_VERSION));
+        Registry::WriteString(registryPath, L"Publisher", Unicode::to_wstring(VER_COMPANY_NAME));
+        Registry::WriteString(registryPath, L"UninstallString", path + L"\\unins000.exe");
+        Registry::WriteString(registryPath, L"QuietUninstallString  ", path + L"\\unins000.exe \\s");
+        Registry::WriteString(registryPath, L"InstallDate", date);
+        Registry::WriteString(registryPath, L"InstallLocation", path);
+        Registry::WriteDWORD( registryPath, L"EstimatedSize", 2084);
+        Registry::WriteDWORD( registryPath, L"NoModify", 1);
+        Registry::WriteDWORD( registryPath, L"NoRepair", 1);
+        Registry::WriteString(registryPath, L"DisplayIcon", path + L"\\AnyFSE.exe,0");
 
         return true;
     }
