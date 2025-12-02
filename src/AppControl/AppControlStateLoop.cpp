@@ -31,6 +31,9 @@
 #include "AppControlStateLoop.hpp"
 #include "Tools/Unicode.hpp"
 
+#include <dwmapi.h>
+#pragma comment(lib, "dwmapi.lib")
+
 namespace AnyFSE::App::AppControl::StateLoop
 {
     Logger log = LogManager::GetLogger("Manager/State");
@@ -43,6 +46,9 @@ namespace AnyFSE::App::AppControl::StateLoop
         , m_exitingTimer(0)
         , m_restartDelayTimer(0)
         , m_isRestart(false)
+        , m_xboxAge(0)
+        , m_deviceFormAge(0)
+        , m_homeAge(0)
     {
 
     }
@@ -112,28 +118,16 @@ namespace AnyFSE::App::AppControl::StateLoop
             KillXbox();
             FocusLauncher();
         }
-        else if (!IsLauncherActive() && !Config::AggressiveMode)
+        else if (!IsLauncherActive() && (Config::AggressiveMode || IsHomeLaunch()))
         {
             log.Debug("OnXboxDetected: Launcher is not active => Kill It. Start Launcher with splash");
-            if (IsInFSEMode())
+            if (true || IsInFSEMode())
             {
                 ShowSplash();
                 KillXbox();
                 RestartLauncher();
                 WaitLauncher();
             }
-            else
-            {
-                log.Debug("OnXboxDetected: Launcher is not active, In Desktop mode");
-            }
-        }
-        else if (Config::AggressiveMode)
-        {
-            log.Debug("OnXboxDetected: Aggressive mode => Kill It. Start Launcher with splash");
-            ShowSplash();
-            KillXbox();
-            RestartLauncher();
-            WaitLauncher();
         }
         else
         {
@@ -169,7 +163,10 @@ namespace AnyFSE::App::AppControl::StateLoop
 
     void AppControlStateLoop::OnDeviceForm()
     {
-        m_deviceFormAge = GetTickCount64();
+        if (!IsOnGamebar())
+        {
+            m_deviceFormAge = GetTickCount64();
+        }
     }
 
     void AppControlStateLoop::OnQueryEndSession()
@@ -184,15 +181,17 @@ namespace AnyFSE::App::AppControl::StateLoop
 
     void AppControlStateLoop::OnOpenHome()
     {
+        m_homeAge = GetTickCount64();
+
         if (Config::AggressiveMode)
         {
             log.Debug("During AggressiveMode detection of Accessing to HomeApp is skipped");
         }
-        else if (!IsOnTaskSwitcher())
+        else if (IsXboxActive() && !IsOnTaskSwitcher() && !IsOnSettings() && !IsOnGamebar())
         {
-            log.Debug("OnOpenHome: Accessing to HomeApp registry key was Detected");
+            log.Debug("OnOpenHome: Accessing to HomeApp registry key was Detected While Xbox is active");
 
-            if (IsYoungXbox() )
+            if (IsYoungXbox())
             {
                 log.Debug("OnOpenHome: Home App detected on young XBox, do nothing");
                 return;
@@ -308,9 +307,78 @@ namespace AnyFSE::App::AppControl::StateLoop
         return (GetTickCount64() - m_xboxAge) < 2000;
     }
 
+    bool AppControlStateLoop::IsOnGamebar()
+    {
+        HWND gameBar = Process::GetWindow(L"Gamebar.exe", 0, L"Windows.UI.Core.CoreWindow", L"", WS_VISIBLE, 0 );
+        if (!gameBar)
+        {
+            return false;
+        }
+
+        BOOL dwmEnabled = FALSE;
+        DwmIsCompositionEnabled(&dwmEnabled);
+
+        DWORD dwmAttr = 0;
+        if (dwmEnabled
+            && DwmGetWindowAttribute(gameBar, DWMWA_CLOAKED, &dwmAttr, sizeof(dwmAttr)) >=0
+            && (dwmAttr & DWM_CLOAKED_SHELL) == 0)
+        {
+            log.Debug("Gamebar Is Active");
+            return true;
+        }
+
+        return false;
+    }
+
+    bool AppControlStateLoop::IsOnSettings()
+    {
+        HWND settingsWindow = Process::GetWindow(L"SystemSettings.exe", 0, L"Windows.UI.Core.CoreWindow", L"", WS_VISIBLE, 0 );
+        if (!settingsWindow)
+        {
+            return false;
+        }
+
+        HWND hForeground = GetForegroundWindow();
+
+        if ( hForeground == settingsWindow || hForeground == GetParent(settingsWindow))
+        {
+            log.Debug("Settings Is Active");
+            return true;
+        }
+
+        return false;
+    }
+
+    bool AppControlStateLoop::IsHomeLaunch()
+    {
+        LONGLONG age = GetTickCount64() - m_homeAge;
+        if (age < 2000 )
+        {
+            return true;
+        }
+        log.Debug("Home accessed %lldms ago", age);
+        return false;
+    }
+
+
+    bool AppControlStateLoop::IsXboxActive()
+    {
+        if (Process::FindFirstByName(L"XboxPCApp.exe"))
+        {
+            log.Debug("Xbox is Active");
+            return true;
+        }
+        return false;
+    }
+
     bool AppControlStateLoop::IsOnTaskSwitcher()
     {
-        return (GetTickCount64() - m_deviceFormAge) < 1000;
+        if ((GetTickCount64() - m_deviceFormAge) < 1000)
+        {
+            log.Debug("TaskSwitcher is Active");
+            return true;
+        }
+        return false;
     }
 
     bool AppControlStateLoop::IsExiting()

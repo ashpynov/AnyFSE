@@ -42,6 +42,7 @@ namespace AnyFSE::App::AppControl::StateLoop
 
             LONGLONG m_xboxAge;
             LONGLONG m_deviceFormAge;
+            LONGLONG m_homeAge;
 
             DWORD launcherPid;
             DWORD m_waitStartTime;
@@ -77,6 +78,10 @@ namespace AnyFSE::App::AppControl::StateLoop
             bool IsYoungXbox();
             bool IsOnTaskSwitcher();
             bool IsExiting();
+            bool IsOnGamebar();
+            bool IsHomeLaunch();
+            bool IsXboxActive();
+            bool IsOnSettings();
 
             void ShowSplash();
             void StartSplash();
