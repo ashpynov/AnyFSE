@@ -644,6 +644,12 @@ namespace AnyFSE::App::AppSettings::Settings
             Layout_LineHeightSmall, 0, Layout_LineSmallMargin));
 
         primarySettingsLine.AddGroupItem(&AddSettingsLine(m_customSettingPageList, top,
+            L"Window class name",
+            L"Class of application main window",
+            m_classEdit,
+            Layout_LineHeightSmall, 0, Layout_LineSmallMargin));
+
+        primarySettingsLine.AddGroupItem(&AddSettingsLine(m_customSettingPageList, top,
             L"Window title",
             L"Title of app window when it have been activated",
             m_titleEdit,
@@ -665,10 +671,35 @@ namespace AnyFSE::App::AppSettings::Settings
             Layout_LineHeightSmall, 0, Layout_LineSmallMargin));
 
         secondarySettingsLine.AddGroupItem(&AddSettingsLine(m_customSettingPageList, top,
+            L"Secondary window class name",
+            L"Class of app window when it alternative mode have been activated",
+            m_classAltEdit,
+            Layout_LineHeightSmall, 0, Layout_LineSmallMargin));
+
+        secondarySettingsLine.AddGroupItem(&AddSettingsLine(m_customSettingPageList, top,
             L"Secondary window title",
             L"Title of app window when it alternative mode have been activated",
             m_titleAltEdit,
-            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin));
+            Layout_LineHeightSmall, 0, Layout_LineSmallMargin));
+
+        AddSettingsLine(m_customSettingPageList, top,
+            L"",
+            L"",
+            m_customResetButton,
+            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin,
+            Layout_StartupAddWidth, Layout_StartupAddHeight
+        ).SetState(FluentDesign::SettingsLine::Caption);
+
+        m_customResetButton.SetText(L"Reset");
+        m_customResetButton.OnChanged = delegate(OnCustomReset);
+
+        m_additionalArgumentsEdit.OnChanged += delegate(UpdateCustomResetEnabled);
+        m_processNameEdit.OnChanged += delegate(UpdateCustomResetEnabled);
+        m_processNameAltEdit.OnChanged += delegate(UpdateCustomResetEnabled);
+        m_titleEdit.OnChanged += delegate(UpdateCustomResetEnabled);
+        m_titleAltEdit.OnChanged += delegate(UpdateCustomResetEnabled);
+        m_classEdit.OnChanged += delegate(UpdateCustomResetEnabled);
+        m_classAltEdit.OnChanged += delegate(UpdateCustomResetEnabled);
     }
 
     void SettingsDialog::AddSplashSettingsPage()
@@ -1082,7 +1113,7 @@ namespace AnyFSE::App::AppSettings::Settings
         m_isCustom = (customSettings || m_config.IsCustom) && (
             m_config.Type != LauncherType::Xbox
             && m_config.Type != LauncherType::ArmouryCrate
-            && m_config.Type == LauncherType::OneGameLauncher
+            && m_config.Type != LauncherType::OneGameLauncher
         ) || m_config.Type == LauncherType::Custom;
         m_isAggressive = Config::AggressiveMode && m_config.Type != LauncherType::Xbox;
 
@@ -1193,6 +1224,26 @@ namespace AnyFSE::App::AppSettings::Settings
         UpdateLayout();
     }
 
+    void SettingsDialog::OnCustomReset()
+    {
+        m_config = m_defaultConfig;
+        UpdateCustomSettings();
+    }
+
+    void SettingsDialog::UpdateCustomResetEnabled()
+    {
+        bool bEnable =
+               Unicode::to_lower(m_additionalArgumentsEdit.GetText()) != Unicode::to_lower(m_defaultConfig.StartArg)
+            || Unicode::to_lower(m_processNameEdit.GetText()) != Unicode::to_lower(m_defaultConfig.ProcessName)
+            || Unicode::to_lower(m_processNameAltEdit.GetText()) != Unicode::to_lower(m_defaultConfig.ProcessNameAlt)
+            || Unicode::to_lower(m_titleEdit.GetText()) != Unicode::to_lower(m_defaultConfig.WindowTitle)
+            || Unicode::to_lower(m_titleAltEdit.GetText()) != Unicode::to_lower(m_defaultConfig.WindowTitleAlt)
+            || Unicode::to_lower(m_classEdit.GetText()) != Unicode::to_lower(m_defaultConfig.ClassName)
+            || Unicode::to_lower(m_classAltEdit.GetText()) != Unicode::to_lower(m_defaultConfig.ClassNameAlt)
+        ;
+        m_customResetButton.Enable(bEnable);
+    }
+
     void SettingsDialog::OpenSettingsPage()
     {
         m_pageName = L"";
@@ -1231,10 +1282,9 @@ namespace AnyFSE::App::AppSettings::Settings
 
     void SettingsDialog::UpdateControls()
     {
-        LauncherConfig defaults;
-        Config::GetLauncherDefaults(m_currentLauncherPath, defaults);
+        Config::GetLauncherDefaults(m_currentLauncherPath, m_defaultConfig);
 
-        if (defaults.Type == LauncherType::None)
+        if (m_defaultConfig.Type == LauncherType::None)
         {
             m_pFseOnStartupLine->Enable(false);
             m_fseOnStartupToggle.SetCheck(false);
@@ -1245,12 +1295,12 @@ namespace AnyFSE::App::AppSettings::Settings
             m_fseOnStartupToggle.SetCheck(Config::FseOnStartup);
         }
 
-        bool alwaysSettings = defaults.Type==LauncherType::Custom;
+        bool alwaysSettings = m_defaultConfig.Type==LauncherType::Custom;
         bool noSettings =
-                defaults.Type == LauncherType::Xbox
-            ||  defaults.Type == LauncherType::ArmouryCrate
-            || defaults.Type == LauncherType::OneGameLauncher
-            || defaults.Type == LauncherType::None;
+                m_defaultConfig.Type == LauncherType::Xbox
+            ||  m_defaultConfig.Type == LauncherType::ArmouryCrate
+            || m_defaultConfig.Type == LauncherType::OneGameLauncher
+            || m_defaultConfig.Type == LauncherType::None;
 
         bool haveSettings = m_isCustom && !noSettings || alwaysSettings;
         bool enableCheck = !alwaysSettings && !noSettings;
@@ -1278,7 +1328,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         if (!haveSettings)
         {
-            m_config = defaults;
+            m_config = m_defaultConfig;
             UpdateCustomSettings();
         }
 
@@ -1339,6 +1389,10 @@ namespace AnyFSE::App::AppSettings::Settings
         m_processNameAltEdit.SetText(m_config.ProcessNameAlt);
         m_titleEdit.SetText(m_config.WindowTitle);
         m_titleAltEdit.SetText(m_config.WindowTitleAlt);
+        m_classEdit.SetText(m_config.ClassName);
+        m_classAltEdit.SetText(m_config.ClassNameAlt);
+
+        UpdateCustomResetEnabled();
     }
     void SettingsDialog::SaveSettings()
     {
@@ -1379,6 +1433,8 @@ namespace AnyFSE::App::AppSettings::Settings
         Config::Launcher.WindowTitle = m_titleEdit.GetText();
         Config::Launcher.ProcessNameAlt = m_processNameAltEdit.GetText();
         Config::Launcher.WindowTitleAlt = m_titleAltEdit.GetText();
+        Config::Launcher.ClassName = m_classEdit.GetText();
+        Config::Launcher.ClassNameAlt = m_classAltEdit.GetText();
         Config::Launcher.IconFile = m_config.IconFile;
 
 

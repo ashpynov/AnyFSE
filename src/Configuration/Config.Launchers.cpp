@@ -109,6 +109,20 @@ namespace AnyFSE::Configuration
             }
         },
         {
+            LauncherType::RetroBat, {
+                LauncherType::RetroBat,
+                L"RetroBat",
+                L"RetroBat.exe",
+                L"",
+                0, 0,
+                L"emulationstation.exe",
+                L"SDL_app",
+                L"",
+                0, 0,
+                L"retrobat.exe"
+            }
+        },
+        {
             LauncherType::ArmouryCrate, {
                 LauncherType::ArmouryCrate,
                 L"Armoury Crate",

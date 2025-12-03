@@ -30,6 +30,7 @@
 
 namespace AnyFSE::Tools::Process
 {
+    DWORD FindFirstByExe(const std::wstring &processPath);
     DWORD FindFirstByName(const std::wstring& processName);
     DWORD StartProtocol(const std::wstring &command);
     DWORD StartProcess(const std::wstring &command, const std::wstring &arguments);

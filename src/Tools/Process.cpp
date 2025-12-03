@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <set>
 #include <sstream>
+#include <filesystem>
 
 #include "Logging/LogManager.hpp"
 #include "Tools/Unicode.hpp"
@@ -40,6 +41,14 @@
 namespace AnyFSE::Tools::Process
 {
     static Logger log = LogManager::GetLogger("Process");
+
+    DWORD FindFirstByExe(const std::wstring &processPath)
+    {
+        std::filesystem::path path(processPath);
+
+        return _wcsicmp(L".exe", path.extension().wstring().c_str())
+            ? 0 : FindFirstByName(path.filename().wstring());
+    }
 
     DWORD FindFirstByName(const std::wstring &processName)
     {

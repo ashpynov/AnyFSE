@@ -281,7 +281,8 @@ namespace AnyFSE::App::AppControl::StateLoop
     bool AppControlStateLoop::IsLauncherProcess()
     {
         return 0 != Process::FindFirstByName(Config::Launcher.ProcessName)
-            || 0 != Process::FindFirstByName(Config::Launcher.ProcessNameAlt);
+            || 0 != Process::FindFirstByName(Config::Launcher.ProcessNameAlt)
+            || 0 != Process::FindFirstByExe(Config::Launcher.StartCommand);
     }
 
     bool AppControlStateLoop::IsSplashActive()

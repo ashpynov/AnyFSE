@@ -44,6 +44,7 @@ namespace AnyFSE::Configuration
         Steam,
         BigBox,
         OneGameLauncher,
+        RetroBat,
         Xbox
     };
 
@@ -100,6 +101,7 @@ namespace AnyFSE::Configuration
             static void FindOneGameLauncher(std::list<std::wstring>& found);
             static void FindXbox(std::list<std::wstring>& found);
             static void FindArmoryCrate(std::list<std::wstring>& found);
+            static void FindRetroBat(std::list<std::wstring>& found);
 
         public:
             // Unsafe

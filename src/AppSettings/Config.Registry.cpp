@@ -31,8 +31,8 @@ namespace AnyFSE::Configuration
 {
     void Config::GetStartupConfigured()
     {
-        Launcher.StartCommand = GetXboxPath(Launcher.StartCommand);
         FseOnStartup = IsXboxConfigured() && IsFseOnStartupConfigured();
+        Launcher.StartCommand = FseOnStartup ? GetXboxPath(Launcher.StartCommand) : L"";
     }
 
     void Config::UpdatePortableLauncher(LauncherConfig & out)
@@ -108,7 +108,7 @@ namespace AnyFSE::Configuration
         }
     }
 
-    bool Config::FindLaunchers(std::list<std::wstring>& found)
+    bool Config::FindLaunchers(std::list<std::wstring> &found)
     {
         size_t existed = found.size();
         found.push_back(L"");
@@ -124,6 +124,7 @@ namespace AnyFSE::Configuration
         FindSteam(found);
         FindBigBox(found);
         FindOneGameLauncher(found);
+        FindRetroBat(found);
         FindArmoryCrate(found);
         FindXbox(found);
         return found.size() > existed;
@@ -174,6 +175,15 @@ namespace AnyFSE::Configuration
         if (!installPath.empty())
         {
             found.push_back(L"ogl://");
+        }
+    }
+
+    void Config::FindRetroBat(std::list<std::wstring> &found)
+    {
+        std::wstring installPath = Registry::ReadString(L"HKCU\\Software\\RetroBat", L"LatestKnownInstallPath");
+        if (!installPath.empty())
+        {
+            found.push_back(installPath + L"\\RetroBat.exe");
         }
     }
 

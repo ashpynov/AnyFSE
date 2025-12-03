@@ -111,8 +111,10 @@ namespace AnyFSE::App::AppSettings::Settings
             , m_additionalArgumentsEdit(m_theme)
             , m_processNameEdit(m_theme)
             , m_titleEdit(m_theme)
+            , m_classEdit(m_theme)
             , m_processNameAltEdit(m_theme)
             , m_titleAltEdit(m_theme)
+            , m_classAltEdit(m_theme)
             , m_browseButton(m_theme)
             , m_okButton(m_theme)
             , m_closeButton(m_theme)
@@ -127,6 +129,7 @@ namespace AnyFSE::App::AppSettings::Settings
             , m_splashCustomVideoEdit(m_theme)
             , m_troubleAggressiveToggle(m_theme)
             , m_startupAddButton(m_theme)
+            , m_customResetButton(m_theme)
         {}
 
     private:
@@ -149,6 +152,8 @@ namespace AnyFSE::App::AppSettings::Settings
         void OnShowLogoChanged();
         void OnShowVideoChanged();
         void OnCustomChanged();
+        void OnCustomReset();
+        void UpdateCustomResetEnabled();
         void OpenSettingsPage();
         void OpenCustomSettingsPage();
         void OpenSplashSettingsPage();
@@ -170,6 +175,7 @@ namespace AnyFSE::App::AppSettings::Settings
         bool m_buttonPressed = false;
 
         LauncherConfig m_config;
+        LauncherConfig m_defaultConfig;
         std::wstring m_currentLauncherPath;
         std::list<std::wstring> m_launchersList;
 
@@ -187,6 +193,7 @@ namespace AnyFSE::App::AppSettings::Settings
         Toggle m_troubleAggressiveToggle;
         Toggle m_fseOnStartupToggle;
         Toggle m_customSettingsToggle;
+        Button m_customResetButton;
 
         Toggle m_splashShowAnimationToggle;
         Toggle m_splashShowLogoToggle;
@@ -201,8 +208,10 @@ namespace AnyFSE::App::AppSettings::Settings
         TextBox m_additionalArgumentsEdit;
         TextBox m_processNameEdit;
         TextBox m_titleEdit;
+        TextBox m_classEdit;
         TextBox m_processNameAltEdit;
         TextBox m_titleAltEdit;
+        TextBox m_classAltEdit;
         Button m_browseButton;
         Button m_okButton;
         Button m_closeButton;
