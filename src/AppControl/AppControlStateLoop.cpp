@@ -163,10 +163,7 @@ namespace AnyFSE::App::AppControl::StateLoop
 
     void AppControlStateLoop::OnDeviceForm()
     {
-        if (!IsOnGamebar())
-        {
-            m_deviceFormAge = GetTickCount64();
-        }
+        m_deviceFormAge = GetTickCount64();
     }
 
     void AppControlStateLoop::OnQueryEndSession()

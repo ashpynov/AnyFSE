@@ -286,7 +286,9 @@ namespace AnyFSE::App::AppSettings::Settings
                 }
 
                 {
-                    r.bottom = paint.ClientRect().bottom - m_theme.DpiScale(Layout_MarginBottom);
+                    r = paint.ClientRect();
+                    r.bottom -= m_theme.DpiScale(Layout_MarginBottom);
+                    r.left += m_theme.DpiScale(Layout_MarginLeft);
                     r.top = r.bottom - m_theme.DpiScale(Layout_ButtonHeight);
                     SelectFont(paint.MemDC(), m_theme.GetFont_TextSecondary());
                     SetTextColor(paint.MemDC(), m_theme.GetColorRef(FluentDesign::Theme::Colors::TextSecondary));

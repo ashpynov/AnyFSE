@@ -150,7 +150,9 @@ namespace AnyFSE::Configuration
     bool Config::LoadLauncherSettings(const json& config, const std::wstring &path, LauncherConfig& out)
     {
         GetLauncherDefaults(path, out);
-        if (out.Type == Custom || config.value(jp("/Launcher/CustomSettings"), out.IsCustom))
+
+        if ((out.Type == Custom || config.value(jp("/Launcher/CustomSettings"), out.IsCustom))
+            && path == config.value(jp("/Launcher/StartCommand"), out.StartCommand))
         {
             out.StartCommand    = config.value(jp("/Launcher/StartCommand"),   out.StartCommand);
             out.StartArg        = config.value(jp("/Launcher/StartArg"),       out.StartArg);
