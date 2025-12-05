@@ -26,7 +26,9 @@
 #include "Logging/LogManager.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/GdiPlus.hpp"
-#include "Tools/Tools.hpp"
+#include "Tools/List.hpp"
+#include "Tools/Window.hpp"
+#include "Tools/Icon.hpp"
 #include <commctrl.h>
 #include <uxtheme.h>
 #include <dwmapi.h>
@@ -361,7 +363,7 @@ namespace FluentDesign
                 TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT), TME_LEAVE, m_hWnd, 0};
                 TrackMouseEvent(&tme);
             }
-            else if (Tools::index_of(m_childControlsList, hWndUnderCursor) != Tools::npos
+            else if (List::index_of(m_childControlsList, hWndUnderCursor) != List::npos
                 || hWndUnderCursor == m_chevronButton.GetHwnd())
             {
                 m_hovered = true;
@@ -383,7 +385,7 @@ namespace FluentDesign
                 TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT), TME_LEAVE, m_hWnd, 0};
                 TrackMouseEvent(&tme);
             }
-            else if (Tools::index_of(m_childControlsList, hWndUnderCursor) == Tools::npos
+            else if (List::index_of(m_childControlsList, hWndUnderCursor) == List::npos
                  && hWndUnderCursor != m_chevronButton.GetHwnd())
             {
                 m_hovered = false;
@@ -499,7 +501,7 @@ namespace FluentDesign
         PositionChildControl();
 
         RECT rect;
-        Tools::GetChildRect(m_hWnd, &rect);
+        Window::GetChildRect(m_hWnd, &rect);
         UINT top = rect.top + m_theme.DpiScale(GetDesignHeight() + GetDesignPadding());
         int width = rect.right - rect.left;
 
@@ -530,7 +532,7 @@ namespace FluentDesign
 
     void SettingsLine::SetIcon(const std::wstring &path)
     {
-        m_hIcon = Tools::LoadIcon(path);
+        m_hIcon = Icon::LoadIcon(path);
         UpdateLayout();
     }
 

@@ -19,12 +19,15 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
-    <ClCompile Include="src\App\*.cpp" />
+    <ClCompile Include="src\App\AppStateLoop.cpp" />
+    <ClCompile Include="src\App\IPCChannel.cpp" />
     <ClCompile Include="src\AppService\*.cpp" />
     <ClCompile Include="src\Configuration\*.cpp" />
     <ClCompile Include="src\Logging\*.cpp" />
-    <ClCompile Include="src\Tools\*.cpp" Exclude="src\Tools\Tools.cpp"/>
-    <ClCompile Remove="src\App\Application.cpp" />
+    <ClCompile Include="src\Tools\Process.cpp" />
+    <ClCompile Include="src\Tools\Event.cpp" />
+    <ClCompile Include="src\Tools\Unicode.cpp" />
+    <ClCompile Include="src\ToolsEx\ProcessEx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\AppService\AppService.def" />

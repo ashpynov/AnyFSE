@@ -118,10 +118,10 @@
     <ClCompile Include="src\Tools\Event.cpp" />
     <ClCompile Include="src\Tools\Registry.cpp" />
     <ClCompile Include="src\Tools\Unicode.cpp" />
-    <ClCompile Include="src\Tools\Tools.cpp" />
+    <ClCompile Include="src\Tools\Window.cpp" />
     <ClCompile Include="src\Tools\Process.cpp" />
-    <ClCompile Include="src\Tools\ProcessEx.cpp" />
-    <ClCompile Include="src\Tools\TaskManager.cpp" />
+    <ClCompile Include="src\ToolsEx\ProcessEx.cpp" />
+    <ClCompile Include="src\ToolsEx\TaskManager.cpp" />
     <ClCompile Include="src\Tools\Admin.cpp" />
     <ClCompile Include="src\Logging\*.cpp" />
     <ClCompile Include="src\AppControl\GamingExperience.cpp" />

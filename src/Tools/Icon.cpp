@@ -27,16 +27,16 @@
 #include <string>
 #include <vector>
 #include <locale>
-#include "Logging/LogManager.hpp"
-#include "Tools.hpp"
 #include <algorithm>
 #include <shlobj_core.h>
+#include "Logging/LogManager.hpp"
+#include "Icon.hpp"
 #include "Packages.hpp"
 
 
-namespace AnyFSE::Tools
+namespace AnyFSE::Tools::Icon
 {
-    static Logger log = LogManager::GetLogger("Tools");
+    static Logger log = LogManager::GetLogger("Tools/Icon");
 
     HICON LoadIconFromPNG(const std::wstring &pngPath, int size)
     {
@@ -130,10 +130,9 @@ namespace AnyFSE::Tools
 
         return hIcon;
     }
-
     Gdiplus::Bitmap * LoadBitmapFromIcon(const std::wstring &icon, int iconSize)
     {
-        HICON hIcon = Tools::LoadIcon(icon, iconSize);
+        HICON hIcon = Icon::LoadIcon(icon, iconSize);
         if (!hIcon)
         {
             return nullptr;
@@ -169,45 +168,6 @@ namespace AnyFSE::Tools
 
         return result;
     }
-
-    BOOL GetChildRect(HWND hwnd, RECT * rect)
-    {
-        GetWindowRect(hwnd, rect);
-        MapWindowPoints(NULL, GetParent(hwnd), (LPPOINT)rect, 2);
-        return TRUE;
-    }
-
-    BOOL MoveWindow(HWND hwnd, int dx, int dy, BOOL bRepaint)
-    {
-        RECT rect;
-        GetChildRect(hwnd, &rect);
-        OffsetRect(&rect, dx, dy);
-        ::MoveWindow(hwnd, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, bRepaint);
-        return TRUE;
-    }
-
-    BOOL MoveWindow(HWND hwnd, RECT* rect, BOOL bRepaint)
-    {
-        ::MoveWindow(hwnd, rect->left, rect->top, rect->right - rect->left, rect->bottom - rect->top, bRepaint);
-        return TRUE;
-    }
-
-    BOOL MouseInClientRect(HWND hWnd, RECT *rect)
-    {
-        RECT hitRect;
-        if (rect == NULL)
-        {
-            GetClientRect(hWnd, &hitRect);
-        }
-        else
-        {
-            hitRect = *rect;
-        }
-
-        POINT pt;
-        GetCursorPos(&pt);
-        MapWindowPoints(NULL, hWnd, &pt, 1);
-
-        return PtInRect(&hitRect, pt);
-    }
 }
+
+namespace Icon = AnyFSE::Tools::Icon;

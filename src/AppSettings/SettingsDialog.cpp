@@ -27,15 +27,15 @@
 #include <commdlg.h>
 #include <uxtheme.h>
 #include <filesystem>
-#include "Tools/Tools.hpp"
-#include "Tools/Unicode.hpp"
 #include "Logging/LogManager.hpp"
 #include "SettingsDialog.hpp"
 #include "Configuration/Config.hpp"
 #include "FluentDesign/Theme.hpp"
 #include "FluentDesign/Popup.hpp"
+#include "Tools/List.hpp"
+#include "Tools/Unicode.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
-#include "Tools/TaskManager.hpp"
+#include "Tools/Window.hpp"
 #include "Tools/Registry.hpp"
 #include "Tools/Process.hpp"
 #include "StartupAppEditor.hpp"
@@ -330,7 +330,7 @@ namespace AnyFSE::App::AppSettings::Settings
             break;
 
         case WM_MOUSEMOVE:
-            if (!m_pageName.empty() && !m_buttonMouseOver && Tools::MouseInClientRect(m_hDialog, &m_breadCrumbRect))
+            if (!m_pageName.empty() && !m_buttonMouseOver && Window::MouseInClientRect(m_hDialog, &m_breadCrumbRect))
             {
                 m_buttonMouseOver = true;
                 InvalidateRect(m_hDialog, &m_breadCrumbRect, TRUE);
@@ -349,7 +349,7 @@ namespace AnyFSE::App::AppSettings::Settings
             break;
 
         case WM_LBUTTONDOWN:
-            if (!m_pageName.empty() && !m_buttonPressed && Tools::MouseInClientRect(m_hDialog, &m_breadCrumbRect))
+            if (!m_pageName.empty() && !m_buttonPressed && Window::MouseInClientRect(m_hDialog, &m_breadCrumbRect))
             {
                 m_buttonPressed = true;
                 InvalidateRect(m_hDialog, &m_breadCrumbRect, TRUE);
@@ -358,7 +358,7 @@ namespace AnyFSE::App::AppSettings::Settings
             break;
 
         case WM_LBUTTONUP:
-            if (m_buttonPressed && Tools::MouseInClientRect(m_hDialog, &m_breadCrumbRect))
+            if (m_buttonPressed && Window::MouseInClientRect(m_hDialog, &m_breadCrumbRect))
             {
                 OpenSettingsPage();
             }
@@ -446,7 +446,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         for (auto& line: *pPageList)
         {
-            Tools::MoveWindow(line.GetHWnd(), width * invert, 0, FALSE);
+            Window::MoveWindow(line.GetHWnd(), width * invert, 0, FALSE);
             if (!line.IsNested())
             {
                 ShowWindow(line.GetHWnd(), SW_SHOW);
@@ -462,12 +462,12 @@ namespace AnyFSE::App::AppSettings::Settings
             {
                 for (auto &line : *m_pActivePageList)
                 {
-                    Tools::MoveWindow(line.GetHWnd(), -delta * invert, 0, TRUE);
+                    Window::MoveWindow(line.GetHWnd(), -delta * invert, 0, TRUE);
                 }
             }
             for (auto &line : *pPageList)
             {
-                Tools::MoveWindow(line.GetHWnd(), -delta * invert, 0, TRUE);
+                Window::MoveWindow(line.GetHWnd(), -delta * invert, 0, TRUE);
             }
             RedrawWindow(m_hScrollView, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
             Sleep(5);
@@ -476,7 +476,7 @@ namespace AnyFSE::App::AppSettings::Settings
         for (auto &line : *m_pActivePageList)
         {
             ShowWindow(line.GetHWnd(), SW_HIDE);
-            Tools::MoveWindow(line.GetHWnd(), width * invert, 0, FALSE);
+            Window::MoveWindow(line.GetHWnd(), width * invert, 0, FALSE);
         }
         m_pActivePageList = pPageList;
         UpdateLayout();
@@ -536,7 +536,7 @@ namespace AnyFSE::App::AppSettings::Settings
                 - m_theme.DpiScale(Layout_ButtonPadding)
             };
 
-        Tools::MoveWindow(m_scrollView.GetHwnd(), &scrollRect, FALSE);
+        Window::MoveWindow(m_scrollView.GetHwnd(), &scrollRect, FALSE);
 
 
         GetClientRect(m_hDialog, &rect);
@@ -1367,9 +1367,9 @@ namespace AnyFSE::App::AppSettings::Settings
             Config::UpdatePortableLauncher(info);
             m_launcherCombo.AddItem(info.Name, info.IconFile, info.StartCommand);
         }
-        size_t index = Tools::index_of(m_launchersList, m_currentLauncherPath);
+        size_t index = List::index_of(m_launchersList, m_currentLauncherPath);
 
-        if (index == Tools::npos)
+        if (index == List::npos)
         {
             LauncherConfig info;
             Config::GetLauncherDefaults(m_currentLauncherPath, info);
@@ -1401,28 +1401,15 @@ namespace AnyFSE::App::AppSettings::Settings
         const std::wstring gamingHomeApp = L"GamingHomeApp";
         const std::wstring xboxApp = L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";
 
-
-        bool removeAnyFSE = false;
-
         if (m_config.Type == LauncherType::None)
         {
             Registry::DeleteValue(gamingConfiguration, gamingHomeApp);
             Registry::WriteBool(gamingConfiguration, startupToGamingHome, false);
-            removeAnyFSE = true;
         }
         else
         {
             Registry::WriteBool(gamingConfiguration, startupToGamingHome, m_fseOnStartupToggle.GetCheck());
             Registry::WriteString(gamingConfiguration, gamingHomeApp, xboxApp);
-
-            if (m_config.Type == LauncherType::Xbox)
-            {
-                removeAnyFSE = true;
-            }
-            else
-            {
-                // save FSE
-            }
         }
 
         Config::Launcher.StartCommand = m_config.StartCommand;
@@ -1468,15 +1455,5 @@ namespace AnyFSE::App::AppSettings::Settings
         }
 
         Config::Save();
-
-        if (removeAnyFSE)
-        {
-            TaskManager::RemoveTask();
-        }
-        else
-        {
-            //create app start
-            TaskManager::CreateTask();
-        }
     }
 }

@@ -1,6 +1,6 @@
 #include "Dialog.hpp"
-#include "Tools/Tools.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
+#include "Tools/Window.hpp"
 
 namespace FluentDesign
 {
@@ -84,7 +84,7 @@ namespace FluentDesign
             GetClientRect(child, &clientRect);
 
             RECT childRect = clientRect;
-            GetChildRect(child, &childRect);
+            Window::GetChildRect(child, &childRect);
 
             float panelHeight = dialogRect.bottom - m_theme.DpiScaleF(GetFooterDesignHeight());
 

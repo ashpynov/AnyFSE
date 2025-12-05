@@ -26,7 +26,7 @@
 #include <string>
 #include <functional>
 #include <Uxtheme.h>
-#include "Tools/Tools.hpp"
+#include "Tools/Icon.hpp"
 #include "Popup.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/GdiPlus.hpp"

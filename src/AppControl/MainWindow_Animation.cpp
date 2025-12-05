@@ -28,7 +28,7 @@
 #include "MainWindow.hpp"
 #include "Logging/LogManager.hpp"
 #include "Configuration/Config.hpp"
-#include "Tools/Tools.hpp"
+#include "Tools/Icon.hpp"
 #include "Tools/GdiPlus.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 
@@ -52,7 +52,7 @@ namespace AnyFSE::App::AppControl::Window
             return FALSE;
         }
 
-        if (HICON hIcon = Tools::LoadIcon(Config::Launcher.IconFile))
+        if (HICON hIcon = Icon::LoadIcon(Config::Launcher.IconFile))
         {
             m_pLogoImage = new Gdiplus::Bitmap(hIcon);
             DestroyIcon(hIcon);

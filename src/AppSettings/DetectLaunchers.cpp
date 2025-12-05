@@ -22,13 +22,17 @@
 //
 
 #include <filesystem>
+#include <windows.h>
 #include "Configuration/Config.hpp"
 #include "Tools/Registry.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/Packages.hpp"
+#include "Configuration/Config.hpp"
 
 namespace AnyFSE::Configuration
 {
+    namespace fs = std::filesystem;
+
     void Config::GetStartupConfigured()
     {
         FseOnStartup = IsXboxConfigured() && IsFseOnStartupConfigured();
@@ -143,7 +147,7 @@ namespace AnyFSE::Configuration
 
     void Config::FindPlaynite(std::list<std::wstring>& found)
     {
-        std::wstring installPath = Registry::GetInstallPath(L"Playnite");
+        std::wstring installPath = GetInstallPath(L"Playnite");
         if (!installPath.empty())
         {
             found.push_back(installPath + L"\\Playnite.FullscreenApp.exe");
@@ -153,7 +157,7 @@ namespace AnyFSE::Configuration
 
     void Config::FindSteam(std::list<std::wstring>& found)
     {
-        std::wstring installPath = Registry::GetInstallPath(L"Steam");
+        std::wstring installPath = GetInstallPath(L"Steam");
         if (!installPath.empty())
         {
             found.push_back(installPath + L"\\Steam.exe");
@@ -162,7 +166,7 @@ namespace AnyFSE::Configuration
 
     void Config::FindBigBox(std::list<std::wstring> &found)
     {
-        std::wstring installPath = Registry::SearchAppUserModel(L"LaunchBox");
+        std::wstring installPath = SearchAppUserModel(L"LaunchBox");
         if (!installPath.empty())
         {
             found.push_back(installPath + L"\\BigBox.exe");
@@ -197,4 +201,138 @@ namespace AnyFSE::Configuration
             found.push_back(installPath + L"\\XboxPcApp.exe");
         }
     }
+
+    std::wstring Config::GetPathFromCommand(const std::wstring &uninstallCommand)
+    {
+        size_t pos = uninstallCommand.find(L'\"');
+        if (pos == std::string::npos)
+        {
+            return fs::path(uninstallCommand).wstring();
+        }
+
+        size_t last = uninstallCommand.find(L'\"', pos + 1);
+        std::wstring name = last != std::string::npos ? uninstallCommand.substr(pos + 1, last - pos - 1) : uninstallCommand.substr(pos+1);
+        return name;
+    }
+
+    std::wstring Config::SearchAppUserModel(const std::wstring &displayName)
+    {
+        std::wstring path = L"HKCU\\Software\\Classes\\AppUserModelId";
+        std::wstring exactDisplayName = Unicode::to_lower(displayName);
+
+        std::wstring actualPath;
+        HKEY root = Registry::GetRootKey(path, actualPath);
+
+        HKEY hKey;
+        if (RegOpenKeyExW(root, actualPath.c_str(), 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+        {
+            return L"";
+        }
+
+        DWORD subkeyIndex = 0;
+        WCHAR subkeyName[255];
+        DWORD subkeyNameSize = 255;
+
+        while (RegEnumKeyExW(hKey, subkeyIndex, subkeyName, &subkeyNameSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+        {
+            HKEY hSubKey;
+            std::wstring subkeyPath = actualPath + L"\\" + subkeyName;
+
+            if (RegOpenKeyExW(root, subkeyPath.c_str(), 0, KEY_READ, &hSubKey) == ERROR_SUCCESS)
+            {
+                WCHAR displayName[1024];
+                DWORD dataSize = sizeof(displayName);
+                DWORD type;
+
+                if (RegQueryValueExW(hSubKey, L"DisplayName", NULL, &type,
+                                    (LPBYTE)displayName, &dataSize) == ERROR_SUCCESS
+                    && type == REG_SZ
+                    && exactDisplayName == Unicode::to_lower(displayName)
+                    && fs::exists(subkeyName)
+                )
+                {
+                    RegCloseKey(hSubKey);
+                    RegCloseKey(hKey);
+                    return fs::path(GetPathFromCommand(subkeyName)).parent_path().wstring();
+                }
+            }
+            RegCloseKey(hSubKey);
+            subkeyIndex++;
+            subkeyNameSize = 255;
+        }
+        RegCloseKey(hKey);
+        return L"";
+    }
+
+    std::wstring Config::GetInstallPath(const std::wstring &displayName)
+    {
+        std::vector<std::wstring> registryPaths = {
+            L"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+            L"HKCU\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+            L"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+            L"HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall"};
+
+        std::wstring exactDisplayName = Unicode::to_lower(displayName);
+
+        for (const auto &path : registryPaths)
+        {
+            std::wstring actualPath;
+            HKEY root = Registry::GetRootKey(path, actualPath);
+
+            HKEY hKey;
+            if (RegOpenKeyExW(root, actualPath.c_str(), 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+            {
+                continue;
+            }
+
+            DWORD subkeyIndex = 0;
+            WCHAR subkeyName[255];
+            DWORD subkeyNameSize = 255;
+
+            while (RegEnumKeyExW(hKey, subkeyIndex, subkeyName, &subkeyNameSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+            {
+                HKEY hSubKey;
+                std::wstring subkeyPath = actualPath + L"\\" + subkeyName;
+
+                if (RegOpenKeyExW(root, subkeyPath.c_str(), 0, KEY_READ, &hSubKey) == ERROR_SUCCESS)
+                {
+                    WCHAR displayName[1024];
+                    WCHAR uninstallString[1024];
+                    DWORD dataSize = sizeof(displayName);
+                    DWORD type;
+
+                    if (RegQueryValueExW(hSubKey, L"DisplayName", NULL, &type,
+                                        (LPBYTE)displayName, &dataSize) == ERROR_SUCCESS
+                        && type == REG_SZ
+                        && exactDisplayName == Unicode::to_lower(displayName))
+                    {
+
+                        dataSize = sizeof(uninstallString);
+                        if (RegQueryValueExW(hSubKey, L"UninstallString", NULL, &type,
+                                            (LPBYTE)uninstallString, &dataSize) == ERROR_SUCCESS
+                            && type == REG_SZ
+                        )
+                        {
+                            std::wstring binary = GetPathFromCommand(uninstallString);
+                            if ( !fs::exists(binary))
+                            {
+                                continue;
+                            }
+                            RegCloseKey(hSubKey);
+                            RegCloseKey(hKey);
+                            return fs::path(binary).parent_path().wstring();
+                        }
+                    }
+                    RegCloseKey(hSubKey);
+                }
+
+                subkeyIndex++;
+                subkeyNameSize = 255;
+            }
+            RegCloseKey(hKey);
+        }
+
+        return L"";
+    }
+
 }

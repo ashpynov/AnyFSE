@@ -30,7 +30,7 @@
 #include "Static.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/GdiPlus.hpp"
-#include "Tools/Tools.hpp"
+#include "Tools/Icon.hpp"
 
 #pragma comment(lib, "Gdiplus.lib")
 
@@ -119,7 +119,7 @@ namespace FluentDesign
             m_pImage = nullptr;
         }
 
-        m_pImage = Tools::LoadBitmapFromIcon(iconPath, iconSize);
+        m_pImage = Icon::LoadBitmapFromIcon(iconPath, iconSize);
         Invalidate();
     }
 

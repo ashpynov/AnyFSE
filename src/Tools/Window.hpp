@@ -23,15 +23,16 @@
 
 
 #pragma once
-
 #include <string>
-#include <set>
-#include <windows.h>
+#include <Windows.h>
+#include "GdiPlus.hpp"
 
-namespace AnyFSE::Tools::ProcessEx
+namespace AnyFSE::Tools::Window
 {
-    HRESULT Kill(const std::wstring& processName);
-    HRESULT Kill(DWORD processId);
+    BOOL GetChildRect(HWND hwnd, RECT *rect);
+    BOOL MoveWindow(HWND hwnd, RECT * rect, BOOL bRepaint);
+    BOOL MoveWindow(HWND hwnd, int dx, int dy, BOOL bRepaint);
+    BOOL MouseInClientRect(HWND, RECT *rect);
 }
 
-namespace ProcessEx = AnyFSE::Tools::ProcessEx;
+namespace Window = AnyFSE::Tools::Window;

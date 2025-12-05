@@ -29,7 +29,7 @@
 #include "resource.h"
 #include "Logging/LogManager.hpp"
 #include "Configuration/Config.hpp"
-#include "Tools/Tools.hpp"
+#include "Tools/Icon.hpp"
 #include "Tools/Unicode.hpp"
 #include "AppControl/AppControl.hpp"
 #include "AppControl/MainWindow.hpp"
@@ -74,7 +74,7 @@ namespace AnyFSE::App::AppControl::Window
         WC.lpszClassName = className;
         WC.hInstance = hInstance;
         WC.lpfnWndProc = MainWndProc;
-        WC.hIcon = Tools::LoadIcon(Config::Launcher.IconFile, 16);
+        WC.hIcon = Icon::LoadIcon(Config::Launcher.IconFile, 16);
         //stWC.hbrBackground = NULL_BRUSH;
         WC.style = CS_HREDRAW | CS_VREDRAW;
 

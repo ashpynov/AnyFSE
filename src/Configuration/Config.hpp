@@ -100,8 +100,12 @@ namespace AnyFSE::Configuration
             static void FindBigBox(std::list<std::wstring>& found);
             static void FindOneGameLauncher(std::list<std::wstring>& found);
             static void FindXbox(std::list<std::wstring>& found);
-            static void FindArmoryCrate(std::list<std::wstring>& found);
+            static void FindArmoryCrate(std::list<std::wstring> &found);
             static void FindRetroBat(std::list<std::wstring>& found);
+
+            static std::wstring GetPathFromCommand(const std::wstring &uninstallCommand);
+            static std::wstring SearchAppUserModel(const std::wstring &displayName);
+            static std::wstring GetInstallPath(const std::wstring &displayName);
 
         public:
             // Unsafe

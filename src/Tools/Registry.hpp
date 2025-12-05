@@ -34,9 +34,6 @@ namespace AnyFSE::Tools
         static DWORD ReadDWORD(const std::wstring &subKey, const std::wstring &valueName, DWORD defaultValue = 0);
         static bool ReadBool(const std::wstring &subKey, const std::wstring &valueName, bool defaultValue = false);
 
-        static std::wstring SearchAppUserModel(const std::wstring &displayName);
-        static std::wstring GetInstallPath(const std::wstring &displayName);
-
         static bool WriteString(const std::wstring &subKey, const std::wstring &valueName, const std::wstring &value);
         static bool WriteDWORD(const std::wstring &subKey, const std::wstring &valueName, DWORD value);
         static bool WriteBool(const std::wstring &subKey, const std::wstring &valueName, bool value);
@@ -46,7 +43,6 @@ namespace AnyFSE::Tools
         static bool DeleteValue(const std::wstring &subKey, const std::wstring &valueName);
         static bool DeleteKey(const std::wstring &subKey);
 
-    private:
         static HKEY GetRootKey(const std::wstring& subKey, std::wstring& actualPath);
     };
 }

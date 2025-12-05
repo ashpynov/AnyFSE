@@ -34,10 +34,9 @@
 #include <ShlObj.h>
 
 #include "Tools/Process.hpp"
-#include "Tools/ProcessEx.hpp"
-#include "Tools/TaskManager.hpp"
+#include "ToolsEx/ProcessEx.hpp"
+#include "ToolsEx/TaskManager.hpp"
 #include "Tools/Unicode.hpp"
-#include "Tools/TaskManager.hpp"
 #include "Tools/Registry.hpp"
 #include "AppInstaller.hpp"
 
@@ -227,7 +226,7 @@ namespace AnyFSE
 
     void AppInstaller::OnSelectPath()
     {
-        std::wstring path = Registry::ReadString(registryPath, L"InstallLocation", Tools::TaskManager::GetInstallPath());
+        std::wstring path = Registry::ReadString(registryPath, L"InstallLocation", ToolsEx::TaskManager::GetInstallPath());
 
         if (path.empty())
         {
@@ -363,7 +362,7 @@ namespace AnyFSE
 
             // Set task
             SetCurrentProgress(L"Register scheduled task");
-            status &= Tools::TaskManager::CreateTask(path.wstring() + L"\\AnyFSE.exe");
+            status &= ToolsEx::TaskManager::CreateTask(path.wstring() + L"\\AnyFSE.exe");
 
             // Set task
             SetCurrentProgress(L"Register uninstaller");

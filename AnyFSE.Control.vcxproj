@@ -21,7 +21,7 @@
     <ClCompile Include="src\AppControl\*.cpp" />
     <ClCompile Include="src\Configuration\*.cpp" />
     <ClCompile Include="src\Logging\*.cpp" />
-    <ClCompile Include="src\Tools\*.cpp" Exclude="src\Tools\ProcessEx.cpp" />
+    <ClCompile Include="src\Tools\*.cpp"/>
     <ClCompile Remove="src\App\Application.cpp" />
   </ItemGroup>
   <ItemGroup>

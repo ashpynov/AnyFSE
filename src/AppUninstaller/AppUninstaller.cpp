@@ -36,11 +36,11 @@
 #include "Logging/LogManager.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/Unicode.hpp"
-#include "Tools/Tools.hpp"
+#include "Tools/Window.hpp"
 #include "Tools/Admin.hpp"
 #include "Tools/Process.hpp"
-#include "Tools/ProcessEx.hpp"
-#include "Tools/TaskManager.hpp"
+#include "ToolsEx/ProcessEx.hpp"
+#include "ToolsEx/TaskManager.hpp"
 #include "Tools/Registry.hpp"
 
 
@@ -229,7 +229,7 @@ namespace AnyFSE
             GetClientRect(child, &clientRect);
 
             RECT childRect = clientRect;
-            GetChildRect(child, &childRect);
+            Window::GetChildRect(child, &childRect);
 
             float panelHeight = dialogRect.bottom - m_theme.DpiScaleF(Layout_Margins + Layout_ButtonHeight + Layout_ButtonPadding);
 
@@ -421,7 +421,7 @@ namespace AnyFSE
         std::wstring path = fs::path(moduleName).parent_path().wstring();
 
         TerminateAnyFSE();
-        TaskManager::RemoveTask();
+        ToolsEx::TaskManager::RemoveTask();
 
         bool removeDir = DeleteFiles(path);
 

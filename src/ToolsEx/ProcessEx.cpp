@@ -37,7 +37,7 @@
 
 #pragma comment(lib, "psapi.lib")
 
-namespace AnyFSE::Tools::ProcessEx
+namespace AnyFSE::ToolsEx::ProcessEx
 {
     static Logger log = LogManager::GetLogger("ProcessEx");
 

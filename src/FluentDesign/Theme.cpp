@@ -24,7 +24,7 @@
 
 #include "Theme.hpp"
 #include "Tools/GdiPlus.hpp"
-#include "Tools/Tools.hpp"
+#include "Tools/Window.hpp"
 #include "Logging/LogManager.hpp"
 #include <dwmapi.h>
 #include <commctrl.h>
@@ -489,7 +489,7 @@ namespace FluentDesign
         while (hChild)
         {
             RECT rc;
-            Tools::GetChildRect(hChild, &rc);
+            Window::GetChildRect(hChild, &rc);
             storage[hChild] = DpiUnscaleF(rc);
             hChild = GetWindow(hChild, GW_HWNDNEXT);
         }
@@ -501,12 +501,12 @@ namespace FluentDesign
         while (hChild)
         {
             RECT rc;
-            Tools::GetChildRect(hChild, &rc);
+            Window::GetChildRect(hChild, &rc);
             auto st = storage.find(hChild);
             if (st != storage.end())
             {
                 RECT rc = DpiScale(st->second);
-                MoveWindow(hChild, &rc, FALSE);
+                Window::MoveWindow(hChild, &rc, FALSE);
             }
             hChild = GetWindow(hChild, GW_HWNDNEXT);
         }

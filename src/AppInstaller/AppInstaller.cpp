@@ -35,7 +35,7 @@
 #include "Logging/LogManager.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/Unicode.hpp"
-#include "Tools/Tools.hpp"
+#include "Tools/Window.hpp"
 #include "Tools/Admin.hpp"
 #include "AppControl/GamingExperience.hpp"
 
@@ -230,7 +230,7 @@ namespace AnyFSE
             GetClientRect(child, &clientRect);
 
             RECT childRect = clientRect;
-            GetChildRect(child, &childRect);
+            Window::GetChildRect(child, &childRect);
 
             float panelHeight = dialogRect.bottom - m_theme.DpiScaleF(Layout_Margins + Layout_ButtonHeight + Layout_ButtonPadding);
 

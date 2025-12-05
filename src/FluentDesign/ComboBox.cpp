@@ -26,8 +26,8 @@
 #include <string>
 #include <functional>
 #include <Uxtheme.h>
-#include "Tools/Tools.hpp"
 #include "ComboBox.hpp"
+#include "Tools/Icon.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/GdiPlus.hpp"
 
@@ -102,7 +102,7 @@ namespace FluentDesign
     {
         ComboItem &cb = *(m_comboItems.insert(pos != -1 ? m_comboItems.begin() + pos : m_comboItems.end(), ComboItem{name, icon, value, -1}));
 
-        HICON hIcon = Tools::LoadIcon(cb.icon, 32);
+        HICON hIcon = Icon::LoadIcon(cb.icon, 32);
         cb.iconIndex = hIcon ? ImageList_AddIcon(m_hImageList, hIcon) : -1;
 
         InvalidateRect(m_hCombo, NULL, FALSE);
@@ -610,7 +610,7 @@ namespace FluentDesign
         {
             if (item.iconIndex != -1 && !item.icon.empty())
             {
-                HICON hIcon = Tools::LoadIcon(item.icon, 32);
+                HICON hIcon = Icon::LoadIcon(item.icon, 32);
                 item.iconIndex = hIcon ? ImageList_AddIcon(m_hImageList, hIcon) : -1;
             }
         }

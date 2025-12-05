@@ -33,7 +33,7 @@
 #pragma comment(lib, "taskschd.lib")
 #include "TaskManager.hpp"
 
-namespace AnyFSE::Tools::TaskManager
+namespace AnyFSE::ToolsEx::TaskManager
 {
 
     #define TRY(hr) if (FAILED((hr))) throw std::exception((std::string("Can't register task at ") + std::to_string(__LINE__)).c_str());
