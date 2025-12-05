@@ -60,27 +60,32 @@ namespace AnyFSE::App::AppControl
 {
     static Logger log = LogManager::GetLogger("AppControl");
 
-    int AppControl::ShowAdminError()
-    {
-        log.Critical("Application should be executed as Adminisrator, exiting\n");
-
-        InitCustomControls();
-
-        TaskDialog(NULL, GetModuleHandle(NULL),
-            L"Insufficient permissons",
-            L"Please run AnyFSE as Administrator",
-            L"Escalated privileges is required to monitor XBox application execution "
-            L"or instaling application as schedulled autorun task.\n\n",
-            TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
-
-        return FALSE;
-    }
 
     int AppControl::ShowSettings()
     {
-        return Tools::Admin::IsRunningAsAdministrator() || Tools::Admin::RequestAdminElevation(L"/Settings")
-            ? App::CallLibrary(L"AnyFSE.Settings.dll", GetModuleHandle(NULL), NULL, NULL, 0)
-            : ShowAdminError();
+        log.Debug("Triggered Show settings");
+        HWND hAdminWnd = FindWindow(AnyFSEAdminWndClassName, nullptr);
+
+        if (hAdminWnd)
+        {
+            log.Debug("Post WM_SHOWSETTINGS to 0x%x", hAdminWnd);
+            PostMessage(hAdminWnd, UserMessage::WM_SHOWSETTINGS, 0, 0);
+            return 0;
+        }
+
+        log.Debug("Admin window is not found");
+        if (!Tools::Admin::IsRunningAsAdministrator() &&!Tools::Admin::RequestAdminElevation(L"/Settings"))
+        {
+            Tools::Admin::ShowAdminError();
+            return -1;
+        }
+
+        return 0;
+    }
+
+    bool AppControl::AsCombo(LPSTR lpCmdLine)
+    {
+        return _strcmpi(lpCmdLine, "/Combo") == 0;
     }
 
     bool AppControl::AsControl(LPSTR lpCmdLine)
@@ -175,13 +180,11 @@ namespace AnyFSE::App::AppControl
 
         // ShowSettings();
 
-        LPCTSTR className = L"AnyFSE";
-
-        HWND hAppWnd = FindWindow(className, NULL);
+        HWND hAppWnd = FindWindow(AnyFSESplashWndClassName, NULL);
         if (hAppWnd)
         {
             log.Debug("Application control is executed already, exiting\n");
-            PostMessage(hAppWnd, MainWindow::WM_TRAY, 0, WM_LBUTTONDBLCLK);
+            PostMessage(hAppWnd, UserMessage::WM_TRAY, 0, WM_LBUTTONDBLCLK);
             return 0;
         }
 
@@ -198,29 +201,31 @@ namespace AnyFSE::App::AppControl
             return -1;
         }
 
-        if (
-            NeedAdmin(lpCmdLine)
+        if (AsCombo(lpCmdLine)
             && !Tools::Admin::IsRunningAsAdministrator()
             && !Tools::Admin::RequestAdminElevation(AsSettings(lpCmdLine) ? L"/Settings" : L"")
         )
         {
-            ShowAdminError();
+            Tools::Admin::ShowAdminError();
             return -1;
+        }
+
+        if (!AsCombo(lpCmdLine) && !IsServiceAvailable())
+        {
+            log.Debug("\n\nNeed Restart Task");
+            if( !Tools::Admin::RequestAdminElevation(L"/RestartTask") )
+            {
+                Tools::Admin::ShowAdminError();
+                return -1;
+            }
+            return 0;
         }
 
         log.Debug("\n\nApplication control is started (hInstance=%08x)", hInstance);
 
+        log.Debug("Messages ID: WM_RESTARTTASK: %u, WM_SHOWSETTINGS: %u", UserMessage::WM_RESTARTTASK, UserMessage::WM_SHOWSETTINGS );
+
         Launchers::LauncherOnBoot();
-
-        std::thread serviceThread;
-
-        if (!AsControl(lpCmdLine) && !IsServiceAvailable())
-        {
-            serviceThread = std::thread([&]()
-            {
-                App::CallLibrary(L"AnyFSE.Service.dll", hInstance, hPrevInstance, NULL, nCmdShow);
-            });
-        }
 
         DWORD xBoxProcess = Process::FindFirstByName(Config::XBoxProcessName);
         if (xBoxProcess)
@@ -230,6 +235,25 @@ namespace AnyFSE::App::AppControl
 
         Window::MainWindow mainWindow;
         AppControlStateLoop AppControlStateLoop(mainWindow);
+        std::thread serviceThread;
+        std::thread settingsThread;
+
+        if (AsCombo(lpCmdLine))
+        {
+            if (IsServiceAvailable())
+            {
+                AppControlStateLoop.NotifyRemote(AppEvents::EXIT_SERVICE);
+            }
+            serviceThread = std::thread([&]()
+            {
+                App::CallLibrary(L"AnyFSE.Service.dll", hInstance, hPrevInstance, NULL, nCmdShow);
+            });
+
+            settingsThread = std::thread([&]()
+            {
+                App::CallLibrary(L"AnyFSE.Settings.dll", hInstance, hPrevInstance, "/Settings", nCmdShow);
+            });
+        }
 
         mainWindow.OnExplorerDetected += ([&AppControlStateLoop, &mainWindow]()
         {
@@ -250,7 +274,7 @@ namespace AnyFSE::App::AppControl
             AppControlStateLoop.Notify(AppEvents::END_SESSION);
         });
 
-        if (!mainWindow.Create(className, hInstance, (Config::Launcher.Name + L" is launching").c_str()))
+        if (!mainWindow.Create(AnyFSESplashWndClassName, hInstance, (Config::Launcher.Name + L" is launching").c_str()))
         {
             return (int)GetLastError();
         }
@@ -265,10 +289,7 @@ namespace AnyFSE::App::AppControl
 
         fseMonitor.OnExperienseChanged += ([&AppControlStateLoop, &mainWindow]()
         {
-            log.Debug(
-                "Mode is changed to %s\n",
-                GamingExperience::IsActive() ? "Fullscreeen experience" : "Windows Desktop"
-            );
+            log.Debug("Mode is changed to %s\n", GamingExperience::IsActive() ? "Fullscreeen experience" : "Windows Desktop");
             if (!AppControlStateLoop.IsRunning())
             {
                 SetLastError(StartControl(AppControlStateLoop, mainWindow));
@@ -279,10 +300,10 @@ namespace AnyFSE::App::AppControl
 
         log.Debug("Run window loop.");
 
-        if (AsSettings(lpCmdLine))
-        {
-            PostMessage(FindWindow(className, NULL), MainWindow::WM_TRAY, 0, WM_LBUTTONDBLCLK);
-        }
+        // if (AsSettings(lpCmdLine))
+        // {
+        //     PostMessage(FindWindow(AnyFSESplashWndClassName, NULL), UserMessage::WM_TRAY, 0, WM_LBUTTONDBLCLK);
+        // }
 
         exitCode = Window::MainWindow::RunLoop();
 
@@ -310,6 +331,22 @@ namespace AnyFSE::App::AppControl
             serviceThread.join();
 
             log.Debug("Homebrew service is completed");
+        }
+
+        if (settingsThread.joinable())
+        {
+            log.Debug("Stop homebrew Settings service");
+
+            HWND hSettingsWnd = FindWindow(App::AnyFSEAdminWndClassName, NULL);
+            if (hSettingsWnd)
+            {
+                log.Debug("Settings window is found");
+                PostMessage(hSettingsWnd, WM_DESTROY, 0, 0);
+            }
+            log.Debug("Joining Settings thread");
+            settingsThread.join();
+
+            log.Debug("Homebrew Settings service is completed");
         }
 
         if (exitCode)

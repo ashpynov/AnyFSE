@@ -28,6 +28,7 @@
 
 namespace AnyFSE::Tools::Admin
 {
+    int ShowAdminError();
     BOOL IsRunningAsAdministrator();
     BOOL RequestAdminElevation(const std::wstring& args = L"");
 }

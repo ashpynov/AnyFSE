@@ -20,11 +20,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
+#include <windows.h>
+#include <commctrl.h>
 
 #include "Admin.hpp"
 
+#pragma comment(lib, "comctl32.lib")
+#pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+
+
 namespace AnyFSE::Tools::Admin
 {
+    int ShowAdminError()
+    {
+        INITCOMMONCONTROLSEX icex;
+        icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+        icex.dwICC = ICC_STANDARD_CLASSES;
+        ::InitCommonControlsEx(&icex);
+
+        TaskDialog(NULL, GetModuleHandle(NULL),
+            L"Insufficient permissons",
+            L"Please run AnyFSE as Administrator",
+            L"Escalated privileges is required to monitor XBox application execution "
+            L"or instaling application as schedulled autorun task.\n\n",
+            TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
+
+        return FALSE;
+    }
+
     BOOL IsRunningAsAdministrator()
     {
         BOOL fRet = FALSE;

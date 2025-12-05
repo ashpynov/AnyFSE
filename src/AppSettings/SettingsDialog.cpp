@@ -1396,7 +1396,7 @@ namespace AnyFSE::App::AppSettings::Settings
     }
     void SettingsDialog::SaveSettings()
     {
-        const std::wstring gamingConfiguration = L"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration";
+        const std::wstring gamingConfiguration = L" ";
         const std::wstring startupToGamingHome = L"StartupToGamingHome";
         const std::wstring gamingHomeApp = L"GamingHomeApp";
         const std::wstring xboxApp = L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";

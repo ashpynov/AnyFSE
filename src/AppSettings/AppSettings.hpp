@@ -21,14 +21,28 @@
 // SOFTWARE.
 //
 
-#include "App/Application.hpp"
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+#include <windows.h>
+
+
+namespace AnyFSE::App::AppSettings
 {
-    return AnyFSE::App::CallLibrary(
-            !_strcmpi(lpCmdLine, "/Service") ? L"AnyFSE.Service.dll"
-        :   !_strcmpi(lpCmdLine, "/RestartTask") || !_strcmpi(lpCmdLine, "/Settings") ? L"AnyFSE.Settings.dll"
-        :   L"AnyFSE.Control.dll",
-        hInstance, hPrevInstance, lpCmdLine, nCmdShow
-    );
+    class AppSettings
+    {
+        private:
+
+            static HWND m_hDialogWnd;
+
+            static LRESULT CALLBACK AdminWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+            static void PostCommand(HWND hAdminWnd, LPSTR lpCmdLine);
+            static int ShowSettings();
+            static int RestartTask();
+            static int RestartApp();
+
+        public:
+            static bool AsRestartTask(LPSTR lpCmdLine);
+            static bool AsSettings(LPSTR lpCmdLine);
+
+            static int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
+    };
 }

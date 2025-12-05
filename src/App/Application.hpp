@@ -26,8 +26,20 @@
 
 namespace AnyFSE::App
 {
+    struct UserMessage
+    {
+        static UINT WM_TRAY;
+        static UINT WM_TASKBARCREATED;
+        static UINT WM_SHOWSETTINGS;
+        static UINT WM_RESTARTTASK;
+    };
+
+    static const wchar_t * AnyFSESplashWndClassName = L"AnyFSE";
+    static const wchar_t * AnyFSEAdminWndClassName = L"AnyFSEAdmin";
+
     typedef INT_PTR (*MainFunc)(HINSTANCE, HINSTANCE, LPSTR, int);
-    int CallLibrary(const WCHAR * library, HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+
+    static int CallLibrary(const WCHAR * library, HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
     {
         HMODULE hModuleDll = NULL;
         static MainFunc *Main = nullptr;

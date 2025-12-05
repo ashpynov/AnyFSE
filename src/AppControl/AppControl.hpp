@@ -33,9 +33,9 @@ namespace AnyFSE::App::AppControl
     class AppControl
     {
         public:
-            static int ShowAdminError();
             static int ShowSettings();
-            static int StartControl(StateLoop::AppControlStateLoop & AppControlStateLoop, Window::MainWindow &mainWindow);
+            static bool AsCombo(LPSTR lpCmdLine);
+            static int StartControl(StateLoop::AppControlStateLoop &AppControlStateLoop, Window::MainWindow &mainWindow);
             static void InitCustomControls();
             static bool AsControl(LPSTR lpCmdLine);
             static bool IsServiceAvailable();

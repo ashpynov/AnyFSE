@@ -31,6 +31,7 @@
 #include "Configuration/Config.hpp"
 #include "Tools/Tools.hpp"
 #include "Tools/Unicode.hpp"
+#include "App/Application.hpp"
 #include "AppControl/AppControl.hpp"
 #include "AppControl/MainWindow.hpp"
 #include "MainWindow.hpp"
@@ -45,9 +46,7 @@ namespace AnyFSE::App::AppControl::Window
         : m_hWnd(NULL)
         , m_aClass(NULL)
         , m_pLogoImage(nullptr)
-        , WM_TASKBARCREATED(RegisterWindowMessage(L"TaskbarCreated"))
     {
-
         ZeroMemory(&WC, sizeof(WC));
     }
     MainWindow::~MainWindow()
@@ -205,11 +204,16 @@ namespace AnyFSE::App::AppControl::Window
 
     LRESULT CALLBACK MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
-        if (uMsg == WM_TASKBARCREATED)
+        if (uMsg == UserMessage::WM_TASKBARCREATED)
         {
             log.Debug("Explorer start taskbar ready");
             CreateTrayIcon();
             return DefWindowProc(m_hWnd, uMsg, wParam, lParam);
+        }
+        if (uMsg == UserMessage::WM_TRAY)
+        {
+            OnTray(lParam);
+            return 0;
         }
         switch (uMsg)
         {
@@ -224,9 +228,6 @@ namespace AnyFSE::App::AppControl::Window
         case WM_DESTROY:
             OnDestroy();
             break;
-        case WM_TRAY:
-            OnTray(lParam);
-            return 0;
         case WM_TIMER:
             OnTimer(wParam);
             return 0;
@@ -273,7 +274,7 @@ namespace AnyFSE::App::AppControl::Window
         stData.cbSize = sizeof(stData);
         stData.hWnd = m_hWnd;
         stData.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-        stData.uCallbackMessage = WM_TRAY;
+        stData.uCallbackMessage = UserMessage::WM_TRAY;
         stData.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON));
         LoadStringSafe(IDS_TIP, stData.szTip, _countof(stData.szTip));
         if (!Shell_NotifyIcon(NIM_ADD, &stData))
@@ -359,6 +360,12 @@ namespace AnyFSE::App::AppControl::Window
             return FALSE;
         case ID_QUIT:
             m_result = 0;
+            HWND hSettingsWnd = FindWindow(App::AnyFSEAdminWndClassName, NULL);
+            if (hSettingsWnd)
+            {
+                log.Debug("Settings window is found");
+                PostMessage(hSettingsWnd, WM_DESTROY, 0, 0);
+            }
             DestroyWindow(m_hWnd);
             return TRUE;
         }

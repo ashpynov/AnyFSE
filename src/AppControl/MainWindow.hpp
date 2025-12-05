@@ -35,11 +35,7 @@ namespace AnyFSE::App::AppControl::Window
 {
     class MainWindow
     {
-    public:
-        static const UINT WM_TRAY = WM_USER + 1;
     private:
-        const UINT WM_TASKBARCREATED;
-
         HICON m_hIcon = NULL;
         HWND m_hWnd;
         ATOM m_aClass;

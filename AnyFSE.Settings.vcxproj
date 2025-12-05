@@ -16,6 +16,7 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
+    <ClCompile Include="src\App\*.cpp" />
     <ClCompile Include="src\AppSettings\**\*.cpp" />
     <ClCompile Include="src\Configuration\*.cpp" />
     <ClCompile Include="src\Logging\*.cpp" />

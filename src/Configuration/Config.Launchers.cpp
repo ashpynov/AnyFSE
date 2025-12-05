@@ -76,7 +76,7 @@ namespace AnyFSE::Configuration
                 L"",
                 L"",
                 true,
-                L"@"
+                L""
             }
         },
         {

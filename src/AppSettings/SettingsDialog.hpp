@@ -95,8 +95,9 @@ namespace AnyFSE::App::AppSettings::Settings
     public:
         INT_PTR Show(HINSTANCE hInstance);
         void CenterDialog(HWND hwnd);
-        SettingsDialog()
-            : m_theme()
+        SettingsDialog(HWND &hDialog)
+            : m_hDialog(hDialog)
+            , m_theme()
             , m_captionStatic(m_theme)
             , m_captionBackButton(m_theme)
             , m_captionCloseButton(m_theme)
@@ -163,7 +164,7 @@ namespace AnyFSE::App::AppSettings::Settings
         void UpdateControls();
 
         HINSTANCE m_hInstance;
-        HWND m_hDialog;
+        HWND &m_hDialog;
 
         bool m_isCustom;
         bool m_isAggressive;

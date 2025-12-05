@@ -23,12 +23,10 @@
 
 #include "App/Application.hpp"
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+namespace AnyFSE::App
 {
-    return AnyFSE::App::CallLibrary(
-            !_strcmpi(lpCmdLine, "/Service") ? L"AnyFSE.Service.dll"
-        :   !_strcmpi(lpCmdLine, "/RestartTask") || !_strcmpi(lpCmdLine, "/Settings") ? L"AnyFSE.Settings.dll"
-        :   L"AnyFSE.Control.dll",
-        hInstance, hPrevInstance, lpCmdLine, nCmdShow
-    );
-}
+    UINT UserMessage::WM_TRAY = RegisterWindowMessage(L"ANYFSE_MESSAGE_TRAY");
+    UINT UserMessage::WM_TASKBARCREATED = RegisterWindowMessage(L"WM_TASKBARCREATED");
+    UINT UserMessage::WM_SHOWSETTINGS = RegisterWindowMessage(L"ANYFSE_MESSAGE_SHOWSETTINGS");
+    UINT UserMessage::WM_RESTARTTASK = RegisterWindowMessage(L"ANYFSE_MESSAGE_RESTARTTASK");
+};
