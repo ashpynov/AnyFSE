@@ -174,6 +174,9 @@ namespace AnyFSE::App::AppControl
             AppControlStateLoop.NotifyRemote(AppEvents::SUSPEND_SERVICE);
             return -1;
         }
+
+        AppControlStateLoop.NotifyRemote(Config::AggressiveMode ? AppEvents::XBOX_DENY : AppEvents::XBOX_ALLOW);
+
         return 0;
     }
     void AppControl::InitCustomControls()

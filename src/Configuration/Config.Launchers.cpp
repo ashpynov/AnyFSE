@@ -65,7 +65,7 @@ namespace AnyFSE::Configuration
                 LauncherType::Steam,
                 L"Steam Big Picture Mode",
                 L"Steam.exe",
-                L"steam://open/bigpicture",
+                L"-gamepadui",
                 WS_EX_APPWINDOW, WS_THICKFRAME,
                 L"steamwebhelper.exe",
                 L"SDL_app",
@@ -75,8 +75,7 @@ namespace AnyFSE::Configuration
                 L"",
                 L"",
                 L"",
-                true,
-                L"@"
+                true
             }
         },
         {

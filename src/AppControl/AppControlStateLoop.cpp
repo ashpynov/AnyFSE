@@ -130,6 +130,15 @@ namespace AnyFSE::App::AppControl::StateLoop
                 WaitLauncher();
             }
         }
+        else if (Config::AggressiveMode || IsHomeLaunch())
+        {
+            log.Debug("OnXboxDetected: Launcher Active and %s => Killing Xbox, focus launcher",
+                 Config::AggressiveMode ? "Agressive mode" : "Home launch" );
+
+            KillXbox();
+            FocusLauncher();
+            PreventTimeout();
+        }
         else
         {
             log.Debug("OnXboxDetected: Do nothing");
@@ -157,6 +166,7 @@ namespace AnyFSE::App::AppControl::StateLoop
             FocusLauncher();
         }
     }
+
     void AppControlStateLoop::OnGameModeExit()
     {
         log.Debug("Exited Game Mode, do nothing");
@@ -317,6 +327,7 @@ namespace AnyFSE::App::AppControl::StateLoop
         HWND gameBar = Process::GetWindow(L"Gamebar.exe", 0, L"Windows.UI.Core.CoreWindow", L"", WS_VISIBLE, 0 );
         if (!gameBar)
         {
+            log.Debug("No Gamebar");
             return false;
         }
 
@@ -359,6 +370,7 @@ namespace AnyFSE::App::AppControl::StateLoop
         LONGLONG age = GetTickCount64() - m_homeAge;
         if (age < 2000 )
         {
+            log.Debug("Home accessed %lldms ago", age);
             return true;
         }
         log.Debug("Home accessed %lldms ago", age);
