@@ -21,6 +21,9 @@
 // SOFTWARE.
 //
 
+#ifndef VER_VERSION_STR
+#define VER_VERSION_STR "1.2.3"
+#endif
 
 #include "SettingsDialog.hpp"
 #include "resource.h"
@@ -366,6 +369,16 @@ namespace AnyFSE::App::AppSettings::Settings
                     r.right = paint.ClientRect().right;
                     SelectFont(paint.MemDC(), m_theme.GetFont_Title());
                     ::DrawText(paint.MemDC(), m_pageName.c_str(), -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
+                }
+                {
+                    r = paint.ClientRect();
+                    r.bottom -= m_theme.DpiScale(Layout_MarginBottom);
+                    r.left += m_theme.DpiScale(Layout_MarginLeft);
+                    r.top = r.bottom - m_theme.DpiScale(Layout_ButtonHeight);
+                    SelectFont(paint.MemDC(), m_theme.GetFont_TextSecondary());
+                    SetTextColor(paint.MemDC(), m_theme.GetColorRef(FluentDesign::Theme::Colors::TextDisabled));
+                    std::wstring version = std::wstring(L"Version ") + Unicode::to_wstring(VER_VERSION_STR);
+                    ::DrawText(paint.MemDC(), version.c_str(), -1, &r, DT_LEFT | DT_BOTTOM | DT_SINGLELINE | DT_NOCLIP);
                 }
 
                 m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_okButton.GetHwnd());
