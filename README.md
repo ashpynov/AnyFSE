@@ -10,31 +10,62 @@ The AnyFSE Home application aims to give users the ability to use their favorite
 Currently, there is no official way available for third-party developers to allow their users to choose custom launchers like Playnite, Steam Big Picture mode, LaunchBox, etc. as Home Applications for Fullscreen Experience mode.
 However, I hope that Microsoft will change their mind and provide an official API to do so.
 
+Now AnyFSE able to support (alpabetical):
 
-## Install and Uninstall
+- LaunchBox BigBox
+- One Game Launcher
+- Playnite Fullscreen
+- RetroBat
+- Steam Big Picture Mode
 
-To install AnyFSE, simply extract content to any desired location and launch it. In the settings dialog, choose the application to use and press 'Save'.
+Some other launchers potentially can be supported too with minor customizations
 
-If you change your mind and decide to move the file to another location, just put it there, run it, and press Save.
+## How it is works
 
-If AnyFSE appears buggy, glitchy, heavy, or you have any other reason to uninstall it, simply open settings and press uninstall.
+It is not replace or re-configure you windows to use other launcher instead of Xbox.
 
-### Manual Uninstallation
-To manually remove AnyFSE, you need to Open Task Scheduler (press the Windows key and type Task Scheduler) and delete the task 'AnyFSE home application' from Task Scheduler Library.
+Instead of it upon execution AnyFSE will start to monitor XboxPCApp application have been started after attempt to access to specific registry key. This trigger AnyFSE to launch configured game manager and exit XboxApp.
 
 
-### User Account Control
-Since adding tasks to Task Scheduler and changing the registry require escalated privileges (running as Administrator), you will be prompted for administrator permissions when opening settings.
+## Install, Configure and Uninstall
+
+### How to install
+
+Just Launch AnyFSE.Installer.exe. Select folder to extract into. Wait few secondsto complete and Configure.
+
+You launcher should be installed additionally.
+
+### How to launch and configure
+
+After sussessfull instalation there will be AnyFSE icon in tray. Select Configure.
+
+Also you may manual start AnyFSE.exe. First time it will register Tray icon. Second - will bring configuration window.
+
+### How to uninstall it
+
+Open Settings -> Apps -> Instaled apps.
+
+Find AnyFSE and select "Uninstall"
+
+### User Account Control and permissions
+
+Since version 0.10 permisssion requirements was redesigned:
+
+- Installation and deinstalation program are require admin permissions to register AnyFSE service during instalation
+
+- AnyFSE.Service.exe - registered as scheduled task and start on Windows launch automaticaly on behalf of SYSTEM account
+
+- AnyFSE.exe - to implement logic, settings, and start launchers - do not need elevated priveleges and work under regular user.
 
 > [!WARNING]
 > ### Microsoft Defender flag
 > The tool randomly may triggers a Defender detection: Trojan:Win32/Sabsik.FL.A!ml or Program:Script/Wacapew.A!ml, or other *!ml signatures (depends from the Moon phase).
 >
-> As soon as tool working from behalf of SYSTEM user, monitors access to registry, kill some applications and start other - some silly Machine Learning signatures may consider as it harmfull trojan. Even it it does not contain any network related code.
+> As soon as part of tool working from behalf of SYSTEM user, monitors access to registry, kill some applications and start other - some silly Machine Learning signatures may consider as it harmfull trojan. Even it it does not contain any network related code.
 >
 > But you don’t have to trust me — feel free to review the code and build it yourself.
 >
-> Anyway, even builded yourself binary will trigger . So it is better to create dedicated folder
+> Anyway, even builded yourself binary will trigger. So it is better to create dedicated folder
 > for AnyFSE, and add this folder to MS Defender exclusions before installation.
 >
 > P.S. If you know how to deal with this  - let me know.
@@ -46,11 +77,6 @@ To do this, Create folder 'splash' next to AnyFSE.exe and put there you favourit
 
 For sure it will be good idea to suppress native splash screens of launchers, to do so enable custom settings and add startup argument to prevent native splash (for Playnite it is ```--hidesplashscreen``` option).
 
-### Splash Settings
-There are few option to configure splash look and feel can be changed via json configuration file and file name of video:
-- ```/Splash/Video/Path``` - **absolute** path to folder with splashes or your single video
-- ```/Splash/Video/Loop``` - loop video if it is too short (false/true), by default video will be 'paused' on last frame
-- ```/Splash/Video/Mute``` - mute video sound (false/true)
 
 ### Filename control
 You can specify custom position of loop via filename. To do this - name should contain additional part before extension like:
@@ -74,6 +100,9 @@ There is '***Aggressive mode***' to forcefully prevent **Any** XboxPcApp appeare
 AnyFSE works with 2 instances:
 
 ## Service Instance
+
+**AnyFSE.Service.exe**
+
 This instance is executed by Task Scheduler at system startup under the SYSTEM user with administrator privileges. This instance monitors user session execution (user logon) to start the second 'Application' instance. This is the earliest possible way to run an application, even before the Shell starts, without using dirty registry hacks.
 
 The main goals of the service instance are to monitor 3 things:
@@ -87,6 +116,8 @@ When any of these are detected, it notifies the second 'Application' instance vi
 This instance also has privileged permissions, so it receives commands from the Application instance to prevent XboxPcApp process startup.
 
 ## Application (Control) Instance
+
+**AnyFSE.exe**
 
 This instance is executed by the service instance on user logon (or can be executed ad-hoc by the user for configuration).
 
