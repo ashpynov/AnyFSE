@@ -9,18 +9,30 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "AnyFSE.exe",
-            "args": ["/Argument"],
+            "args": [""],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin/Debug",
             "environment": [],
-            "preLaunchTask": "Build AnyFSE Debug"
+            "preLaunchTask": "Build AnyFSE App Debug"
+        },
+        {
+            "name": "Debug AnyFSE.Service",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "AnyFSE.Service.exe",
+            "args": ["/suspend"],
+
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bin/Debug",
+            "environment": [],
+            "preLaunchTask": "Build AnyFSE.Service Debug"
         },
         {
             "name": "Debug Installer",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "AnyFSE.Installer.exe",
-            "args": ["/Argument"],
+            "args": [""],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin/Debug",
             "environment": [],

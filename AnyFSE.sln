@@ -5,11 +5,11 @@ VisualStudioVersion = 17.14.36408.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AnyFSE.Service", "AnyFSE.Service.vcxproj", "{4B2F1E9A-8C3D-4E76-9A1F-2D8C5A3B7E9F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AnyFSE.Control", "AnyFSE.Control.vcxproj", "{A3B8C1D2-E4F5-6789-ABCD-EF0123456789}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AnyFSE.Settings", "AnyFSE.Settings.vcxproj", "{7F3A9B1C-82D4-4E5F-91A6-B8C7D2E4F619}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AnyFSE", "AnyFSE.vcxproj", "{C4D8E9A2-1B7F-43C5-9D0E-F8A2B6C7D1E3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Uninstaller", "AnyFSE.Uninstaller.vcxproj", "{A3F1C4B2-8D9E-4F67-92A1-5B3C8D7E6F4A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +33,10 @@ Global
 		{C4D8E9A2-1B7F-43C5-9D0E-F8A2B6C7D1E3}.Debug|x64.Build.0 = Debug|x64
 		{C4D8E9A2-1B7F-43C5-9D0E-F8A2B6C7D1E3}.Release|x64.ActiveCfg = Release|x64
 		{C4D8E9A2-1B7F-43C5-9D0E-F8A2B6C7D1E3}.Release|x64.Build.0 = Release|x64
+		{A3F1C4B2-8D9E-4F67-92A1-5B3C8D7E6F4A}.Debug|x64.ActiveCfg = Debug|x64
+		{A3F1C4B2-8D9E-4F67-92A1-5B3C8D7E6F4A}.Debug|x64.Build.0 = Debug|x64
+		{A3F1C4B2-8D9E-4F67-92A1-5B3C8D7E6F4A}.Release|x64.ActiveCfg = Release|x64
+		{A3F1C4B2-8D9E-4F67-92A1-5B3C8D7E6F4A}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

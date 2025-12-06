@@ -88,13 +88,14 @@ namespace AnyFSE::App::AppSettings::Settings
 
         static const int Layout_CaptionButtonWidth = 48;
         static const int Layout_CaptionHeight = 36;
-        static const int Layout_CaptionButtonPad = 4;
 
         void ShowGroup(int groupIdx, bool show);
 
     public:
         INT_PTR Show(HINSTANCE hInstance);
         void CenterDialog(HWND hwnd);
+        void StoreWindowPlacement();
+        void RestoreWindowPlacement();
         SettingsDialog()
             : m_theme()
             , m_captionStatic(m_theme)
@@ -146,6 +147,8 @@ namespace AnyFSE::App::AppSettings::Settings
         void OnLauncherChanged();
         void OnOk();
         void OnMinimize();
+        void OnMaximize();
+        void UpdateMaximizeButtonIcon();
         void OnClose();
 
         void OnShowTextChanged();
@@ -249,6 +252,8 @@ namespace AnyFSE::App::AppSettings::Settings
 
         void UpdateDpiLayout();
 
+        void ArrangeControls();
+
         void UpdateLayout();
 
         void AddCustomSettingsPage();
@@ -261,6 +266,9 @@ namespace AnyFSE::App::AppSettings::Settings
         void OnStartupAdd();
         void OnStartupModify(SettingsLine *pLine);
         void OnStartupDelete(SettingsLine *pLine);
+        void AddMinimizeButton();
+        void AddMaximizeButton();
+        void AddCloseButton();
         void AddStartupSettingsPage();
 
         SettingsLine * m_pFseOnStartupLine;

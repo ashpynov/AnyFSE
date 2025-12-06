@@ -244,7 +244,7 @@ namespace AnyFSE::App
             if (error == ERROR_BROKEN_PIPE || error == ERROR_PIPE_NOT_CONNECTED)
             {
                 m_connectionState = ConnectionState::Disconnected;
-                TRACE("IPCChannel::StartAsyncRead: Pipe disconnected due to error");
+                log.Debug("IPCChannel::StartAsyncRead: Pipe disconnected due to error");
             }
             return false;
         }
@@ -432,7 +432,11 @@ namespace AnyFSE::App
             if (error == ERROR_BROKEN_PIPE || error == ERROR_PIPE_NOT_CONNECTED)
             {
                 m_connectionState = ConnectionState::Disconnected;
-                TRACE("IPCChannel::StartAsyncReadAndWait: Pipe disconnected due to error");
+                log.Debug("IPCChannel::StartAsyncReadAndWait: Pipe disconnected due to error");
+                if (!m_isServer)
+                {
+                    throw std::exception("IPCChannel::StartAsyncReadAndWait: Pipe disconnected due to error");
+                }
             }
             Sleep(1000);
             return false;

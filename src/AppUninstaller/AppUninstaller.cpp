@@ -37,7 +37,7 @@
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/Window.hpp"
-#include "Tools/Admin.hpp"
+#include "ToolsEx/Admin.hpp"
 #include "Tools/Process.hpp"
 #include "ToolsEx/ProcessEx.hpp"
 #include "ToolsEx/TaskManager.hpp"
@@ -159,7 +159,7 @@ namespace AnyFSE
         {
         case WM_INITDIALOG:
             {
-                m_theme.Attach(hwnd);
+                m_theme.AttachDlg(hwnd);
                 CenterDialog(hwnd);
                 OnInitDialog(hwnd);
                 m_theme.DpiUnscaleChilds(hwnd, m_designedPositions);
@@ -195,7 +195,7 @@ namespace AnyFSE
 
         CreatePage();
 
-        if (!Tools::Admin::IsRunningAsAdministrator() && !Tools::Admin::RequestAdminElevation()
+        if (!ToolsEx::Admin::IsRunningAsAdministrator() && !ToolsEx::Admin::RequestAdminElevation()
         )
         {
             ShowErrorPage(
@@ -548,6 +548,13 @@ namespace AnyFSE
     {
         std::set<DWORD> handles;
         if (Process::FindAllByName(L"AnyFSE.exe", handles))
+        {
+            for (auto& handle: handles)
+            {
+                ProcessEx::Kill(handle);
+            }
+        }
+        if (Process::FindAllByName(L"AnyFSE.Service.exe", handles))
         {
             for (auto& handle: handles)
             {

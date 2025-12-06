@@ -1,22 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="Globals">
-    <TargetName>AnyFSE.Service</TargetName>
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <TargetExt>.dll</TargetExt>
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{4B2F1E9A-8C3D-4E76-9A1F-2D8C5A3B7E9F}</ProjectGuid>
-    <AssemblyDescription>AnyFSE System service module</AssemblyDescription>
+    <RootNamespace>AnyFSE</RootNamespace>
+    <TargetName>AnyFSE.Service</TargetName>
+    <ConfigurationType>Application</ConfigurationType>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <AssemblyDescription>AnyFSE System service monitoring module</AssemblyDescription>
   </PropertyGroup>
   <Import Project="AnyFSE.vcxproj.props" />
-
-  <ItemDefinitionGroup>
-    <ClCompile>
-      <!-- <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary> Prevent Defender warn -->
-    </ClCompile>
-    <Link>
-      <ModuleDefinitionFile>src\AppService\AppService.def</ModuleDefinitionFile>
-    </Link>
-  </ItemDefinitionGroup>
 
   <ItemGroup>
     <ClCompile Include="src\App\AppStateLoop.cpp" />
@@ -27,15 +21,8 @@
     <ClCompile Include="src\Tools\Process.cpp" />
     <ClCompile Include="src\Tools\Event.cpp" />
     <ClCompile Include="src\Tools\Unicode.cpp" />
-    <ClCompile Include="src\ToolsEx\ProcessEx.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="src\AppService\AppService.def" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\resource.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="src\Resource.rc" />
+    <ClCompile Include="src\ToolsEx\*.cpp" />
+
+    <ResourceCompile Include="src\AppService\Service.rc" />
   </ItemGroup>
 </Project>

@@ -34,7 +34,7 @@
 
 namespace FluentDesign
 {
-    void Popup::Show(HWND hParent, int x, int y, const std::vector<PopupItem>& items, int width)
+    void Popup::Show(HWND hParent, int x, int y, const std::vector<PopupItem>& items, int width, int flags)
     {
         if (m_popupVisible)
             return;
@@ -46,13 +46,16 @@ namespace FluentDesign
         int popupWidth = width;
         int popupHeight = min(m_theme.DpiScale(400), (int)items.size() * m_theme.DpiScale(Layout_ItemHeight));
 
+        int dx = (flags & TPM_RIGHTALIGN) ? -popupWidth : (flags & TPM_CENTERALIGN) ? -popupWidth / 2 : 0;
+        int dy = (flags & TPM_BOTTOMALIGN) ? -popupHeight : 0;
+
         // Create popup listbox window
         m_hPopupList = CreateWindowEx(
             WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
             L"LISTBOX",
             L"",
             WS_CHILD | WS_POPUP | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | CS_DROPSHADOW | WS_TABSTOP,
-            x - popupWidth, y,
+            x + dx, y + dy,
             popupWidth,
             popupHeight,
             hParent,
@@ -167,6 +170,7 @@ namespace FluentDesign
         {
             RectF iconRect = rectF;
             iconRect.Width = m_theme.DpiScaleF(Layout_ImageSize);
+            iconRect.Y += m_theme.DpiScaleF(2);
             Font font(hdc, m_theme.GetFont_GlyphNormal());
 
             graphics.DrawString(pItem->icon.c_str(), -1, &font, iconRect, &format, &textBrush);
@@ -203,6 +207,7 @@ namespace FluentDesign
 
     void Popup::OnMouseMove(HWND hWnd, LPARAM lParam)
     {
+        SetCursor(LoadCursor(NULL, IDC_ARROW));
         int hoverIndex = (int)SendMessage(hWnd, LB_ITEMFROMPOINT, 0, lParam);
         if (hoverIndex >= 0 && hoverIndex < (int)SendMessage(hWnd, LB_GETCOUNT, 0, 0))
         {

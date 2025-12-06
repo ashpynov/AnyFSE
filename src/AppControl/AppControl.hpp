@@ -32,14 +32,15 @@ namespace AnyFSE::App::AppControl
 
     class AppControl
     {
-        public:
-            static int ShowAdminError();
-            static int ShowSettings();
-            static int StartControl(StateLoop::AppControlStateLoop & AppControlStateLoop, Window::MainWindow &mainWindow);
-            static void InitCustomControls();
-            static bool AsControl(LPSTR lpCmdLine);
-            static bool IsServiceAvailable();
-            static bool AsSettings(LPSTR lpCmdLine);
+        static int CallLibrary(const WCHAR *library, HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
+    public:
+        static int ShowAdminError();
+        static int ShowSettings();
+        static int StartControl(StateLoop::AppControlStateLoop & AppControlStateLoop, Window::MainWindow &mainWindow);
+        static void InitCustomControls();
+        static bool AsControl(LPSTR lpCmdLine);
+        static bool IsServiceAvailable();
+        static bool AsSettings(LPSTR lpCmdLine);
             static bool NeedAdmin(LPSTR lpCmdLine);
             static int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
     };

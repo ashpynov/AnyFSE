@@ -74,7 +74,7 @@ namespace FluentDesign
 
         HWND GetHwnd() { return m_popupVisible ? m_hPopupList : nullptr; }
 
-        void Show(HWND hParent, int x, int y, const std::vector<PopupItem>& items, int width);
+        void Show(HWND hParent, int x, int y, const std::vector<PopupItem>& items, int width, int flags = TPM_RIGHTALIGN);
         void Hide();
 
         void OnPaint(HWND hWnd);

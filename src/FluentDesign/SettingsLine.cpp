@@ -545,7 +545,7 @@ namespace FluentDesign
 
     void SettingsLine::PositionChildControl()
     {
-        if (m_childControlsList.size()==0)
+        if (m_childControlsList.size()==0 && !HasChevron())
             return;
 
         int rightPos = m_width - (m_state != State::Caption ? m_theme.DpiScale(20) : 0);
@@ -559,7 +559,7 @@ namespace FluentDesign
                         m_theme.DpiScale(CHEVRON_SIZE),
                         FALSE
             );
-            rightPos -= m_theme.DpiScale(CHEVRON_SIZE + 4);
+            rightPos -= m_theme.DpiScale(CHEVRON_SIZE + CHEVRON_SPACE);
         }
 
         for (auto it = m_childControlsList.rbegin(); it != m_childControlsList.rend(); ++it)
@@ -695,14 +695,11 @@ namespace FluentDesign
 
         if (m_state == State::Opened && m_groupItemsList.size())
         {
-            m_frameFlags = Gdiplus::FrameFlags::SIDE_ALL | Gdiplus::FrameFlags::CORNER_TOP;
+            m_frameFlags = Gdiplus::FrameFlags::SIDE_NO_BOTTOM | Gdiplus::FrameFlags::CORNER_TOP;
 
             for (auto& gr : m_groupItemsList)
             {
-                if (gr->m_visible)
-                {
-                    gr->SetFrame(Gdiplus::FrameFlags::SIDE_NO_BOTTOM);
-                }
+                gr->SetFrame(Gdiplus::FrameFlags::SIDE_NO_BOTTOM);
             }
             m_groupItemsList.back()->SetFrame(Gdiplus::FrameFlags::SIDE_ALL | Gdiplus::FrameFlags::CORNER_BOTTOM);
 

@@ -40,18 +40,11 @@
 #include "AppControl.hpp"
 #include "App/Application.hpp"
 #include "AppControl/Launchers.hpp"
-#include "Tools/Admin.hpp"
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
-{
-    return TRUE;
-}
-
-__declspec(dllexport)
-int WINAPI Main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     return AnyFSE::App::AppControl::AppControl::WinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
 }
@@ -59,6 +52,53 @@ int WINAPI Main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 namespace AnyFSE::App::AppControl
 {
     static Logger log = LogManager::GetLogger("AppControl");
+
+    int AppControl::CallLibrary(const WCHAR * library, HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+    {
+        HMODULE hModuleDll = NULL;
+        static MainFunc *Main = nullptr;
+
+        int result = INT_MIN;
+        do
+        {
+            hModuleDll = LoadLibrary(library);
+            if (!hModuleDll)
+            {
+                break;
+            }
+
+            MainFunc Main = (MainFunc)GetProcAddress(hModuleDll, "Main");
+            if( !Main )
+            {
+                break;
+            }
+            result = (int)Main(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
+
+        } while (false);
+
+        if (result == INT_MIN)
+        {
+            LPSTR messageBuffer = nullptr;
+            DWORD size = FormatMessageA(
+                FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                    FORMAT_MESSAGE_FROM_SYSTEM |
+                    FORMAT_MESSAGE_IGNORE_INSERTS,
+                NULL,
+                GetLastError(),
+                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                (LPSTR)&messageBuffer,
+                0,
+                NULL);
+            MessageBoxA(NULL, messageBuffer, "Call module error", MB_OK | MB_ICONERROR);
+            LocalFree(messageBuffer);
+        }
+
+        if (hModuleDll)
+            FreeLibrary(hModuleDll);
+
+        return result;
+    }
+
 
     int AppControl::ShowAdminError()
     {
@@ -78,30 +118,18 @@ namespace AnyFSE::App::AppControl
 
     int AppControl::ShowSettings()
     {
-        return Tools::Admin::IsRunningAsAdministrator() || Tools::Admin::RequestAdminElevation(L"/Settings")
-            ? App::CallLibrary(L"AnyFSE.Settings.dll", GetModuleHandle(NULL), NULL, NULL, 0)
-            : ShowAdminError();
+        return CallLibrary(L"AnyFSE.Settings.dll", GetModuleHandle(NULL), NULL, NULL, 0);
     }
 
     bool AppControl::AsControl(LPSTR lpCmdLine)
     {
-        return _strcmpi(lpCmdLine, "/Control") == 0;
+        return _strnicmp(lpCmdLine, "/Control", 8) != 0;
     }
 
     bool AppControl::IsServiceAvailable()
     {
         static bool available = IPCChannel::IsServerAvailable(L"AnyFSEPipe");
         return available;
-    }
-
-    bool AppControl::AsSettings(LPSTR lpCmdLine)
-    {
-        return _strcmpi(lpCmdLine, "/Settings") == 0 || !Config::IsConfigured();
-    }
-
-    bool AppControl::NeedAdmin(LPSTR lpCmdLine)
-    {
-        return AsSettings(lpCmdLine) || (!AsControl(lpCmdLine) && !IsServiceAvailable());
     }
 
     int AppControl::StartControl(AppControlStateLoop & AppControlStateLoop, Window::MainWindow& mainWindow)
@@ -131,13 +159,8 @@ namespace AnyFSE::App::AppControl
         if (!GamingExperience::ApiIsAvailable)
         {
             log.Critical("Fullscreen Gaming API is not detected, exiting\n");
-            AppControlStateLoop.NotifyRemote(AppEvents::EXIT_SERVICE);
+            AppControlStateLoop.NotifyRemote(AppEvents::SUSPEND_SERVICE);
             return -1;
-        }
-
-        if (!Config::AggressiveMode)
-        {
-            AppControlStateLoop.NotifyRemote(AppEvents::MONITOR_REGISTRY);
         }
 
         if (Config::Launcher.Type != LauncherType::None || Config::Launcher.Type != LauncherType::Xbox)
@@ -148,7 +171,7 @@ namespace AnyFSE::App::AppControl
         else
         {
             log.Info("Launcher is Not configured. Exiting\n");
-            AppControlStateLoop.NotifyRemote(AppEvents::EXIT_SERVICE);
+            AppControlStateLoop.NotifyRemote(AppEvents::SUSPEND_SERVICE);
             return -1;
         }
         return 0;
@@ -173,8 +196,6 @@ namespace AnyFSE::App::AppControl
 
         AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
 
-        // ShowSettings();
-
         LPCTSTR className = L"AnyFSE";
 
         HWND hAppWnd = FindWindow(className, NULL);
@@ -198,29 +219,24 @@ namespace AnyFSE::App::AppControl
             return -1;
         }
 
-        if (
-            NeedAdmin(lpCmdLine)
-            && !Tools::Admin::IsRunningAsAdministrator()
-            && !Tools::Admin::RequestAdminElevation(AsSettings(lpCmdLine) ? L"/Settings" : L"")
-        )
+        if (!IsServiceAvailable())
         {
-            ShowAdminError();
+            log.Critical("AnyFSE monitoring service not executed, exiting\n");
+            InitCustomControls();
+            TaskDialog(NULL, hInstance,
+                       L"Execution failure",
+                       L"AnyFSE monitoring service is not run.",
+                       L"Can not connect to AnyFSE monitoring service.\n"
+                       L"It is required to track and prevent Xbox app execution.\n"
+                       L"\n"
+                       L"Please reinstall application.",
+                       TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
             return -1;
         }
 
         log.Debug("\n\nApplication control is started (hInstance=%08x)", hInstance);
 
         Launchers::LauncherOnBoot();
-
-        std::thread serviceThread;
-
-        if (!AsControl(lpCmdLine) && !IsServiceAvailable())
-        {
-            serviceThread = std::thread([&]()
-            {
-                App::CallLibrary(L"AnyFSE.Service.dll", hInstance, hPrevInstance, NULL, nCmdShow);
-            });
-        }
 
         DWORD xBoxProcess = Process::FindFirstByName(Config::XBoxProcessName);
         if (xBoxProcess)
@@ -279,38 +295,22 @@ namespace AnyFSE::App::AppControl
 
         log.Debug("Run window loop.");
 
-        if (AsSettings(lpCmdLine))
-        {
-            PostMessage(FindWindow(className, NULL), MainWindow::WM_TRAY, 0, WM_LBUTTONDBLCLK);
-        }
-
         exitCode = Window::MainWindow::RunLoop();
 
         if (exitCode != ERROR_RESTART_APPLICATION)
         {
             log.Info("Stopping application, notify service exit");
-            AppControlStateLoop.NotifyRemote(AppEvents::EXIT_SERVICE);
+            AppControlStateLoop.NotifyRemote(AppEvents::SUSPEND_SERVICE);
+        }
+        else
+        {
+            log.Info("Restarting application, notify service exit");
+            AppControlStateLoop.NotifyRemote(AppEvents::RESTART_SERVICE);
         }
 
         AppControlStateLoop.Stop();
 
         log.Debug("Loop finished. Time to exit");
-
-        if (serviceThread.joinable())
-        {
-            log.Debug("Stop homebrew service");
-
-            HWND hServiceWnd = FindWindow(L"AnyFSEService", NULL);
-            if (hServiceWnd)
-            {
-                log.Debug("Service window is found");
-                PostMessage(hServiceWnd, WM_DESTROY, 0, 0);
-            }
-            log.Debug("Joining service thread");
-            serviceThread.join();
-
-            log.Debug("Homebrew service is completed");
-        }
 
         if (exitCode)
         {
@@ -321,12 +321,6 @@ namespace AnyFSE::App::AppControl
             log.Debug("Job is done!");
         }
 
-        if (exitCode == ERROR_RESTART_APPLICATION)
-        {
-            wchar_t modulePath[MAX_PATH];
-            GetModuleFileName(NULL, modulePath, MAX_PATH);
-            Process::StartProcess(modulePath, L"");
-        }
         return (int)exitCode;
     }
 };

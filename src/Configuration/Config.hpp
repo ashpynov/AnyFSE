@@ -122,6 +122,9 @@ namespace AnyFSE::Configuration
             static json GetConfig();
             static void Save();
 
+            static void SaveWindowPlacement(int cmdShow, const RECT & rcNormalPosition);
+            static int LoadWindowPlacement(RECT * prcNormalPosition);
+
             static std::wstring GetApplicationName(const std::wstring & filePath);
 
             static std::wstring GetFileDescription(const std::wstring &filePath);

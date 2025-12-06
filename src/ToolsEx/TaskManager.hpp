@@ -26,6 +26,7 @@
 namespace AnyFSE::ToolsEx::TaskManager
 {
     bool CreateTask(const std::wstring& exeFile = L"");
+    bool StartTask();
     bool RemoveTask();
     std::wstring GetInstallPath();
 }

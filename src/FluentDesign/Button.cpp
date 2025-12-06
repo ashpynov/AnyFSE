@@ -45,6 +45,7 @@ namespace FluentDesign
         , m_bFlat(false)
         , m_bSquare(false)
         , m_hButton(nullptr)
+        , m_isSmallIcon(false)
         , m_textNormalColor(Theme::Colors::Text)
         , m_backgroundNormalColor(Theme::Colors::Button)
         , m_textHoverColor(Theme::Colors::Text)
@@ -105,10 +106,11 @@ namespace FluentDesign
         InvalidateRect(m_hButton, NULL, TRUE);
     }
 
-    void Button::SetIcon(const std::wstring &glyph)
+    void Button::SetIcon(const std::wstring &glyph, bool bSmall)
     {
         m_text = glyph;
         m_isIconButton = true;
+        m_isSmallIcon = bSmall;
         InvalidateRect(m_hButton, NULL, TRUE);
     }
 
@@ -126,6 +128,7 @@ namespace FluentDesign
     void Button::SetFlat(bool isFlat)
     {
         m_bFlat = isFlat;
+        SetWindowLong(m_hButton, GWL_STYLE, (GetWindowLong(m_hButton, GWL_STYLE) & ~BS_FLAT) | (isFlat ? BS_FLAT : 0));
         InvalidateRect(m_hButton, NULL, TRUE);
     }
 
@@ -334,6 +337,11 @@ namespace FluentDesign
             borderColor = backColor;
         }
 
+        if ( m_bFlat && focused && m_theme.IsKeyboardFocused() && m_buttonMouseOver)
+        {
+            br.Inflate(m_theme.DpiScaleF(-1), m_theme.DpiScaleF(-1));
+        }
+
         if (!m_bFlat || m_buttonPressed || m_buttonMouseOver)
         {
             // Draw outer rounded rectangle (track)
@@ -341,7 +349,7 @@ namespace FluentDesign
             SolidBrush backBrush(backColor);
 
             // For rounded rectangles in GDI+, we need to use GraphicsPath
-            if (m_bSquare)
+            if (m_bSquare && !(m_bFlat && focused && m_buttonMouseOver && m_theme.IsKeyboardFocused()))
             {
                 graphics.FillRectangle(&backBrush, br);
                 if (!m_bFlat)
@@ -356,7 +364,11 @@ namespace FluentDesign
         }
 
         // Create the font and brush
-        Font font(hdc, m_isIconButton ? m_theme.GetFont_GlyphNormal() : m_theme.GetFont_Text());
+        Font font(hdc, m_isIconButton
+            ? (m_isSmallIcon
+                ? m_theme.GetFont_Glyph()
+                : m_theme.GetFont_GlyphNormal())
+            : m_theme.GetFont_Text());
 
         Color textColor(m_theme.GetColor(
             ! enabled           ? Theme::Colors::TextDisabled

@@ -157,7 +157,7 @@ namespace AnyFSE
             void OnInstall();
             void OnSettings();
             void OnDone();
-            void StartAnyFSE(bool bSettings);
+            bool StartAnyFSE();
             bool DeleteOldVersion();
             bool TerminateAnyFSE();
             bool AddUninstallRegistry(const std::wstring &path);

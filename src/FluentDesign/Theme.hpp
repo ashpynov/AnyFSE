@@ -132,7 +132,7 @@ namespace FluentDesign
         static const int m_primarySize = 14;
         static const int m_largeSize = 20;
         static const int m_secondarySize = 11;
-        static const int m_glyphSize = 12;
+        static const int m_glyphSize = 10;
         static const int m_glyphNormalSize = 14;
         static const int m_iconSize = 20;
         static const int m_titleSize = 28;
@@ -162,7 +162,8 @@ namespace FluentDesign
 
         public:
         Theme(HWND hParentWnd = NULL);
-        void Attach(HWND hParentWnd);
+        void AttachWindow(HWND hHostWnd);
+        void AttachDlg(HWND hParentWnd);
 
         void RegisterChild(HWND hChild);
 
@@ -194,6 +195,9 @@ namespace FluentDesign
         const int DpiScale(int designSize);
         const float DpiScaleF(int designSize);
         const float DpiScaleF(float designSize);
+
+        const RECT DpiScale(const RECT &designRect);
+        const RECT DpiUnscale(const RECT &actualRect);
 
         const Gdiplus::RectF DpiUnscaleF(const RECT &actualRect);
         const RECT DpiScale(const Gdiplus::RectF &designRectF);

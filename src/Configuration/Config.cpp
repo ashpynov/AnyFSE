@@ -224,6 +224,32 @@ namespace AnyFSE::Configuration
         file.close();
     }
 
+    void Config::SaveWindowPlacement(int cmdShow, const RECT &rcNormalPosition)
+    {
+        json config = GetConfig();
+        config["WindowPos"]["Left"] = rcNormalPosition.left;
+        config["WindowPos"]["Top"] = rcNormalPosition.top;
+        config["WindowPos"]["Right"] = rcNormalPosition.right;
+        config["WindowPos"]["Bottom"] = rcNormalPosition.bottom;
+        config["WindowPos"]["State"] = cmdShow;
+
+        std::ofstream file(GetConfigFileA());
+        file << config.dump(4);
+        file.close();
+    }
+
+    int Config::LoadWindowPlacement(RECT *prcNormalPosition)
+    {
+        json config = GetConfig();
+
+        prcNormalPosition->left = config.value(jp("/WindowPos/Left"), 0);
+        prcNormalPosition->top = config.value(jp("/WindowPos/Top"), 0);
+        prcNormalPosition->right = config.value(jp("/WindowPos/Right"), 0);
+        prcNormalPosition->bottom = config.value(jp("/WindowPos/Bottom"), 0);
+
+        return config.value(jp("/WindowPos/State"), 0);
+    }
+
     std::wstring Config::GetApplicationName(const std::wstring &filePath)
     {
         std::wstring name = GetFileDescription(filePath);

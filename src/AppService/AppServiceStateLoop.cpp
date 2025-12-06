@@ -40,6 +40,10 @@ namespace AnyFSE::App::AppService::StateLoop
         {
             case AppEvents::CONNECT:
                 log.Info("AppControl connected" );
+                OnStart.Notify();
+                NotifyRemote(event);
+                return;
+
             case AppEvents::XBOX_DETECTED:
             case AppEvents::OPEN_HOME:
             case AppEvents::OPEN_DEVICE_FORM:
@@ -52,11 +56,10 @@ namespace AnyFSE::App::AppService::StateLoop
             case AppEvents::XBOX_ALLOW:
                 return OnXboxAllow.Notify();
 
-            case AppEvents::MONITOR_REGISTRY:
-                return OnMonitorRegistry.Notify();
-
-            case AppEvents::EXIT_SERVICE:
-                return OnExit.Notify();
+                case AppEvents::SUSPEND_SERVICE:
+                return OnSuspend.Notify();
+            case AppEvents::RESTART_SERVICE:
+                return OnRestart.Notify();
 
             default:
                 log.Trace("Recieved event by service %d", event);

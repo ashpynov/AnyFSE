@@ -47,7 +47,7 @@ namespace FluentDesign
         LoadColors();
         if (hParentWnd)
         {
-            Attach(hParentWnd);
+            AttachDlg(hParentWnd);
         }
         else
         {
@@ -55,7 +55,7 @@ namespace FluentDesign
         }
     }
 
-    void Theme::Attach(HWND hHostWnd)
+    void Theme::AttachWindow(HWND hHostWnd)
     {
         m_lastFocused = GetFocus();
         m_isKeyboardFocus = false;
@@ -64,12 +64,15 @@ namespace FluentDesign
         m_dpi = GetDpiForWindow(m_hParentWnd);
         LoadColors();
         CreateFonts();
+    }
 
+    void Theme::AttachDlg(HWND hHostWnd)
+    {
+        AttachWindow(hHostWnd);
 
         SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
         SetWindowSubclass(hHostWnd, DialogSubclassProc, 0, (DWORD_PTR)this);
-
     }
 
     void Theme::RegisterChild(HWND hChild)
@@ -293,15 +296,17 @@ namespace FluentDesign
         GetClassNameW(hWnd, className, MAX_PATH);
         if (!_wcsicmp(className, L"STATIC") || !_wcsicmp(className, L"EDIT"))
         {
-            return -1;
+            return NAN;
         }
         else if (!_wcsicmp(className, L"BUTTON"))
         {
-            WCHAR name[MAX_PATH + 1];
-            GetWindowTextW(hWnd, name, MAX_PATH);
-            if (!_wcsicmp(name, L"TOGGLE"))
+            if (GetWindowLong(hWnd, GWL_STYLE) & BS_CHECKBOX)
             {
                 return DpiScaleF(m_focusToggleMargins);
+            }
+            if (GetWindowLong(hWnd, GWL_STYLE) & BS_FLAT)
+            {
+                return -(float)GetSize_FocusMargins();
             }
         }
 
@@ -334,7 +339,7 @@ namespace FluentDesign
         if (!child || !m_isKeyboardFocus || GetFocus() != child) return;
 
         float offset = FocusOffsetByWndClass(child);
-        if (offset < 0 ) return;
+        if (std::isnan(offset)) return;
 
         RECT clientRect;
         GetClientRect(child, &clientRect);
@@ -463,7 +468,25 @@ namespace FluentDesign
     {
         return designSize * m_dpi / 96;
     }
-    const Gdiplus::RectF Theme::DpiUnscaleF(const RECT& scaledRect)
+    const RECT Theme::DpiScale(const RECT &designRect)
+    {
+        return RECT {
+            (LONG)DpiScale(designRect.left),
+            (LONG)DpiScale(designRect.top),
+            (LONG)DpiScale(designRect.right),
+            (LONG)DpiScale(designRect.bottom),
+        };
+    }
+    const RECT Theme::DpiUnscale(const RECT &actualRect)
+    {
+        return RECT {
+            (LONG)DpiUnscale(actualRect.left),
+            (LONG)DpiUnscale(actualRect.top),
+            (LONG)DpiUnscale(actualRect.right),
+            (LONG)DpiUnscale(actualRect.bottom),
+        };
+    }
+    const Gdiplus::RectF Theme::DpiUnscaleF(const RECT &scaledRect)
     {
         return Gdiplus::RectF(
             DpiUnscaleF(scaledRect.left),

@@ -50,8 +50,10 @@ namespace AnyFSE::ToolsEx::TaskManager
         // Get current executable path
         wchar_t modulePath[MAX_PATH];
         GetModuleFileNameW(NULL, modulePath, MAX_PATH);
+        wchar_t * path = wcsrchr(modulePath,'\\');
+        if (path) { *path = '\0'; }
 
-        std::wstring exePath = exeFile.empty() ? modulePath : exeFile;
+        std::wstring exePath = exeFile.empty() ? std::wstring(modulePath) + L"\\AnyFSE.Service.exe" : exeFile;
 
         ITaskService *pService = NULL;
         ITaskFolder *pRootFolder = NULL;
@@ -91,7 +93,6 @@ namespace AnyFSE::ToolsEx::TaskManager
             TRY( pActionCollection->Create(TASK_ACTION_EXEC, &pAction));
             TRY( pAction->QueryInterface(IID_IExecAction, (void **)&pExecAction));
             TRY( pExecAction->put_Path(_bstr_t(exePath.c_str())));                   // Use current process path:cite[2]
-            TRY( pExecAction->put_Arguments(_bstr_t(L"/Service")));
 
             TRY(pTask->get_RegistrationInfo(&pRegInfo));
             TRY(pRegInfo->put_Author(_bstr_t(L"Artem Shpynov")));
@@ -205,5 +206,41 @@ namespace AnyFSE::ToolsEx::TaskManager
         CoUninitialize();
 
         return !result.empty() ? std::filesystem::path(result).parent_path().wstring() : L"";
+    }
+
+    bool StartTask()
+    {
+        bool result = false;
+        ITaskService *pService = NULL;
+        ITaskFolder *pRootFolder = NULL;
+        IRegisteredTask* pTask = NULL;
+        IRunningTaskCollection* pRunningTasks = NULL;
+
+        LONG count = 0;
+
+        try
+        {
+            TRY( CoInitializeEx(NULL, COINIT_MULTITHREADED));
+            TRY( CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void **)&pService));
+            TRY( pService->Connect(_variant_t(), _variant_t(), _variant_t(), _variant_t()));
+            TRY( pService->GetFolder(_bstr_t(L"\\"), &pRootFolder));
+            TRY( pRootFolder->GetTask(_bstr_t(TaskName.c_str()), &pTask));
+            TRY( pTask->GetInstances(0, &pRunningTasks));
+            TRY( pRunningTasks->get_Count(&count));
+            TRY( pTask->Run(_variant_t(), NULL));
+            result = true;
+        }
+        catch(const std::exception& e)
+        {
+            log.Error(log.APIError(), "Cannot Restart task: %s", e.what());
+        }
+
+        FREE(pRunningTasks);
+        FREE(pTask);
+        FREE(pRootFolder);
+        FREE(pService);
+        CoUninitialize();
+
+        return result;
     }
 }

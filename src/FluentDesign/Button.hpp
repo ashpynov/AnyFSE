@@ -48,6 +48,7 @@ namespace FluentDesign
         bool m_isIconButton;
         bool m_bFlat;
         bool m_bSquare;
+        bool m_isSmallIcon;
         int m_cornerRadius = 8;
 
         std::vector<Popup::PopupItem> m_menuItems;
@@ -84,7 +85,7 @@ namespace FluentDesign
 
         HWND GetHwnd() const { return m_hButton; }
         void SetText(const std::wstring& text);
-        void SetIcon(const std::wstring& glyph);
+        void SetIcon(const std::wstring& glyph, bool bSmall = false);
         void Enable(bool bEnable);
         void Show(bool bShow);
 

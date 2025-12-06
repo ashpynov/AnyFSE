@@ -34,6 +34,11 @@ namespace AnyFSE::Tools
         callbacks.push_back(callback);
     }
 
+    void Event::Clear()
+    {
+        callbacks.clear();
+    }
+
     void Event::operator=(std::function<void()> callback)
     {
         callbacks.clear();

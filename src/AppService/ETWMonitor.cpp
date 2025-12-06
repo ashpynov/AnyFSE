@@ -55,7 +55,13 @@ namespace AnyFSE::App::AppService
     ETWMonitor::~ETWMonitor()
     {
         if (m_isRunning)
+        {
             Stop();
+        }
+        if ( m_monitoringThread.joinable())
+        {
+            m_monitoringThread.join();
+        }
     }
 
     HANDLE ETWMonitor::Start()
@@ -127,7 +133,14 @@ namespace AnyFSE::App::AppService
                 // ProcessTrace will block until events arrive or session stops
                 log.Debug("Entering wait cycle for real-time ETW monitoring");
                 ULONG status = ProcessTrace(&m_consumerHandle, 1, NULL, NULL);
-                if (status != ERROR_SUCCESS && status != ERROR_CANCELLED)
+
+                if (status == ERROR_WMI_INSTANCE_NOT_FOUND)
+                {
+                    log.Debug(log.APIError(status), "ProcessTrace fail, sleep 1 sec.");
+                    Sleep(1000);
+                    continue;
+                }
+                else if (status != ERROR_SUCCESS && status != ERROR_CANCELLED)
                 {
                     log.Debug(log.APIError(status), "ProcessTrace ended with status: %lu", status);
                     break;

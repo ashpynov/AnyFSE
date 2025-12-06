@@ -72,6 +72,7 @@ namespace AnyFSE::App::AppControl::StateLoop
             case AppEvents::OPEN_DEVICE_FORM:  return OnDeviceForm();
             case AppEvents::QUERY_END_SESSION: return OnQueryEndSession();
             case AppEvents::END_SESSION:       return OnEndSession();
+            case AppEvents::DISCONNECT:        return OnDisconnect();
             default: break;
         }
     }
@@ -174,6 +175,12 @@ namespace AnyFSE::App::AppControl::StateLoop
     void AppControlStateLoop::OnEndSession()
     {
 
+    }
+
+    void AppControlStateLoop::OnDisconnect()
+    {
+        SetLastError(WS_E_ENDPOINT_DISCONNECTED);
+        m_splash.ExitOnError();
     }
 
     void AppControlStateLoop::OnOpenHome()

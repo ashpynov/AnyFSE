@@ -34,43 +34,7 @@
         },
         {
             "type": "shell",
-            "label": "Build AnyFSE.Service Release",
-            "command": "msbuild.exe",
-            "args": [
-                "AnyFSE.Service.vcxproj",
-                "-property:Configuration=Release",
-                "-property:Platform=x64",
-                "-target:Clean;Build"
-            ],
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
-        },
-        {
-            "type": "shell",
-            "label": "Build AnyFSE.Control Debug",
-            "command": "msbuild.exe",
-            "args": [
-                "AnyFSE.Control.vcxproj",
-                "-property:Configuration=Debug",
-                "-property:Platform=x64",
-                "-target:Build"
-            ],
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
-        },
-        {
-            "type": "shell",
-            "label": "Build AnyFSE Debug",
+            "label": "Build AnyFSE App Debug",
             "command": "msbuild.exe",
             "args": [
                 "AnyFSE.vcxproj",
@@ -84,7 +48,10 @@
             "group": {
                 "kind": "build",
                 "isDefault": false
-            }
+            },
+            "dependsOn":[
+                "Build AnyFSE.Settings Debug"
+            ]
         },
         {
             "type": "shell",
@@ -210,7 +177,6 @@
             },
             "dependsOn":[
                 "Build AnyFSE Release",
-                "Build AnyFSE.Uninstaller Release"
             ]
         },
         {

@@ -28,6 +28,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include "Configuration/Config.hpp"
 
 #pragma comment(lib, "advapi32.lib")
 
@@ -194,7 +195,10 @@ namespace AnyFSE::App::AppService
         SetTraceProperties();
         StartSession();
         EnableProcessProvider();
-        //EnableRegistryProvider();
+        if (!Config::AggressiveMode)
+        {
+            EnableRegistryProvider();
+        }
         OpenConsumer();
 
         log.Debug("Real-time ETW monitoring started successfully for process: %s", Unicode::to_string(m_processName).c_str());

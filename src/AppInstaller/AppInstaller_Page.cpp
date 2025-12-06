@@ -138,8 +138,18 @@ namespace AnyFSE
 
         m_captionStatic.SetText(caption);
         m_textStatic.SetText(text);
-        m_rightButton.SetText(buttonRight);
-        m_rightButton.OnChanged = callbackRight;
+
+        if( !buttonRight.empty())
+        {
+            m_rightButton.SetText(buttonRight);
+            m_rightButton.OnChanged = callbackRight;
+            m_rightButton.Show(true);
+        }
+        else
+        {
+            m_rightButton.Show(false);
+        }
+
 
         if( !buttonLeft.empty())
         {
@@ -202,15 +212,14 @@ namespace AnyFSE
         ShowPage(Icon_Progress,
             L"Installing AnyFSE",
             L"Preparation",
-            L"Cancel", delegate(OnCancel));
+            L"", delegate(OnCancel));
     }
 
     void AppInstaller::ShowCompletePage()
     {
         ShowPage(Icon_Done,
             L"Done",
-            L"AnyFSE installation has been completed.\nPress Configure change settings.\n\n"
-            L"It is highly recomended to restart your PC to de-escalate priveleges after configuration",
+            L"AnyFSE installation has been completed.\n\nPress Configure change settings.\n",
             L"Configure", delegate(OnSettings),
             fs::exists(m_pathEdit.GetText() + L"\\AnyFSE.json") ? L"Done" : L"", delegate(OnDone)
         );
@@ -362,7 +371,10 @@ namespace AnyFSE
 
             // Set task
             SetCurrentProgress(L"Register scheduled task");
-            status &= ToolsEx::TaskManager::CreateTask(path.wstring() + L"\\AnyFSE.exe");
+            status &= ToolsEx::TaskManager::CreateTask(path.wstring() + L"\\AnyFSE.Service.exe");
+
+            SetCurrentProgress(L"Starting application");
+            status &= ToolsEx::TaskManager::StartTask();
 
             // Set task
             SetCurrentProgress(L"Register uninstaller");
@@ -410,12 +422,20 @@ namespace AnyFSE
             }
         }
 
-        Process::FindAllByName(L"AnyFSE.exe", handles);
+        if (Process::FindAllByName(L"AnyFSE.Service.exe", handles))
+        {
+            for (auto& handle: handles)
+            {
+                ProcessEx::Kill(handle);
+            }
+        }
 
-        for (int i = 0; handles.size() && i < 10; i++)
+        for (int i = 0;
+            (Process::FindAllByName(L"AnyFSE.exe", handles) ||
+            Process::FindAllByName(L"AnyFSE.Services.exe", handles))
+            && i < 10; i++)
         {
             Sleep(1000);
-            Process::FindAllByName(L"AnyFSE.exe", handles);
         }
 
         return true;
@@ -515,17 +535,16 @@ namespace AnyFSE
 
     void AppInstaller::OnSettings()
     {
-        StartAnyFSE(true);
+        HWND hWnd = FindWindow(L"AnyFSE", NULL);
+        if (hWnd)
+        {
+            PostMessage(hWnd, WM_USER + 1, 0, WM_LBUTTONDBLCLK);
+        }
+        EndDialog(m_hDialog, IDOK);
     }
 
     void AppInstaller::OnDone()
     {
-        StartAnyFSE(false);
-    }
-
-    void AppInstaller::StartAnyFSE(bool bSettings)
-    {
-        Process::StartProcess(m_pathEdit.GetText() + L"\\AnyFSE.exe", bSettings ? L"/Settings" : L"");
         EndDialog(m_hDialog, IDOK);
     }
 }

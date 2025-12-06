@@ -31,6 +31,8 @@
 #include "Configuration/Config.hpp"
 #include "Tools/Icon.hpp"
 #include "Tools/Unicode.hpp"
+#include "FluentDesign/Theme.hpp"
+#include "FluentDesign/Popup.hpp"
 #include "AppControl/AppControl.hpp"
 #include "AppControl/MainWindow.hpp"
 #include "MainWindow.hpp"
@@ -47,7 +49,6 @@ namespace AnyFSE::App::AppControl::Window
         , m_pLogoImage(nullptr)
         , WM_TASKBARCREATED(RegisterWindowMessage(L"TaskbarCreated"))
     {
-
         ZeroMemory(&WC, sizeof(WC));
     }
     MainWindow::~MainWindow()
@@ -311,19 +312,44 @@ namespace AnyFSE::App::AppControl::Window
 
         case WM_RBUTTONDOWN:
         {
+            static FluentDesign::Theme theme;
+            theme.AttachWindow(m_hWnd);
+            static FluentDesign::Popup popup(theme);
+            static std::vector<FluentDesign::Popup::PopupItem> popupItems{
+                FluentDesign::Popup::PopupItem(L"\xE713", L"Configure",
+                    [This = this]() { SendMessage(This->m_hWnd, WM_COMMAND, MAKEWPARAM(ID_CONFIGURE, 0), 0); }),
+                FluentDesign::Popup::PopupItem(L"\xE733", L"Quit",
+                    [This = this]() { SendMessage(This->m_hWnd, WM_COMMAND, MAKEWPARAM(ID_QUIT, 0), 0); })
+            };
+            POINT pt;
+            GetCursorPos(&pt);
+            SetForegroundWindow(m_hWnd);
+            popup.Show(m_hWnd, pt.x, pt.y, popupItems, 300, TPM_LEFTALIGN | TPM_BOTTOMALIGN);
+            theme.SwapFocus(popup.GetHwnd());
+            break;
+
             HMENU hMenu = LoadMenu(WC.hInstance, MAKEINTRESOURCE(IDR_POPUP));
             if (hMenu)
             {
                 HMENU hSubMenu = GetSubMenu(hMenu, 0);
+                UINT selectedCmd = 0;
                 if (hSubMenu)
                 {
                     POINT stPoint;
                     GetCursorPos(&stPoint);
 
-                    TrackPopupMenu(hSubMenu, TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, stPoint.x, stPoint.y, 0, m_hWnd, NULL);
+                    selectedCmd = TrackPopupMenuEx(
+                        hSubMenu,
+                        TPM_RETURNCMD | TPM_NONOTIFY | TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON,
+                        stPoint.x, stPoint.y, m_hWnd, NULL);
                 }
 
                 DestroyMenu(hMenu);
+                if (selectedCmd != 0)
+                {
+                    // Handle menu command
+                    SendMessage(m_hWnd, WM_COMMAND, MAKEWPARAM(selectedCmd, 0), 0);
+                }
             }
         }
         break;

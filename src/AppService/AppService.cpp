@@ -26,23 +26,20 @@
 #include "AppService/ETWMonitor.hpp"
 #include "Logging/LogManager.hpp"
 #include "ToolsEx/ProcessEx.hpp"
+#include "ToolsEx/TaskManager.hpp"
+#include "ToolsEx/Admin.hpp"
+#include "Tools/Unicode.hpp"
 
 #include "Configuration/Config.hpp"
 
 #include <windows.h>
 #include <wtsapi32.h>
 #include <UserEnv.h>
+#include "AppService.hpp"
 #pragma comment(lib, "wtsapi32.lib")
 #pragma comment(lib, "userenv.lib")
 
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
-{
-
-    return TRUE;
-}
-
-__declspec(dllexport)
-int WINAPI Main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     return AnyFSE::App::AppService::AppService::ServiceMain(hInstance, hPrevInstance, lpCmdLine);
 }
@@ -57,9 +54,85 @@ namespace AnyFSE::App::AppService
     AppServiceStateLoop                 AppService::AppControlStateLoop;
     HWND                                AppService::m_hwnd;
 
-    BOOL AppService::ExitService()
+    static const int COMPLETE_EXIT = 0;
+    static const int COMPLETE_RESTART = 1;
+    static const int COMPLETE_SUSPEND = 2;
+
+    BOOL AppService::ExitService(int nState)
     {
-        PostMessage(m_hwnd, WM_DESTROY, 0, 0);
+        PostMessage(m_hwnd, WM_DESTROY, nState, 0);
+        return true;
+    }
+
+    bool AppService::IsSystemAccount()
+    {
+        HANDLE hToken = NULL;
+        DWORD dwSize = 0;
+        PTOKEN_USER pTokenUser = NULL;
+        bool isSystem = false;
+
+        // Open process token
+        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+            return false;
+
+        // Get token information size
+        GetTokenInformation(hToken, TokenUser, NULL, 0, &dwSize);
+
+        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+        {
+            pTokenUser = (PTOKEN_USER)LocalAlloc(LPTR, dwSize);
+            if (pTokenUser)
+            {
+                // Get token user information
+                if (GetTokenInformation(hToken, TokenUser, pTokenUser, dwSize, &dwSize))
+                {
+                    // Lookup account name from SID
+                    WCHAR name[256];
+                    WCHAR domain[256];
+                    DWORD nameSize = 256;
+                    DWORD domainSize = 256;
+                    SID_NAME_USE sidType;
+
+                    if (LookupAccountSid(NULL, pTokenUser->User.Sid,
+                                         name, &nameSize,
+                                         domain, &domainSize,
+                                         &sidType))
+                    {
+
+                        // Check if it's SYSTEM account
+                        isSystem = (_wcsicmp(name, L"SYSTEM") == 0 &&
+                                    _wcsicmp(domain, L"NT AUTHORITY") == 0);
+
+                        log.Debug("Service is started by %s/%s",
+                            Unicode::to_string(domain).c_str(),
+                            Unicode::to_string(name).c_str()
+                        );
+                    }
+                }
+                LocalFree(pTokenUser);
+            }
+        }
+
+        CloseHandle(hToken);
+        return isSystem;
+    }
+
+    bool AppService::StartServiceTask()
+    {
+        if (ToolsEx::Admin::IsRunningAsAdministrator())
+        {
+            log.Debug("Is Elevated permissions => Create and Start task");
+            ToolsEx::TaskManager::CreateTask();
+            ToolsEx::TaskManager::StartTask();
+        }
+        else
+        {
+            MessageBox(NULL,
+                L"AnyFSE.Service should be executed as scheduled task, not as regular application.",
+                L"Error",
+                MB_ICONERROR | MB_OK
+            );
+        }
         return true;
     }
 
@@ -67,21 +140,99 @@ namespace AnyFSE::App::AppService
     {
         Config::Load();
         AnyFSE::Logging::LogManager::Initialize("AnyFSE/Service", Config::LogLevel, Config::LogPath);
-        log.Debug("Service is started (hInstance=%08x)", hInstance);
+
+        if (FindWindow(L"AnyFSEService", nullptr))
+        {
+            log.Debug("Service message window is existed already, exiting");
+            return -1;
+        }
+        if (!IsSystemAccount())
+        {
+            log.Debug("Not System account, starting task");
+            StartServiceTask();
+            return -1;
+        }
+
+        log.Debug("Service is started (hInstance=%08x), cmdLine: %s", hInstance, lpCmdLine);
+
+        bool bCommand = (lpCmdLine && lpCmdLine[0]);
+        bool bSuspend = bCommand
+            || Config::Launcher.Type == LauncherType::None
+            || Config::Launcher.Type == LauncherType::Xbox;
 
         CreateBackgroundWindow();
-        StartMonitoring();
+        StartMonitoring(bSuspend);
+
         DWORD activeSession = WTSGetActiveConsoleSessionId();
-        if (lpCmdLine != NULL && activeSession != 0xFFFFFFFF)
+        if (!bCommand && activeSession != 0xFFFFFFFF)
         {
             log.Debug("Session is started already force to run\n");
             LaunchAppInUserSession(activeSession);
         }
-        MonitorSessions();
-        StopMonitoring();
-        log.Debug("Work is done");
 
-        return 0;
+        int result = MonitorSessions();
+
+        StopMonitoring();
+
+        switch (result)
+        {
+            case COMPLETE_EXIT:
+                log.Debug("Work is done");
+                break;
+            case COMPLETE_SUSPEND:
+                log.Debug("Restart in suspend mode");
+                Restart(true);
+                break;
+            case COMPLETE_RESTART:
+                log.Debug("Restarting");
+                Restart();
+                break;
+            default:
+                log.Debug("Unknown error: %d, suspend", result);
+                Restart();
+                break;
+        }
+
+        return result;
+    }
+
+    void AppService::Restart(bool bSuspended)
+    {
+        // Get current executable path
+        TCHAR modulePath[MAX_PATH];
+        GetModuleFileName(NULL, modulePath, MAX_PATH);
+
+
+        std::wstring fullCommand = std::wstring(L"\"") + modulePath + L"\"";
+
+        if (bSuspended)
+        {
+            fullCommand += L" /suspend";
+        }
+
+        // Create writable buffer for command line
+        std::vector<wchar_t> cmdLine(MAX_PATH);
+        wcscpy_s(cmdLine.data(), MAX_PATH, fullCommand.c_str());
+
+        // Prepare startup info
+        STARTUPINFO si = { sizeof(STARTUPINFO) };
+        PROCESS_INFORMATION pi;
+
+        // Create the new process
+        if (CreateProcess(NULL,         // Executable path
+                        cmdLine.data(), // Command line
+                        NULL,           // Process security
+                        NULL,           // Thread security
+                        FALSE,          // Inherit handles
+                        0,              // Creation flags
+                        NULL,           // Environment
+                        NULL,           // Current directory
+                        &si,            // Startup info
+                        &pi))           // Process info
+        {
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+        }
     }
 
     void AppService::CreateBackgroundWindow()
@@ -112,16 +263,22 @@ namespace AnyFSE::App::AppService
         {
             LaunchAppInUserSession((DWORD)lParam);
         }
+        else if (msg == WM_USER)
+        {
+            EnableMonitoring();
+            return 0;
+        }
         else if (msg == WM_DESTROY)
         {
             AppControlStateLoop.Stop();
             WTSUnRegisterSessionNotification(hwnd);
-            PostQuitMessage(0);
+            PostQuitMessage((int)wParam);
+            return 0;
         }
         return DefWindowProc(hwnd, msg, wParam, lParam);
     }
 
-    void AppService::MonitorSessions()
+    int AppService::MonitorSessions()
     {
         MSG msg;
         while (GetMessage(&msg, NULL, 0, 0) > 0)
@@ -129,11 +286,12 @@ namespace AnyFSE::App::AppService
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+        return (int)msg.wParam;
     }
 
     BOOL AppService::LaunchAppInUserSession(DWORD sessionId)
     {
-        log.Debug(log.APIError(), "LaunchAppInUserSession");
+        log.Debug("LaunchAppInUserSession");
 
         HANDLE hUserToken = NULL;
         if (!WTSQueryUserToken(sessionId, &hUserToken))
@@ -160,14 +318,20 @@ namespace AnyFSE::App::AppService
         wchar_t modulePath[MAX_PATH];
         GetModuleFileName(NULL, modulePath, MAX_PATH);
 
-        std::wstring fullCommand = std::wstring(L"\"") + modulePath + L"\" /Control";
+        wchar_t * path = wcsrchr(modulePath,'\\');
+        if (path)
+        {
+            *path = '\0';
+        }
+
+        std::wstring fullCommand = std::wstring(L"\"") + modulePath + L"\\AnyFSE.exe\" /Control";
 
         // Create writable buffer for command line
         std::vector<wchar_t> cmdLine(MAX_PATH);
         wcscpy_s(cmdLine.data(), MAX_PATH, fullCommand.c_str());
 
 
-        log.Debug(log.APIError(), "To CreateProcessAsUser...");
+        log.Debug("To CreateProcessAsUser...");
         // Create process with elevated token
         BOOL success = CreateProcessAsUser(
             hUserToken,                  // Elevated token
@@ -184,7 +348,7 @@ namespace AnyFSE::App::AppService
             &pi           // Process info
         );
 
-        log.Debug(log.APIError(), "User session application is executed");
+        log.Debug("User session application is executed");
 
         if (success)
         {
@@ -198,7 +362,7 @@ namespace AnyFSE::App::AppService
         return TRUE;
     }
 
-    void AppService::StartMonitoring()
+    void AppService::EnableMonitoring()
     {
         etwMonitor.OnProcessExecuted += ([]()
         {
@@ -224,19 +388,7 @@ namespace AnyFSE::App::AppService
 
         etwMonitor.OnFailure += ([]()
         {
-            ExitService();
-        });
-
-        AppControlStateLoop.OnMonitorRegistry += ([]()
-        {
-            log.Debug("Monitor registry recieved!" );
-            etwMonitor.EnableRegistryProvider();
-        });
-
-        AppControlStateLoop.OnExit += ([]()
-        {
-            log.Debug("Exiting!" );
-            ExitService();
+            ExitService(COMPLETE_EXIT);
         });
 
         AppControlStateLoop.OnXboxDeny += ([]()
@@ -251,8 +403,36 @@ namespace AnyFSE::App::AppService
             log.Debug("XboxAllow message recieved!" );
             xboxIsDenied = false;
         });
-
         etwMonitor.Start();
+    }
+
+    void AppService::StartMonitoring(bool bSuspended)
+    {
+        AppControlStateLoop.OnSuspend += ([]()
+        {
+            log.Debug("Suspending!" );
+            ExitService(COMPLETE_SUSPEND);
+        });
+
+        AppControlStateLoop.OnRestart += ([]()
+        {
+            log.Debug("Restarting!" );
+            ExitService(COMPLETE_RESTART);
+        });
+
+        if (!bSuspended)
+        {
+            EnableMonitoring();
+        }
+        else
+        {
+            AppControlStateLoop.OnStart += ([]()
+            {
+                AppControlStateLoop.OnStart.Clear();
+                PostMessage(m_hwnd, WM_USER, 0, 0);
+            });
+        }
+
         AppControlStateLoop.Start();
     }
 

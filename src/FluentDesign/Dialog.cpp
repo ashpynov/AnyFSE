@@ -23,7 +23,7 @@ namespace FluentDesign
 
     BOOL Dialog::OnInitDialog(HWND hwnd)
     {
-        m_theme.Attach(hwnd);
+        m_theme.AttachDlg(hwnd);
         CenterDialog(hwnd);
         Create();
 

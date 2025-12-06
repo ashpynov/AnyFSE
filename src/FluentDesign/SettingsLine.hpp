@@ -84,6 +84,7 @@ namespace FluentDesign
         State m_state;
 
         const int CHEVRON_SIZE = 24;
+        const int CHEVRON_SPACE = 9;
 
         Button m_chevronButton;
 

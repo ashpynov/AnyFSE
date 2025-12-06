@@ -36,7 +36,7 @@
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/Window.hpp"
-#include "Tools/Admin.hpp"
+#include "ToolsEx/Admin.hpp"
 #include "AppControl/GamingExperience.hpp"
 
 #pragma comment(lib, "delayimp.lib")
@@ -149,7 +149,7 @@ namespace AnyFSE
         {
         case WM_INITDIALOG:
             {
-                m_theme.Attach(hwnd);
+                m_theme.AttachDlg(hwnd);
                 CenterDialog(hwnd);
                 OnInitDialog(hwnd);
                 m_theme.DpiUnscaleChilds(hwnd, m_designedPositions);
@@ -196,7 +196,7 @@ namespace AnyFSE
                 Icon_Error
             );
         }
-        else if (!Tools::Admin::IsRunningAsAdministrator() && !Tools::Admin::RequestAdminElevation()
+        else if (!ToolsEx::Admin::IsRunningAsAdministrator() && !ToolsEx::Admin::RequestAdminElevation()
         )
         {
             ShowErrorPage(

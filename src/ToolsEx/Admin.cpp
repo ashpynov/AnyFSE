@@ -23,7 +23,7 @@
 
 #include "Admin.hpp"
 
-namespace AnyFSE::Tools::Admin
+namespace AnyFSE::ToolsEx::Admin
 {
     BOOL IsRunningAsAdministrator()
     {

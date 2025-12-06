@@ -140,7 +140,15 @@ namespace AnyFSE::App::StateLoop
                 }
                 // Wait for events or timer expiration
                 lock.unlock();
-                m_ipcChannel.Wait(timeoutMs);
+                try
+                {
+                    m_ipcChannel.Wait(timeoutMs);
+                }
+                catch (...)
+                {
+                    Notify(AppEvents::DISCONNECT);
+                }
+
                 lock.lock();
             }
 

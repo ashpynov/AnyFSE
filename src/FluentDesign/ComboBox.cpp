@@ -318,7 +318,7 @@ namespace FluentDesign
     {
             rect.right -= m_theme.DpiScale(Layout_ChevronMargin);
 
-            HFONT hOldFont = (HFONT)SelectObject(hdc, m_theme.GetFont_Glyph());
+            HFONT hOldFont = (HFONT)SelectObject(hdc, m_theme.GetFont_GlyphNormal());
 
             SetTextColor(hdc, m_theme.GetColorRef(Theme::Colors::Text));
             ::DrawText(hdc, L"\xE70D", -1, &rect,

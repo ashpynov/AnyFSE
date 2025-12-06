@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-
+#pragma once
 
 #include <windows.h>
 #include "AppService/ETWMonitor.hpp"
@@ -38,18 +38,23 @@ namespace AnyFSE::App::AppService
 
     public:
         static int WINAPI ServiceMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine);
-        static BOOL ExitService();
+        static BOOL ExitService(int nState);
+
 
     private:
+        static bool IsSystemAccount();
+        static bool StartServiceTask();
         static BOOL LaunchAppInUserSession(DWORD sessionId);
 
-        static void StartMonitoring();
+        static void EnableMonitoring();
+
+        static void StartMonitoring(bool bSuspended);
         static void StopMonitoring();
         static void KillXbox();
 
         static LRESULT BackgroundWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+        static void Restart(bool bSuspended = false);
         static void CreateBackgroundWindow();
-        static void MonitorSessions();
-
+        static int MonitorSessions();
     };
 }

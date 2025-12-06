@@ -21,12 +21,13 @@
 // SOFTWARE.
 //
 
-#include "App/Application.hpp"
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+#include <windows.h>
+#include <string>
+
+
+namespace AnyFSE::ToolsEx::Admin
 {
-    return AnyFSE::App::CallLibrary(
-        _strcmpi(lpCmdLine, "/Service") ? L"AnyFSE.Control.dll" : L"AnyFSE.Service.dll",
-        hInstance, hPrevInstance, lpCmdLine, nCmdShow
-    );
+    BOOL IsRunningAsAdministrator();
+    BOOL RequestAdminElevation(const std::wstring& args = L"");
 }
