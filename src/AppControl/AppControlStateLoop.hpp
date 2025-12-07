@@ -58,6 +58,7 @@ namespace AnyFSE::App::AppControl::StateLoop
             void OnStart();
             void OnStartApps();
             void OnXboxDetected();
+            void OnLauncherStopped();
             void OnGameModeEnter();
             void OnGameModeExit();
             void OnDeviceForm();
@@ -87,6 +88,7 @@ namespace AnyFSE::App::AppControl::StateLoop
             void ShowSplash();
             void StartSplash();
             void KillXbox();
+            void ExitFSEMode();
             void StartLauncher();
             void RestartLauncher();
             void WaitLauncher();

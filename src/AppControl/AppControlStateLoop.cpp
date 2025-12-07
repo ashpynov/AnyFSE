@@ -66,6 +66,7 @@ namespace AnyFSE::App::AppControl::StateLoop
             case AppEvents::START:             return OnStart();
             case AppEvents::START_APPS:        return OnStartApps();
             case AppEvents::XBOX_DETECTED:     return OnXboxDetected();
+            case AppEvents::LAUNCHER_STOPPED:  return OnLauncherStopped();
             case AppEvents::GAMEMODE_ENTER:    return OnGameModeEnter();
             case AppEvents::GAMEMODE_EXIT:     return OnGameModeExit();
             case AppEvents::OPEN_HOME:         return OnOpenHome();
@@ -145,6 +146,17 @@ namespace AnyFSE::App::AppControl::StateLoop
         }
 
         m_xboxAge = GetTickCount64();
+    }
+
+    void AppControlStateLoop::OnLauncherStopped()
+    {
+        if (IsInFSEMode() && !IsLauncherActive())
+        {
+            m_exitingTimer = AppStateLoop::SetTimer(std::chrono::seconds(30), [this](){ this->OnExitingTimer();}, false );
+            ShowSplash();
+            PreventTimeout();
+            ExitFSEMode();
+        }
     }
 
     void AppControlStateLoop::OnGameModeEnter()
@@ -420,6 +432,14 @@ namespace AnyFSE::App::AppControl::StateLoop
     {
         log.Debug("Killing Xbox");
         NotifyRemote(AppEvents::XBOX_DENY);
+    }
+
+    void AppControlStateLoop::ExitFSEMode()
+    {
+        GamingExperience::ExitFSEMode();
+        AppStateLoop::CancelTimer(m_exitingTimer);
+        m_exitingTimer = 0;
+        CloseSplash();
     }
 
     void AppControlStateLoop::StartLauncher()

@@ -310,7 +310,7 @@ namespace AnyFSE::App::AppControl
             log.Info("Restarting application, notify service exit");
             AppControlStateLoop.NotifyRemote(AppEvents::RESTART_SERVICE);
         }
-
+        Sleep(1000);
         AppControlStateLoop.Stop();
 
         log.Debug("Loop finished. Time to exit");

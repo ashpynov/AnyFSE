@@ -103,8 +103,19 @@ namespace AnyFSE::App::AppService
         {
             HandleStartProcessEvent(eventRecord);
             #ifdef _TRACE
+            // TraceEvent(eventRecord, count);
+            #endif
+        }
+        else if (m_trackStop
+            && eventRecord->EventHeader.EventDescriptor.Opcode == 2
+            && eventRecord->EventHeader.EventDescriptor.Task == 2
+            && eventRecord->EventHeader.EventDescriptor.Id == 2
+            /*&& IsEqualGUID(eventRecord->EventHeader.ProviderId, ProcessProviderGuid)*/)
+        {
+            #ifdef _TRACE
             TraceEvent(eventRecord, count);
             #endif
+            HandleStopProcessEvent(eventRecord);
         }
         else if (eventRecord->EventHeader.EventDescriptor.Opcode == 38  // QueryValueKey
             && eventRecord->EventHeader.EventDescriptor.Task == 0       //
@@ -124,6 +135,7 @@ namespace AnyFSE::App::AppService
 
         return;
     }
+
     void ETWMonitor::HandleStartProcessEvent(EVENT_RECORD *eventRecord)
     {
         int offset = GetImageNameOffset(eventRecord);
@@ -154,6 +166,40 @@ namespace AnyFSE::App::AppService
         {
             m_explorerProcessId = eventRecord->EventHeader.ProcessId;
             log.Debug("Explorer.exe was started with pid %d", m_explorerProcessId);
+        }
+    }
+
+    bool ETWMonitor::memimem(const char * pData, size_t dataLen, const char * pSample, size_t sampleLen)
+    {
+        if ( dataLen < sampleLen || sampleLen < 2)
+        {
+            return false;
+        }
+
+        for (int pos = (int)(dataLen - sampleLen - 1); pos >= 0; pos--)
+        {
+            if ((pData[pos+sampleLen-1] & ~0x20) != (pSample[sampleLen-1] & ~0x20))
+            {
+                continue;
+            }
+            if (!_memicmp(pData+pos, pSample, sampleLen))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void ETWMonitor::HandleStopProcessEvent(EVENT_RECORD *eventRecord)
+    {
+        char *pData = (char*)eventRecord->UserData;
+        size_t len = eventRecord->UserDataLength;
+
+        if ( memimem(pData, len, m_launcherProcName.c_str(), min(14, m_launcherProcName.size()))
+            || memimem(pData, len, m_LauncherAltProcName.c_str(), min(14, m_LauncherAltProcName.size()))
+        )
+        {
+            OnLauncherStopped.Notify();
         }
     }
 

@@ -74,6 +74,7 @@ namespace AnyFSE::Configuration
     bool            Config::CleanupFailedStart = true;
     DWORD           Config::RestartDelay = 1000;
     std::list<StartupApp> Config::StartupApps;
+    bool            Config::ExitFSEOnLauncherExit = false;
 
     std::wstring Config::GetModulePath()
     {
@@ -137,9 +138,9 @@ namespace AnyFSE::Configuration
         SplashVideoLoop         = config.value(jp("/Splash/Video/Loop"),     false);
         SplashVideoPause        = config.value(jp("/Splash/Video/Pause"),    true);
         StartupApps             = config.value(jp("/StartupApps"),           std::list<StartupApp>());
+        ExitFSEOnLauncherExit   = config.value(jp("/Extra/ExitFSEOnLauncherExit"), false);
 
         std::wstring launcher   = config.value(jp("/Launcher/Path"),         std::wstring());
-
 
 
         LoadLauncherSettings(config, launcher, Launcher);
@@ -215,6 +216,8 @@ namespace AnyFSE::Configuration
 
         config["AggressiveMode"]                = AggressiveMode;
         config["StartupApps"]                   = StartupApps;
+
+        config["Extra"]["ExitFSEOnLauncherExit"] = ExitFSEOnLauncherExit;
 
     //  config["Log"]["Path"]                   = LogPath;
     //  config["XBoxProcessName"]               = XBoxProcessName;

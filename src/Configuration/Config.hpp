@@ -161,6 +161,8 @@ namespace AnyFSE::Configuration
             static DWORD RestartDelay;
 
             static std::list<StartupApp> StartupApps;
+
+            static bool ExitFSEOnLauncherExit;
     };
 }
 

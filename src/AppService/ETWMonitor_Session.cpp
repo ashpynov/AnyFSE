@@ -199,6 +199,10 @@ namespace AnyFSE::App::AppService
         {
             EnableRegistryProvider();
         }
+        if (Config::ExitFSEOnLauncherExit)
+        {
+            EnableMonitoringExitLauncher();
+        }
         OpenConsumer();
 
         log.Debug("Real-time ETW monitoring started successfully for process: %s", Unicode::to_string(m_processName).c_str());
@@ -238,5 +242,12 @@ namespace AnyFSE::App::AppService
         }
 
         log.Debug("Real-time ETW monitoring stopped for process: %s", Unicode::to_string(m_processName).c_str());
+    }
+
+    void ETWMonitor::EnableMonitoringExitLauncher()
+    {
+        m_launcherProcName = Tools::Unicode::to_string(Config::Launcher.ProcessName);
+        m_LauncherAltProcName = Tools::Unicode::to_string(Config::Launcher.ProcessNameAlt);
+        m_trackStop = true;
     }
 }

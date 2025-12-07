@@ -31,7 +31,7 @@ namespace AnyFSE::App
         START,
         START_APPS,
         XBOX_DETECTED,
-        PLAYNITE_LAUNCHED,
+        LAUNCHER_STOPPED,
         GAMEMODE_ENTER,
         GAMEMODE_EXIT,
         OPEN_HOME,

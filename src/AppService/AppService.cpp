@@ -386,6 +386,12 @@ namespace AnyFSE::App::AppService
             AppControlStateLoop.NotifyRemote(AppEvents::OPEN_DEVICE_FORM);
         });
 
+        etwMonitor.OnLauncherStopped += ([]()
+        {
+            log.Debug("LauncherPtocess stopped\n" );
+            AppControlStateLoop.NotifyRemote(AppEvents::LAUNCHER_STOPPED);
+        });
+
         etwMonitor.OnFailure += ([]()
         {
             ExitService(COMPLETE_EXIT);

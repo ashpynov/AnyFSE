@@ -44,6 +44,7 @@ namespace AnyFSE::App::AppService::StateLoop
                 NotifyRemote(event);
                 return;
 
+            case AppEvents::LAUNCHER_STOPPED:
             case AppEvents::XBOX_DETECTED:
             case AppEvents::OPEN_HOME:
             case AppEvents::OPEN_DEVICE_FORM:
@@ -56,8 +57,9 @@ namespace AnyFSE::App::AppService::StateLoop
             case AppEvents::XBOX_ALLOW:
                 return OnXboxAllow.Notify();
 
-                case AppEvents::SUSPEND_SERVICE:
+            case AppEvents::SUSPEND_SERVICE:
                 return OnSuspend.Notify();
+
             case AppEvents::RESTART_SERVICE:
                 return OnRestart.Notify();
 

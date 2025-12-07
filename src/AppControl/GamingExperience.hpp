@@ -39,6 +39,7 @@ namespace AnyFSE::App::AppControl
     public:
         static bool ApiIsAvailable;
         static bool IsActive();
+        static bool ExitFSEMode();
         GamingExperience();
         ~GamingExperience();
 

@@ -129,6 +129,7 @@ namespace AnyFSE::App::AppSettings::Settings
             , m_splashCustomTextEdit(m_theme)
             , m_splashCustomVideoEdit(m_theme)
             , m_troubleAggressiveToggle(m_theme)
+            , m_troubleExitOnExitToggle(m_theme)
             , m_startupAddButton(m_theme)
             , m_customResetButton(m_theme)
             , m_pActivePageList(nullptr)
@@ -195,6 +196,7 @@ namespace AnyFSE::App::AppSettings::Settings
         ComboBox m_launcherCombo;
         ComboBox m_troubleLogLevelCombo;
         Toggle m_troubleAggressiveToggle;
+        Toggle m_troubleExitOnExitToggle;
         Toggle m_fseOnStartupToggle;
         Toggle m_customSettingsToggle;
         Button m_customResetButton;

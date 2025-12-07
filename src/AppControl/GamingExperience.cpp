@@ -57,6 +57,12 @@ namespace AnyFSE::App::AppControl
         return ApiIsAvailable && IsGamingFullScreenExperienceActive();
     }
 
+    bool GamingExperience::ExitFSEMode()
+    {
+        SetGamingFullScreenExperience(FALSE);
+        return false;
+    }
+
     GamingExperience::GamingExperience()
     {
         m_fseHandle = nullptr;

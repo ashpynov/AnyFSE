@@ -46,6 +46,7 @@ namespace AnyFSE::App::AppService
         void Stop();
         HANDLE StopAsync();
         Event OnProcessExecuted;
+        Event OnLauncherStopped;
         Event OnHomeAppTouched;
         Event OnDeviceFormTouched;
         Event OnFailure;
@@ -75,6 +76,7 @@ namespace AnyFSE::App::AppService
         ULONG OpenConsumer();
         void StartRealtimeETW();
         void StopRealtimeETW();
+        void EnableMonitoringExitLauncher();
         static void WINAPI EventRecordCallback(EVENT_RECORD *eventRecord);
 
         void TraceEvent(PEVENT_RECORD pEvent, size_t count);
@@ -90,6 +92,11 @@ namespace AnyFSE::App::AppService
         std::wstring m_processName;
         std::wstring m_sessionName;
         std::thread m_monitoringThread;
+
+        bool m_trackStop;
+        std::string m_launcherProcName;
+        std::string m_LauncherAltProcName;
+
         std::atomic<bool> m_isRunning;
         std::atomic<bool> m_stopRequested;
         HANDLE m_threadHandle;
@@ -103,7 +110,9 @@ namespace AnyFSE::App::AppService
 
         LONG m_explorerProcessId;
         void HandleStartProcessEvent(EVENT_RECORD *eventRecord);
+        void HandleStopProcessEvent(EVENT_RECORD *eventRecord);
         void HandleRegistryQueryValueEvent(EVENT_RECORD *eventRecord);
+        static bool memimem(const char *pData, size_t dataLen, const char *pSample, size_t sampleLen);
     };
 
 }

@@ -39,13 +39,14 @@ namespace AnyFSE::App::AppService
     static Logger log = LogManager::GetLogger("ETWMonitor");
 
     ETWMonitor::ETWMonitor(const std::wstring &processName)
-        : m_isRunning(false),
-          m_stopRequested(false),
-          m_threadHandle(NULL),
-          m_sessionHandle(NULL),
-          m_consumerHandle(NULL),
-          m_pTraceProperties(nullptr),
-          m_explorerProcessId(Process::FindFirstByName(L"explorer.exe"))
+        : m_isRunning(false)
+        , m_stopRequested(false)
+        , m_threadHandle(NULL)
+        , m_sessionHandle(NULL)
+        , m_consumerHandle(NULL)
+        , m_pTraceProperties(nullptr)
+        , m_explorerProcessId(Process::FindFirstByName(L"explorer.exe"))
+        , m_trackStop(false)
     {
         ZeroMemory(&m_logFile, sizeof(m_logFile));
         m_processName = processName;

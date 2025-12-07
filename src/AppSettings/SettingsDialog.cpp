@@ -940,6 +940,13 @@ namespace AnyFSE::App::AppSettings::Settings
             L"More simple and robust logic on XboxApp start, but you will lose any manual access to the XboxApp",
             m_troubleAggressiveToggle,
             Layout_LineHeight, Layout_LinePadding, 0);
+
+        AddSettingsLine(m_troubleshootSettingPageList,
+            top,
+            L"Leave full screen on Home app exit",
+            L"Exit to desktop mode after Home app was exited",
+            m_troubleExitOnExitToggle,
+            Layout_LineHeight, Layout_LinePadding, 0);
     }
 
     void SettingsDialog::AddStartupAppLine(const std::wstring& path, const std::wstring& args, bool enabled )
@@ -1298,6 +1305,7 @@ namespace AnyFSE::App::AppSettings::Settings
             && m_config.Type != LauncherType::ArmouryCrate
             && m_config.Type != LauncherType::OneGameLauncher
         ) || m_config.Type == LauncherType::Custom;
+
         m_isAggressive = Config::AggressiveMode && m_config.Type != LauncherType::Xbox;
 
         for (auto app : Config::StartupApps)
@@ -1529,6 +1537,8 @@ namespace AnyFSE::App::AppSettings::Settings
         m_troubleLogLevelCombo.SelectItem(min(max((int)LogLevels::Disabled, (int)Config::LogLevel), (int)LogLevels::Max));
         m_troubleAggressiveToggle.SetCheck(Config::AggressiveMode);
 
+        m_troubleExitOnExitToggle.SetCheck(Config::ExitFSEOnLauncherExit);
+
         m_splashShowTextToggle.SetCheck(Config::SplashShowText);
         m_splashCustomTextEdit.SetText(Config::SplashCustomText);
 
@@ -1632,6 +1642,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         Config::LogLevel = (LogLevels)m_troubleLogLevelCombo.GetSelectedIndex();
         Config::AggressiveMode = m_troubleAggressiveToggle.GetCheck();
+        Config::ExitFSEOnLauncherExit = m_troubleExitOnExitToggle.GetCheck();
 
         Config::StartupApps.clear();
 
