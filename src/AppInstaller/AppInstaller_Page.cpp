@@ -356,7 +356,7 @@ namespace AnyFSE
             // Kill existing process
             SetCurrentProgress(L"Search and terminate existing application");
             status &= TerminateAnyFSE();
- 
+
             SetCurrentProgress(L"Remove old version");
 
             std::wstring oldPath = Registry::ReadString(registryPath, L"InstallLocation");
@@ -418,7 +418,7 @@ namespace AnyFSE
         {
             for (auto& handle: handles)
             {
-                ProcessEx::Kill(handle);
+                ProcessEx::KillSystem(handle);
             }
         }
 

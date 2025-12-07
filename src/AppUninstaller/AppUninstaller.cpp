@@ -543,7 +543,6 @@ namespace AnyFSE
         return true;
     }
 
-
     bool AppUninstaller::TerminateAnyFSE()
     {
         std::set<DWORD> handles;
@@ -551,18 +550,29 @@ namespace AnyFSE
         {
             for (auto& handle: handles)
             {
-                ProcessEx::Kill(handle);
+                ProcessEx::KillSystem(handle);
             }
         }
+
         if (Process::FindAllByName(L"AnyFSE.Service.exe", handles))
         {
             for (auto& handle: handles)
             {
-                ProcessEx::Kill(handle);
+                ProcessEx::KillSystem(handle);
             }
         }
+
+        for (int i = 0;
+            (Process::FindAllByName(L"AnyFSE.exe", handles) ||
+            Process::FindAllByName(L"AnyFSE.Service.exe", handles))
+            && i < 10; i++)
+        {
+            Sleep(1000);
+        }
+
         return true;
     }
+
     void AppUninstaller::OnDone()
     {
         EndDialog(m_hDialog, IDOK);
