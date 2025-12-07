@@ -169,10 +169,10 @@ namespace AnyFSE::Tools::Process
         PROCESS_INFORMATION pi = {0};
         si.cb = sizeof(si);
 
-        std::wstring fullCommand = L"\"" + command;
+        std::wstring fullCommand = L"\"" + command +L"\"";
         if (!arguments.empty())
         {
-            fullCommand += L"\" " + arguments;
+            fullCommand += L" " + arguments;
         }
 
         // Create writable buffer for command line
