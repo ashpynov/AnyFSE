@@ -39,7 +39,6 @@ namespace FluentDesign
                                                        UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 
-
         Theme &m_theme;
 
         HWND m_hScrollView;
@@ -48,7 +47,18 @@ namespace FluentDesign
         int m_scrollPos;
         int m_viewHeight;
 
+        RECT m_scrollBarRect;
+        RECT m_thumbRect;
+
+        bool m_hovered;
+        bool m_dragging;
+        int  m_dragStartScrollPos;
+        int  m_dragStartMousePos;
+
         void SetOffset(int newOffset);
+
+        void CalculateRects();
+        LRESULT OnPaint(HWND hWnd);
 
     public:
         HWND GetHwnd() const { return m_hScrollView; }
@@ -62,12 +72,17 @@ namespace FluentDesign
         void EnsureVisible(const RECT &rcItem);
         void ScrollBy(int delta);
         int GetScrollPos() const;
-        void OnResize(int newWidth, int newHeight);
 
         ~ScrollView();
 
+        void OnResize(int newWidth, int newHeight);
+
         LRESULT OnVScroll(int nScrollCode, int nPos);
         LRESULT OnMouseWheel(int delta);
-        LRESULT OnNcPaint(HWND hWnd);
+        LRESULT OnMouseMove();
+        LRESULT OnMouseLeave();
+        LRESULT OnLButtonDown();
+        LRESULT OnLButtonUp();
+        LRESULT OnEraseBkgnd(HDC hdc, HWND child);
     };
 }

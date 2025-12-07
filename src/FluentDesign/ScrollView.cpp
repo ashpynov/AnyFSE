@@ -25,6 +25,7 @@
 #include "ScrollView.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/GdiPlus.hpp"
+#include "Tools/Window.hpp"
 
 namespace FluentDesign
 {
@@ -34,24 +35,15 @@ namespace FluentDesign
         switch (uMsg)
         {
             case WM_SETFOCUS:
-            {
                 SetFocus(GetWindow(hWnd, GW_CHILD));
-            }
-            break;
+                break;
 
             case WM_SIZE:
-            {
-                HWND hChild = GetWindow(hWnd, GW_CHILD);
-                while (hChild)
-                {
-                    RECT rc;
-                    GetClientRect(hChild, &rc);
-                    SendMessage(hChild, WM_SIZE, 0, MAKELONG(rc.right - rc.left, rc.bottom - rc.top));
-                    hChild = GetWindow(hChild, GW_HWNDNEXT);
-                }
                 This->OnResize(LOWORD(lParam), HIWORD(lParam));
-            }
-            break;
+                break;
+
+            case WM_NCHITTEST:
+                return HTCLIENT;
 
             case WM_VSCROLL:
                 return This->OnVScroll(LOWORD(wParam), HIWORD(wParam));
@@ -59,28 +51,24 @@ namespace FluentDesign
             case WM_MOUSEWHEEL:
                 return This->OnMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam));
 
+            case WM_MOUSEMOVE:
+                return This->OnMouseMove();
 
-            case WM_NCPAINT:
-                return This->OnNcPaint(hWnd);
+            case WM_MOUSELEAVE:
+                return This->OnMouseLeave();
+
+            case WM_LBUTTONDOWN:
+                return This->OnLButtonDown();
+
+            case WM_LBUTTONUP:
+                return This->OnLButtonUp();
 
             case WM_PAINT:
-                {
-                    FluentDesign::DoubleBuferedPaint paint(hWnd);
-                }
-                return 0;
+                return This->OnPaint(hWnd);
 
             case WM_ERASEBKGND:
-                {
-                    if(lParam)
-                    {
-                        HWND parent = GetParent(hWnd);
-                        if (parent)
-                        {
-                            SendMessage(parent, WM_ERASEBKGND, (WPARAM)wParam, (LPARAM)hWnd);
-                        }
-                    }
-                }
-                return 1;
+                return This->OnEraseBkgnd((HDC)wParam, (HWND)lParam);
+
             case WM_NCDESTROY:
                 RemoveWindowSubclass(hWnd, ScrollViewSubclassProc, uIdSubclass);
                 break;
@@ -88,59 +76,175 @@ namespace FluentDesign
         return DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }
 
-    LRESULT ScrollView::OnNcPaint(HWND hWnd)
+    LRESULT ScrollView::OnEraseBkgnd(HDC hdc, HWND child)
     {
+        if(child)
         {
-            HDC hdc = GetWindowDC(hWnd);
-            using namespace Gdiplus;
-            Graphics graphics(hdc);
-            graphics.SetSmoothingMode(SmoothingModeAntiAlias);
-
-            RECT rcWindow;
-            GetWindowRect(hWnd, &rcWindow);
-
-            // Convert to client-relative coordinates for non-client area
-            int width = rcWindow.right - rcWindow.left;
-            int height = rcWindow.bottom - rcWindow.top;
-
-            // Calculate scrollbar rectangle (right side)
-            RECT rcScrollbar =
+            HWND parent = GetParent(m_hScrollView);
+            if (parent)
             {
-                width - GetSystemMetrics(SM_CXVSCROLL),
-                0,
-                width,
-                height
-            };
-
-            RectF rect = ToRectF(rcScrollbar);
-            rect.Inflate(0.5, 0.5);
-            SolidBrush backBrush(m_theme.GetColor(Theme::Colors::Dialog));
-            graphics.FillRectangle(&backBrush, rect);
-
-            if (m_contentHeight > height)
-            {
-                SolidBrush thumbBrush(m_theme.GetColor(Theme::Colors::ScrollThumb));
-                Pen thumbPen(m_theme.GetColor(Theme::Colors::ScrollThumb), 0.5);
-
-                rect.X = rect.GetRight() - 13.0f;
-                rect.Width = 3;
-
-                rect.Height = max(((FLOAT)m_viewHeight * (height / (FLOAT)m_contentHeight)), 20.0f);
-                rect.Y = (FLOAT)m_scrollPos * (height - rect.Height) / (m_contentHeight - height);
-
-                RoundRect(graphics, rect, rect.Width, &thumbBrush, thumbPen);
+                SendMessage(parent, WM_ERASEBKGND, (WPARAM)hdc, (LPARAM)m_hScrollView);
             }
-            ReleaseDC(hWnd, hdc);
+        }
+        return 1;
+    }
+
+    LRESULT ScrollView::OnMouseMove()
+    {
+        if (m_dragging)
+        {
+            POINT cursorPos;
+            GetCursorPos(&cursorPos);
+            MapWindowPoints(NULL, m_hScrollView, &cursorPos, 1);
+
+            int deltaMouseY = cursorPos.y - m_dragStartMousePos;
+            float scale = m_viewHeight ? (float) m_contentHeight / m_viewHeight : 0;
+            ScrollTo((int)(deltaMouseY * scale + m_dragStartScrollPos));
+        }
+        else if (Window::MouseInClientRect(m_hScrollView, &m_scrollBarRect))
+        {
+            if (!m_hovered)
+            {
+                m_hovered = true;
+                UpdateScrollBar();
+            }
+
+            TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT), TME_LEAVE, m_hScrollView};
+            TrackMouseEvent(&tme);
+            SetCapture(m_hScrollView);
+        }
+        else if (m_hovered)
+        {
+            m_hovered = false;
+            ReleaseCapture();
+            UpdateScrollBar();
+        }
+
+        return 0;
+    };
+
+    LRESULT ScrollView::OnMouseLeave()
+    {
+        return 0;
+    };
+
+    LRESULT ScrollView::OnLButtonDown()
+    {
+        if (!Window::MouseInClientRect(m_hScrollView, &m_scrollBarRect))
+        {
             return 0;
         }
+
+        POINT cursorPos;
+        GetCursorPos(&cursorPos);
+        MapWindowPoints(NULL, m_hScrollView, &cursorPos, 1);
+
+        if ( cursorPos.y > m_thumbRect.top && cursorPos.y < m_thumbRect.bottom)
+        {
+            m_dragStartMousePos = cursorPos.y;
+            m_dragStartScrollPos = m_scrollPos;
+            SetCapture(m_hScrollView);
+            m_dragging = true;
+        }
+        else if (cursorPos.y < m_thumbRect.top)
+        {
+            ScrollBy(-m_viewHeight);
+        }
+        else if (cursorPos.y > m_thumbRect.bottom)
+        {
+            ScrollBy(m_viewHeight);
+        }
+
+        return 0;
+    };
+
+    LRESULT ScrollView::OnLButtonUp()
+    {
+        m_dragging = false;
+        if (!Window::MouseInClientRect(m_hScrollView, &m_scrollBarRect))
+        {
+            m_hovered = false;
+            UpdateScrollBar();
+            ReleaseCapture();
+        }
+        return 0;
+    };
+
+    LRESULT ScrollView::OnPaint(HWND hWnd)
+    {
+        using namespace Gdiplus;
+        FluentDesign::DoubleBuferedPaint paint(hWnd);
+        Graphics graphics(paint.MemDC());
+        graphics.SetSmoothingMode(SmoothingModeAntiAlias);
+
+        RectF rect = ToRectF(m_scrollBarRect);
+
+        if (rect.Width > 0 && m_hovered)
+        {
+            rect.Inflate(m_theme.DpiScaleF(-2), 0);
+            SolidBrush backBrush(m_theme.GetColor(Theme::Colors::ScrollTrack));
+            Pen thumbPen(m_theme.GetColor(Theme::Colors::ScrollTrack), 0.5);
+            RoundRect(graphics, rect, rect.Width, &backBrush, thumbPen);
+        }
+
+        rect = ToRectF(m_thumbRect);
+
+        if (rect.Width > 0)
+        {
+            DWORD color = m_theme.GetColor(m_hovered ? Theme::Colors::ScrollThumb : Theme::Colors::ScrollThumbStroke);
+            SolidBrush thumbBrush(color);
+            Pen thumbPen(color, 0.5);
+
+            RoundRect(graphics, rect, rect.Width, &thumbBrush, thumbPen);
+        }
+        return 0;
     }
 
     void ScrollView::SetOffset(int newOffset)
     {
     }
 
+    void ScrollView::CalculateRects()
+    {
+        RECT rcWindow;
+        GetClientRect(m_hScrollView, &rcWindow);
+
+        int height = rcWindow.bottom - rcWindow.top;
+
+        // Calculate scrollbar rectangle (right side)
+        m_scrollBarRect =
+        {
+            rcWindow.right - m_theme.DpiScale(12),
+            0,
+            rcWindow.right,
+            rcWindow.bottom
+        };
+
+        int thumbWidth = 0;
+        int thumbHeight = 0;
+
+        if (m_contentHeight > height)
+        {
+            thumbWidth = m_theme.DpiScale(m_hovered ? 6 : 2);
+
+            m_thumbRect.left = m_scrollBarRect.right - thumbWidth - m_theme.DpiScale(3);
+            m_thumbRect.right = m_thumbRect.left + thumbWidth;
+
+            thumbHeight = max((m_viewHeight * height / m_contentHeight), m_theme.DpiScale(20));
+            m_thumbRect.top = m_scrollPos * (height - thumbHeight) / (m_contentHeight - height);
+            m_thumbRect.bottom = m_thumbRect.top + thumbHeight;
+        }
+        else
+        {
+            SetRectEmpty(&m_scrollBarRect);
+            SetRectEmpty(&m_thumbRect);
+        }
+    }
+
     ScrollView::ScrollView(Theme &theme)
         : m_theme(theme)
+        , m_hovered(false)
+        , m_dragging(false)
     {}
 
     ScrollView::ScrollView(Theme &theme, HWND hParent, int x, int y, int width, int height)
@@ -159,7 +263,7 @@ namespace FluentDesign
             WS_EX_CONTROLPARENT,
             L"STATIC",
             L"",
-            WS_VISIBLE | WS_CHILD | WS_CLIPCHILDREN | WS_TABSTOP | WS_VSCROLL,
+            WS_VISIBLE | WS_CHILD | WS_CLIPCHILDREN | WS_TABSTOP,
             x, y, width, height,
             hParent, NULL, GetModuleHandle(NULL), NULL);
 
@@ -182,12 +286,12 @@ namespace FluentDesign
             ScrollTo(m_contentHeight - m_viewHeight);
         }
         UpdateScrollBar();
-
     }
 
     void ScrollView::UpdateScrollBar()
     {
-        RedrawWindow(m_hScrollView, NULL, NULL, RDW_INVALIDATE | RDW_FRAME);
+        CalculateRects();
+        RedrawWindow(m_hScrollView, NULL, NULL, RDW_INVALIDATE);
     }
 
     void ScrollView::ScrollTo(int newPos)
@@ -261,6 +365,14 @@ namespace FluentDesign
     // Call this when the window is resized
     void ScrollView::OnResize(int newWidth, int newHeight)
     {
+        HWND hChild = GetWindow(m_hScrollView, GW_CHILD);
+        while (hChild)
+        {
+            RECT rc;
+            GetClientRect(hChild, &rc);
+            SendMessage(hChild, WM_SIZE, 0, MAKELONG(rc.right - rc.left, rc.bottom - rc.top));
+            hChild = GetWindow(hChild, GW_HWNDNEXT);
+        }
         m_viewHeight = newHeight;
         UpdateScrollBar();
     }
