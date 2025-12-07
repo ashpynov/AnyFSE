@@ -1053,6 +1053,9 @@ namespace AnyFSE::App::AppSettings::Settings
 
         UpdateMaximizeButtonIcon();
 
+        SetWindowLong(m_captionMaximizeButton.GetHwnd(), GWL_STYLE,
+            GetWindowLong(m_captionMaximizeButton.GetHwnd(), GWL_STYLE) & ~WS_TABSTOP );
+
         m_captionMaximizeButton.SetFlat(true);
         m_captionMaximizeButton.SetSquare(true);
         m_captionMaximizeButton.OnChanged += delegate(OnMaximize);

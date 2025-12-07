@@ -54,6 +54,34 @@ namespace AnyFSE::ToolsEx::ProcessEx
         return Kill(processId);
     }
 
+    HRESULT KillSystem(DWORD processId)
+    {
+        if (processId == 0)
+        {
+            return ERROR_INVALID_PARAMETER;
+        }
+
+        // Method 2: Run taskkill with runas for elevated privileges
+        std::wstring command = L"/C taskkill /F /PID " + std::to_wstring(processId);
+
+        SHELLEXECUTEINFOW sei = {sizeof(sei)};
+        sei.lpFile = L"cmd.exe";
+        sei.lpParameters = command.c_str();
+        sei.nShow = SW_HIDE;
+        sei.fMask = SEE_MASK_NOCLOSEPROCESS;
+
+        if (!ShellExecuteExW(&sei))
+        {
+            DWORD error = GetLastError();
+            return HRESULT_FROM_WIN32(error);
+        }
+
+        // Wait for the process to complete
+        WaitForSingleObject(sei.hProcess, 10000); // Wait up to 10 seconds
+        CloseHandle(sei.hProcess);
+        return NULL;
+    }
+
     HRESULT Kill(DWORD processId)
     {
         if (processId == 0)
@@ -79,4 +107,5 @@ namespace AnyFSE::ToolsEx::ProcessEx
         CloseHandle(hProcess);
         return ERROR_SUCCESS;
     }
+
 }

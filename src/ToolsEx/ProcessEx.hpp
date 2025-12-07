@@ -31,6 +31,7 @@
 namespace AnyFSE::ToolsEx::ProcessEx
 {
     HRESULT Kill(const std::wstring& processName);
+    HRESULT KillSystem(DWORD processId);
     HRESULT Kill(DWORD processId);
 }
 

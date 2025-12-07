@@ -131,6 +131,7 @@ namespace AnyFSE::App::AppSettings::Settings
             , m_troubleAggressiveToggle(m_theme)
             , m_startupAddButton(m_theme)
             , m_customResetButton(m_theme)
+            , m_pActivePageList(nullptr)
         {}
 
     private:
