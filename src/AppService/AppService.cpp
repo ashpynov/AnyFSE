@@ -28,6 +28,7 @@
 #include "ToolsEx/ProcessEx.hpp"
 #include "ToolsEx/TaskManager.hpp"
 #include "ToolsEx/Admin.hpp"
+#include "ToolsEx/Minidump.hpp"
 #include "Tools/Unicode.hpp"
 
 #include "Configuration/Config.hpp"
@@ -39,9 +40,25 @@
 #pragma comment(lib, "wtsapi32.lib")
 #pragma comment(lib, "userenv.lib")
 
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    return AnyFSE::App::AppService::AppService::ServiceMain(hInstance, hPrevInstance, lpCmdLine);
+    static Logger log = LogManager::GetLogger("Service");
+    ToolsEx::InstallUnhandledExceptionHandler();
+    try
+    {
+        return AnyFSE::App::AppService::AppService::ServiceMain(hInstance, hPrevInstance, lpCmdLine);
+    }
+    catch(const std::exception& e)
+    {
+        log.Error(e, "\n\nUnhandled std exception:");
+    }
+    catch(...)
+    {
+        log.Error(log.APIError(), "\n\nUnhandled exception");
+    }
+    AnyFSE::App::AppService::AppService::Restart();
+    return ERROR_UNHANDLED_EXCEPTION;
 }
 
 namespace AnyFSE::App::AppService
@@ -192,6 +209,7 @@ namespace AnyFSE::App::AppService
                 Restart();
                 break;
         }
+        log.Debug("Exiting %d\n", result);
 
         return result;
     }

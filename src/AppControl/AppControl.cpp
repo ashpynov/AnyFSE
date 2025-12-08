@@ -43,10 +43,25 @@
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+#include "ToolsEx/Minidump.hpp"
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    return AnyFSE::App::AppControl::AppControl::WinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
+    static Logger log = LogManager::GetLogger("Service");
+    ToolsEx::InstallUnhandledExceptionHandler();
+    try
+    {
+        return AnyFSE::App::AppControl::AppControl::WinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
+    }
+    catch(const std::exception& e)
+    {
+        log.Error(e, "\n\nUnhandled std exception:");
+    }
+    catch(...)
+    {
+        log.Error(log.APIError(), "\n\nUnhandled exception");
+    }
+    return ERROR_UNHANDLED_EXCEPTION;
 }
 
 namespace AnyFSE::App::AppControl

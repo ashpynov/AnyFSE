@@ -51,9 +51,13 @@
     <ApplicationFiles Include="$(OutDir)splash" />
     <ApplicationFiles Include="$(OutDir)*.exe" Exclude="$(OutDir)$(TargetName).exe" />
   </ItemGroup>
+  <ItemGroup>
+    <ApplicationDumpFiles Include="$(OutDir)AnyFSE*.pdb" />
+  </ItemGroup>
 
   <PropertyGroup>
     <InstallFiles>@(ApplicationFiles->'&quot;%(RecursiveDir)%(Filename)%(Extension)&quot;', ' ')</InstallFiles>
+    <PDBFiles>@(ApplicationDumpFiles->'&quot;%(RecursiveDir)%(Filename)%(Extension)&quot;', ' ')</PDBFiles>
   </PropertyGroup>
 
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -139,9 +143,9 @@
 
 <ItemDefinitionGroup>
     <CustomBuildStep>
-        <Message>Archive $(InstallFiles) to $(AssemblyProduct).$(AssemblyVersion).zip</Message>
-        <Command>cd &quot;$(OutDir)&quot; &amp;&amp; tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion).zip&quot; $(InstallFiles)</Command>
-        <Outputs>$(OutDir)\AnyFSE.zip</Outputs>
+        <Message>Archive $(InstallFiles) and $(PDBFiles) to $(AssemblyProduct).$(AssemblyVersion).zip and $(AssemblyProduct).$(AssemblyVersion).pdb.zip </Message>
+        <Command>cd &quot;$(OutDir)&quot; &amp;&amp; tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion).zip&quot; $(InstallFiles) &amp;&amp; tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion).pdb.zip&quot; $(PDBFiles)</Command>
+        <Outputs>$(AssemblyProduct).$(AssemblyVersion).zip; $(AssemblyProduct).$(AssemblyVersion).pdb.zip </Outputs>
     </CustomBuildStep>
 </ItemDefinitionGroup>
 

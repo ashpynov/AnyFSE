@@ -39,7 +39,7 @@ namespace AnyFSE::App::AppService
     public:
         static int WINAPI ServiceMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine);
         static BOOL ExitService(int nState);
-
+        static void Restart(bool bSuspended = false);
 
     private:
         static bool IsSystemAccount();
@@ -51,9 +51,7 @@ namespace AnyFSE::App::AppService
         static void StartMonitoring(bool bSuspended);
         static void StopMonitoring();
         static void KillXbox();
-
         static LRESULT BackgroundWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-        static void Restart(bool bSuspended = false);
         static void CreateBackgroundWindow();
         static int MonitorSessions();
     };

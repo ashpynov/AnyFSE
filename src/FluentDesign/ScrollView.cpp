@@ -223,7 +223,7 @@ namespace FluentDesign
         int thumbWidth = 0;
         int thumbHeight = 0;
 
-        if (m_contentHeight > height)
+        if (m_contentHeight && m_contentHeight > height)
         {
             thumbWidth = m_theme.DpiScale(m_hovered ? 6 : 2);
 
