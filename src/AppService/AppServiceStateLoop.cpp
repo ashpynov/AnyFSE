@@ -43,6 +43,8 @@ namespace AnyFSE::App::AppService::StateLoop
                 OnStart.Notify();
                 NotifyRemote(event);
                 return;
+            case AppEvents::RELOAD_CONFIG:
+                return OnReloadConfig.Notify();
 
             case AppEvents::LAUNCHER_STOPPED:
             case AppEvents::XBOX_DETECTED:

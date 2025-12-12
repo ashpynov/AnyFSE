@@ -54,7 +54,7 @@ namespace FluentDesign
 
     protected:
         HWND m_hWnd;
-        HWND m_hParent;
+        HWND m_hParent = nullptr;
 
         std::list<HWND> m_childControlsList;
 
@@ -67,16 +67,16 @@ namespace FluentDesign
 
         HICON m_hIcon;
 
-        int m_left, m_top;
-        int m_width, m_height;
+        int m_left = 0, m_top = 0;
+        int m_width = 0, m_height = 0;
 
-        int m_designHeight;
-        int m_designPadding;
+        int m_designHeight = 0;
+        int m_designPadding = 0;
 
         bool m_visible;
         bool m_enabled;
         bool m_hovered;
-        bool m_childFocused;
+        bool m_childFocused = false;
         SettingsLine *m_groupLine;
 
         UINT m_frameFlags;

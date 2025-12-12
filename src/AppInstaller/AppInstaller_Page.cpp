@@ -170,14 +170,28 @@ namespace AnyFSE
 
     void AppInstaller::ShowWelcomePage()
     {
-        ShowPage(L"",
-            L"Welcome to AnyFSE Installer",
-            std::wstring(L"This will install AnyFSE version ") +
-            Unicode::to_wstring(APP_VERSION) +
-            std::wstring(L" to your system.\n\nClick Next to proceed or Cancel to exit."),
-            L"Cancel", delegate(OnCancel),
-            L"Next", delegate(ShowLicensePage)
-        );
+        if (m_isUpdate)
+        {
+            ShowPage(L"",
+                L"Welcome to AnyFSE Updater",
+                std::wstring(L"This will update AnyFSE to version ") +
+                Unicode::to_wstring(APP_VERSION) +
+                std::wstring(L" on your system.\n\nClick Update to proceed or Cancel to exit."),
+                L"Cancel", delegate(OnCancel),
+                L"Update", delegate(OnInstall)
+            );
+        }
+        else
+        {
+            ShowPage(L"",
+                L"Welcome to AnyFSE Installer",
+                std::wstring(L"This will install AnyFSE version ") +
+                Unicode::to_wstring(APP_VERSION) +
+                std::wstring(L" to your system.\n\nClick Next to proceed or Cancel to exit."),
+                L"Cancel", delegate(OnCancel),
+                L"Next", delegate(ShowLicensePage)
+            );
+        }
     }
 
     void AppInstaller::ShowLicensePage()
@@ -210,19 +224,30 @@ namespace AnyFSE
     void AppInstaller::ShowProgressPage()
     {
         ShowPage(Icon_Progress,
-            L"Installing AnyFSE",
+            m_isUpdate ? L"Updating AnyFSE" : L"Installing AnyFSE",
             L"Preparation",
             L"", delegate(OnCancel));
     }
 
     void AppInstaller::ShowCompletePage()
     {
-        ShowPage(Icon_Done,
-            L"Done",
-            L"AnyFSE installation has been completed.\n\nPress Configure change settings.\n",
-            L"Configure", delegate(OnSettings),
-            fs::exists(m_pathEdit.GetText() + L"\\AnyFSE.json") ? L"Done" : L"", delegate(OnDone)
-        );
+        if (m_isUpdate)
+        {
+            ShowPage(Icon_Done,
+                L"Done",
+                L"AnyFSE update has been completed.",
+                L"Done", delegate(OnDone)
+            );
+        }
+        else
+        {
+            ShowPage(Icon_Done,
+                L"Done",
+                L"AnyFSE installation has been completed.\n\nPress Configure change settings.\n",
+                L"Configure", delegate(OnSettings),
+                fs::exists(m_pathEdit.GetText() + L"\\AnyFSE.json") ? L"Done" : L"", delegate(OnDone)
+            );
+        }
     }
 
     void AppInstaller::ShowErrorPage(const std::wstring &caption, const std::wstring &text, const std::wstring &icon)
@@ -547,4 +572,47 @@ namespace AnyFSE
     {
         EndDialog(m_hDialog, IDOK);
     }
+
+    bool AppInstaller::AutoDeleteSelf()
+    {
+        std::wstring batchPath = fs::temp_directory_path().wstring() + L"\\ins000_anyfse_cleanup.bat";
+
+        std::wofstream batch(batchPath);
+        if (!batch.is_open()) return false;
+
+        batch << L"@echo off\n";
+        batch << L"chcp 65001 >nul\n";
+        batch << L"echo Cleaning up...\n";
+
+        batch << L":waitloop\n";
+        batch << L"tasklist /fi \"PID eq " << GetCurrentProcessId() << L"\" | find \"" << GetCurrentProcessId() << L"\" >nul\n";
+        batch << L"if not errorlevel 1 (\n";
+        batch << L"  timeout /t 1 /nobreak >nul\n";
+        batch << L"  goto waitloop\n";
+        batch << L")\n\n";
+
+        // Delete this batch file
+        WCHAR path[MAX_PATH];
+        GetModuleFileName(GetModuleHandle(NULL), path, MAX_PATH);
+        batch << L"del /f /q \"" << path << "\"\n";
+        batch << L"del /f /q \"" << batchPath << L"\"\n";
+
+        batch << L"echo Cleaning complete!\n";
+
+        batch.close();
+
+        // Execute batch
+        SHELLEXECUTEINFOW sei = { sizeof(sei) };
+        sei.lpFile = batchPath.c_str();
+        sei.nShow = SW_HIDE;
+        sei.fMask = SEE_MASK_NOCLOSEPROCESS;
+
+        if (ShellExecuteExW(&sei))
+        {
+            CloseHandle(sei.hProcess);
+        }
+
+        return true;
+    }
+
 }

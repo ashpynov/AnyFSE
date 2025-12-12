@@ -38,8 +38,8 @@ namespace FluentDesign
     {
 
     private:
-        int m_designWidth;
-        int m_designHeight;
+        int m_designWidth = 0;
+        int m_designHeight = 0;
 
         bool m_large;
 

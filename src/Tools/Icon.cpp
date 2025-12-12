@@ -122,7 +122,7 @@ namespace AnyFSE::Tools::Icon
 
         HRESULT hr = SHDefExtractIconW(path.wstring().c_str(), index, 0, &hIcon, NULL, (DWORD)iconSize);
 
-        if (hr || !hIcon)
+        if (hr != 0 || !hIcon)
         {
             log.Warn(log.APIError(), "No icon with index %d", index);
             return NULL;

@@ -245,6 +245,13 @@ namespace FluentDesign
         : m_theme(theme)
         , m_hovered(false)
         , m_dragging(false)
+        , m_thumbRect{0}
+        , m_scrollBarRect{0}
+        , m_contentHeight(0)
+        , m_hScrollView(nullptr)
+        , m_scrollPos(0)
+        , m_dragStartMousePos(0)
+        , m_dragStartScrollPos(0)
     {}
 
     ScrollView::ScrollView(Theme &theme, HWND hParent, int x, int y, int width, int height)

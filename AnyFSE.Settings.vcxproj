@@ -21,6 +21,8 @@
     <ClCompile Include="src\Logging\*.cpp" />
     <ClCompile Include="src\Tools\*.cpp" />
     <ClCompile Include="src\FluentDesign\*.cpp" />
+    <ClCompile Include="src\Updater\Updater.AppSettings.cpp" />
+    <ClCompile Include="src\Updater\Updater.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\AppSettings\AppSettings.def" />

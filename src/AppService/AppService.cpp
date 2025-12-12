@@ -28,7 +28,7 @@
 #include "ToolsEx/ProcessEx.hpp"
 #include "ToolsEx/TaskManager.hpp"
 #include "ToolsEx/Admin.hpp"
-#include "ToolsEx/Minidump.hpp"
+#include "Tools/Minidump.hpp"
 #include "Tools/Unicode.hpp"
 
 #include "Configuration/Config.hpp"
@@ -442,6 +442,31 @@ namespace AnyFSE::App::AppService
         {
             log.Debug("Restarting!" );
             ExitService(COMPLETE_RESTART);
+        });
+
+        AppControlStateLoop.OnReloadConfig += ([]()
+        {
+            log.Debug("Config reload!" );
+            bool wasSuspended = (Config::Launcher.Type == LauncherType::None || Config::Launcher.Type == LauncherType::Xbox);
+
+            Config::Load();
+            LogManager::Initialize("AnyFSE/Service", Config::LogLevel, Config::LogPath);
+
+            bool willSuspended = (Config::Launcher.Type == LauncherType::None || Config::Launcher.Type == LauncherType::Xbox);
+
+            if (wasSuspended == willSuspended)
+            {
+                return;
+            }
+
+            if (willSuspended)
+            {
+                AppControlStateLoop.OnSuspend.Notify();
+            }
+            else
+            {
+                EnableMonitoring();
+            }
         });
 
         if (!bSuspended)

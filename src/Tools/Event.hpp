@@ -42,6 +42,7 @@ namespace AnyFSE::Tools
             void operator -=(const std::function<void()>& callback);
             void Notify();
             void Clear();
+            bool HasSubscribe();
 
             Event() {};
             Event(std::function<void()> callback);

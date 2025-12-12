@@ -49,6 +49,8 @@ namespace AnyFSE::App::AppControl::StateLoop
         , m_xboxAge(0)
         , m_deviceFormAge(0)
         , m_homeAge(0)
+        , m_waitStartTime(0)
+        , launcherPid(0)
     {
 
     }
@@ -123,7 +125,7 @@ namespace AnyFSE::App::AppControl::StateLoop
         else if (!IsLauncherActive() && (Config::AggressiveMode || IsHomeLaunch()))
         {
             log.Debug("OnXboxDetected: Launcher is not active => Kill It. Start Launcher with splash");
-            if (true || IsInFSEMode())
+            // if (IsInFSEMode())
             {
                 ShowSplash();
                 KillXbox();
@@ -256,7 +258,7 @@ namespace AnyFSE::App::AppControl::StateLoop
 
     void AppControlStateLoop::OnLauncherTimer()
     {
-        log.Trace("Launcher check %d ms", GetTickCount() - m_waitStartTime);
+        log.Trace("Launcher check %d ms", GetTickCount64() - m_waitStartTime);
         if (IsLauncherActive())
         {
             log.Debug("Launcher activated");
@@ -266,7 +268,7 @@ namespace AnyFSE::App::AppControl::StateLoop
             PreventTimeout();
             CloseSplash();
         }
-        else if (!IsLauncherProcess() || GetTickCount() - m_waitStartTime > 60000)
+        else if (!IsLauncherProcess() || GetTickCount64() - m_waitStartTime > 60000)
         {
             log.Debug("Launcher not started, starting");
             AppStateLoop::CancelTimer(m_waitLauncherTimer);
@@ -488,7 +490,7 @@ namespace AnyFSE::App::AppControl::StateLoop
         if (!m_waitLauncherTimer && !m_exitingTimer)
         {
             log.Debug("Set timer for await Launcher");
-            m_waitStartTime = GetTickCount();
+            m_waitStartTime = GetTickCount64();
             m_waitLauncherTimer = AppStateLoop::SetTimer(std::chrono::milliseconds(500), [this](){ this->OnLauncherTimer(); }, true );
         }
     }

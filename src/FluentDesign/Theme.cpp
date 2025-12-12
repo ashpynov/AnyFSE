@@ -236,16 +236,18 @@ namespace FluentDesign
                 This->OnDPIChanged.Notify();
             }
             break;
+
             case WM_CTLCOLORDLG:
+            case WM_CTLCOLORBTN:
+            case WM_CTLCOLORSTATIC:
             {
-                static HBRUSH hBlackBrush = CreateSolidBrush(This->GetColorRef(FluentDesign::Theme::Colors::Dialog));
-                return (LRESULT)hBlackBrush;
+                return (LRESULT)This->m_hDialogBack;
             }
 
             case WM_ERASEBKGND:
             {
                 HWND child = (HWND)lParam;
-                if(child && !DefSubclassProc(hWnd, msg, wParam, lParam))
+                if(child)// && !DefSubclassProc(hWnd, msg, wParam, lParam))
                 {
                     RECT childRect;
                     GetClientRect(child, &childRect);
@@ -253,9 +255,14 @@ namespace FluentDesign
                     FillRect((HDC)wParam, &childRect, hBrush);
                     DeleteObject(hBrush);
 
-                    if ( child == GetFocus())
+                    HWND focused = GetFocus();
+                    if (child == focused)
                     {
                         This->DrawChildFocus((HDC)wParam, child, child);
+                    }
+                    else
+                    {
+                        This->DrawChildFocus((HDC)wParam, child, focused);
                     }
                 }
             }
@@ -304,7 +311,7 @@ namespace FluentDesign
             {
                 return DpiScaleF(m_focusToggleMargins);
             }
-            if (GetWindowLong(hWnd, GWL_STYLE) & BS_FLAT)
+            if ((GetWindowLong(hWnd, GWL_STYLE) & (BS_FLAT | WS_TABSTOP)) == BS_FLAT )
             {
                 return -(float)GetSize_FocusMargins();
             }
@@ -336,7 +343,7 @@ namespace FluentDesign
 
     void Theme::DrawChildFocus(HDC hdc, HWND parent, HWND child)
     {
-        if (!child || !m_isKeyboardFocus || GetFocus() != child) return;
+        if (!child || !m_isKeyboardFocus || GetFocus() != child || !IsWindowVisible(child)) return;
 
         float offset = FocusOffsetByWndClass(child);
         if (std::isnan(offset)) return;

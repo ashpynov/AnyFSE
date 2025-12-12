@@ -156,6 +156,7 @@ namespace AnyFSE::App::AppControl::Window
                     pEventHeader->pMediaPlayer->ClearMediaItem();
                 }
             }
+            break;
             default:
                 //log.Debug("Event recieved: %d", pEventHeader->eEventType);
                 break;
@@ -169,6 +170,10 @@ namespace AnyFSE::App::AppControl::Window
         , m_bInitialized(FALSE)
         , m_loop(false)
         , m_pause(true)
+        , m_mutedLoop(false)
+        , m_duration(0)
+        , m_endLoop(0)
+        , m_startLoop(0)
         , m_desiredState(MFP_MEDIAPLAYER_STATE_EMPTY)
     {
         CoInitializeEx(NULL, COINIT_MULTITHREADED);
@@ -212,7 +217,7 @@ namespace AnyFSE::App::AppControl::Window
             return S_OK;
         }
 
-        log.Debug("Load Video: %s", Unicode::to_string(videoFile).c_str());
+        log.Debug("Load Video: %s", Unicode::to_string(videoFile ? videoFile : L"").c_str());
 
         if (m_bInitialized)
         {

@@ -52,6 +52,12 @@ namespace FluentDesign
         , m_backgroundHoverColor(Theme::Colors::ButtonHover)
         , m_textPressedColor(Theme::Colors::Text)
         , m_backgroundPressedColor(Theme::Colors::ButtonPressed)
+        , m_iconAngle(0)
+        , m_startAngle(0)
+        , m_endAngle(0)
+        , m_stepAngle(0)
+        , m_animationLoop(false)
+        , m_animationTimer(0)
     {
     }
 
@@ -77,7 +83,7 @@ namespace FluentDesign
         m_hButton = CreateWindow(
             L"BUTTON",
             L"",
-            WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP,
+            WS_VISIBLE | WS_CHILD | BS_DEFCOMMANDLINK | WS_TABSTOP,
             x, y, width, height,
             hParent, NULL, GetModuleHandle(NULL), NULL);
 
@@ -101,23 +107,34 @@ namespace FluentDesign
 
     void Button::SetText(const std::wstring &text)
     {
+        if (m_text == text)
+            return;
+
         m_text = text;
         m_isIconButton = false;
-        InvalidateRect(m_hButton, NULL, TRUE);
+       // SetWindowText(m_hButton, text.c_str());
+        InvalidateRect(m_hButton, NULL, FALSE);
     }
 
     void Button::SetIcon(const std::wstring &glyph, bool bSmall)
     {
+        if (m_text == glyph)
+            return;
+
         m_text = glyph;
         m_isIconButton = true;
         m_isSmallIcon = bSmall;
-        InvalidateRect(m_hButton, NULL, TRUE);
+
+        InvalidateRect(m_hButton, NULL, FALSE);
     }
 
     void Button::Enable(bool bEnable)
     {
-        EnableWindow(m_hButton, bEnable);
-        InvalidateRect(m_hButton, NULL, TRUE);
+        if ((bool)IsWindowEnabled(m_hButton) == bEnable)
+            return;
+
+        SetWindowLong(m_hButton, GWL_STYLE, (GetWindowLong(m_hButton, GWL_STYLE) & ~WS_DISABLED) | (bEnable ? 0 : WS_DISABLED));
+        InvalidateRect(m_hButton, NULL, FALSE);
     }
 
     void Button::Show(bool bShow)
@@ -129,13 +146,40 @@ namespace FluentDesign
     {
         m_bFlat = isFlat;
         SetWindowLong(m_hButton, GWL_STYLE, (GetWindowLong(m_hButton, GWL_STYLE) & ~BS_FLAT) | (isFlat ? BS_FLAT : 0));
-        InvalidateRect(m_hButton, NULL, TRUE);
+        InvalidateRect(m_hButton, NULL, FALSE);
     }
 
     void Button::SetSquare(bool isSquare)
     {
         m_bSquare = isSquare;
-        InvalidateRect(m_hButton, NULL, TRUE);
+        InvalidateRect(m_hButton, NULL, FALSE);
+    }
+
+    void Button::SetAlign(int bsStyle)
+    {
+        long style = GetWindowLong(m_hButton, GWL_STYLE) & ~BS_CENTER;
+        SetWindowLong(m_hButton, GWL_STYLE, style | (bsStyle & BS_CENTER));
+        InvalidateRect(m_hButton, NULL, FALSE);
+    }
+
+    void Button::SetAngle(int angle)
+    {
+        m_iconAngle = angle;
+        InvalidateRect(m_hButton, NULL, FALSE);
+    }
+
+    void Button::SetLinkStyle()
+    {
+        SetWindowLong(m_hButton, GWL_STYLE, (GetWindowLong(m_hButton, GWL_STYLE) & ~BS_TYPEMASK) | BS_COMMANDLINK);
+
+        SetColors(
+            Theme::Colors::TextAccented,  Theme::Colors::Transparent,
+            Theme::Colors::Text,          Theme::Colors::Transparent,
+            Theme::Colors::TextSecondary, Theme::Colors::Transparent
+        );
+        SetAlign(BS_LEFT);
+        SetFlat(true);
+        InvalidateRect(m_hButton, NULL, FALSE);
     }
 
     void Button::SetColors(Theme::Colors textNornal, Theme::Colors backgroundNormal, Theme::Colors textHover, Theme::Colors backgroundHover, Theme::Colors textPressed, Theme::Colors backgroundPressed)
@@ -164,6 +208,39 @@ namespace FluentDesign
         m_theme.SwapFocus(popup.GetHwnd());
     }
 
+    SIZE Button::GetMinSize()
+    {
+        RECT clientRect;
+        GetClientRect(m_hButton, &clientRect);
+
+        HDC hdc = GetWindowDC(m_hButton);
+        Graphics graphics(hdc);
+
+        StringFormat format;
+        long align = GetWindowLong(m_hButton, GWL_STYLE) & BS_CENTER;
+        format.SetAlignment(align == BS_LEFT ? StringAlignmentNear : align == BS_RIGHT ? StringAlignmentFar : StringAlignmentCenter);
+        format.SetLineAlignment(StringAlignmentCenter);
+        format.SetTrimming(StringTrimmingNone);
+        format.SetFormatFlags(StringFormatFlagsNoWrap);
+
+        Font font(hdc, m_isIconButton
+            ? (m_isSmallIcon
+                ? m_theme.GetFont_Glyph()
+                : m_theme.GetFont_GlyphNormal())
+            : m_theme.GetFont_Text());
+
+        RectF br;
+        br.Width = 100000;
+        br.Height = 100000;
+
+        RectF mr;
+
+        graphics.MeasureString(m_text.c_str(), m_isIconButton ? 1 : -1, &font, br, &format, &mr);
+        ReleaseDC(m_hButton, hdc);
+
+        return SIZE{(long)mr.Width, (long)mr.Height};
+    }
+
     Button::~Button()
     {
         if (m_hButton)
@@ -173,12 +250,75 @@ namespace FluentDesign
         }
     }
 
+    void Button::Animate(int startAngle, int stopAngle, int duration, bool bInfinite)
+    {
+        bool active = m_animationTimer;
+
+        m_startAngle = startAngle;
+        m_endAngle = stopAngle;
+        m_stepAngle = (stopAngle - startAngle) * 10 / duration;
+        if (!m_stepAngle)
+        {
+            m_stepAngle = m_endAngle > m_startAngle ? 1 : -1;
+        }
+        m_animationLoop = bInfinite;
+        if (!active)
+        {
+            m_animationTimer = SetTimer(m_hButton, 1, 10, NULL);
+            SetAngle(m_startAngle);
+        }
+    }
+
+    void Button::CompleteAnimation()
+    {
+        m_animationLoop = false;
+    }
+
+    void Button::CancelAnimation(int endAngle)
+    {
+        KillTimer(m_hButton, m_animationTimer);
+        m_animationTimer = 0;
+        SetAngle(endAngle);
+    }
+
+    LRESULT Button::OnTimer(UINT timerId)
+    {
+        if (timerId != 1)
+            return 0;
+
+        int nextAngle = m_iconAngle + m_stepAngle;
+        if ( (m_endAngle > m_startAngle && nextAngle >= m_endAngle)
+            || (m_endAngle < m_startAngle && nextAngle <= m_endAngle))
+        {
+            if (!m_animationLoop)
+            {
+                CancelAnimation(m_endAngle);
+                return 0;
+            }
+            else
+            {
+                nextAngle = m_startAngle;
+            }
+        }
+        SetAngle(nextAngle);
+        return 0;
+    }
+
     LRESULT Button::ButtonSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
     {
 
         Button *This = reinterpret_cast<Button *>(dwRefData);
         switch (uMsg)
         {
+            case WM_SETCURSOR:
+                if ((GetWindowLong(hWnd, GWL_STYLE) & BS_TYPEMASK) == BS_COMMANDLINK)
+                {
+                    SetCursor(LoadCursor(NULL, IDC_HAND));
+                    return TRUE;
+                }
+                break;
+            case WM_TIMER:
+                return This->OnTimer((UINT)wParam);
             case WM_MOUSEMOVE:
             case WM_MOUSELEAVE:
             case WM_LBUTTONDOWN:
@@ -226,6 +366,7 @@ namespace FluentDesign
 
             case WM_ERASEBKGND:
                 return 1;
+
             case WM_NCDESTROY:
                 RemoveWindowSubclass(hWnd, ButtonSubclassProc, uIdSubclass);
                 break;
@@ -243,7 +384,7 @@ namespace FluentDesign
             if (!m_buttonMouseOver)
             {
                 m_buttonMouseOver = true;
-                InvalidateRect(hWnd, NULL, TRUE);
+                InvalidateRect(hWnd, NULL, FALSE);
 
                 // Track mouse leave
                 TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT)};
@@ -378,12 +519,34 @@ namespace FluentDesign
         ));
 
         SolidBrush textBrush(textColor);
-
+        br = gdiRect;
+        br.Inflate(-m_theme.DpiScaleF(1), -m_theme.DpiScaleF(1));
         StringFormat format;
-        format.SetAlignment(StringAlignmentCenter);
+        long align = GetWindowLong(m_hButton, GWL_STYLE) & BS_CENTER;
+        format.SetAlignment(align == BS_LEFT ? StringAlignmentNear : align == BS_RIGHT ? StringAlignmentFar : StringAlignmentCenter);
         format.SetLineAlignment(StringAlignmentCenter);
+        format.SetTrimming(StringTrimmingNone);
+        format.SetFormatFlags(StringFormatFlagsNoWrap);
 
-        graphics.DrawString(m_text.c_str(), -1, &font, br, &format, &textBrush);
+        if (m_isIconButton && m_iconAngle)
+        {
+            graphics.TranslateTransform(br.X + br.Width/2 - 1, br.Y + br.Height/2 - 1);
+            graphics.RotateTransform((REAL)m_iconAngle);
+            br.X -= (br.Width / 2);
+            br.Y -= (br.Height / 2);
+        }
+        if (m_isIconButton)
+        {
+            for (int i = 0; i < m_text.length(); i++)
+            {
+                graphics.DrawString(m_text.c_str() + i, 1, &font, br, &format, &textBrush);
+            }
+        }
+        else
+        {
+            graphics.DrawString(m_text.c_str(), -1, &font, br, &format, &textBrush);
+        }
+        graphics.ResetTransform();
 
         return;
     }

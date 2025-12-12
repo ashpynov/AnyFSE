@@ -74,7 +74,14 @@ namespace AnyFSE::Configuration
     bool            Config::CleanupFailedStart = true;
     DWORD           Config::RestartDelay = 1000;
     std::list<StartupApp> Config::StartupApps;
-    bool            Config::ExitFSEOnLauncherExit = false;
+    bool            Config::ExitFSEOnHomeExit = false;
+
+    int             Config::UpdateCheckInterval = -2;
+    std::wstring    Config::UpdateLastCheck;
+    std::wstring    Config::UpdateLastVersion;
+    bool            Config::UpdatePreRelease = false;
+    bool            Config::UpdateNotifications = true;
+    bool            Config::UpdateOnClick = true;
 
     std::wstring Config::GetModulePath()
     {
@@ -114,18 +121,17 @@ namespace AnyFSE::Configuration
     void Config::Load()
     {
         LogPath = GetModulePath();
+        XBoxProcessName = std::wstring(L"XboxPcApp.exe");
 
         json config = GetConfig();
 
         FseOnStartup = true;
 
         LogLevel                = (LogLevels)config.value(jp("/Log/Level"),  (int)LogLevels::Disabled);
-        LogPath                 = config.value(jp("/Log/Path"),              GetModulePath());
         AggressiveMode          = config.value(jp("/AggressiveMode"),        false);
         QuickStart              = config.value(jp("/QuickStart"),            false);
         CleanupFailedStart      = config.value(jp("/CleanupFailedStart"),    true);
         RestartDelay            = config.value(jp("/RestartDelay"),          (DWORD)1000);
-        XBoxProcessName         = config.value(jp("/XBoxProcessName"),       std::wstring(L"XboxPcApp.exe"));
 
         SplashShowAnimation     = config.value(jp("/Splash/ShowAnimation"),  true);
         SplashShowLogo          = config.value(jp("/Splash/ShowLogo"),       true);
@@ -138,14 +144,20 @@ namespace AnyFSE::Configuration
         SplashVideoLoop         = config.value(jp("/Splash/Video/Loop"),     false);
         SplashVideoPause        = config.value(jp("/Splash/Video/Pause"),    true);
         StartupApps             = config.value(jp("/StartupApps"),           std::list<StartupApp>());
-        ExitFSEOnLauncherExit   = config.value(jp("/Extra/ExitFSEOnLauncherExit"), false);
+        ExitFSEOnHomeExit       = config.value(jp("/Extra/ExitFSEOnHomeExit"), false);
+
+        UpdatePreRelease        = config.value(jp("/Update/PreRelease"),     false);
+        UpdateNotifications     = config.value(jp("/Update/Notifications"),  true);
+        UpdateOnClick           = config.value(jp("/Update/UpdateOnClick"),  false);
+        UpdateLastVersion       = config.value(jp("/Update/LastVersion"),    std::wstring());
+        UpdateLastCheck         = config.value(jp("/Update/LastCheck"),      std::wstring());
+        UpdateCheckInterval     = config.value(jp("/Update/CheckInterval"),  -2);
 
         std::wstring launcher   = config.value(jp("/Launcher/Path"),         std::wstring());
 
 
         LoadLauncherSettings(config, launcher, Launcher);
         CustomSettings = config.value(jp("/Launcher/CustomSettings"), Launcher.IsCustom);
-
     }
 
     bool Config::LoadLauncherSettings(const json& config, const std::wstring &path, LauncherConfig& out)
@@ -217,7 +229,14 @@ namespace AnyFSE::Configuration
         config["AggressiveMode"]                = AggressiveMode;
         config["StartupApps"]                   = StartupApps;
 
-        config["Extra"]["ExitFSEOnLauncherExit"] = ExitFSEOnLauncherExit;
+        config["Extra"]["ExitFSEOnHomeExit"] = ExitFSEOnHomeExit;
+
+        config["Update"]["PreRelease"]           = UpdatePreRelease;
+        config["Update"]["Notifications"]        = UpdateNotifications;
+        config["Update"]["UpdateOnClick"]        = UpdateOnClick;
+        config["Update"]["LastVersion"]          = UpdateLastVersion;
+        config["Update"]["LastCheck"]            = UpdateLastCheck;
+        config["Update"]["CheckInterval"]        = UpdateCheckInterval;
 
     //  config["Log"]["Path"]                   = LogPath;
     //  config["XBoxProcessName"]               = XBoxProcessName;
@@ -251,6 +270,29 @@ namespace AnyFSE::Configuration
         prcNormalPosition->bottom = config.value(jp("/WindowPos/Bottom"), 0);
 
         return config.value(jp("/WindowPos/State"), 0);
+    }
+
+    void Config::SaveUpdateVersion(const std::wstring & lastVersion)
+    {
+        SYSTEMTIME st;
+        GetLocalTime(&st);
+
+        wchar_t currentTime[64];
+        swprintf_s(currentTime, L"%04d-%02d-%02dT%02d:%02d:%02d",
+                st.wYear, st.wMonth, st.wDay,
+                st.wHour, st.wMinute, st.wSecond);
+
+        Config::UpdateLastVersion = lastVersion;
+        Config::UpdateLastCheck = currentTime;
+
+        json config = GetConfig();
+
+        config["Update"]["LastVersion"] = Config::UpdateLastVersion;
+        config["Update"]["LastCheck"] = Config::UpdateLastCheck;
+
+        std::ofstream file(GetConfigFileA());
+        file << config.dump(4);
+        file.close();
     }
 
     std::wstring Config::GetApplicationName(const std::wstring &filePath)

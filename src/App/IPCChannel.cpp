@@ -36,6 +36,7 @@ namespace AnyFSE::App
         , m_connectionState(ConnectionState::Disconnected)
         , m_readPending(false)
         , m_writePending(false)
+        , m_pendingMessage()
         , log(LogManager::GetLogger(isServer ? "ServerIPC" : "ClientIPC"))
     {
         TRACE("Creating object");

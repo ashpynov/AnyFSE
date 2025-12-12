@@ -54,7 +54,7 @@ namespace FluentDesign
         bool m_hasFocus = false;
         bool m_mouseOver = false;
 
-        int m_designedWidth;
+        int m_designedWidth = 0;
 
         // Text
         std::wstring m_placeholder;

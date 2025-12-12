@@ -25,7 +25,7 @@ namespace FluentDesign
     {
         protected:
             Theme m_theme;
-            HWND m_hDialog;
+            HWND m_hDialog = nullptr;
 
             std::map<HWND, Gdiplus::RectF> m_designedPositions;
 

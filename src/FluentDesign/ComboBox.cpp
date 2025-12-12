@@ -93,8 +93,8 @@ namespace FluentDesign
         }
         if (m_hCombo)
         {
-            DestroyWindow(m_hPopupList);
-            m_hPopupList = nullptr;
+            DestroyWindow(m_hCombo);
+            m_hCombo = nullptr;
         }
     }
 
@@ -122,6 +122,18 @@ namespace FluentDesign
         if (index >=0 && index < m_comboItems.size())
         {
             m_selectedIndex = index;
+        }
+    }
+
+    void ComboBox::SelectItem(const std::wstring &value)
+    {
+        for (int index = 0; index < m_comboItems.size(); index++)
+        {
+            if (m_comboItems[index].value == value)
+            {
+                m_selectedIndex = index;
+                break;
+            }
         }
     }
 

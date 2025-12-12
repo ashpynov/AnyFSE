@@ -491,7 +491,7 @@ namespace AnyFSE
 
     bool AppUninstaller::AutoDeleteSelf(const std::wstring& path, bool deleteFolder)
     {
-        std::wstring batchPath = fs::temp_directory_path().wstring() + L"\\unins000_anyfse_clenup.bat";
+        std::wstring batchPath = fs::temp_directory_path().wstring() + L"\\unins000_anyfse_cleanup.bat";
 
         std::wofstream batch(batchPath);
         if (!batch.is_open()) return false;

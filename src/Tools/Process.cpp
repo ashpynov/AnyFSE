@@ -206,13 +206,13 @@ namespace AnyFSE::Tools::Process
     // Callback function for EnumWindows
     struct WindowSearchData
     {
-        const std::set<DWORD> * processIds;
+        const std::set<DWORD> * processIds = nullptr;
         std::wstring windowTitle;
         std::wstring className;
-        DWORD style;
-        DWORD noStyle;
-        DWORD exStyle;
-        HWND foundWindow;
+        DWORD style = 0;
+        DWORD noStyle = 0;
+        DWORD exStyle = 0;
+        HWND foundWindow = nullptr;
     };
 
     BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)

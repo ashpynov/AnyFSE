@@ -38,8 +38,15 @@ namespace FluentDesign
     {
 
     private:
-        int m_designWidth;
-        int m_designHeight;
+        int m_designWidth = 0;
+        int m_designHeight = 0;
+
+        int m_iconAngle;
+        int m_startAngle;
+        int m_endAngle;
+        int m_stepAngle;
+        UINT_PTR m_animationTimer;
+        bool m_animationLoop;
 
         HWND m_hButton;
 
@@ -62,8 +69,10 @@ namespace FluentDesign
 
         std::wstring m_text;
 
+        LRESULT OnTimer(UINT timerId);
+
         static LRESULT CALLBACK ButtonSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-            UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+                                                   UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
         void HandleMouse(HWND hWnd, UINT uMsg, LPARAM lParam);
         void DrawButton(HWND hWnd, HDC hdc, RECT rc);
@@ -91,6 +100,9 @@ namespace FluentDesign
 
         void SetFlat(bool isFlat);
         void SetSquare(bool isSquare);
+        void SetAlign(int bsStyle);
+        void SetAngle(int angle);
+        void SetLinkStyle();
 
         void SetColors(Theme::Colors textNornal, Theme::Colors backgroundNormal = Theme::Colors::Default,
                        Theme::Colors textHover = Theme::Colors::Default, Theme::Colors backgroundHover = Theme::Colors::Default,
@@ -98,8 +110,12 @@ namespace FluentDesign
 
         void SetMenu(const std::vector<Popup::PopupItem> &items);
         void ShowMenu();
-
+        SIZE GetMinSize();
         ~Button();
+
+        void Animate(int startAngle, int stopAngle, int duration, bool bInfinite);
+        void CompleteAnimation();
+        void CancelAnimation(int endAngle = 0);
 
         Event OnChanged;
         Event OnButtonDown;

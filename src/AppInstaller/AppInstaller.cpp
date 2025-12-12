@@ -59,7 +59,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     InitCommonControlsEx(&icex);
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
-    int result = (int)AnyFSE::AppInstaller().Show(hInstance);
+    int result = (int)AnyFSE::AppInstaller().Show(hInstance, !_wcsnicmp(lpCmdLine, L"/autoupdate", 11));
 
     return result;
 }
@@ -67,9 +67,16 @@ namespace AnyFSE
 {
     Logger log = LogManager::GetLogger("Installer");
 
-    INT_PTR AppInstaller::Show(HINSTANCE hInstance)
+    INT_PTR AppInstaller::Show(HINSTANCE hInstance, bool bAutoUpdate)
     {
         LogManager::Initialize("AnyFSE/Installer");
+
+        m_isUpdate = bAutoUpdate;
+
+        if (bAutoUpdate)
+        {
+            AutoDeleteSelf();
+        }
 
         size_t size = sizeof(DLGTEMPLATE) + sizeof(WORD) * 3; // menu, class, title
         HGLOBAL hGlobal = GlobalAlloc(GHND, size);
@@ -180,7 +187,9 @@ namespace AnyFSE
 
     void AppInstaller::OnInitDialog(HWND hwnd)
     {
-        std::wstring title = L"AnyFSE Installer v" + Unicode::to_wstring(APP_VERSION);
+        std::wstring title = std::wstring(L"AnyFSE ")
+            + (m_isUpdate ? L"Updater v" : L"Installer v")
+            + Unicode::to_wstring(APP_VERSION);
         SetWindowText(hwnd, title.c_str());
 
         CreatePage();

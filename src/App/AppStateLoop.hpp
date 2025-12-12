@@ -92,9 +92,9 @@ namespace AnyFSE::App::StateLoop
         {
             std::chrono::steady_clock::time_point expirationTime;
             std::function<void()> callback;
-            bool isRecurring;
+            bool isRecurring = false;
             std::chrono::milliseconds interval;
-            bool isInvalid;
+            bool isInvalid = false;
         };
 
         std::map<uint64_t, TimerInfo> m_timersMap;

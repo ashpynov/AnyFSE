@@ -215,6 +215,7 @@ namespace AnyFSE::ToolsEx::TaskManager
         ITaskFolder *pRootFolder = NULL;
         IRegisteredTask* pTask = NULL;
         IRunningTaskCollection* pRunningTasks = NULL;
+        IRunningTask* pRunningTask = NULL;
 
         LONG count = 0;
 
@@ -227,7 +228,7 @@ namespace AnyFSE::ToolsEx::TaskManager
             TRY( pRootFolder->GetTask(_bstr_t(TaskName.c_str()), &pTask));
             TRY( pTask->GetInstances(0, &pRunningTasks));
             TRY( pRunningTasks->get_Count(&count));
-            TRY( pTask->Run(_variant_t(), NULL));
+            TRY( pTask->Run(_variant_t(), &pRunningTask));
             result = true;
         }
         catch(const std::exception& e)
@@ -235,6 +236,7 @@ namespace AnyFSE::ToolsEx::TaskManager
             log.Error(log.APIError(), "Cannot Restart task: %s", e.what());
         }
 
+        FREE(pRunningTask);
         FREE(pRunningTasks);
         FREE(pTask);
         FREE(pRootFolder);

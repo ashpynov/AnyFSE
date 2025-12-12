@@ -38,6 +38,8 @@
 #include "FluentDesign/SettingsLine.hpp"
 #include "FluentDesign/ScrollView.hpp"
 
+#include "Updater/Updater.hpp"
+
 
 #pragma comment(linker, "\"/manifestdependency:type='win32' \
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
@@ -69,6 +71,7 @@ namespace AnyFSE::App::AppSettings::Settings
         static const int Layout_MarginBottom = 32;
         static const int Layout_ButtonPadding = 16;
         static const int Layout_ButtonHeight = 32;
+        static const int Layout_UpdateHeight = 36;
 
         static const int Layout_LineHeight = 67;
         static const int Layout_LinePadding = 8;
@@ -104,7 +107,6 @@ namespace AnyFSE::App::AppSettings::Settings
             , m_captionMinimizeButton(m_theme)
             , m_captionMaximizeButton(m_theme)
             , m_customSettingsState(FluentDesign::SettingsLine::Closed)
-            , m_scrollView(m_theme)
             , m_launcherCombo(m_theme)
             , m_troubleLogLevelCombo(m_theme)
             , m_fseOnStartupToggle(m_theme)
@@ -133,6 +135,18 @@ namespace AnyFSE::App::AppSettings::Settings
             , m_startupAddButton(m_theme)
             , m_customResetButton(m_theme)
             , m_pActivePageList(nullptr)
+
+            // SettingsDialog_Update
+            , m_updateCheckButton(m_theme)
+            , m_updateCurrentText(m_theme)
+            , m_updateButton(m_theme)
+            , m_scrollView(m_theme)
+
+            // UpdateSettingsPage
+            , m_updateSettingsPeriodCombo(m_theme)
+            , m_updateSettingsPreReleaseToggle(m_theme)
+            , m_updateSettingsNotificationsToggle(m_theme)
+            , m_updateSettingsUpdateToggle(m_theme)
         {}
 
     private:
@@ -167,12 +181,12 @@ namespace AnyFSE::App::AppSettings::Settings
         void OpenMSSettingsStartupApps();
         void UpdateControls();
 
-        HINSTANCE m_hInstance;
-        HWND m_hDialog;
+        HINSTANCE m_hInstance = nullptr;
+        HWND m_hDialog = nullptr;
 
-        bool m_isCustom;
-        bool m_isAggressive;
-        bool m_enterOnStartup;
+        bool m_isCustom = false;
+        bool m_isAggressive = false;
+        bool m_enterOnStartup = false;
 
         std::wstring m_pageName = L"";
         RECT m_breadCrumbRect = { 0 };
@@ -222,7 +236,7 @@ namespace AnyFSE::App::AppSettings::Settings
         Button m_okButton;
         Button m_closeButton;
 
-        HWND m_hScrollView;
+        HWND m_hScrollView = nullptr;
 
         std::list<SettingsLine> m_settingPageList;
         std::list<SettingsLine> m_customSettingPageList;
@@ -230,7 +244,7 @@ namespace AnyFSE::App::AppSettings::Settings
         std::list<SettingsLine> m_troubleshootSettingPageList;
         std::list<SettingsLine> m_startupSettingPageList;
 
-        std::list<SettingsLine> *m_pActivePageList;
+        std::list<SettingsLine> *m_pActivePageList = nullptr;
 
         Button m_startupAddButton;
         std::list<Toggle> m_startupToggles;
@@ -259,6 +273,8 @@ namespace AnyFSE::App::AppSettings::Settings
 
         void UpdateLayout();
 
+        HWND GetMainWindow();
+
         void AddCustomSettingsPage();
         void AddSplashSettingsPage();
         void AddTroubleshootSettingsPage();
@@ -274,19 +290,52 @@ namespace AnyFSE::App::AppSettings::Settings
         void AddCloseButton();
         void AddStartupSettingsPage();
 
-        SettingsLine * m_pFseOnStartupLine;
-        SettingsLine * m_pCustomSettingsLine;
+        SettingsLine * m_pFseOnStartupLine = nullptr;
+        SettingsLine * m_pCustomSettingsLine = nullptr;
 
-        SettingsLine * m_pSplashTextLine;
-        SettingsLine * m_pSplashLogoLine;
-        SettingsLine * m_pSplashVideoLine;
+        SettingsLine * m_pSplashTextLine = nullptr;
+        SettingsLine * m_pSplashLogoLine = nullptr;
+        SettingsLine * m_pSplashVideoLine = nullptr;
 
-        SettingsLine * m_pSplashPageLine;
-        SettingsLine * m_pTroubleshootPageLine;
-        SettingsLine * m_pStartupPageLine;
-        SettingsLine * m_pStartupPageAppsHeader;
+        SettingsLine * m_pSplashPageLine = nullptr;
+        SettingsLine * m_pTroubleshootPageLine = nullptr;
+        SettingsLine * m_pStartupPageLine = nullptr;
+        SettingsLine * m_pStartupPageAppsHeader = nullptr;
 
         SettingsLine::State m_customSettingsState;
+
+        // SettingsDialog_Update
+        static const UINT WM_UPDATE_NOTIFICATION = WM_USER + 2;
+
+        Button m_updateCheckButton;
+        Static m_updateCurrentText;
+        Button m_updateButton;
+
+        void AddUpdateControls();
+        void MoveUpdateControls();
+        bool SetVersionStatus(const Updater::UpdateInfo& uiInfo);
+        void OnCheckUpdate();
+        void OnUpdateNetworkRestore();
+        void OnUpdateNotification();
+        void UpdateVersionStatusDelay(UINT delay);
+        void OnUpdate();
+
+        // SettingsDialog_UpdateSettingsPage
+        SettingsLine * m_pUpdateSettingsLine = nullptr;
+        std::list<SettingsLine> m_updateSettingPageList;
+
+        ComboBox m_updateSettingsPeriodCombo;
+        Toggle m_updateSettingsPreReleaseToggle;
+        Toggle m_updateSettingsNotificationsToggle;
+        Toggle m_updateSettingsUpdateToggle;
+
+        void AddUpdateSettingsPage(ULONG &top);
+        void AddUpdateSettingsPageControls();
+        void OpenUpdateSettingsPage();
+        void UpdateSettingsLoadControls();
+        void UpdateSettingsChangedCheck();
+        void UpdateSettingsChanged();
+        void UpdateSettingsSaveControls();
     };
 }
 

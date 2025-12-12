@@ -56,7 +56,7 @@ namespace AnyFSE
         private:
 
         public:
-            INT_PTR Show(HINSTANCE hInstance);
+            INT_PTR Show(HINSTANCE hInstance, bool bAutoUpdate);
 
             enum Pages : int
             {
@@ -119,6 +119,8 @@ namespace AnyFSE
             Button m_rightButton;
 
         private:
+            bool m_isUpdate = false;
+
             void CenterDialog(HWND hwnd);
             static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
             INT_PTR InstanceDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -157,6 +159,7 @@ namespace AnyFSE
             void OnInstall();
             void OnSettings();
             void OnDone();
+            bool AutoDeleteSelf();
             bool StartAnyFSE();
             bool DeleteOldVersion();
             bool TerminateAnyFSE();

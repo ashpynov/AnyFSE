@@ -32,6 +32,7 @@
 #include "Logging/LogManager.hpp"
 #include "Configuration/Config.hpp"
 #include "Tools/Process.hpp"
+#include "Tools/Notification.hpp"
 
 #include "AppControl/AppControl.hpp"
 #include "AppControl/GamingExperience.hpp"
@@ -43,7 +44,7 @@
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#include "ToolsEx/Minidump.hpp"
+#include "Tools/Minidump.hpp"
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -178,7 +179,7 @@ namespace AnyFSE::App::AppControl
             return -1;
         }
 
-        if (Config::Launcher.Type != LauncherType::None || Config::Launcher.Type != LauncherType::Xbox)
+        if (Config::Launcher.Type != LauncherType::None && Config::Launcher.Type != LauncherType::Xbox)
         {
             AppControlStateLoop.Notify(AppEvents::START);
             AppControlStateLoop.Start();
@@ -265,14 +266,24 @@ namespace AnyFSE::App::AppControl
         Window::MainWindow mainWindow;
         AppControlStateLoop AppControlStateLoop(mainWindow);
 
-        mainWindow.OnExplorerDetected += ([&AppControlStateLoop, &mainWindow]()
+        mainWindow.OnReconfigure = ([&AppControlStateLoop]()
+        {
+            log.Info("Reload config");
+            Config::Load();
+            LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
+            AppControlStateLoop.NotifyRemote(AppEvents::RELOAD_CONFIG);
+        });
+
+        mainWindow.OnStartWindow += ([&AppControlStateLoop, &mainWindow]()
         {
             if (!AppControlStateLoop.IsRunning())
             {
                 SetLastError(StartControl(AppControlStateLoop, mainWindow));
             }
             AppControlStateLoop.Notify(AppEvents::START_APPS);
-        });
+            mainWindow.StartUpdateCheck();
+         });
+
 
         mainWindow.OnQueryEndSession += ([&AppControlStateLoop]()
         {
@@ -315,14 +326,18 @@ namespace AnyFSE::App::AppControl
 
         exitCode = Window::MainWindow::RunLoop();
 
-        if (exitCode != ERROR_RESTART_APPLICATION)
+        if (exitCode == WS_E_ENDPOINT_DISCONNECTED)
+        {
+            log.Info("Service is not connected");
+        }
+        else if (exitCode != ERROR_RESTART_APPLICATION)
         {
             log.Info("Stopping application, notify service exit");
             AppControlStateLoop.NotifyRemote(AppEvents::SUSPEND_SERVICE);
         }
         else
         {
-            log.Info("Restarting application, notify service exit");
+            log.Info("Restarting application, notify service restart");
             AppControlStateLoop.NotifyRemote(AppEvents::RESTART_SERVICE);
         }
         Sleep(1000);

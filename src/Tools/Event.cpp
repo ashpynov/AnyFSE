@@ -39,6 +39,11 @@ namespace AnyFSE::Tools
         callbacks.clear();
     }
 
+    bool Event::HasSubscribe()
+    {
+        return callbacks.size();
+    }
+
     void Event::operator=(std::function<void()> callback)
     {
         callbacks.clear();

@@ -28,6 +28,8 @@
     <ClCompile Include="src\FluentDesign\Theme_Colors.cpp"/>
     <ClCompile Include="src\FluentDesign\Popup.cpp"/>
     <ClInclude Include="src\App\Application.hpp" />
+    <ClCompile Include="src\Updater\Updater.AppControl.cpp" />
+    <ClCompile Include="src\Updater\Updater.cpp" />
     <ClInclude Include="src\resource.h" />
     <ResourceCompile Include="src\Resource.rc" />
     <Image Include="media\AnyFSEIcon.ico" />

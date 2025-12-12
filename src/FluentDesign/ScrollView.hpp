@@ -45,7 +45,7 @@ namespace FluentDesign
 
         int m_contentHeight;
         int m_scrollPos;
-        int m_viewHeight;
+        int m_viewHeight = 0;
 
         RECT m_scrollBarRect;
         RECT m_thumbRect;

@@ -167,8 +167,10 @@ namespace FluentDesign
     {
         size_t size = sizeof(DLGTEMPLATE) + sizeof(WORD) * 3; // menu, class, title
         HGLOBAL hGlobal = GlobalAlloc(GHND, size);
-
+        if (!hGlobal) return -1;
+        
         LPDLGTEMPLATE dlgTemplate = (LPDLGTEMPLATE)GlobalLock(hGlobal);
+        if (!dlgTemplate) return -1;
 
         dlgTemplate->style = DS_MODALFRAME | WS_POPUP | WS_CLIPCHILDREN | WS_CAPTION;
         dlgTemplate->dwExtendedStyle = WS_EX_WINDOWEDGE;

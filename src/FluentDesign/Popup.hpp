@@ -69,6 +69,7 @@ namespace FluentDesign
             , m_selectedIndex(-1)
             , m_hoveredIndex(-1)
             , m_popupVisible(false)
+            , m_hPopupList(nullptr)
         {
         }
 

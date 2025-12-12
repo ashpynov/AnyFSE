@@ -45,7 +45,7 @@ namespace AnyFSE::App::AppControl::StateLoop
             LONGLONG m_homeAge;
 
             DWORD launcherPid;
-            DWORD m_waitStartTime;
+            LONGLONG m_waitStartTime;
             bool  m_isRestart;
 
 

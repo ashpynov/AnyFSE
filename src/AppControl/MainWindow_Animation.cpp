@@ -141,18 +141,18 @@ namespace AnyFSE::App::AppControl::Window
 
     BOOL MainWindow::StartAnimation()
     {
-        if (Config::SplashShowAnimation && Config::SplashShowLogo && !m_hTimer && m_pLogoImage)
+        if (Config::SplashShowAnimation && Config::SplashShowLogo && !m_hAnimationTimer && m_pLogoImage)
         {
-            m_hTimer = SetTimer(m_hWnd, m_animationTimerId, ZOOM_INTERVAL_MS, NULL);
+            m_hAnimationTimer = SetTimer(m_hWnd, m_animationTimerId, ZOOM_INTERVAL_MS, NULL);
         }
         return TRUE;
     }
     BOOL MainWindow::StopAnimation()
     {
-        if (m_hTimer)
+        if (m_hAnimationTimer)
         {
             KillTimer(m_hWnd, m_animationTimerId);
-            m_hTimer = NULL;
+            m_hAnimationTimer = NULL;
         }
         return TRUE;
     }

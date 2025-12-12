@@ -141,6 +141,8 @@ namespace AnyFSE::App::AppService
         int offset = GetImageNameOffset(eventRecord);
         PWSTR processFullName = wCharAt(eventRecord->UserData, offset);
 
+        processFullName = processFullName ? processFullName : L"";
+
         PWSTR pFileName = NULL;
 
         for (PWSTR p = processFullName; *p; p++) {

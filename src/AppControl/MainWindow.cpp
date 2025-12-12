@@ -26,6 +26,7 @@
 #include <tchar.h>
 #include <windows.h>
 #include <filesystem>
+#include <winsock.h>
 #include "resource.h"
 #include "Logging/LogManager.hpp"
 #include "Configuration/Config.hpp"
@@ -36,7 +37,11 @@
 #include "AppControl/AppControl.hpp"
 #include "AppControl/MainWindow.hpp"
 #include "MainWindow.hpp"
+#include "Updater/Updater.hpp"
+#include "Updater/Updater.AppControl.hpp"
+#include "Tools/Notification.hpp"
 
+#pragma comment(lib, "mpr.lib")
 
 namespace AnyFSE::App::AppControl::Window
 {
@@ -47,7 +52,9 @@ namespace AnyFSE::App::AppControl::Window
         : m_hWnd(NULL)
         , m_aClass(NULL)
         , m_pLogoImage(nullptr)
+        , m_gdiplusToken(0ll)
         , WM_TASKBARCREATED(RegisterWindowMessage(L"TaskbarCreated"))
+        , WM_UPDATER_COMMAND(RegisterWindowMessage(L"AnyFSE.Updater.Command"))
     {
         ZeroMemory(&WC, sizeof(WC));
     }
@@ -161,9 +168,15 @@ namespace AnyFSE::App::AppControl::Window
         DWORD error = GetLastError();
         if (error)
         {
-            SendMessage(m_hWnd, WM_DESTROY, (WPARAM)error, 0);
+            PostMessage(m_hWnd, WM_DESTROY, (WPARAM)error, 0);
         }
         return error;
+    }
+
+    void MainWindow::StartUpdateCheck()
+    {
+        Updater::Subscribe(m_hWnd, WM_UPDATE_NOTIFICATION);
+        ScheduleCheck();
     }
 
     // static
@@ -212,6 +225,14 @@ namespace AnyFSE::App::AppControl::Window
             CreateTrayIcon();
             return DefWindowProc(m_hWnd, uMsg, wParam, lParam);
         }
+        else if (uMsg == WM_UPDATER_COMMAND)
+        {
+            if (Updater::UpdaterHandleCommand(m_hWnd, wParam, lParam))
+            {
+                OnUpdateCheck();
+            }
+            return FALSE;
+        };
         switch (uMsg)
         {
         case WM_CREATE:
@@ -223,6 +244,7 @@ namespace AnyFSE::App::AppControl::Window
         case WM_ERASEBKGND:
             return 1;
         case WM_DESTROY:
+            m_result = (int)wParam;
             OnDestroy();
             break;
         case WM_TRAY:
@@ -248,6 +270,12 @@ namespace AnyFSE::App::AppControl::Window
             log.Info("EndSession recieved");
             OnEndSession.Notify();
             break;
+        case WM_UPDATE_NOTIFICATION:
+            OnUpdateNotification();
+            return 0;
+        case WM_UPDATE_CHECK:
+            OnUpdateCheck();
+            return 0;
         }
         return DefWindowProc(m_hWnd, uMsg, wParam, lParam);
     }
@@ -273,6 +301,7 @@ namespace AnyFSE::App::AppControl::Window
         ZeroMemory(&stData, sizeof(stData));
         stData.cbSize = sizeof(stData);
         stData.hWnd = m_hWnd;
+        stData.uID = 1;
         stData.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
         stData.uCallbackMessage = WM_TRAY;
         stData.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON));
@@ -283,7 +312,7 @@ namespace AnyFSE::App::AppControl::Window
             return;
         }
 
-        OnExplorerDetected.Notify();
+        OnStartWindow.Notify();
         ExitOnError();
     }
 
@@ -309,7 +338,6 @@ namespace AnyFSE::App::AppControl::Window
         case WM_LBUTTONDBLCLK:
             SendMessage(m_hWnd, WM_COMMAND, ID_CONFIGURE, 0);
             break;
-
         case WM_RBUTTONDOWN:
         {
             static FluentDesign::Theme theme;
@@ -367,6 +395,57 @@ namespace AnyFSE::App::AppControl::Window
         return TRUE;
     }
 
+    void MainWindow::OnUpdateNotification()
+    {
+        Updater::Subscribe(m_hWnd, WM_UPDATE_NOTIFICATION);
+
+        Updater::UpdateInfo upd = Updater::GetLastUpdateInfo();
+        if (upd.uiState == Updater::NetworkFailed &&
+            ((Config::UpdateCheckInterval == 0 && !m_successChecked) || Config::UpdateCheckInterval > 0)
+        )
+        {
+            ScheduleCheck();
+        }
+        else if (upd.uiState == Updater::UpdaterState::Done
+                && upd.uiCommand == Updater::UpdaterState::CheckingUpdate
+                )
+        {
+            m_successChecked = true;
+            if (!upd.newVersion.empty() && upd.newVersion != Config::UpdateLastVersion)
+            {
+                Notification::ShowNewVersion(m_hWnd, upd.newVersion);
+            }
+            Config::SaveUpdateVersion(upd.newVersion);
+            OnUpdateCheck();
+        }
+    }
+
+    void MainWindow::OnUpdateCheck()
+    {
+        int delay = Updater::ScheduledCheckAsync(Config::UpdateLastCheck, Config::UpdateCheckInterval, Config::UpdatePreRelease, m_hWnd, WM_UPDATE_NOTIFICATION);
+        ScheduleCheck(delay);
+    }
+
+    void MainWindow::ScheduleCheck(int delay)
+    {
+        KillTimer(m_hWnd, m_updateTimerId);
+
+        if (delay < 0)
+        {
+            log.Debug("Stop Updater Schedule");
+            return;
+        }
+
+        log.Debug("Schedule updater check in %ds/%.2fh", delay, (float)delay / 3600);
+
+        SetTimer(m_hWnd, m_updateTimerId, (UINT)delay * 1000,
+            [](HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+            {
+                KillTimer(hWnd, idEvent);
+                SendMessage(hWnd, WM_UPDATE_CHECK, 0, 0);
+            });
+    }
+
     BOOL MainWindow::OnCommand(WORD command)
     {
         switch (command)
@@ -376,9 +455,7 @@ namespace AnyFSE::App::AppControl::Window
                 int result = AppControl::ShowSettings();
                 if ( result == IDOK)
                 {
-                    FreeResources();
-                    m_result = ERROR_RESTART_APPLICATION;
-                    DestroyWindow(m_hWnd);
+                    OnReconfigure.Notify();
                     return TRUE;
                 }
             }
@@ -462,7 +539,7 @@ namespace AnyFSE::App::AppControl::Window
             return;
         }
 
-        m_currentVideo = videoFiles[GetTickCount() % videoFiles.size()].wstring().c_str();
+        m_currentVideo = videoFiles[GetTickCount64() % videoFiles.size()].wstring().c_str();
     }
 }
 

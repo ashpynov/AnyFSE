@@ -59,13 +59,13 @@ namespace FluentDesign
         bool m_buttonPressed;
         bool m_buttonMouseOver;
 
-        int m_designWidth;
+        int m_designWidth = 0;
 
         // Listbox part
         HWND m_hPopupList;
         bool m_popupVisible;
         int m_selectedIndex;
-        int m_originalIndex;
+        int m_originalIndex = 0;
         int m_hoveredIndex;
 
         static LRESULT CALLBACK ComboBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -101,6 +101,7 @@ namespace FluentDesign
         int AddItem(const std::wstring &name, const std::wstring &icon, const std::wstring &value, int pos = -1);
         int Reset();
         void SelectItem(int index);
+        void SelectItem(const std::wstring &value);
         std::wstring GetCurentValue();
         int GetSelectedIndex() const { return m_selectedIndex; };
         Event OnChanged;

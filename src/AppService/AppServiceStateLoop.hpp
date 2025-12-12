@@ -41,6 +41,7 @@ namespace AnyFSE::App::AppService::StateLoop
             Event OnSuspend;
             Event OnRestart;
             Event OnStart;
+            Event OnReloadConfig;
 
         private:
             virtual void ProcessEvent(AppEvents event);

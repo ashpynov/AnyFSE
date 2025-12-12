@@ -45,6 +45,7 @@ namespace AnyFSE::App::AppService
         , m_sessionHandle(NULL)
         , m_consumerHandle(NULL)
         , m_pTraceProperties(nullptr)
+        , m_traceHandle(0)
         , m_explorerProcessId(Process::FindFirstByName(L"explorer.exe"))
         , m_trackStop(false)
     {

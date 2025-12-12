@@ -37,8 +37,12 @@ namespace AnyFSE::App::AppControl::Window
     {
     public:
         static const UINT WM_TRAY = WM_USER + 1;
+        static const UINT WM_UPDATE_NOTIFICATION = WM_USER + 2;
+        static const UINT WM_UPDATE_CHECK = WM_USER + 3;
+        static const UINT WM_UPDATE_COMMAND = WM_USER + 4;
     private:
         const UINT WM_TASKBARCREATED;
+        const UINT WM_UPDATER_COMMAND;
 
         HICON m_hIcon = NULL;
         HWND m_hWnd;
@@ -48,6 +52,7 @@ namespace AnyFSE::App::AppControl::Window
 
         int m_result = ERROR_RESTART_APPLICATION;
         bool m_empty = false;
+        bool m_successChecked = false;
 
         static WNDCLASS WC;
         static LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -60,6 +65,10 @@ namespace AnyFSE::App::AppControl::Window
         BOOL FreeResources();
         BOOL OnCommand(WORD command);
         void OnDestroy();
+
+        void OnUpdateNotification();
+        void OnUpdateCheck();
+        void ScheduleCheck(int delay = 60);
         void SelectNextVideo();
 
         LRESULT CALLBACK HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -76,14 +85,18 @@ namespace AnyFSE::App::AppControl::Window
         bool IsVisible();
         int ExitOnError();
 
-        Event OnExplorerDetected;
+        void StartUpdateCheck();
+        Event OnStartWindow;
         Event OnQueryEndSession;
         Event OnEndSession;
+        Event OnReconfigure;
 
     private: // Animation
 
         UINT_PTR m_animationTimerId = 1;
-        UINT_PTR m_hTimer = NULL;
+        UINT_PTR m_updateTimerId = 2;
+        UINT_PTR m_hAnimationTimer = NULL;
+        UINT_PTR m_hUpdateTimer = NULL;
 
         const int ZOOM_INTERVAL_MS = 20;
 

@@ -199,7 +199,7 @@ namespace AnyFSE::App::AppService
         {
             EnableRegistryProvider();
         }
-        if (Config::ExitFSEOnLauncherExit)
+        if (Config::ExitFSEOnHomeExit)
         {
             EnableMonitoringExitLauncher();
         }

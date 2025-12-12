@@ -21,12 +21,9 @@
 // SOFTWARE.
 //
 
-#ifndef VER_VERSION_STR
-#define VER_VERSION_STR "1.2.3"
-#endif
-
 #include "SettingsDialog.hpp"
 #include "resource.h"
+#include <windows.h>
 #include <commdlg.h>
 #include <uxtheme.h>
 #include <filesystem>
@@ -53,16 +50,24 @@
 
 namespace AnyFSE::App::AppSettings::Settings
 {
-    Logger log = LogManager::GetLogger("Settings");
+    static Logger log = LogManager::GetLogger("Settings");
 
     INT_PTR SettingsDialog::Show(HINSTANCE hInstance)
     {
         size_t size = sizeof(DLGTEMPLATE) + sizeof(WORD) * 3; // menu, class, title
         HGLOBAL hGlobal = GlobalAlloc(GHND, size);
+        if (!hGlobal)
+        {
+            return -1;
+        }
 
         LPDLGTEMPLATE dlgTemplate = (LPDLGTEMPLATE)GlobalLock(hGlobal);
+        if (!dlgTemplate)
+        {
+            return -1;
+        }
 
-        dlgTemplate->style = WS_POPUP | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME;
+        dlgTemplate->style = WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME;
         dlgTemplate->dwExtendedStyle = WS_EX_WINDOWEDGE;
         dlgTemplate->cdit = 0;  // No controls
         dlgTemplate->x = 0;
@@ -163,10 +168,11 @@ namespace AnyFSE::App::AppSettings::Settings
         {
         case WM_INITDIALOG:
             {   // To enable immersive dark mode (for a dark title bar)
+
                 m_theme.AttachDlg(hwnd);
-                RestoreWindowPlacement();
                 SetWindowText(hwnd, L"AnyFSE Settings");
                 OnInitDialog(hwnd);
+                RestoreWindowPlacement();
             }
             return TRUE;
 
@@ -273,6 +279,10 @@ namespace AnyFSE::App::AppSettings::Settings
             }
             return FALSE;
 
+        case WM_UPDATE_NOTIFICATION:
+            OnUpdateNotification();
+            return TRUE;
+
         case WM_SIZE:
             UpdateLayout();
             if (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED)
@@ -295,7 +305,7 @@ namespace AnyFSE::App::AppSettings::Settings
             }
             break;
 
-            case WM_ERASEBKGND:
+        case WM_ERASEBKGND:
             SetWindowLong(m_hDialog, DWLP_MSGRESULT, 0);
             return TRUE;
         case WM_NOTIFY:
@@ -370,19 +380,11 @@ namespace AnyFSE::App::AppSettings::Settings
                     SelectFont(paint.MemDC(), m_theme.GetFont_Title());
                     ::DrawText(paint.MemDC(), m_pageName.c_str(), -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
                 }
-                {
-                    r = paint.ClientRect();
-                    r.bottom -= m_theme.DpiScale(Layout_MarginBottom);
-                    r.left += m_theme.DpiScale(Layout_MarginLeft);
-                    r.top = r.bottom - m_theme.DpiScale(Layout_ButtonHeight);
-                    SelectFont(paint.MemDC(), m_theme.GetFont_TextSecondary());
-                    SetTextColor(paint.MemDC(), m_theme.GetColorRef(FluentDesign::Theme::Colors::TextDisabled));
-                    std::wstring version = std::wstring(L"Version ") + Unicode::to_wstring(VER_VERSION_STR);
-                    ::DrawText(paint.MemDC(), version.c_str(), -1, &r, DT_LEFT | DT_BOTTOM | DT_SINGLELINE | DT_NOCLIP);
-                }
 
                 m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_okButton.GetHwnd());
                 m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_closeButton.GetHwnd());
+                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_updateCheckButton.GetHwnd());
+                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_updateButton.GetHwnd());
 
                 SelectObject(paint.MemDC(), oldFont);
             }
@@ -510,7 +512,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
     void SettingsDialog::SwitchActivePage(std::list<SettingsLine> * pPageList, bool back)
     {
-        if (pPageList == m_pActivePageList)
+        if (!pPageList || pPageList == m_pActivePageList)
         {
             return;
         }
@@ -551,11 +553,13 @@ namespace AnyFSE::App::AppSettings::Settings
             RedrawWindow(m_hScrollView, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
             Sleep(5);
         }
-
-        for (auto &line : *m_pActivePageList)
+        if (m_pActivePageList)
         {
-            ShowWindow(line.GetHWnd(), SW_HIDE);
-            Window::MoveWindow(line.GetHWnd(), width * invert, 0, FALSE);
+            for (auto& line : *m_pActivePageList)
+            {
+                ShowWindow(line.GetHWnd(), SW_HIDE);
+                Window::MoveWindow(line.GetHWnd(), width * invert, 0, FALSE);
+            }
         }
         m_pActivePageList = pPageList;
         UpdateLayout();
@@ -644,6 +648,7 @@ namespace AnyFSE::App::AppSettings::Settings
             m_theme.DpiScale(Layout_ButtonHeight),
             FALSE);
 
+        MoveUpdateControls();
 
         UpdateLayout();
     }
@@ -725,6 +730,8 @@ namespace AnyFSE::App::AppSettings::Settings
             m_theme.DpiScale(Layout_ButtonHeight),
             FALSE
         );
+
+        MoveUpdateControls();
     }
 
     void SettingsDialog::UpdateLayout()
@@ -734,7 +741,8 @@ namespace AnyFSE::App::AppSettings::Settings
                 &m_customSettingPageList,
                 &m_splashSettingPageList,
                 &m_troubleshootSettingPageList,
-                &m_startupSettingPageList
+                &m_startupSettingPageList,
+                &m_updateSettingPageList
             }
         )
         {
@@ -775,6 +783,11 @@ namespace AnyFSE::App::AppSettings::Settings
         m_scrollView.SetContentHeight(top + m_scrollView.GetScrollPos());
 
         RedrawWindow(m_hDialog, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
+    }
+
+    HWND SettingsDialog::GetMainWindow()
+    {
+        return FindWindow(L"AnyFSE", NULL);
     }
 
     void SettingsDialog::AddCustomSettingsPage()
@@ -1209,6 +1222,8 @@ namespace AnyFSE::App::AppSettings::Settings
 
         AddCustomSettingsPage();
 
+        AddUpdateSettingsPage(top);
+
         m_pSplashPageLine = &AddSettingsLine(m_settingPageList, top,
             L"Splash screen settings",
             L"Configure Look'n'Feel of splash screen during home app loading",
@@ -1252,6 +1267,8 @@ namespace AnyFSE::App::AppSettings::Settings
 
         rect.right -= m_theme.DpiScale(Layout_MarginRight);
         rect.left  += m_theme.DpiScale(Layout_MarginLeft);
+
+        AddUpdateControls();
 
         m_okButton.Create(m_hDialog,
             rect.right
@@ -1537,7 +1554,7 @@ namespace AnyFSE::App::AppSettings::Settings
         m_troubleLogLevelCombo.SelectItem(min(max((int)LogLevels::Disabled, (int)Config::LogLevel), (int)LogLevels::Max));
         m_troubleAggressiveToggle.SetCheck(Config::AggressiveMode);
 
-        m_troubleExitOnExitToggle.SetCheck(Config::ExitFSEOnLauncherExit);
+        m_troubleExitOnExitToggle.SetCheck(Config::ExitFSEOnHomeExit);
 
         m_splashShowTextToggle.SetCheck(Config::SplashShowText);
         m_splashCustomTextEdit.SetText(Config::SplashCustomText);
@@ -1549,6 +1566,8 @@ namespace AnyFSE::App::AppSettings::Settings
         m_splashShowVideoLoopToggle.SetCheck(Config::SplashVideoLoop);
         m_splashShowVideoMuteToggle.SetCheck(Config::SplashVideoMute);
         m_splashShowVideoPauseToggle.SetCheck(Config::SplashVideoPause);
+
+        UpdateSettingsLoadControls();
     }
 
     void SettingsDialog::OnLauncherChanged()
@@ -1642,7 +1661,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         Config::LogLevel = (LogLevels)m_troubleLogLevelCombo.GetSelectedIndex();
         Config::AggressiveMode = m_troubleAggressiveToggle.GetCheck();
-        Config::ExitFSEOnLauncherExit = m_troubleExitOnExitToggle.GetCheck();
+        Config::ExitFSEOnHomeExit = m_troubleExitOnExitToggle.GetCheck();
 
         Config::StartupApps.clear();
 
@@ -1658,6 +1677,8 @@ namespace AnyFSE::App::AppSettings::Settings
                 }
             );
         }
+
+        UpdateSettingsSaveControls();
 
         Config::Save();
     }

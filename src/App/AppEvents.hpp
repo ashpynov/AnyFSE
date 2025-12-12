@@ -42,7 +42,8 @@ namespace AnyFSE::App
         QUERY_END_SESSION,
         END_SESSION,
         RESTART_SERVICE,
-        DISCONNECT
+        DISCONNECT,
+        RELOAD_CONFIG,
     };
 }
 

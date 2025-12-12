@@ -45,9 +45,9 @@ namespace FluentDesign
         HWND m_hToggle;
         bool m_buttonPressed;
         bool m_buttonMouseOver;
-        int  m_pressedPos;
-        int  m_thumbShift;
-        int  m_pressedPath;
+        int  m_pressedPos = 0;
+        int  m_thumbShift = 0;
+        int  m_pressedPath = 0;
         bool m_isChecked;
 
         static LRESULT CALLBACK ToggleSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,

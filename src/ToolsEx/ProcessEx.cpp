@@ -76,9 +76,12 @@ namespace AnyFSE::ToolsEx::ProcessEx
             return HRESULT_FROM_WIN32(error);
         }
 
-        // Wait for the process to complete
-        WaitForSingleObject(sei.hProcess, 10000); // Wait up to 10 seconds
-        CloseHandle(sei.hProcess);
+        if (sei.hProcess)
+        {
+            // Wait for the process to complete
+            WaitForSingleObject(sei.hProcess, 10000); // Wait up to 10 seconds
+            CloseHandle(sei.hProcess);
+        }
         return NULL;
     }
 

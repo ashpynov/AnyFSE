@@ -105,7 +105,7 @@ namespace Gdiplus
         RectF strokeRect = origRect;
         strokeRect.Inflate(-.5, -.5);
         dia = min(min(strokeRect.Height, strokeRect.Width), cornerRadius);
-        GraphicsPath strokes[4];
+        GraphicsPath strokes[5];
         int n = 0;
         if (flags & SIDE_TOP)
         {

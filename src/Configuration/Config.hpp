@@ -50,34 +50,34 @@ namespace AnyFSE::Configuration
 
     struct LauncherConfig
     {
-        LauncherType Type;
+        LauncherType Type = LauncherType::None;
         std::wstring Name;
         std::wstring StartCommand;
         std::wstring StartArg;
 
-        DWORD ExStyle;
-        DWORD NoStyle;
+        DWORD ExStyle = 0;
+        DWORD NoStyle = 0;
         std::wstring ProcessName;
         std::wstring ClassName;
         std::wstring WindowTitle;
 
-        DWORD ExStyleAlt;
-        DWORD NoStyleAlt;
+        DWORD ExStyleAlt = 0;
+        DWORD NoStyleAlt = 0;
         std::wstring ProcessNameAlt;
         std::wstring ClassNameAlt;
         std::wstring WindowTitleAlt;
         std::wstring IconFile;
-        bool IsTrayAggressive;
+        bool IsTrayAggressive = false;
         std::wstring ActivationProtocol;
-        bool IsCustom;
-        bool IsPortable;
+        bool IsCustom = false;
+        bool IsPortable = false;
     };
 
     struct StartupApp
     {
         std::wstring Path;
         std::wstring Args;
-        bool Enabled;
+        bool Enabled = false;
     };
 
     class Config
@@ -125,7 +125,9 @@ namespace AnyFSE::Configuration
             static void SaveWindowPlacement(int cmdShow, const RECT & rcNormalPosition);
             static int LoadWindowPlacement(RECT * prcNormalPosition);
 
-            static std::wstring GetApplicationName(const std::wstring & filePath);
+            static void SaveUpdateVersion(const std::wstring &lastVersion);
+
+            static std::wstring GetApplicationName(const std::wstring &filePath);
 
             static std::wstring GetFileDescription(const std::wstring &filePath);
 
@@ -162,7 +164,14 @@ namespace AnyFSE::Configuration
 
             static std::list<StartupApp> StartupApps;
 
-            static bool ExitFSEOnLauncherExit;
+            static bool ExitFSEOnHomeExit;
+
+            static bool         UpdatePreRelease;
+            static bool         UpdateNotifications;
+            static bool         UpdateOnClick;
+            static int          UpdateCheckInterval;
+            static std::wstring UpdateLastCheck;
+            static std::wstring UpdateLastVersion;
     };
 }
 

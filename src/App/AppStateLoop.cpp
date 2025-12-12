@@ -33,6 +33,8 @@ namespace AnyFSE::App::StateLoop
     AppStateLoop::AppStateLoop(bool isServer)
         : m_ipcChannel(L"AnyFSEPipe", isServer)
         , _log(LogManager::GetLogger("StateLoop"))
+        , m_hReadPipe(nullptr)
+        , m_hWritePipe(nullptr)
     {
         m_hQueueCondition = CreateEvent(NULL, FALSE, FALSE, NULL);
         m_ipcChannel.SetCancelEvent(m_hQueueCondition);
@@ -57,7 +59,7 @@ namespace AnyFSE::App::StateLoop
     {
         AnyFSE::App::Message message;
         message.event = event;
-        message.ticks = GetTickCount();
+        message.ticks = GetTickCount64();
         return m_ipcChannel.Write(&message, timeout);
     }
 

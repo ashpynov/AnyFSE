@@ -127,6 +127,8 @@ namespace FluentDesign
         HFONT m_hTitleFont;
         HFONT m_hGlyphNormalFont;
 
+        HBRUSH m_hDialogBack = nullptr;
+
         COLORREF m_colors[Colors::Max + 1];
 
         static const int m_primarySize = 14;
