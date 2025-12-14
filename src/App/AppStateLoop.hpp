@@ -66,6 +66,7 @@ namespace AnyFSE::App::StateLoop
         // Main control functions
         void Start();
         void Stop();
+        void Wait(DWORD timeout);
         bool IsRunning() { return m_isRunning.load(); }
 
     protected:

@@ -33,6 +33,7 @@
 #include "Configuration/Config.hpp"
 #include "Tools/Process.hpp"
 #include "Tools/Notification.hpp"
+#include "Tools/PowerEfficiency.hpp"
 
 #include "AppControl/AppControl.hpp"
 #include "AppControl/GamingExperience.hpp"
@@ -44,25 +45,12 @@
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#include "Tools/Minidump.hpp"
+#include "ToolsEx/Minidump.hpp"
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    static Logger log = LogManager::GetLogger("Service");
     ToolsEx::InstallUnhandledExceptionHandler();
-    try
-    {
-        return AnyFSE::App::AppControl::AppControl::WinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
-    }
-    catch(const std::exception& e)
-    {
-        log.Error(e, "\n\nUnhandled std exception:");
-    }
-    catch(...)
-    {
-        log.Error(log.APIError(), "\n\nUnhandled exception");
-    }
-    return ERROR_UNHANDLED_EXCEPTION;
+    return AnyFSE::App::AppControl::AppControl::WinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
 }
 
 namespace AnyFSE::App::AppControl
@@ -175,21 +163,12 @@ namespace AnyFSE::App::AppControl
         if (!GamingExperience::ApiIsAvailable)
         {
             log.Critical("Fullscreen Gaming API is not detected, exiting\n");
-            AppControlStateLoop.NotifyRemote(AppEvents::SUSPEND_SERVICE);
+            AppControlStateLoop.NotifyRemote(AppEvents::EXIT_SERVICE);
             return -1;
         }
 
-        if (Config::Launcher.Type != LauncherType::None && Config::Launcher.Type != LauncherType::Xbox)
-        {
-            AppControlStateLoop.Notify(AppEvents::START);
-            AppControlStateLoop.Start();
-        }
-        else
-        {
-            log.Info("Launcher is Not configured. Exiting\n");
-            AppControlStateLoop.NotifyRemote(AppEvents::SUSPEND_SERVICE);
-            return -1;
-        }
+        AppControlStateLoop.NotifyRemote(AppEvents::START);
+        AppControlStateLoop.Start();
 
         AppControlStateLoop.NotifyRemote(Config::AggressiveMode ? AppEvents::XBOX_DENY : AppEvents::XBOX_ALLOW);
 
@@ -271,7 +250,7 @@ namespace AnyFSE::App::AppControl
             log.Info("Reload config");
             Config::Load();
             LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
-            AppControlStateLoop.NotifyRemote(AppEvents::RELOAD_CONFIG);
+            AppControlStateLoop.NotifyRemote(AppEvents::RELOAD_SERVICE);
         });
 
         mainWindow.OnStartWindow += ([&AppControlStateLoop, &mainWindow]()
@@ -319,8 +298,11 @@ namespace AnyFSE::App::AppControl
                 SetLastError(StartControl(AppControlStateLoop, mainWindow));
                 mainWindow.ExitOnError();
             }
+
             AppControlStateLoop.Notify(GamingExperience::IsActive() ? AppEvents::GAMEMODE_ENTER : AppEvents::GAMEMODE_EXIT);
         });
+
+        Tools::EnablePowerEfficencyMode(true);
 
         log.Debug("Run window loop.");
 
@@ -332,16 +314,15 @@ namespace AnyFSE::App::AppControl
         }
         else if (exitCode != ERROR_RESTART_APPLICATION)
         {
-            log.Info("Stopping application, notify service exit");
-            AppControlStateLoop.NotifyRemote(AppEvents::SUSPEND_SERVICE);
+            log.Info("Restarting application, notify service to reload");
+            AppControlStateLoop.NotifyRemote(AppEvents::RELOAD_SERVICE);
         }
         else
         {
-            log.Info("Restarting application, notify service restart");
-            AppControlStateLoop.NotifyRemote(AppEvents::RESTART_SERVICE);
+            log.Info("Exiting application, notify service Suspend");
+            AppControlStateLoop.NotifyRemote(AppEvents::SUSPEND_SERVICE);
         }
-        Sleep(1000);
-        AppControlStateLoop.Stop();
+        AppControlStateLoop.Wait(1000);
 
         log.Debug("Loop finished. Time to exit");
 

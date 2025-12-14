@@ -411,7 +411,20 @@ namespace AnyFSE
             return;
         }
 
-        ShowCompletePage();
+        SetCurrentProgress(L"Waiting for application is started");
+        for (int i = 0; i < 10; i++)
+        {
+            HWND hwnd = FindWindow(L"AnyFSE", 0);
+            if (hwnd)
+            {
+                PostMessage(hwnd, WM_USER, m_isUpdate ? 0 : 1, 0);
+                ShowCompletePage();
+                return;
+            }
+            Sleep(1000);
+        }
+        ShowErrorPage(L"Installation Error", L"Can't find executed application. \nPlease try to restart PC.");
+
     }
 
     bool AppInstaller::DeleteOldVersion()

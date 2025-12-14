@@ -1,10 +1,10 @@
-#include "resource.h"
 #include <windows.h>
 #include "Logging/LogManager.hpp"
 #include "SettingsDialog.hpp"
 #include "Configuration/Config.hpp"
 #include "Tools/Event.hpp"
 #include "Updater/Updater.AppSettings.hpp"
+#include <FluentDesign/SettingsLine.hpp>
 
 
 namespace AnyFSE::App::AppSettings::Settings

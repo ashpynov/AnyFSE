@@ -1,5 +1,6 @@
 #include "Tools/Process.hpp"
 #include "Updater/Updater.hpp"
+#include <string>
 
 namespace AnyFSE::Updater
 {

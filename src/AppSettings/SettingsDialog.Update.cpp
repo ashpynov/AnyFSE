@@ -1,31 +1,20 @@
-#include "resource.h"
 #include <windows.h>
-#include <commdlg.h>
-#include <uxtheme.h>
-#include <filesystem>
-#include <winsock.h>
 #include "Logging/LogManager.hpp"
 #include "AppSettings/SettingsDialog.hpp"
 #include "Configuration/Config.hpp"
 #include "FluentDesign/Theme.hpp"
-#include "FluentDesign/Popup.hpp"
-#include "Tools/List.hpp"
 #include "Tools/Unicode.hpp"
-#include "Tools/DoubleBufferedPaint.hpp"
-#include "Tools/Window.hpp"
-#include "Tools/Registry.hpp"
-#include "Tools/Process.hpp"
 #include "Updater/Updater.hpp"
-#include "Tools/Notification.hpp"
-#include "StartupAppEditor.hpp"
 
 #define byte ::byte
 
-#include "Tools/GdiPlus.hpp"
 
 #ifndef VER_VERSION_STR
 #define VER_VERSION_STR "0.0.0"
 #endif
+#include <gdiplusenums.h>
+#include <string>
+#include <Tools/Event.hpp>
 
 #pragma comment(lib, "ws2_32.lib")
 

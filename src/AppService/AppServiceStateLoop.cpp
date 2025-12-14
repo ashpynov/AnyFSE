@@ -43,8 +43,8 @@ namespace AnyFSE::App::AppService::StateLoop
                 OnStart.Notify();
                 NotifyRemote(event);
                 return;
-            case AppEvents::RELOAD_CONFIG:
-                return OnReloadConfig.Notify();
+            case AppEvents::RELOAD_SERVICE:
+                return OnReload.Notify();
 
             case AppEvents::LAUNCHER_STOPPED:
             case AppEvents::XBOX_DETECTED:
@@ -59,11 +59,14 @@ namespace AnyFSE::App::AppService::StateLoop
             case AppEvents::XBOX_ALLOW:
                 return OnXboxAllow.Notify();
 
-            case AppEvents::SUSPEND_SERVICE:
-                return OnSuspend.Notify();
+            case AppEvents::EXIT_SERVICE:
+                return OnExit.Notify();
 
             case AppEvents::RESTART_SERVICE:
                 return OnRestart.Notify();
+
+            case AppEvents::SUSPEND_SERVICE:
+                return OnSuspend.Notify();
 
             default:
                 log.Trace("Recieved event by service %d", event);

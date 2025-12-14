@@ -276,6 +276,7 @@ namespace AnyFSE::App::AppSettings::Settings
         HWND GetMainWindow();
 
         void AddCustomSettingsPage();
+        void OnGotoSplashFolder();
         void AddSplashSettingsPage();
         void AddTroubleshootSettingsPage();
         void AddStartupAppLine(const std::wstring &path, const std::wstring &args, bool enabled);

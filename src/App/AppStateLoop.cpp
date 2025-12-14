@@ -23,9 +23,9 @@
 
 #include "App/AppStateLoop.hpp"
 #include "Logging/LogManager.hpp"
-#include "Tools/Unicode.hpp"
 #undef max
 #include <chrono>
+#include "AppStateLoop.hpp"
 
 namespace AnyFSE::App::StateLoop
 {
@@ -90,6 +90,16 @@ namespace AnyFSE::App::StateLoop
         m_timersMap.clear();
     }
 
+    void AppStateLoop::Wait(DWORD timeout)
+    {
+        SetTimer(std::chrono::milliseconds(timeout), [this]() { Notify(AppEvents::DISCONNECT); }, false);
+
+        if (m_thread.joinable())
+        {
+            m_thread.join();
+        }
+    }
+
     uint64_t AppStateLoop::SetTimer(std::chrono::milliseconds timeout, std::function<void()> callback, bool recurring)
     {
         // This can only be called from the processing thread during event handling
@@ -116,6 +126,7 @@ namespace AnyFSE::App::StateLoop
     void AppStateLoop::ProcessingCycle()
     {
         _log.Info("Entering StateManager loop");
+        int failCounter = 0;
 
         while (m_isRunning)
         {
@@ -145,10 +156,16 @@ namespace AnyFSE::App::StateLoop
                 try
                 {
                     m_ipcChannel.Wait(timeoutMs);
+                    failCounter = 0;
                 }
                 catch (...)
                 {
-                    Notify(AppEvents::DISCONNECT);
+                    failCounter++;
+                    Sleep(1000);
+                    if (failCounter > 60)
+                    {
+                        Notify(AppEvents::DISCONNECT);
+                    }
                 }
 
                 lock.lock();

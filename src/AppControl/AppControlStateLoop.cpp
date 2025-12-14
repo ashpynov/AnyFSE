@@ -205,6 +205,7 @@ namespace AnyFSE::App::AppControl::StateLoop
     {
         SetLastError(WS_E_ENDPOINT_DISCONNECTED);
         m_splash.ExitOnError();
+        Stop();
     }
 
     void AppControlStateLoop::OnOpenHome()

@@ -22,11 +22,9 @@
 //
 
 #include "SettingsDialog.hpp"
-#include "resource.h"
 #include <windows.h>
-#include <commdlg.h>
-#include <uxtheme.h>
-#include <filesystem>
+#include <Windows.h>
+#include <algorithm>
 #include "Logging/LogManager.hpp"
 #include "SettingsDialog.hpp"
 #include "Configuration/Config.hpp"
@@ -44,9 +42,6 @@
 
 #include "Tools/GdiPlus.hpp"
 
-
-#pragma comment(lib, "comctl32.lib")
-#pragma comment(lib, "uxtheme.lib")
 
 namespace AnyFSE::App::AppSettings::Settings
 {
@@ -877,6 +872,14 @@ namespace AnyFSE::App::AppSettings::Settings
         m_classAltEdit.OnChanged += delegate(UpdateCustomResetEnabled);
     }
 
+    void SettingsDialog::OnGotoSplashFolder()
+    {
+        std::wstring path = Config::GetModulePath() + L"\\splash";
+
+        CreateDirectoryW(path.c_str(), NULL);
+        Process::StartProtocol(L"\"" + path + L"\"");
+    }
+
     void SettingsDialog::AddSplashSettingsPage()
     {
         ULONG top = 0;
@@ -904,11 +907,14 @@ namespace AnyFSE::App::AppSettings::Settings
             m_splashShowAnimationToggle,
             Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin));
 
-        m_pSplashVideoLine=&AddSettingsLine(m_splashSettingPageList, top,
+
+        m_pSplashVideoLine = &AddSettingsLine(m_splashSettingPageList, top,
             L"Show Video",
-            L"",
+            L"Show random video from \"splash\" folder",
             m_splashShowVideoToggle,
             Layout_LineHeight, 0, 0);
+
+        m_pSplashVideoLine->OnLink = delegate(OnGotoSplashFolder);
 
         m_pSplashVideoLine->AddGroupItem(&AddSettingsLine(m_splashSettingPageList, top,
             L"Loop video",

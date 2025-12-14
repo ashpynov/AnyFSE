@@ -1,6 +1,5 @@
 #include <filesystem>
 #include "StartupAppEditor.hpp"
-#include "Tools/DoubleBufferedPaint.hpp"
 
 namespace AnyFSE::App::AppSettings::Settings
 {

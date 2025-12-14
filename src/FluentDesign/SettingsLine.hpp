@@ -83,6 +83,8 @@ namespace FluentDesign
 
         State m_state;
 
+        RECT m_secondaryTextRect;
+
         const int CHEVRON_SIZE = 24;
         const int CHEVRON_SPACE = 9;
 
@@ -168,6 +170,7 @@ namespace FluentDesign
         std::wstring GetData(int index);
 
         Event OnChanged;
+        Event OnLink;
 
     protected:
         // Window procedure and message handlers

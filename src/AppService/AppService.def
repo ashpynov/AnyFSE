@@ -1,3 +1,0 @@
-LIBRARY "AnyFSE.Service.dll"
-EXPORTS
-    Main @1

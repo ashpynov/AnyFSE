@@ -1,3 +1,0 @@
-LIBRARY "AnyFSE.Control.dll"
-EXPORTS
-    Main @1

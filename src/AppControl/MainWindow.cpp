@@ -22,7 +22,6 @@
 //
 
 
-
 #include <tchar.h>
 #include <windows.h>
 #include <filesystem>
@@ -40,6 +39,7 @@
 #include "Updater/Updater.hpp"
 #include "Updater/Updater.AppControl.hpp"
 #include "Tools/Notification.hpp"
+#include "Tools/PowerEfficiency.hpp"
 
 #pragma comment(lib, "mpr.lib")
 
@@ -121,8 +121,13 @@ namespace AnyFSE::App::AppControl::Window
         if (IsWindow(m_hWnd))
         {
             m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, Config::SplashVideoPause, m_hWnd);
+
             if (!m_empty)
             {
+                if (Config::SplashShowVideo)
+                {
+                    Tools::EnablePowerEfficencyMode(false);
+                }
                 m_videoPlayer.Play();
                 StartAnimation();
             }
@@ -155,6 +160,9 @@ namespace AnyFSE::App::AppControl::Window
             SelectNextVideo();
             StopAnimation();
         }
+
+        Tools::EnablePowerEfficencyMode(true);
+
         return true;
     }
 
@@ -273,6 +281,12 @@ namespace AnyFSE::App::AppControl::Window
         case WM_UPDATE_NOTIFICATION:
             OnUpdateNotification();
             return 0;
+        case WM_USER:
+            if (Config::UpdateNotifications)
+            {
+                Notification::ShowCurrentVersion(m_hWnd, wParam);
+            }
+            return 0;
         case WM_UPDATE_CHECK:
             OnUpdateCheck();
             return 0;
@@ -297,6 +311,7 @@ namespace AnyFSE::App::AppControl::Window
 
     void MainWindow::CreateTrayIcon()
     {
+        SetLastError(0);
         NOTIFYICONDATA stData;
         ZeroMemory(&stData, sizeof(stData));
         stData.cbSize = sizeof(stData);
@@ -411,7 +426,7 @@ namespace AnyFSE::App::AppControl::Window
                 )
         {
             m_successChecked = true;
-            if (!upd.newVersion.empty() && upd.newVersion != Config::UpdateLastVersion)
+            if (Config::UpdateNotifications && !upd.newVersion.empty() && upd.newVersion != Config::UpdateLastVersion)
             {
                 Notification::ShowNewVersion(m_hWnd, upd.newVersion);
             }
@@ -452,7 +467,12 @@ namespace AnyFSE::App::AppControl::Window
         {
         case ID_CONFIGURE:
             {
+                // Ensure normal priority while settings dialog runs
+                Tools::EnablePowerEfficencyMode(false);
                 int result = AppControl::ShowSettings();
+                // Restore idle/low-power after settings dialog closes
+                Tools::EnablePowerEfficencyMode(true);
+
                 if ( result == IDOK)
                 {
                     OnReconfigure.Notify();

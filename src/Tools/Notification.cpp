@@ -1,7 +1,12 @@
 #include "Tools/Notification.hpp"
+#include "Tools/Unicode.hpp"
 #include "resource.h"
 #include <shellapi.h>
 #include "Notification.hpp"
+
+#ifndef VER_VERSION_STR
+#define VER_VERSION_STR "0.0.0"
+#endif
 
 namespace AnyFSE::Tools
 {
@@ -69,5 +74,11 @@ namespace AnyFSE::Tools
         }
         std::wstring msg = L"New version " + version + L" is available.";
         Tools::Notification::Show(hwnd, L"AnyFSE Update available", msg);
+    }
+
+    void Notification::ShowCurrentVersion(HWND hwnd, bool installed)
+    {
+        std::wstring msg = L"Current version is " + Unicode::to_wstring(VER_VERSION_STR);
+        Tools::Notification::Show(hwnd, installed ? L"AnyFSE was installed" : L"AnyFSE was updated", msg);
     }
 }

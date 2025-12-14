@@ -38,10 +38,11 @@ namespace AnyFSE::App::AppService::StateLoop
 
             Event OnXboxDeny;
             Event OnXboxAllow;
-            Event OnSuspend;
+            Event OnExit;
             Event OnRestart;
             Event OnStart;
-            Event OnReloadConfig;
+            Event OnReload;
+            Event OnSuspend;
 
         private:
             virtual void ProcessEvent(AppEvents event);

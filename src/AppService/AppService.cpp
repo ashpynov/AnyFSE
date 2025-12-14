@@ -28,8 +28,9 @@
 #include "ToolsEx/ProcessEx.hpp"
 #include "ToolsEx/TaskManager.hpp"
 #include "ToolsEx/Admin.hpp"
-#include "Tools/Minidump.hpp"
+#include "ToolsEx/Minidump.hpp"
 #include "Tools/Unicode.hpp"
+#include "Tools/PowerEfficiency.hpp"
 
 #include "Configuration/Config.hpp"
 
@@ -40,25 +41,10 @@
 #pragma comment(lib, "wtsapi32.lib")
 #pragma comment(lib, "userenv.lib")
 
-
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    static Logger log = LogManager::GetLogger("Service");
     ToolsEx::InstallUnhandledExceptionHandler();
-    try
-    {
-        return AnyFSE::App::AppService::AppService::ServiceMain(hInstance, hPrevInstance, lpCmdLine);
-    }
-    catch(const std::exception& e)
-    {
-        log.Error(e, "\n\nUnhandled std exception:");
-    }
-    catch(...)
-    {
-        log.Error(log.APIError(), "\n\nUnhandled exception");
-    }
-    AnyFSE::App::AppService::AppService::Restart();
-    return ERROR_UNHANDLED_EXCEPTION;
+    return AnyFSE::App::AppService::AppService::ServiceMain(hInstance, hPrevInstance, lpCmdLine);
 }
 
 namespace AnyFSE::App::AppService
@@ -73,7 +59,8 @@ namespace AnyFSE::App::AppService
 
     static const int COMPLETE_EXIT = 0;
     static const int COMPLETE_RESTART = 1;
-    static const int COMPLETE_SUSPEND = 2;
+    static const int COMPLETE_RELOAD = 2;
+    static const int COMPLETE_SUSPEND = 3;
 
     BOOL AppService::ExitService(int nState)
     {
@@ -172,43 +159,66 @@ namespace AnyFSE::App::AppService
 
         log.Debug("Service is started (hInstance=%08x), cmdLine: %s", hInstance, lpCmdLine);
 
-        bool bCommand = (lpCmdLine && lpCmdLine[0]);
-        bool bSuspend = bCommand
-            || Config::Launcher.Type == LauncherType::None
-            || Config::Launcher.Type == LauncherType::Xbox;
+        RegisterEvents();
+        AppControlStateLoop.Start();
 
-        CreateBackgroundWindow();
-        StartMonitoring(bSuspend);
 
         DWORD activeSession = WTSGetActiveConsoleSessionId();
-        if (!bCommand && activeSession != 0xFFFFFFFF)
+        if (activeSession != 0xFFFFFFFF)
         {
             log.Debug("Session is started already force to run\n");
             LaunchAppInUserSession(activeSession);
         }
 
-        int result = MonitorSessions();
+        bool bNoClient = false;
+        int result = 0;
 
-        StopMonitoring();
-
-        switch (result)
+        do
         {
-            case COMPLETE_EXIT:
-                log.Debug("Work is done");
-                break;
-            case COMPLETE_SUSPEND:
-                log.Debug("Restart in suspend mode");
-                Restart(true);
-                break;
-            case COMPLETE_RESTART:
-                log.Debug("Restarting");
-                Restart();
-                break;
-            default:
-                log.Debug("Unknown error: %d, suspend", result);
-                Restart();
-                break;
-        }
+            log.Debug("Entering Main service loop, noClient mode %s", bNoClient ? "On" : "Off");
+
+            AppControlStateLoop.Notify((Config::AggressiveMode && !bNoClient) ? AppEvents::XBOX_DENY : AppEvents::XBOX_ALLOW);
+
+            CreateBackgroundWindow();
+            StartMonitoring(bNoClient || Config::Launcher.Type == LauncherType::None || Config::Launcher.Type == LauncherType::Xbox);
+
+            Tools::EnablePowerEfficencyMode(true);
+            int result = MonitorSessions();
+
+            StopMonitoring();
+
+            switch (result)
+            {
+                case COMPLETE_EXIT:
+                    log.Debug("Work is done");
+                    break;
+
+                case COMPLETE_RELOAD:
+                    log.Debug("Reload");
+                    Config::Load();
+                    AnyFSE::Logging::LogManager::Initialize("AnyFSE/Service", Config::LogLevel, Config::LogPath);
+                    bNoClient = false;
+                    break;
+
+                case COMPLETE_SUSPEND:
+                    log.Debug("Switch to suspend mode");
+                    bNoClient = true;
+                    break;
+
+                case COMPLETE_RESTART:
+                    log.Debug("Switch to normal mode");
+                    Restart();
+                    break;
+
+                default:
+                    log.Debug("Unknown error: %d, restart", result);
+                    Restart();
+                    break;
+            }
+        } while (result != COMPLETE_RELOAD && result != COMPLETE_SUSPEND);
+
+        AppControlStateLoop.Stop();
+
         log.Debug("Exiting %d\n", result);
 
         return result;
@@ -283,12 +293,11 @@ namespace AnyFSE::App::AppService
         }
         else if (msg == WM_USER)
         {
-            EnableMonitoring();
+            RegisterEvents();
             return 0;
         }
         else if (msg == WM_DESTROY)
         {
-            AppControlStateLoop.Stop();
             WTSUnRegisterSessionNotification(hwnd);
             PostQuitMessage((int)wParam);
             return 0;
@@ -380,9 +389,37 @@ namespace AnyFSE::App::AppService
         return TRUE;
     }
 
-    void AppService::EnableMonitoring()
+    void AppService::RegisterEvents()
     {
-        etwMonitor.OnProcessExecuted += ([]()
+        AppControlStateLoop.OnExit = ([]()
+        {
+            log.Debug("Reloading!" );
+            AppControlStateLoop.NotifyRemote(AppEvents::DISCONNECT);
+            ExitService(COMPLETE_EXIT);
+        });
+
+        AppControlStateLoop.OnRestart = ([]()
+        {
+            log.Debug("Restarting!" );
+            AppControlStateLoop.NotifyRemote(AppEvents::DISCONNECT);
+            ExitService(COMPLETE_RESTART);
+        });
+
+        AppControlStateLoop.OnSuspend = ([]()
+        {
+            log.Debug("Restarting!" );
+            AppControlStateLoop.NotifyRemote(AppEvents::DISCONNECT);
+            ExitService(COMPLETE_SUSPEND);
+        });
+
+
+        AppControlStateLoop.OnReload = ([]()
+        {
+            log.Debug("Config reload!" );
+            ExitService(COMPLETE_RELOAD);
+        });
+
+        etwMonitor.OnProcessExecuted = ([]()
         {
             log.Debug("Xbox process execution is detected\n" );
             AppControlStateLoop.NotifyRemote(AppEvents::XBOX_DETECTED);
@@ -392,103 +429,54 @@ namespace AnyFSE::App::AppService
             }
         });
 
-        etwMonitor.OnHomeAppTouched += ([]()
+        etwMonitor.OnHomeAppTouched = ([]()
         {
             log.Trace("Attempt to open Home App detected!" );
             AppControlStateLoop.NotifyRemote(AppEvents::OPEN_HOME);
         });
 
-        etwMonitor.OnDeviceFormTouched += ([]()
+        etwMonitor.OnDeviceFormTouched = ([]()
         {
             log.Trace("Access to DeviceForm detected!" );
             AppControlStateLoop.NotifyRemote(AppEvents::OPEN_DEVICE_FORM);
         });
 
-        etwMonitor.OnLauncherStopped += ([]()
+        etwMonitor.OnLauncherStopped = ([]()
         {
             log.Debug("LauncherPtocess stopped\n" );
             AppControlStateLoop.NotifyRemote(AppEvents::LAUNCHER_STOPPED);
         });
 
-        etwMonitor.OnFailure += ([]()
+        etwMonitor.OnFailure = ([]()
         {
             ExitService(COMPLETE_EXIT);
         });
 
-        AppControlStateLoop.OnXboxDeny += ([]()
+        AppControlStateLoop.OnXboxDeny = ([]()
         {
             log.Debug("XboxDeny message recieved!" );
             xboxIsDenied = true;
             KillXbox();
         });
 
-        AppControlStateLoop.OnXboxAllow += ([]()
+        AppControlStateLoop.OnXboxAllow = ([]()
         {
             log.Debug("XboxAllow message recieved!" );
             xboxIsDenied = false;
         });
-        etwMonitor.Start();
     }
 
     void AppService::StartMonitoring(bool bSuspended)
     {
-        AppControlStateLoop.OnSuspend += ([]()
-        {
-            log.Debug("Suspending!" );
-            ExitService(COMPLETE_SUSPEND);
-        });
-
-        AppControlStateLoop.OnRestart += ([]()
-        {
-            log.Debug("Restarting!" );
-            ExitService(COMPLETE_RESTART);
-        });
-
-        AppControlStateLoop.OnReloadConfig += ([]()
-        {
-            log.Debug("Config reload!" );
-            bool wasSuspended = (Config::Launcher.Type == LauncherType::None || Config::Launcher.Type == LauncherType::Xbox);
-
-            Config::Load();
-            LogManager::Initialize("AnyFSE/Service", Config::LogLevel, Config::LogPath);
-
-            bool willSuspended = (Config::Launcher.Type == LauncherType::None || Config::Launcher.Type == LauncherType::Xbox);
-
-            if (wasSuspended == willSuspended)
-            {
-                return;
-            }
-
-            if (willSuspended)
-            {
-                AppControlStateLoop.OnSuspend.Notify();
-            }
-            else
-            {
-                EnableMonitoring();
-            }
-        });
-
         if (!bSuspended)
         {
-            EnableMonitoring();
+            etwMonitor.Start();
         }
-        else
-        {
-            AppControlStateLoop.OnStart += ([]()
-            {
-                AppControlStateLoop.OnStart.Clear();
-                PostMessage(m_hwnd, WM_USER, 0, 0);
-            });
-        }
-
-        AppControlStateLoop.Start();
     }
 
     void AppService::StopMonitoring()
     {
         etwMonitor.Stop();
-        AppControlStateLoop.Stop();
     }
 
     void AppService::KillXbox()

@@ -12,5 +12,6 @@ namespace AnyFSE::Tools
         static void Show(HWND hwnd, const std::wstring& title, const std::wstring& message, const std::wstring& launchUrl = L"");
 
         static void ShowNewVersion(HWND hwnd, const std::wstring &version, const std::wstring &launchUrl = L"");
+        static void ShowCurrentVersion(HWND hwnd, bool installed);
     };
 }

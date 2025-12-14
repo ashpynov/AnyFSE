@@ -39,11 +39,12 @@ namespace AnyFSE::App
         XBOX_DENY,
         XBOX_ALLOW,
         SUSPEND_SERVICE,
+        EXIT_SERVICE,
         QUERY_END_SESSION,
         END_SESSION,
         RESTART_SERVICE,
         DISCONNECT,
-        RELOAD_CONFIG,
+        RELOAD_SERVICE,
     };
 }
 

@@ -47,7 +47,7 @@ namespace FluentDesign
         , m_enabled(true)
         , m_hovered(false)
         , m_hWnd(nullptr)
-        , m_linePadding(4)
+        , m_linePadding(8)
         , m_leftMargin(16)
         , m_state(State::Normal)
         , m_frameFlags(Gdiplus::FrameFlags::CORNER_ALL | Gdiplus::FrameFlags::SIDE_ALL)
@@ -55,7 +55,9 @@ namespace FluentDesign
         , m_groupLine(nullptr)
         , m_icon(L'\0')
         , m_hIcon(nullptr)
+        ,m_secondaryTextRect{0}
     {
+
     }
 
     SettingsLine::SettingsLine(
@@ -168,6 +170,20 @@ namespace FluentDesign
             OnMouseMove();
             return 0;
 
+        case WM_SETCURSOR:
+            if (m_hovered && OnLink.HasSubscribe())
+            {
+                POINT pt;
+                GetCursorPos(&pt);
+                ScreenToClient(m_hWnd, &pt);
+                if (PtInRect(&m_secondaryTextRect, pt))
+                {
+                    SetCursor(LoadCursor(NULL, IDC_HAND));
+                    return TRUE;
+                }
+            }
+            break;
+
         case WM_NCMOUSELEAVE:
         case WM_MOUSELEAVE:
             OnMouseLeave();
@@ -267,9 +283,6 @@ namespace FluentDesign
         COLORREF textColor = m_enabled ? m_theme.GetColorRef(Theme::Colors::Text)
                                        : m_theme.GetColorRef(Theme::Colors::TextDisabled);
 
-        COLORREF descColor = m_enabled ? m_theme.GetColorRef(Theme::Colors::TextSecondary)
-                                       : m_theme.GetColorRef(Theme::Colors::TextDisabled);
-
         SetBkMode(hdc, TRANSPARENT);
 
         // Draw name
@@ -299,15 +312,28 @@ namespace FluentDesign
 
         ::DrawText(hdc, m_name.c_str(), -1, &nameRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
 
-        // Draw description
-        SelectObject(hdc, m_theme.GetFont_TextSecondary());
-        SetTextColor(hdc, descColor);
+        if ( !m_description.empty())
+        {
+            COLORREF descColor = m_enabled && OnLink.HasSubscribe() ? m_theme.GetColorRef(Theme::Colors::TextAccented)
+                                                       : m_enabled  ? m_theme.GetColorRef(Theme::Colors::TextSecondary)
+                                                                    : m_theme.GetColorRef(Theme::Colors::TextDisabled);
+            // Draw description
+            SelectObject(hdc, m_theme.GetFont_TextSecondary());
+            SetTextColor(hdc, descColor);
 
-        RECT descRect = rect;
-        descRect.top = nameRect.bottom + m_theme.DpiScale(m_linePadding);
-        descRect.bottom = descRect.top + m_theme.GetSize_TextSecondary();
+            RECT descRect = rect;
+            descRect.top = nameRect.bottom + m_theme.DpiScale(m_linePadding);
+            descRect.bottom = descRect.top + m_theme.GetSize_TextSecondary();
 
-        ::DrawText(hdc, m_description.c_str(), -1, &descRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE| DT_NOCLIP);
+            ::DrawText(hdc, m_description.c_str(), -1, &descRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE| DT_NOCLIP|DT_CALCRECT);
+            ::DrawText(hdc, m_description.c_str(), -1, &descRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE| DT_NOCLIP);
+
+            m_secondaryTextRect = descRect;
+        }
+        else
+        {
+            m_secondaryTextRect = RECT{0};
+        }
     }
 
     void SettingsLine::DrawIcon(HDC hdc)
@@ -413,6 +439,18 @@ namespace FluentDesign
 
     void SettingsLine::OnLButtonDown()
     {
+        if (m_hovered && OnLink.HasSubscribe())
+        {
+            POINT pt;
+            GetCursorPos(&pt);
+            ScreenToClient(m_hWnd, &pt);
+            if (PtInRect(&m_secondaryTextRect, pt))
+            {
+                OnLink.Notify();
+                return;
+            }
+        }
+
         // Focus the child control when clicked
         if (m_state == State::Opened || m_state == State::Closed )
         {

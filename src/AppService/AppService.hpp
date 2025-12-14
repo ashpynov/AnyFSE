@@ -46,7 +46,7 @@ namespace AnyFSE::App::AppService
         static bool StartServiceTask();
         static BOOL LaunchAppInUserSession(DWORD sessionId);
 
-        static void EnableMonitoring();
+        static void RegisterEvents();
 
         static void StartMonitoring(bool bSuspended);
         static void StopMonitoring();

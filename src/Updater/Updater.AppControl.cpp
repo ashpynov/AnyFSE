@@ -1,26 +1,21 @@
 
 #include <windows.h>
 #include <winhttp.h>
-#include <urlmon.h>
-#include <shellapi.h>
 #include <sstream>
 #include <vector>
 #include <stdexcept>
 #include <algorithm>
 #include <thread>
 #include <mutex>
-#include <time.h>
 #include "Updater.hpp"
 
 #include "Updater/Updater.hpp"
 #include "Updater/Updater.Command.hpp"
 
 #include "Tools/Unicode.hpp"
-#include "Tools/Process.hpp"
 
 #include "Configuration/nlohmann/json.hpp"
 #include "Configuration/Config.hpp"
-#include "Tools/Event.hpp"
 
 #include "Logging/LogManager.hpp"
 

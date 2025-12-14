@@ -24,9 +24,6 @@
 #include "ETWMonitor.hpp"
 #include "Logging/LogManager.hpp"
 #include "Tools/Unicode.hpp"
-#include <tdh.h>
-#include <iostream>
-#include <sstream>
 #include <string>
 
 #pragma comment(lib, "advapi32.lib")

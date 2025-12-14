@@ -25,11 +25,7 @@
 #include "Logging/LogManager.hpp"
 #include "Tools/Process.hpp"
 #include "Tools/Unicode.hpp"
-#include <tdh.h>
-#include <iostream>
-#include <sstream>
 #include <string>
-#include <tlhelp32.h>
 
 #pragma comment(lib, "advapi32.lib")
 

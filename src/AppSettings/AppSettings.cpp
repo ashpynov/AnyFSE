@@ -23,12 +23,6 @@
 
 
 #include <windows.h>
-#include <iostream>
-#include "resource.h"
-#include <tchar.h>
-#include <commctrl.h>
-#include <strsafe.h>
-
 #include "Logging/LogManager.hpp"
 #include "Configuration/Config.hpp"
 #include "Tools/Process.hpp"
