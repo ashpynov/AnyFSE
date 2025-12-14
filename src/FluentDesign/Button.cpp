@@ -179,7 +179,15 @@ namespace FluentDesign
         );
         SetAlign(BS_LEFT);
         SetFlat(true);
+        SetSize(GetMinSize());
         InvalidateRect(m_hButton, NULL, FALSE);
+    }
+
+    void Button::SetSize(SIZE sz)
+    {
+        m_designHeight = m_theme.DpiUnscale(sz.cy);
+        m_designWidth = m_theme.DpiUnscale(sz.cx);
+        SetWindowPos(m_hButton, NULL, 0, 0, sz.cx, sz.cy, SWP_NOMOVE | SWP_NOZORDER);
     }
 
     void Button::SetColors(Theme::Colors textNornal, Theme::Colors backgroundNormal, Theme::Colors textHover, Theme::Colors backgroundHover, Theme::Colors textPressed, Theme::Colors backgroundPressed)

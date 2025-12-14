@@ -181,7 +181,7 @@ namespace FluentDesign
 
         if (rect.Width > 0 && m_hovered)
         {
-            rect.Inflate(m_theme.DpiScaleF(-2), 0);
+            //rect.Inflate(m_theme.DpiScaleF(-2), 0);
             SolidBrush backBrush(m_theme.GetColor(Theme::Colors::ScrollTrack));
             Pen thumbPen(m_theme.GetColor(Theme::Colors::ScrollTrack), 0.5);
             RoundRect(graphics, rect, rect.Width, &backBrush, thumbPen);
@@ -214,7 +214,7 @@ namespace FluentDesign
         // Calculate scrollbar rectangle (right side)
         m_scrollBarRect =
         {
-            rcWindow.right - m_theme.DpiScale(12),
+            rcWindow.right - m_theme.DpiScale(10),
             0,
             rcWindow.right,
             rcWindow.bottom
@@ -227,7 +227,7 @@ namespace FluentDesign
         {
             thumbWidth = m_theme.DpiScale(m_hovered ? 6 : 2);
 
-            m_thumbRect.left = m_scrollBarRect.right - thumbWidth - m_theme.DpiScale(3);
+            m_thumbRect.left = m_scrollBarRect.right - thumbWidth;
             m_thumbRect.right = m_thumbRect.left + thumbWidth;
 
             thumbHeight = max((m_viewHeight * height / m_contentHeight), m_theme.DpiScale(20));

@@ -60,7 +60,7 @@ namespace AnyFSE::Tools::Window
         return TRUE;
     }
 
-    BOOL MouseInClientRect(HWND hWnd, RECT *rect)
+    BOOL MouseInClientRect(HWND hWnd, RECT *rect, int inflate)
     {
         RECT hitRect;
         if (rect == NULL)
@@ -72,6 +72,8 @@ namespace AnyFSE::Tools::Window
             hitRect = *rect;
         }
 
+        InflateRect(&hitRect, inflate, inflate);
+        
         POINT pt;
         GetCursorPos(&pt);
         MapWindowPoints(NULL, hWnd, &pt, 1);

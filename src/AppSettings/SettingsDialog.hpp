@@ -65,6 +65,8 @@ namespace AnyFSE::App::AppSettings::Settings
         static const int Layout_StartupAddWidth = 100;
         static const int Layout_StartupAddHeight = 32;
 
+        static const int Layout_MaxWidth = 1024;
+        static const int Layout_Border = 3;
         static const int Layout_MarginLeft = 32;
         static const int Layout_MarginTop = 60;
         static const int Layout_MarginRight = 32;
@@ -151,6 +153,7 @@ namespace AnyFSE::App::AppSettings::Settings
     private:
         static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
         INT_PTR InstanceDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+        void GetDialogRect(RECT *prc);
         void InitCustomControls();
 
         void UpdateCombo();
@@ -269,6 +272,8 @@ namespace AnyFSE::App::AppSettings::Settings
         void UpdateDpiLayout();
 
         void ArrangeControls();
+
+        void UpdateLine(SettingsLine *line);
 
         void UpdateLayout();
 

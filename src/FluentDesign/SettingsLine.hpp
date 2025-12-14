@@ -29,6 +29,7 @@
 #include <functional>
 #include "Theme.hpp"
 #include "Tools/Event.hpp"
+#include "Tools/Process.hpp"
 #include "Button.hpp"
 #include "Popup.hpp"
 
@@ -79,12 +80,19 @@ namespace FluentDesign
         bool m_childFocused = false;
         SettingsLine *m_groupLine;
 
+        std::list<Button> m_linkButtons;
+        int m_nMaxColumns = 2;
+
+
+
         UINT m_frameFlags;
 
         State m_state;
 
         RECT m_secondaryTextRect;
 
+        const int LINK_PADDING = 48;
+        const int LINK_VPADDING = 8;
         const int CHEVRON_SIZE = 24;
         const int CHEVRON_SPACE = 9;
 
@@ -169,14 +177,18 @@ namespace FluentDesign
         void SetData(int index, const std::wstring &data) { m_data[index] = data; }
         std::wstring GetData(int index);
 
+        void AddLinkButton(const std::wstring &name, const std::wstring &url);
+        int SetMaxColumns(int nColumns);
+
         Event OnChanged;
         Event OnLink;
 
-    protected:
+        protected:
         // Window procedure and message handlers
         static LRESULT WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
         LRESULT HandleMessage(UINT message, WPARAM wParam, LPARAM lParam);
 
+        int ReflowLinkButtons(int width);
 
         // Message handlers
         void OnPaint();

@@ -26,7 +26,7 @@ namespace AnyFSE::App::AppSettings::Settings
     void SettingsDialog::AddUpdateControls()
     {
         RECT rect;
-        GetClientRect(m_hDialog, &rect);
+        GetDialogRect(&rect);
 
         rect.top = rect.bottom
             - m_theme.DpiScale(Layout_MarginBottom)
@@ -69,7 +69,7 @@ namespace AnyFSE::App::AppSettings::Settings
             std::vector<Popup::PopupItem>
             {
                 Popup::PopupItem(L"\xE2B4", L"View release", delegate(OnShowVersion)),
-                Popup::PopupItem(L"\xEDAB", L"Download & Update", delegate(OnUpdate))
+                Popup::PopupItem(L"\xEDAB", L"Download & update", delegate(OnUpdate))
             }, 400, TPM_LEFTALIGN
         );
 
@@ -83,7 +83,7 @@ namespace AnyFSE::App::AppSettings::Settings
     void SettingsDialog::MoveUpdateControls()
     {
         RECT rect;
-        GetClientRect(m_hDialog, &rect);
+        GetDialogRect(&rect);
 
         rect.top = rect.bottom
             - m_theme.DpiScale(Layout_MarginBottom)

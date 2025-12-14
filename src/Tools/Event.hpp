@@ -28,6 +28,7 @@
 #include <functional>
 
 #define delegate(func) [This = this]() { This->func(); }
+#define delegateparam(func, param) [This = this, Param = param]() { This->func(Param); }
 
 namespace AnyFSE::Tools
 {

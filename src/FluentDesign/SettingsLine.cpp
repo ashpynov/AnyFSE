@@ -536,12 +536,22 @@ namespace FluentDesign
 
     void SettingsLine::UpdateLayout()
     {
-        PositionChildControl();
+        static bool bProtectRecurrency = false;
+
+        if (m_linkButtons.size() && !bProtectRecurrency)
+        {
+            bProtectRecurrency = true;
+            int minHeight = ReflowLinkButtons(m_width);
+            SetSize(m_width, minHeight);
+            bProtectRecurrency = false;
+        }
 
         RECT rect;
         Window::GetChildRect(m_hWnd, &rect);
         UINT top = rect.top + m_theme.DpiScale(GetDesignHeight() + GetDesignPadding());
         int width = rect.right - rect.left;
+
+        PositionChildControl();
 
         if (m_groupItemsList.size() > 0)
         {
@@ -628,6 +638,61 @@ namespace FluentDesign
         return d != m_data.end() ? d->second : L"";
     }
 
+    void SettingsLine::AddLinkButton(const std::wstring &name, const std::wstring &url)
+    {
+        m_linkButtons.emplace_back(m_theme);
+        Button &b = m_linkButtons.back();
+
+        b.Create(m_hWnd, name, [url]() {Process::StartProtocol(url);}, 0, 0, 0, 0);
+        b.SetLinkStyle();
+        OnChanged.Notify();
+    }
+
+    int SettingsLine::SetMaxColumns(int nColumns)
+    {
+        m_nMaxColumns = nColumns;
+        OnChanged.Notify();
+        return 0;
+    }
+
+    int SettingsLine::ReflowLinkButtons(int width)
+    {
+        if (m_linkButtons.size()==0)
+        {
+            return m_height;
+        }
+
+        int maxWidth = 0;
+        int maxHeight = 0;
+        for (auto& b : m_linkButtons)
+        {
+            RECT rc;
+            GetClientRect(b.GetHwnd(), &rc);
+            maxWidth = max(maxWidth, rc.right - rc.left);
+            maxHeight = max(maxHeight, rc.bottom - rc.top);
+        }
+
+        int columns = min(m_nMaxColumns, 1 + (int)((width - m_theme.DpiScale(m_leftMargin) - maxWidth) / (maxWidth + m_theme.DpiScale(LINK_PADDING))));
+
+        int cWidth = (width - m_theme.DpiScale(m_leftMargin)) / columns;
+        int top = 0;
+        int index = 0;
+
+        int gridHeight = (int)((m_linkButtons.size() / columns) - 1) * (maxHeight + m_theme.DpiScale(LINK_VPADDING)) + maxHeight;
+
+        int vertMargins = (m_theme.DpiScale(m_designHeight) - maxHeight) / 2;
+
+        for (auto& b : m_linkButtons)
+        {
+            int x = m_theme.DpiScale(m_leftMargin) + cWidth * (index % columns);
+            int y = vertMargins + (maxHeight + m_theme.DpiScale(LINK_VPADDING)) * (index / columns);
+            SetWindowPos(b.GetHwnd(), NULL, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+            index++;
+        }
+
+        return gridHeight + (vertMargins * 2);
+    }
+
     // Public methods implementation
     void SettingsLine::AddChildControl(HWND hChildControl)
     {
@@ -687,7 +752,15 @@ namespace FluentDesign
 
     int SettingsLine::GetDesignHeight() const
     {
-        return m_visible ? m_designHeight : 0;
+        if (! m_visible)
+        {
+            return 0;
+        }
+        if (m_linkButtons.size())
+        {
+            return m_theme.DpiUnscale(m_height);
+        }
+        return m_designHeight;
     }
 
     int SettingsLine::GetDesignPadding() const

@@ -32,7 +32,7 @@ namespace AnyFSE::Tools::Window
     BOOL GetChildRect(HWND hwnd, RECT *rect);
     BOOL MoveWindow(HWND hwnd, RECT * rect, BOOL bRepaint);
     BOOL MoveWindow(HWND hwnd, int dx, int dy, BOOL bRepaint);
-    BOOL MouseInClientRect(HWND, RECT *rect = NULL);
+    BOOL MouseInClientRect(HWND, RECT *rect = NULL, int inflate = 0);
 }
 
 namespace Window = AnyFSE::Tools::Window;

@@ -105,6 +105,7 @@ namespace FluentDesign
         void SetAlign(int bsStyle);
         void SetAngle(int angle);
         void SetLinkStyle();
+        void SetSize(SIZE sz);
 
         void SetColors(Theme::Colors textNornal, Theme::Colors backgroundNormal = Theme::Colors::Default,
                        Theme::Colors textHover = Theme::Colors::Default, Theme::Colors backgroundHover = Theme::Colors::Default,

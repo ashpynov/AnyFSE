@@ -218,7 +218,7 @@ namespace AnyFSE::App::AppSettings::Settings
                 // Get client rect
                 RECT clientRect;
                 GetClientRect(hwnd, &clientRect);
-                if (!Window::MouseInClientRect(hwnd))
+                if (!Window::MouseInClientRect(hwnd, NULL, m_theme.DpiScale(5)))
                 {
                     SetWindowLong(m_hDialog, DWLP_MSGRESULT, HTCLIENT);
                     return TRUE;
@@ -335,6 +335,7 @@ namespace AnyFSE::App::AppSettings::Settings
                 FillRect(paint.MemDC(), &r, back);
                 DeleteObject(back);
 
+                GetDialogRect(&r);
                 r.left += m_theme.DpiScale(Layout_MarginLeft);
                 r.top += m_theme.DpiScale(Layout_CaptionHeight);
 
@@ -447,20 +448,28 @@ namespace AnyFSE::App::AppSettings::Settings
         return FALSE;
     }
 
+    void SettingsDialog::GetDialogRect(RECT *prc)
+    {
+        GetClientRect(m_hDialog, prc);
+        int width = min(m_theme.DpiScale(Layout_MaxWidth), prc->right - prc->left);
+        prc->left = (prc->right - prc->left - width) / 2;
+        prc->right = prc->left + width;
+    }
+
     template<class T>
     FluentDesign::SettingsLine& SettingsDialog::AddSettingsLine(std::list<SettingsLine>& page,
         ULONG &top, const std::wstring& name, const std::wstring& desc, T& control,
         int height, int padding, int contentMargin, int contentWidth, int contentHeight )
     {
         RECT rect;
-        GetClientRect(m_hDialog, &rect);
+        GetDialogRect(&rect);
         int width = rect.right - rect.left
-            - m_theme.DpiScale(Layout_MarginLeft)
-            - m_theme.DpiScale(Layout_MarginRight);
+            - m_theme.DpiScale(Layout_MarginLeft - Layout_Border)
+            - m_theme.DpiScale(Layout_MarginRight - Layout_Border);
 
         page.emplace_back(
             m_theme, m_hScrollView, name, desc,
-            m_theme.DpiScale(Layout_MarginLeft),
+            m_theme.DpiScale(Layout_MarginLeft - Layout_Border),
             top, width,
             m_theme.DpiScale(height),
             padding,
@@ -482,15 +491,15 @@ namespace AnyFSE::App::AppSettings::Settings
         int height, int padding, int contentMargin, int contentWidth, int contentHeight )
     {
         RECT rect;
-        GetClientRect(m_hDialog, &rect);
+        GetDialogRect(&rect);
         int width = rect.right - rect.left
-            - m_theme.DpiScale(Layout_MarginLeft)
-            - m_theme.DpiScale(Layout_MarginRight);
+            - m_theme.DpiScale(Layout_MarginLeft - Layout_Border)
+            - m_theme.DpiScale(Layout_MarginRight - Layout_Border);
 
 
         page.emplace_back(
             m_theme, m_hScrollView, name, desc,
-            m_theme.DpiScale(Layout_MarginLeft),
+            m_theme.DpiScale(Layout_MarginLeft - Layout_Border ),
             top, width,
             m_theme.DpiScale(height),
             padding
@@ -605,9 +614,9 @@ namespace AnyFSE::App::AppSettings::Settings
             FALSE);
 
         RECT scrollRect {
-            0,
+            m_theme.DpiScale(Layout_Border),
             rect.top + m_theme.DpiScale(Layout_MarginTop + GetSystemMetrics(SM_CYCAPTION)),
-            rect.right,
+            rect.right - m_theme.DpiScale(Layout_Border),
             rect.bottom
                 - m_theme.DpiScale(Layout_MarginBottom)
                 - m_theme.DpiScale(Layout_ButtonHeight)
@@ -617,7 +626,7 @@ namespace AnyFSE::App::AppSettings::Settings
         Window::MoveWindow(m_scrollView.GetHwnd(), &scrollRect, FALSE);
 
 
-        GetClientRect(m_hDialog, &rect);
+        GetDialogRect(&rect);
 
         rect.top = rect.bottom
             - m_theme.DpiScale(Layout_MarginBottom)
@@ -689,9 +698,9 @@ namespace AnyFSE::App::AppSettings::Settings
         );
 
         MoveWindow(m_scrollView.GetHwnd(),
-            0,
+            m_theme.DpiScale(Layout_Border),
             rect.top + m_theme.DpiScale(Layout_MarginTop + GetSystemMetrics(SM_CYCAPTION)),
-            rect.right,
+            rect.right - m_theme.DpiScale(Layout_Border * 2),
             rect.bottom
                 - m_theme.DpiScale(Layout_MarginBottom)
                 - m_theme.DpiScale(Layout_MarginTop + GetSystemMetrics(SM_CYCAPTION))
@@ -700,6 +709,7 @@ namespace AnyFSE::App::AppSettings::Settings
             FALSE
         );
 
+        GetDialogRect(&rect);
         rect.top = rect.bottom
             - m_theme.DpiScale(Layout_MarginBottom)
             - m_theme.DpiScale(Layout_ButtonHeight);
@@ -729,6 +739,17 @@ namespace AnyFSE::App::AppSettings::Settings
         MoveUpdateControls();
     }
 
+    void SettingsDialog::UpdateLine(SettingsLine * line)
+    {
+        UpdateLayout();
+        RECT rc;
+        Window::GetChildRect(line->GetHWnd(), &rc);
+        OffsetRect(&rc, 0, m_scrollView.GetScrollPos());
+        rc.bottom = rc.top + line->GetTotalHeight();
+
+        m_scrollView.EnsureVisible(rc);
+    }
+
     void SettingsDialog::UpdateLayout()
     {
         for (auto &page:
@@ -753,12 +774,12 @@ namespace AnyFSE::App::AppSettings::Settings
         ArrangeControls();
 
         RECT rect;
-        GetClientRect(m_hDialog, &rect);
+        GetDialogRect(&rect);
         int width = rect.right - rect.left
             - m_theme.DpiScale(Layout_MarginLeft)
             - m_theme.DpiScale(Layout_MarginRight);
 
-        int left = m_theme.DpiScale(Layout_MarginLeft);
+        int left = rect.left + m_theme.DpiScale(Layout_MarginLeft);
 
         ULONG top = -m_scrollView.GetScrollPos();
         if (m_pActivePageList)
@@ -1188,16 +1209,15 @@ namespace AnyFSE::App::AppSettings::Settings
         AddCloseButton();
 
         m_hScrollView = m_scrollView.Create(m_hDialog,
-            0,
+            m_theme.DpiScale(Layout_Border),
             rect.top + m_theme.DpiScale(Layout_MarginTop + GetSystemMetrics(SM_CYCAPTION)),
-            rect.right,
+            rect.right - m_theme.DpiScale(Layout_Border * 2),
             rect.bottom
                 - m_theme.DpiScale(Layout_MarginBottom)
                 - m_theme.DpiScale(Layout_MarginTop + GetSystemMetrics(SM_CYCAPTION))
                 - m_theme.DpiScale(Layout_ButtonHeight)
                 - m_theme.DpiScale(Layout_ButtonPadding)
         );
-
 
 
         ULONG top = 0;
@@ -1273,10 +1293,39 @@ namespace AnyFSE::App::AppSettings::Settings
 
         AddStartupSettingsPage();
 
+        AddSettingsLine(m_settingPageList, top,
+            L"Related support",
+            L"",
+            Layout_LineHeightSmall, 0, 0
+        ).SetState(FluentDesign::SettingsLine::Caption);
+
+        SettingsLine &support = AddSettingsLine(m_settingPageList, top,
+            L"Support and community",
+            L"",
+            Layout_LineHeight, 0, 0);
+
+        support.SetIcon(L'\xF6FA');
+        support.OnChanged += delegateparam(UpdateLine, &support);
+
+        SettingsLine &links = AddSettingsLine(m_settingPageList, top,
+            L"",
+            L"",
+            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin);
+
+        support.AddGroupItem(&links);
+
+        // links.SetMaxColumns(1);
+        links.AddLinkButton(L"Discord AnyFSE community channel", L"https://discord.gg/AfkERzTEut");
+        links.AddLinkButton(L"GitHub repository", L"https://github.com/ashpynov/AnyFSE/");
+        links.AddLinkButton(L"Report issue or feature request", L"https://github.com/ashpynov/AnyFSE/issues");
+        links.AddLinkButton(L"Navigate to log files folder", Config::GetModulePath() + L"\\logs");
+
+        support.SetState(FluentDesign::SettingsLine::Opened);
+
         m_pActivePageList = &m_settingPageList;
         UpdateLayout();
 
-        GetClientRect(m_hDialog, &rect);
+        GetDialogRect(&rect);
         rect.top = rect.bottom
             - m_theme.DpiScale(Layout_MarginBottom)
             - m_theme.DpiScale(Layout_ButtonHeight);
