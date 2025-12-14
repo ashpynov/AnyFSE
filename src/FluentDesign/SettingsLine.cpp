@@ -171,7 +171,7 @@ namespace FluentDesign
             return 0;
 
         case WM_SETCURSOR:
-            if (m_hovered && OnLink.HasSubscribe())
+            if (m_enabled && OnLink.HasSubscribe())
             {
                 POINT pt;
                 GetCursorPos(&pt);
@@ -439,7 +439,7 @@ namespace FluentDesign
 
     void SettingsLine::OnLButtonDown()
     {
-        if (m_hovered && OnLink.HasSubscribe())
+        if (m_enabled && OnLink.HasSubscribe())
         {
             POINT pt;
             GetCursorPos(&pt);

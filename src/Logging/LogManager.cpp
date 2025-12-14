@@ -57,9 +57,14 @@ namespace AnyFSE::Logging
         LogToConsole = IsDebuggerPresent() != 0;
         ApplicationName = appName;
         Level = LogToConsole ? LogLevels::Trace : level;
+        if (LogWriter.is_open())
+        {
+            LogWriter.close();
+        }
 
         if (!LogToConsole && !filePath.empty() && Level != LogLevels::Disabled)
         {
+            CreateDirectory(filePath.c_str(), NULL);
             std::wstring logName = Unicode::to_wstring(appName);
             std::replace(logName.begin(), logName.end(), L'/', L'.');
             LogWriter.open(filePath + L"\\" + logName + L".log", ios::app | ios::out);

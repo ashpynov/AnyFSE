@@ -935,6 +935,14 @@ namespace AnyFSE::App::AppSettings::Settings
             Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin));
     }
 
+    void SettingsDialog::OnGotoLogsFolder()
+    {
+        std::wstring path = Config::GetModulePath() + L"\\logs";
+
+        CreateDirectoryW(path.c_str(), NULL);
+        Process::StartProtocol(L"\"" + path + L"\"");
+    }
+
     void SettingsDialog::AddTroubleshootSettingsPage()
     {
         ULONG top = 0;
@@ -945,6 +953,8 @@ namespace AnyFSE::App::AppSettings::Settings
             m_troubleLogLevelCombo,
             Layout_LineHeight, Layout_LinePadding, 0,
             Layout_LauncherComboWidth);
+
+        logLevel.OnLink = delegate(OnGotoLogsFolder);
 
         for (int i = (int)LogLevels::Disabled; i < (int)LogLevels::Max; i++)
         {

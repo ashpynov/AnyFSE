@@ -486,6 +486,11 @@ namespace AnyFSE
             fs::remove_all(path + L"\\dumps");
         }
 
+        if (fs::exists(path + L"\\logs"))
+        {
+            fs::remove_all(path + L"\\dumps");
+        }
+
         if (fs::exists(path + L"\\splash") && fs::is_empty(path + L"\\splash"))
         {
             fs::remove(path + L"\\splash");

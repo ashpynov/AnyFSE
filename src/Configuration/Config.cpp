@@ -120,7 +120,7 @@ namespace AnyFSE::Configuration
 
     void Config::Load()
     {
-        LogPath = GetModulePath();
+        LogPath = GetModulePath() + L"\\logs";
         XBoxProcessName = std::wstring(L"XboxPcApp.exe");
 
         json config = GetConfig();

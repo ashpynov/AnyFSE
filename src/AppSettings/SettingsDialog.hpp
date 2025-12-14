@@ -276,9 +276,13 @@ namespace AnyFSE::App::AppSettings::Settings
         HWND GetMainWindow();
 
         void AddCustomSettingsPage();
+
         void OnGotoSplashFolder();
         void AddSplashSettingsPage();
+
+        void OnGotoLogsFolder();
         void AddTroubleshootSettingsPage();
+
         void AddStartupAppLine(const std::wstring &path, const std::wstring &args, bool enabled);
         Toggle *GetStartupLineToggle(SettingsLine *pLine);
         std::wstring GetProductName(const std::wstring &filePath);
