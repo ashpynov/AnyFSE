@@ -59,6 +59,5 @@ namespace AnyFSE::Updater
         int iCheckInterval;
         bool bPreRelease;
         bool bNotifications;
-        bool bOnClick;
     };
 }

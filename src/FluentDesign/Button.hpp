@@ -59,6 +59,8 @@ namespace FluentDesign
         int m_cornerRadius = 8;
 
         std::vector<Popup::PopupItem> m_menuItems;
+        int m_menuWidth = 300;
+        int m_menuAlingment = TPM_RIGHTALIGN;
 
         Theme::Colors m_textNormalColor;
         Theme::Colors m_backgroundNormalColor;
@@ -108,7 +110,7 @@ namespace FluentDesign
                        Theme::Colors textHover = Theme::Colors::Default, Theme::Colors backgroundHover = Theme::Colors::Default,
                        Theme::Colors textPressed = Theme::Colors::Default, Theme::Colors backgroundPressed = Theme::Colors::Default);
 
-        void SetMenu(const std::vector<Popup::PopupItem> &items);
+        void SetMenu(const std::vector<Popup::PopupItem> &items, int nMenuWidth = 300, int nAlignment = TPM_RIGHTALIGN);
         void ShowMenu();
         SIZE GetMinSize();
         ~Button();

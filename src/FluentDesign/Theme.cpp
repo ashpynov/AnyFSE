@@ -247,7 +247,7 @@ namespace FluentDesign
             case WM_ERASEBKGND:
             {
                 HWND child = (HWND)lParam;
-                if(child)// && !DefSubclassProc(hWnd, msg, wParam, lParam))
+                if(child && !DefSubclassProc(hWnd, msg, wParam, lParam))
                 {
                     RECT childRect;
                     GetClientRect(child, &childRect);

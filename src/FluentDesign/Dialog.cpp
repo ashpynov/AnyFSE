@@ -134,6 +134,9 @@ namespace FluentDesign
             return OnPaint(hwnd);
         case WM_ERASEBKGND:
             return OnErase((HDC)wParam, (HWND)lParam);
+        case WM_NCHITTEST:
+            SetWindowLong(hwnd, DWLP_MSGRESULT, HTCAPTION);
+            return TRUE;
         }
         return FALSE;
     }
@@ -168,7 +171,7 @@ namespace FluentDesign
         size_t size = sizeof(DLGTEMPLATE) + sizeof(WORD) * 3; // menu, class, title
         HGLOBAL hGlobal = GlobalAlloc(GHND, size);
         if (!hGlobal) return -1;
-        
+
         LPDLGTEMPLATE dlgTemplate = (LPDLGTEMPLATE)GlobalLock(hGlobal);
         if (!dlgTemplate) return -1;
 

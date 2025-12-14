@@ -168,7 +168,6 @@ namespace AnyFSE::Configuration
 
             static bool         UpdatePreRelease;
             static bool         UpdateNotifications;
-            static bool         UpdateOnClick;
             static int          UpdateCheckInterval;
             static std::wstring UpdateLastCheck;
             static std::wstring UpdateLastVersion;

@@ -146,7 +146,6 @@ namespace AnyFSE::App::AppSettings::Settings
             , m_updateSettingsPeriodCombo(m_theme)
             , m_updateSettingsPreReleaseToggle(m_theme)
             , m_updateSettingsNotificationsToggle(m_theme)
-            , m_updateSettingsUpdateToggle(m_theme)
         {}
 
     private:
@@ -323,6 +322,7 @@ namespace AnyFSE::App::AppSettings::Settings
         void OnUpdateNetworkRestore();
         void OnUpdateNotification();
         void UpdateVersionStatusDelay(UINT delay);
+        void OnShowVersion();
         void OnUpdate();
 
         // SettingsDialog_UpdateSettingsPage
@@ -332,7 +332,6 @@ namespace AnyFSE::App::AppSettings::Settings
         ComboBox m_updateSettingsPeriodCombo;
         Toggle m_updateSettingsPreReleaseToggle;
         Toggle m_updateSettingsNotificationsToggle;
-        Toggle m_updateSettingsUpdateToggle;
 
         void AddUpdateSettingsPage(ULONG &top);
         void AddUpdateSettingsPageControls();

@@ -61,7 +61,6 @@ namespace AnyFSE::Updater
             Config::UpdateCheckInterval,
             Config::UpdatePreRelease,
             Config::UpdateNotifications,
-            Config::UpdateOnClick
         };
         UpdaterSendCommand(COMMAND::NOTIFYCONFIGUPDATED, (LPARAM)&cu);
     }

@@ -15,6 +15,7 @@
 #include <gdiplusenums.h>
 #include <string>
 #include <Tools/Event.hpp>
+#include "SettingsDialog.hpp"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -64,8 +65,15 @@ namespace AnyFSE::App::AppSettings::Settings
 
         m_updateButton.Show(false);
         m_updateButton.SetLinkStyle();
+        m_updateButton.SetMenu(
+            std::vector<Popup::PopupItem>
+            {
+                Popup::PopupItem(L"\xE2B4", L"View release", delegate(OnShowVersion)),
+                Popup::PopupItem(L"\xEDAB", L"Download & Update", delegate(OnUpdate))
+            }, 400, TPM_LEFTALIGN
+        );
 
-        m_updateButton.OnChanged += delegate(OnUpdate);
+        // m_updateButton.OnChanged += delegate(OnUpdate);
         SIZE sz = m_updateButton.GetMinSize();
         SetWindowPos(m_updateButton.GetHwnd(), NULL, 0, 0, sz.cx, m_theme.DpiScale(Layout_UpdateHeight) / 2, SWP_NOMOVE | SWP_NOZORDER);
 
@@ -119,9 +127,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         bool hasVersion = !version.empty();
         std::wstring cVersion = (hasVersion ? L"Current version v" : L"Version v") + Unicode::to_wstring(VER_VERSION_STR);
-        std::wstring aVersion = hasVersion ?
-            (Config::UpdateOnClick ? L"Update to version " : L"Available version ") + version
-            : L"";
+        std::wstring aVersion = hasVersion ? L"Available version " + version : L"";
 
         bool delayed = (LONGLONG)GetTickCount64() > uiInfo.lCommandAge + 1000;
         UpdaterState command = delayed ? uiInfo.uiState : uiInfo.uiCommand;
@@ -226,20 +232,20 @@ namespace AnyFSE::App::AppSettings::Settings
         });
     }
 
+    void SettingsDialog::OnShowVersion()
+    {
+        if (!Config::UpdateLastVersion.empty())
+        {
+            Updater::ShowVersion(Config::UpdateLastVersion);
+        }
+    }
+
     void SettingsDialog::OnUpdate()
     {
-        if (Config::UpdateLastVersion.empty())
-        {
-            return;
-        }
-        if (Config::UpdateOnClick)
+        if (!Config::UpdateLastVersion.empty())
         {
             Updater::UpdateAsync(Config::UpdateLastVersion, true, m_hDialog, WM_UPDATE_NOTIFICATION);
             UpdateVersionStatusDelay(10);
-        }
-        else
-        {
-            Updater::ShowVersion(Config::UpdateLastVersion);
         }
     }
 }

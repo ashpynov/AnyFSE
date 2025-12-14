@@ -66,14 +66,6 @@ namespace AnyFSE::App::AppSettings::Settings
             Layout_LineHeight, Layout_LinePadding, 0);
 
         m_updateSettingsNotificationsToggle.OnChanged = delegate(UpdateSettingsSaveControls);
-
-        AddSettingsLine(m_updateSettingPageList, top,
-            L"Update on click",
-            L"Run updater on click, instead of go to release page",
-            m_updateSettingsUpdateToggle,
-            Layout_LineHeight, Layout_LinePadding, 0);
-
-        m_updateSettingsUpdateToggle.OnChanged = delegate(UpdateSettingsChanged);
     }
 
     void SettingsDialog::OpenUpdateSettingsPage()
@@ -87,7 +79,6 @@ namespace AnyFSE::App::AppSettings::Settings
         m_updateSettingsPeriodCombo.SelectItem({(wchar_t)Config::UpdateCheckInterval, 0});
         m_updateSettingsPreReleaseToggle.SetCheck(Config::UpdatePreRelease);
         m_updateSettingsNotificationsToggle.SetCheck(Config::UpdateNotifications);
-        m_updateSettingsUpdateToggle.SetCheck(Config::UpdateOnClick);
     }
 
     void SettingsDialog::UpdateSettingsChangedCheck()
@@ -110,8 +101,6 @@ namespace AnyFSE::App::AppSettings::Settings
         Config::UpdateCheckInterval = (int)(short)m_updateSettingsPeriodCombo.GetCurentValue().c_str()[0];
         Config::UpdatePreRelease = m_updateSettingsPreReleaseToggle.GetCheck();
         Config::UpdateNotifications = m_updateSettingsNotificationsToggle.GetCheck();
-        Config::UpdateOnClick = m_updateSettingsUpdateToggle.GetCheck();
-
         Updater::NotifyConfigUpdated();
     }
 }

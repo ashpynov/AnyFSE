@@ -81,7 +81,6 @@ namespace AnyFSE::Configuration
     std::wstring    Config::UpdateLastVersion;
     bool            Config::UpdatePreRelease = false;
     bool            Config::UpdateNotifications = true;
-    bool            Config::UpdateOnClick = true;
 
     std::wstring Config::GetModulePath()
     {
@@ -148,7 +147,6 @@ namespace AnyFSE::Configuration
 
         UpdatePreRelease        = config.value(jp("/Update/PreRelease"),     false);
         UpdateNotifications     = config.value(jp("/Update/Notifications"),  true);
-        UpdateOnClick           = config.value(jp("/Update/UpdateOnClick"),  false);
         UpdateLastVersion       = config.value(jp("/Update/LastVersion"),    std::wstring());
         UpdateLastCheck         = config.value(jp("/Update/LastCheck"),      std::wstring());
         UpdateCheckInterval     = config.value(jp("/Update/CheckInterval"),  -2);
@@ -233,13 +231,9 @@ namespace AnyFSE::Configuration
 
         config["Update"]["PreRelease"]           = UpdatePreRelease;
         config["Update"]["Notifications"]        = UpdateNotifications;
-        config["Update"]["UpdateOnClick"]        = UpdateOnClick;
         config["Update"]["LastVersion"]          = UpdateLastVersion;
         config["Update"]["LastCheck"]            = UpdateLastCheck;
         config["Update"]["CheckInterval"]        = UpdateCheckInterval;
-
-    //  config["Log"]["Path"]                   = LogPath;
-    //  config["XBoxProcessName"]               = XBoxProcessName;
 
         std::ofstream file(GetConfigFileA());
         file << config.dump(4);

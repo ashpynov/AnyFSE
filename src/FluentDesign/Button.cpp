@@ -193,9 +193,11 @@ namespace FluentDesign
         InvalidateRect(m_hButton, NULL, TRUE);
     }
 
-    void Button::SetMenu(const std::vector<Popup::PopupItem> &items)
+    void Button::SetMenu(const std::vector<Popup::PopupItem> &items, int width, int align)
     {
         m_menuItems = items;
+        m_menuWidth = width;
+        m_menuAlingment = align;
     }
 
     void Button::ShowMenu()
@@ -204,7 +206,13 @@ namespace FluentDesign
 
         RECT rect;
         GetWindowRect(m_hButton, &rect);
-        popup.Show(m_hButton, rect.right, rect.bottom, m_menuItems, 300);
+        int x = (m_menuAlingment & TPM_RIGHTALIGN) ? rect.right
+                : (m_menuAlingment & TPM_CENTERALIGN) ? (rect.left + rect.right) / 2
+                : rect.left;
+        int y = (m_menuAlingment & TPM_BOTTOMALIGN) ? rect.top
+                : (m_menuAlingment & TPM_VCENTERALIGN) ? (rect.top + rect.bottom) / 2
+                : rect.bottom;
+        popup.Show(m_hButton, x, y, m_menuItems, m_menuWidth, m_menuAlingment);
         m_theme.SwapFocus(popup.GetHwnd());
     }
 

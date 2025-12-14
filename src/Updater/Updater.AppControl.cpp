@@ -92,7 +92,6 @@ namespace AnyFSE::Updater
                     CONFIGUPDATED *pcu = (CONFIGUPDATED *)lParam;
                     Config::UpdateCheckInterval = pcu->iCheckInterval;
                     Config::UpdatePreRelease = pcu->bPreRelease;
-                    Config::UpdateOnClick = pcu->bOnClick;
                     Config::UpdateNotifications = pcu->bNotifications;
                 }
                 return TRUE;
