@@ -70,19 +70,18 @@ namespace AnyFSE::App::AppService
 
     bool AppService::IsSystemAccount()
     {
-        HANDLE hToken = NULL;
+        HANDLE hToken = nullptr;
         DWORD dwSize = 0;
-        PTOKEN_USER pTokenUser = NULL;
+        PTOKEN_USER pTokenUser = nullptr;
         bool isSystem = false;
 
         // Open process token
         if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
             return false;
 
-        // Get token information size
-        GetTokenInformation(hToken, TokenUser, NULL, 0, &dwSize);
-
-        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+        // First call to get required buffer size
+        if (!GetTokenInformation(hToken, TokenUser, nullptr, 0, &dwSize) &&
+            GetLastError() == ERROR_INSUFFICIENT_BUFFER)
         {
             pTokenUser = (PTOKEN_USER)LocalAlloc(LPTR, dwSize);
             if (pTokenUser)
@@ -90,29 +89,18 @@ namespace AnyFSE::App::AppService
                 // Get token user information
                 if (GetTokenInformation(hToken, TokenUser, pTokenUser, dwSize, &dwSize))
                 {
-                    // Lookup account name from SID
-                    WCHAR name[256];
-                    WCHAR domain[256];
-                    DWORD nameSize = 256;
-                    DWORD domainSize = 256;
-                    SID_NAME_USE sidType;
+                    // Create SYSTEM account SID for comparison
+                    PSID systemSid = nullptr;
+                    SID_IDENTIFIER_AUTHORITY ntAuthority = SECURITY_NT_AUTHORITY;
 
-                    if (LookupAccountSid(NULL, pTokenUser->User.Sid,
-                                         name, &nameSize,
-                                         domain, &domainSize,
-                                         &sidType))
+                    if (AllocateAndInitializeSid(&ntAuthority, 1,
+                                                 SECURITY_LOCAL_SYSTEM_RID,
+                                                 0, 0, 0, 0, 0, 0, 0,
+                                                 &systemSid))
                     {
-
-                        // Check if it's SYSTEM account
-                        //isSystem = (_wcsicmp(name, L"SYSTEM") == 0 &&
-                        //            _wcsicmp(domain, L"NT AUTHORITY") == 0);
-
-                        isSystem = true;
-
-                        log.Debug("Service is started by %s/%s",
-                            Unicode::to_string(domain).c_str(),
-                            Unicode::to_string(name).c_str()
-                        );
+                        // Compare with current process SID
+                        isSystem = (EqualSid(pTokenUser->User.Sid, systemSid) == TRUE);
+                        FreeSid(systemSid);
                     }
                 }
                 LocalFree(pTokenUser);
@@ -217,7 +205,7 @@ namespace AnyFSE::App::AppService
                     Restart();
                     break;
             }
-        } while (result != COMPLETE_RELOAD && result != COMPLETE_SUSPEND);
+        } while (result == COMPLETE_RELOAD || result == COMPLETE_SUSPEND);
 
         AppControlStateLoop.Stop();
 
