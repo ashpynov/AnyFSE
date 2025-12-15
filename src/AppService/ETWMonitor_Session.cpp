@@ -104,8 +104,8 @@ namespace AnyFSE::App::AppService
         }
         if (status)
         {
-            free(m_pTraceProperties);
-            m_pTraceProperties = nullptr;
+            // wipe free(m_pTraceProperties);
+            // wipe m_pTraceProperties = nullptr;
             throw log.APIError("Failed to start ETW trace session: ");
         }
         return status;
@@ -131,8 +131,8 @@ namespace AnyFSE::App::AppService
         )
         {
             StopTrace(m_sessionHandle, m_sessionName.c_str(), m_pTraceProperties);
-            free(m_pTraceProperties);
-            m_pTraceProperties = nullptr;
+            // wipe free(m_pTraceProperties);
+            // wipe m_pTraceProperties = nullptr;
             m_sessionHandle = NULL;
             throw log.APIError("Failed to enable process provider: ");
         }
@@ -179,8 +179,8 @@ namespace AnyFSE::App::AppService
         if (m_consumerHandle == INVALID_PROCESSTRACE_HANDLE)
         {
             StopTrace(m_sessionHandle, m_sessionName.c_str(), m_pTraceProperties);
-            free(m_pTraceProperties);
-            m_pTraceProperties = nullptr;
+            // wipe free(m_pTraceProperties);
+            // wipe m_pTraceProperties = nullptr;
             m_sessionHandle = NULL;
             throw log.APIError(GetLastError(), "Failed to open ETW trace for consumption: Error: " );
         }
@@ -217,23 +217,23 @@ namespace AnyFSE::App::AppService
         {
             if (m_pTraceProperties)
             {
-                // EnableTraceEx2(
-                //     m_sessionHandle,
-                //     &ProcessProviderGuid,
-                //     EVENT_CONTROL_CODE_DISABLE_PROVIDER,
-                //     TRACE_LEVEL_INFORMATION,
-                //     0x0, 0, 0, NULL);
+                EnableTraceEx2(
+                    m_sessionHandle,
+                    &ProcessProviderGuid,
+                    EVENT_CONTROL_CODE_DISABLE_PROVIDER,
+                    TRACE_LEVEL_INFORMATION,
+                    0x0, 0, 0, NULL);
 
-                // EnableTraceEx2(
-                //     m_sessionHandle,
-                //     &RegistryProviderGuid,
-                //     EVENT_CONTROL_CODE_DISABLE_PROVIDER,
-                //     TRACE_LEVEL_INFORMATION,
-                //     0x0, 0, 0, NULL);
+                EnableTraceEx2(
+                    m_sessionHandle,
+                    &RegistryProviderGuid,
+                    EVENT_CONTROL_CODE_DISABLE_PROVIDER,
+                    TRACE_LEVEL_INFORMATION,
+                    0x0, 0, 0, NULL);
 
                 StopTrace(m_sessionHandle, m_sessionName.c_str(), m_pTraceProperties);
-                if (m_pTraceProperties) free(m_pTraceProperties);
-                m_pTraceProperties = nullptr;
+                // wipe if (m_pTraceProperties) free(m_pTraceProperties);
+                // wipe m_pTraceProperties = nullptr;
             }
             m_sessionHandle = NULL;
         }

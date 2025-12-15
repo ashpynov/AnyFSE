@@ -40,7 +40,7 @@ namespace AnyFSE::App::AppService::StateLoop
             Event OnXboxAllow;
             Event OnExit;
             Event OnRestart;
-            Event OnStart;
+            Event OnConnect;
             Event OnReload;
             Event OnSuspend;
 

@@ -16,17 +16,6 @@
             "preLaunchTask": "Build AnyFSE App Debug"
         },
         {
-            "name": "Release AnyFSE",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "AnyFSE.exe",
-            "args": [""],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Release",
-            "environment": [],
-            "preLaunchTask": "Build AnyFSE Release"
-        },
-        {
             "name": "Debug AnyFSE.Service",
             "type": "cppvsdbg",
             "request": "launch",
@@ -59,5 +48,12 @@
             "environment": [],
             "preLaunchTask": "Build AnyFSE.Uninstaller Debug"
         }
-    ]
+    ],
+    "compounds": [
+    {
+      "name": "Debug Service/Control",
+      "configurations": ["Debug AnyFSE.Service", "Debug AnyFSE"],
+      "stopAll": true
+    }
+  ]
 }

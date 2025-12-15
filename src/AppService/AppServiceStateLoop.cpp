@@ -40,7 +40,7 @@ namespace AnyFSE::App::AppService::StateLoop
         {
             case AppEvents::CONNECT:
                 log.Info("AppControl connected" );
-                OnStart.Notify();
+                OnConnect.Notify();
                 NotifyRemote(event);
                 return;
             case AppEvents::RELOAD_SERVICE:
@@ -65,6 +65,7 @@ namespace AnyFSE::App::AppService::StateLoop
             case AppEvents::RESTART_SERVICE:
                 return OnRestart.Notify();
 
+            case AppEvents::DISCONNECT:
             case AppEvents::SUSPEND_SERVICE:
                 return OnSuspend.Notify();
 

@@ -35,6 +35,7 @@ namespace AnyFSE::App::AppService
         static AppServiceStateLoop  AppControlStateLoop;
         static bool                 xboxIsDenied;
         static const std::wstring   XBoxProcessName;
+        static bool                 m_suspended;
 
     public:
         static int WINAPI ServiceMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine);
@@ -46,6 +47,7 @@ namespace AnyFSE::App::AppService
         static bool StartServiceTask();
         static BOOL LaunchAppInUserSession(DWORD sessionId);
 
+        static void RegisterSuspendEvent();
         static void RegisterEvents();
 
         static void StartMonitoring(bool bSuspended);

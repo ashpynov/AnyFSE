@@ -312,7 +312,7 @@ namespace AnyFSE::App::AppControl
         {
             log.Info("Service is not connected");
         }
-        else if (exitCode != ERROR_RESTART_APPLICATION)
+        else if (exitCode == ERROR_RESTART_APPLICATION)
         {
             log.Info("Restarting application, notify service to reload");
             AppControlStateLoop.NotifyRemote(AppEvents::RELOAD_SERVICE);

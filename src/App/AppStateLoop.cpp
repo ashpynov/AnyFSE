@@ -75,29 +75,23 @@ namespace AnyFSE::App::StateLoop
 
     void AppStateLoop::Stop()
     {
-        if (!m_isRunning.exchange(false))
-        {
-            return; // Already stopped
-        }
-
+        m_isRunning.exchange(false);
         SetEvent(m_hQueueCondition);
-        if (m_thread.joinable())
-        {
-            m_thread.join();
-        }
-
-        // Clear timers - no lock needed since thread is joined
-        m_timersMap.clear();
     }
 
     void AppStateLoop::Wait(DWORD timeout)
     {
-        SetTimer(std::chrono::milliseconds(timeout), [this]() { Notify(AppEvents::DISCONNECT); }, false);
+        if (!m_isRunning.exchange(false))
+        {
+            SetTimer(std::chrono::milliseconds(timeout), [this]() { SetEvent(m_hQueueCondition); }, false);
+        }
 
         if (m_thread.joinable())
         {
             m_thread.join();
         }
+
+        m_timersMap.clear();
     }
 
     uint64_t AppStateLoop::SetTimer(std::chrono::milliseconds timeout, std::function<void()> callback, bool recurring)
@@ -126,7 +120,6 @@ namespace AnyFSE::App::StateLoop
     void AppStateLoop::ProcessingCycle()
     {
         _log.Info("Entering StateManager loop");
-        int failCounter = 0;
 
         while (m_isRunning)
         {
@@ -153,19 +146,19 @@ namespace AnyFSE::App::StateLoop
                 }
                 // Wait for events or timer expiration
                 lock.unlock();
+                
+                bool result = true;
                 try
                 {
-                    m_ipcChannel.Wait(timeoutMs);
-                    failCounter = 0;
-                }
-                catch (...)
-                {
-                    failCounter++;
-                    Sleep(1000);
-                    if (failCounter > 60)
+                    if (!m_ipcChannel.Wait(timeoutMs) && m_ipcChannel.IsDisconnected())
                     {
                         Notify(AppEvents::DISCONNECT);
                     }
+                }
+                catch (const std::exception& ex)
+                {
+                    _log.Error(ex, "IPCChannel wait failed, exiting processing loop");
+                    Notify(AppEvents::DISCONNECT);
                 }
 
                 lock.lock();

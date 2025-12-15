@@ -60,6 +60,11 @@ namespace AnyFSE::App::AppService
         {
             m_monitoringThread.join();
         }
+        
+        if (m_pTraceProperties)
+        {
+            free(m_pTraceProperties);
+        }
     }
 
     HANDLE ETWMonitor::Start()

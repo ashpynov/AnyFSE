@@ -434,10 +434,7 @@ namespace AnyFSE::App
             {
                 m_connectionState = ConnectionState::Disconnected;
                 log.Debug("IPCChannel::StartAsyncReadAndWait: Pipe disconnected due to error");
-                if (!m_isServer)
-                {
-                    throw std::exception("IPCChannel::StartAsyncReadAndWait: Pipe disconnected due to error");
-                }
+                throw std::exception("IPCChannel::StartAsyncReadAndWait: Pipe disconnected due to error");
             }
             Sleep(1000);
             return false;
