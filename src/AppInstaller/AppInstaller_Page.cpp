@@ -39,10 +39,12 @@
 #include "Tools/Unicode.hpp"
 #include "Tools/Registry.hpp"
 #include "AppInstaller.hpp"
+#include "Logging/LogManager.hpp"
 
 namespace AnyFSE
 {
     namespace fs = std::filesystem;
+    static Logger log = LogManager::GetLogger("Installer");
 
     std::list<HWND> AppInstaller::CreatePage()
     {
@@ -358,14 +360,49 @@ namespace AnyFSE
 
         return false;
     }
+
+    std::wstring AppInstaller::GetProgressText(int lines)
+    {
+        std::wstring progress;
+
+        auto it = m_progressStatus.begin();
+        if (m_progressStatus.size() > lines)
+        {
+            std::advance(it, m_progressStatus.size() - lines);
+        }
+        for (; it != m_progressStatus.end(); ++it)
+        {
+            std::wstring prefix = (*it)[0] < L'\x2000' ? L" \x2012  " : L"";
+            progress += prefix + *it + L"\n";
+        }
+        return progress;
+    }
     void AppInstaller::SetCurrentProgress(const std::wstring& status)
     {
-        m_textStatic.SetText(status);
+        m_progressStatus.push_back(status);
+        m_textStatic.SetText(GetProgressText(5));
         RedrawWindow(m_hDialog, NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE | RDW_UPDATENOW);
+    }
+
+    void AppInstaller::CheckSuccess(bool bSuccess)
+    {
+        log.Info("%s - %s", Unicode::to_string(m_progressStatus.back()).c_str(), bSuccess ? "OK" : "FAIL");
+
+        std::wstring step = (bSuccess ? L"\x2713 ": L"\x2715 ") + m_progressStatus.back();
+        m_progressStatus.pop_back();
+        SetCurrentProgress(step);
+
+        if (!bSuccess)
+        {
+            throw Logging::Logger::APIError();
+        }
     }
 
     void AppInstaller::OnInstall()
     {
+        LogManager::Initialize("AnyFSE.Installer", LogLevels::Debug, m_pathEdit.GetText()+ L"\\logs");
+        log.Info("Starting Installation AnyFSE v%s to %s", APP_VERSION, Unicode::to_string(m_pathEdit.GetText()).c_str());
+
         try
         {
             fs::path path(m_pathEdit.GetText());
@@ -377,54 +414,45 @@ namespace AnyFSE
             ShowProgressPage();
             Sleep(1);
 
-            bool status = true;
             // Kill existing process
             SetCurrentProgress(L"Search and terminate existing application");
-            status &= TerminateAnyFSE();
+            CheckSuccess(TerminateAnyFSE());
 
             SetCurrentProgress(L"Remove old version");
 
             std::wstring oldPath = Registry::ReadString(registryPath, L"InstallLocation");
             if (!oldPath.empty() && _wcsicmp(oldPath.c_str(), path.wstring().c_str()))
             {
-                status &= DeleteOldVersion();
+                CheckSuccess(DeleteOldVersion());
             }
+            CheckSuccess(DeleteOldFiles(path));
 
             // Extract resource file
             SetCurrentProgress(L"Unpack files");
-            status &= ExtractEmbeddedZip(path);
+            CheckSuccess(ExtractEmbeddedZip(path));
 
-            // Set task
+            SetCurrentProgress(L"Register uninstaller");
+            CheckSuccess(AddUninstallRegistry(path));
+
             SetCurrentProgress(L"Register scheduled task");
-            status &= ToolsEx::TaskManager::CreateTask(path.wstring() + L"\\AnyFSE.Service.exe");
+            CheckSuccess(ToolsEx::TaskManager::CreateTask(path.wstring() + L"\\AnyFSE.Service.exe"));
 
             SetCurrentProgress(L"Starting application");
-            status &= ToolsEx::TaskManager::StartTask();
+            CheckSuccess(ToolsEx::TaskManager::StartTask());
 
-            // Set task
-            SetCurrentProgress(L"Register uninstaller");
-            status &= AddUninstallRegistry(path);
+            SetCurrentProgress(L"Waiting for application is started");
+            CheckSuccess(CheckAppIsStarted());
+
+            ShowCompletePage();
+
+            LogManager::DeleteLog();
         }
         catch(const std::exception& e)
         {
-            ShowErrorPage(L"Installation Error", Unicode::to_wstring(e.what()));
-            return;
+            log.Error(e, "Instalation fail:");
+            ShowErrorPage(L"Installation Error", GetProgressText(4) + Unicode::to_wstring(e.what()));
+            CollectPostMortemInfo(m_pathEdit.GetText());
         }
-
-        SetCurrentProgress(L"Waiting for application is started");
-        for (int i = 0; i < 10; i++)
-        {
-            HWND hwnd = FindWindow(L"AnyFSE", 0);
-            if (hwnd)
-            {
-                PostMessage(hwnd, WM_USER, m_isUpdate ? 0 : 1, 0);
-                ShowCompletePage();
-                return;
-            }
-            Sleep(1000);
-        }
-        ShowErrorPage(L"Installation Error", L"Can't find executed application. \nPlease try to restart PC.");
-
     }
 
     bool AppInstaller::DeleteOldVersion()
@@ -445,6 +473,27 @@ namespace AnyFSE
         {
             WaitForSingleObject(sei.hProcess, 30000);
             CloseHandle(sei.hProcess);
+        }
+        return true;
+    }
+
+    bool AppInstaller::DeleteOldFiles(const std::wstring& dir)
+    {
+        fs::path path(dir);
+        if (fs::is_directory(path))
+        {
+            for (const auto & entry : fs::directory_iterator(path))
+            {
+                if (!entry.is_regular_file())
+                {
+                    continue;
+                }
+                std::wstring ext = Unicode::to_lower(entry.path().extension().wstring());
+                if (ext == L".log" || ext == L".exe" || ext == L".dll")
+                {
+                    fs::remove(entry.path());
+                }
+            }
         }
         return true;
     }
@@ -477,6 +526,21 @@ namespace AnyFSE
         }
 
         return true;
+    }
+
+    bool AppInstaller::CheckAppIsStarted()
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            HWND hwnd = FindWindow(L"AnyFSE", 0);
+            if (hwnd)
+            {
+                PostMessage(hwnd, WM_USER, m_isUpdate ? 0 : 1, 0);
+                return true;
+            }
+            Sleep(1000);
+        }
+        return false;
     }
 
     bool AppInstaller::AddUninstallRegistry(const std::wstring &path)

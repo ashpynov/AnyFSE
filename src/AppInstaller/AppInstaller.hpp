@@ -120,6 +120,7 @@ namespace AnyFSE
 
         private:
             bool m_isUpdate = false;
+            std::list<std::wstring> m_progressStatus;
 
             void CenterDialog(HWND hwnd);
             static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -141,8 +142,8 @@ namespace AnyFSE
             void ShowPathPage();
             void ShowProgressPage();
             void ShowCompletePage();
-            void ShowErrorPage(const std::wstring& caption, const std::wstring& text, const std::wstring& icon = L"");
-
+            void CollectPostMortemInfo(const std::wstring &path);
+            void ShowErrorPage(const std::wstring &caption, const std::wstring &text, const std::wstring &icon = L"");
 
             void OnInitDialog(HWND hwnd);
             void OnPaint(HWND hwnd);
@@ -151,7 +152,10 @@ namespace AnyFSE
             void DrawDialog(HDC hdc, RECT clientRect);
             void CheckPath();
             bool IsValidPath(const std::wstring &pathStr);
+            std::wstring GetProgressText(int lines);
             void SetCurrentProgress(const std::wstring &status);
+
+            void CheckSuccess(bool bSuccess);
 
             void OnSelectPath();
             void OnBrowse();
@@ -160,9 +164,10 @@ namespace AnyFSE
             void OnSettings();
             void OnDone();
             bool AutoDeleteSelf();
-            bool StartAnyFSE();
             bool DeleteOldVersion();
+            bool DeleteOldFiles(const std::wstring &dir);
             bool TerminateAnyFSE();
+            bool CheckAppIsStarted();
             bool AddUninstallRegistry(const std::wstring &path);
             bool ExtractEmbeddedZip(const std::wstring &path);
     };

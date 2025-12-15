@@ -131,7 +131,7 @@ namespace AnyFSE::Configuration
                 L"ArmouryCrateSe.exe",
                 L"Windows.UI.Core.CoreWindow",
                 L"",
-                0, WS_VISIBLE,
+                0, 0,
                 L"",
                 L"",
                 L"",

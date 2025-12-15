@@ -36,7 +36,7 @@
 namespace AnyFSE::ToolsEx::TaskManager
 {
 
-    #define TRY(hr) if (FAILED((hr))) throw std::exception((std::string("Can't register task at ") + std::to_string(__LINE__)).c_str());
+    #define TRY(hr) if (FAILED((hr))) throw std::exception((std::string("Can't register task at ") + std::to_string(__LINE__) + " got error code " + std::to_string(hr)).c_str());
     #define FREE(f) if(f) f->Release();
 
     static const std::wstring TaskName = L"AnyFSE home application";
@@ -71,7 +71,7 @@ namespace AnyFSE::ToolsEx::TaskManager
 
         try
         {
-            TRY( CoInitializeEx(NULL, COINIT_MULTITHREADED));
+            TRY( CoInitializeEx(NULL, COINIT_APARTMENTTHREADED));
             TRY( CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void **)&pService));
             TRY( pService->Connect(_variant_t(), _variant_t(), _variant_t(), _variant_t()));
             TRY( pService->GetFolder(_bstr_t(L"\\"), &pRootFolder));            // Get root task folder
@@ -142,7 +142,7 @@ namespace AnyFSE::ToolsEx::TaskManager
 
         try
         {
-            TRY( CoInitializeEx(NULL, COINIT_MULTITHREADED));
+            TRY( CoInitializeEx(NULL, COINIT_APARTMENTTHREADED));
             TRY( CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void **)&pService));
             TRY( pService->Connect(_variant_t(), _variant_t(), _variant_t(), _variant_t()));
             TRY( pService->GetFolder(_bstr_t(L"\\"), &pRootFolder));
@@ -176,7 +176,7 @@ namespace AnyFSE::ToolsEx::TaskManager
 
         try
         {
-            TRY( CoInitializeEx(NULL, COINIT_MULTITHREADED));
+            TRY( CoInitializeEx(NULL, COINIT_APARTMENTTHREADED));
             TRY( CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void **)&pService));
             TRY( pService->Connect(_variant_t(), _variant_t(), _variant_t(), _variant_t()));
             TRY( pService->GetFolder(_bstr_t(L"\\"), &pRootFolder));
@@ -221,7 +221,7 @@ namespace AnyFSE::ToolsEx::TaskManager
 
         try
         {
-            TRY( CoInitializeEx(NULL, COINIT_MULTITHREADED));
+            TRY( CoInitializeEx(NULL, COINIT_APARTMENTTHREADED));
             TRY( CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void **)&pService));
             TRY( pService->Connect(_variant_t(), _variant_t(), _variant_t(), _variant_t()));
             TRY( pService->GetFolder(_bstr_t(L"\\"), &pRootFolder));

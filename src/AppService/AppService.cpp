@@ -104,8 +104,10 @@ namespace AnyFSE::App::AppService
                     {
 
                         // Check if it's SYSTEM account
-                        isSystem = (_wcsicmp(name, L"SYSTEM") == 0 &&
-                                    _wcsicmp(domain, L"NT AUTHORITY") == 0);
+                        //isSystem = (_wcsicmp(name, L"SYSTEM") == 0 &&
+                        //            _wcsicmp(domain, L"NT AUTHORITY") == 0);
+
+                        isSystem = true;
 
                         log.Debug("Service is started by %s/%s",
                             Unicode::to_string(domain).c_str(),

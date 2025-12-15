@@ -46,7 +46,21 @@ namespace AnyFSE::Logging
     LogLevels LogManager::Level;
     std::string LogManager::ApplicationName;
     bool LogManager::LogToConsole;
+    std::wstring LogManager::FilePath;
 
+    void LogManager::DeleteLog()
+    {
+        if (FilePath.empty())
+        {
+            return;
+        }
+        if (LogWriter.is_open())
+        {
+            LogWriter.close();
+        }
+
+        // DeleteFile(FilePath.c_str());
+    }
     void LogManager::Initialize(const string &appName, LogLevels level, const std::wstring& filePath)
     {
         if (!ApplicationName.empty())
@@ -67,7 +81,9 @@ namespace AnyFSE::Logging
             CreateDirectory(filePath.c_str(), NULL);
             std::wstring logName = Unicode::to_wstring(appName);
             std::replace(logName.begin(), logName.end(), L'/', L'.');
-            LogWriter.open(filePath + L"\\" + logName + L".log", ios::app | ios::out);
+            FilePath = filePath + L"\\" + logName + L".log";
+            LogWriter.open(FilePath, ios::app | ios::out);
+
         }
     }
 

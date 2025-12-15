@@ -69,8 +69,6 @@ namespace AnyFSE
 
     INT_PTR AppInstaller::Show(HINSTANCE hInstance, bool bAutoUpdate)
     {
-        LogManager::Initialize("AnyFSE/Installer");
-
         m_isUpdate = bAutoUpdate;
 
         if (bAutoUpdate)

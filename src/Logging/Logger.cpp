@@ -44,6 +44,10 @@ namespace AnyFSE::Logging
     std::exception Logger::APIError(DWORD code, const char * prefix)
     {
         DWORD errorCode = code ? code : GetLastError();
+        if (!code)
+        {
+            return std::runtime_error("");
+        }
 
         LPSTR messageBuffer = nullptr;
         DWORD size = FormatMessageA(

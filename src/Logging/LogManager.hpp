@@ -41,6 +41,7 @@ namespace AnyFSE::Logging
         static LogLevels Level;
         static std::string ApplicationName;
         static bool LogToConsole;
+        static std::wstring FilePath;
 
         LogManager() {};
         ~LogManager();
@@ -50,6 +51,7 @@ namespace AnyFSE::Logging
         static void WriteMessage(LogLevels level, const std::string &loggerName, const char* format, va_list args);
 
     public:
+        static void DeleteLog();
         static void Initialize(const std::string &appName, LogLevels level = LogLevels::Trace, const std::wstring &filePath = L"");
         static Logger GetLogger(const std::string &loggerName = "");
         static const char * LogLevelToString(LogLevels level);
