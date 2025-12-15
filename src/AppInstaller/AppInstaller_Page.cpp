@@ -400,12 +400,13 @@ namespace AnyFSE
 
     void AppInstaller::OnInstall()
     {
-        LogManager::Initialize("AnyFSE.Installer", LogLevels::Debug, m_pathEdit.GetText()+ L"\\logs");
-        log.Info("Starting Installation AnyFSE v%s to %s", APP_VERSION, Unicode::to_string(m_pathEdit.GetText()).c_str());
+        fs::path path(m_isUpdate ? Registry::ReadString(registryPath, L"InstallLocation") : m_pathEdit.GetText());
+
+        LogManager::Initialize("AnyFSE.Installer", LogLevels::Debug, path.wstring() + L"\\logs");
+        log.Info("Starting Installation AnyFSE v%s to %s", APP_VERSION, path.string().c_str());
 
         try
         {
-            fs::path path(m_pathEdit.GetText());
             if (fs::exists(path) && !fs::is_directory(path))
             {
                 throw std::exception("File name is used as path");
@@ -423,9 +424,12 @@ namespace AnyFSE
             std::wstring oldPath = Registry::ReadString(registryPath, L"InstallLocation");
             if (!oldPath.empty() && _wcsicmp(oldPath.c_str(), path.wstring().c_str()))
             {
-                CheckSuccess(DeleteOldVersion());
+                CheckSuccess(DeleteOldVersion() && DeleteOldFiles(oldPath));
             }
-            CheckSuccess(DeleteOldFiles(path));
+            else
+            {
+                CheckSuccess(DeleteOldFiles(path));
+            }
 
             // Extract resource file
             SetCurrentProgress(L"Unpack files");
@@ -489,6 +493,11 @@ namespace AnyFSE
                     continue;
                 }
                 std::wstring ext = Unicode::to_lower(entry.path().extension().wstring());
+                if (Unicode::to_lower(entry.path().filename().wstring()).find(L"anyfse.updater") == 0)
+                {
+                    continue;
+                }
+
                 if (ext == L".log" || ext == L".exe" || ext == L".dll")
                 {
                     fs::remove(entry.path());
