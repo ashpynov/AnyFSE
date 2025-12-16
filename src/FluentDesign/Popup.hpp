@@ -30,10 +30,11 @@
 #include <functional>
 #include "Tools/Event.hpp"
 #include "Theme.hpp"
+#include "FluentControl.hpp"
 
 namespace FluentDesign
 {
-    class Popup
+    class Popup : public FluentControl
     {
     public:
         struct PopupItem
@@ -55,9 +56,6 @@ namespace FluentDesign
         static const int Layout_IconMargin = 8;
         static const int Layout_CornerRadius = 8;
 
-        Theme &m_theme;
-
-        HWND m_hPopupList;
         bool m_popupVisible;
         int m_selectedIndex;
         int m_hoveredIndex;
@@ -65,15 +63,14 @@ namespace FluentDesign
 
     public:
         Popup(Theme &theme)
-            : m_theme(theme)
+            : FluentControl(theme)
             , m_selectedIndex(-1)
             , m_hoveredIndex(-1)
             , m_popupVisible(false)
-            , m_hPopupList(nullptr)
         {
         }
 
-        HWND GetHwnd() { return m_popupVisible ? m_hPopupList : nullptr; }
+        HWND GetHwnd() { return m_popupVisible ? m_hWnd : nullptr; }
 
         void Show(HWND hParent, int x, int y, const std::vector<PopupItem>& items, int width, int flags = TPM_RIGHTALIGN);
         void Hide();

@@ -80,10 +80,10 @@ namespace FluentDesign
     {
         if(child)
         {
-            HWND parent = GetParent(m_hScrollView);
+            HWND parent = GetParent(m_hWnd);
             if (parent)
             {
-                SendMessage(parent, WM_ERASEBKGND, (WPARAM)hdc, (LPARAM)m_hScrollView);
+                SendMessage(parent, WM_ERASEBKGND, (WPARAM)hdc, (LPARAM)m_hWnd);
             }
         }
         return 1;
@@ -95,13 +95,13 @@ namespace FluentDesign
         {
             POINT cursorPos;
             GetCursorPos(&cursorPos);
-            MapWindowPoints(NULL, m_hScrollView, &cursorPos, 1);
+            MapWindowPoints(NULL, m_hWnd, &cursorPos, 1);
 
             int deltaMouseY = cursorPos.y - m_dragStartMousePos;
             float scale = m_viewHeight ? (float) m_contentHeight / m_viewHeight : 0;
             ScrollTo((int)(deltaMouseY * scale + m_dragStartScrollPos));
         }
-        else if (Window::MouseInClientRect(m_hScrollView, &m_scrollBarRect))
+        else if (Window::MouseInClientRect(m_hWnd, &m_scrollBarRect))
         {
             if (!m_hovered)
             {
@@ -109,9 +109,9 @@ namespace FluentDesign
                 UpdateScrollBar();
             }
 
-            TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT), TME_LEAVE, m_hScrollView};
+            TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT), TME_LEAVE, m_hWnd};
             TrackMouseEvent(&tme);
-            SetCapture(m_hScrollView);
+            SetCapture(m_hWnd);
         }
         else if (m_hovered)
         {
@@ -130,20 +130,20 @@ namespace FluentDesign
 
     LRESULT ScrollView::OnLButtonDown()
     {
-        if (!Window::MouseInClientRect(m_hScrollView, &m_scrollBarRect))
+        if (!Window::MouseInClientRect(m_hWnd, &m_scrollBarRect))
         {
             return 0;
         }
 
         POINT cursorPos;
         GetCursorPos(&cursorPos);
-        MapWindowPoints(NULL, m_hScrollView, &cursorPos, 1);
+        MapWindowPoints(NULL, m_hWnd, &cursorPos, 1);
 
         if ( cursorPos.y > m_thumbRect.top && cursorPos.y < m_thumbRect.bottom)
         {
             m_dragStartMousePos = cursorPos.y;
             m_dragStartScrollPos = m_scrollPos;
-            SetCapture(m_hScrollView);
+            SetCapture(m_hWnd);
             m_dragging = true;
         }
         else if (cursorPos.y < m_thumbRect.top)
@@ -161,7 +161,7 @@ namespace FluentDesign
     LRESULT ScrollView::OnLButtonUp()
     {
         m_dragging = false;
-        if (!Window::MouseInClientRect(m_hScrollView, &m_scrollBarRect))
+        if (!Window::MouseInClientRect(m_hWnd, &m_scrollBarRect))
         {
             m_hovered = false;
             UpdateScrollBar();
@@ -207,7 +207,7 @@ namespace FluentDesign
     void ScrollView::CalculateRects()
     {
         RECT rcWindow;
-        GetClientRect(m_hScrollView, &rcWindow);
+        GetClientRect(m_hWnd, &rcWindow);
 
         int height = rcWindow.bottom - rcWindow.top;
 
@@ -242,13 +242,12 @@ namespace FluentDesign
     }
 
     ScrollView::ScrollView(Theme &theme)
-        : m_theme(theme)
+        : FluentControl(theme)
         , m_hovered(false)
         , m_dragging(false)
         , m_thumbRect{0}
         , m_scrollBarRect{0}
         , m_contentHeight(0)
-        , m_hScrollView(nullptr)
         , m_scrollPos(0)
         , m_dragStartMousePos(0)
         , m_dragStartScrollPos(0)
@@ -266,7 +265,7 @@ namespace FluentDesign
 
     HWND ScrollView::Create(HWND hParent, int x, int y, int width, int height)
     {
-        m_hScrollView = CreateWindowEx(
+        m_hWnd = CreateWindowEx(
             WS_EX_CONTROLPARENT,
             L"STATIC",
             L"",
@@ -276,8 +275,8 @@ namespace FluentDesign
 
         m_viewHeight = height;
         UpdateScrollBar();
-        SetWindowSubclass(m_hScrollView, ScrollViewSubclassProc, 0, (DWORD_PTR)this);
-        return m_hScrollView;
+        SetWindowSubclass(m_hWnd, ScrollViewSubclassProc, 0, (DWORD_PTR)this);
+        return m_hWnd;
     }
 
     void ScrollView::SetContentHeight(int newHeight)
@@ -298,7 +297,7 @@ namespace FluentDesign
     void ScrollView::UpdateScrollBar()
     {
         CalculateRects();
-        RedrawWindow(m_hScrollView, NULL, NULL, RDW_INVALIDATE);
+        RedrawWindow(m_hWnd, NULL, NULL, RDW_INVALIDATE);
     }
 
     void ScrollView::ScrollTo(int newPos)
@@ -315,9 +314,9 @@ namespace FluentDesign
             m_scrollPos = newPos;
 
             // Scroll the window content
-            ScrollWindowEx(m_hScrollView, 0, delta, NULL, NULL, NULL, NULL, SW_INVALIDATE | SW_SCROLLCHILDREN );
+            ScrollWindowEx(m_hWnd, 0, delta, NULL, NULL, NULL, NULL, SW_INVALIDATE | SW_SCROLLCHILDREN );
             UpdateScrollBar();
-            RedrawWindow(m_hScrollView, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
+            RedrawWindow(m_hWnd, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
         }
     }
 
@@ -372,7 +371,7 @@ namespace FluentDesign
     // Call this when the window is resized
     void ScrollView::OnResize(int newWidth, int newHeight)
     {
-        HWND hChild = GetWindow(m_hScrollView, GW_CHILD);
+        HWND hChild = GetWindow(m_hWnd, GW_CHILD);
         while (hChild)
         {
             RECT rc;

@@ -50,7 +50,7 @@ namespace FluentDesign
         int dy = (flags & TPM_BOTTOMALIGN) ? -popupHeight : 0;
 
         // Create popup listbox window
-        m_hPopupList = CreateWindowEx(
+        m_hWnd = CreateWindowEx(
             WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
             L"LISTBOX",
             L"",
@@ -64,35 +64,35 @@ namespace FluentDesign
             NULL);
 
         // Set transparency for shadow
-        SetLayeredWindowAttributes(m_hPopupList, 0, 255, LWA_COLORKEY);
+        SetLayeredWindowAttributes(m_hWnd, 0, 255, LWA_COLORKEY);
 
         for (size_t i = 0; i < m_popupItems.size(); ++i)
         {
-            int lbIndex = (int)SendMessage(m_hPopupList, LB_ADDSTRING, 0, (LPARAM)m_popupItems[i].name.c_str());
-            SendMessage(m_hPopupList, LB_SETITEMDATA, lbIndex, (LPARAM)&(m_popupItems[i]));
+            int lbIndex = (int)SendMessage(m_hWnd, LB_ADDSTRING, 0, (LPARAM)m_popupItems[i].name.c_str());
+            SendMessage(m_hWnd, LB_SETITEMDATA, lbIndex, (LPARAM)&(m_popupItems[i]));
         }
 
         // Subclass the popup listbox
-        SetWindowSubclass(m_hPopupList, PopupSubclassProc, 0, (DWORD_PTR)this);
+        SetWindowSubclass(m_hWnd, PopupSubclassProc, 0, (DWORD_PTR)this);
 
         // Set item height
-        SendMessage(m_hPopupList, LB_SETITEMHEIGHT, 0, (LPARAM)m_theme.DpiScale(Layout_ItemHeight));
+        SendMessage(m_hWnd, LB_SETITEMHEIGHT, 0, (LPARAM)m_theme.DpiScale(Layout_ItemHeight));
 
-        ShowWindow(m_hPopupList, SW_SHOW);
+        ShowWindow(m_hWnd, SW_SHOW);
         m_popupVisible = true;
 
         // Capture mouse to close when clicking outside
-        SetFocus(m_hPopupList);
-        SetCapture(m_hPopupList);
+        SetFocus(m_hWnd);
+        SetCapture(m_hWnd);
     }
 
     void Popup::Hide()
     {
-        if (m_popupVisible && m_hPopupList)
+        if (m_popupVisible && m_hWnd)
         {
             ReleaseCapture();
-            DestroyWindow(m_hPopupList);
-            m_hPopupList = NULL;
+            DestroyWindow(m_hWnd);
+            m_hWnd = NULL;
             m_popupVisible = false;
         }
     }
@@ -159,7 +159,7 @@ namespace FluentDesign
         RectF rectF = ToRectF(itemRect);
         rectF.X += m_theme.DpiScale(Layout_LeftMargin);
         rectF.Width -= m_theme.DpiScale(Layout_LeftMargin);
-        PopupItem *pItem = (PopupItem*)SendMessage(m_hPopupList, LB_GETITEMDATA, itemId, 0);
+        PopupItem *pItem = (PopupItem*)SendMessage(m_hWnd, LB_GETITEMDATA, itemId, 0);
 
         SolidBrush textBrush(Color(m_theme.GetColor(Theme::Colors::Text)));
         StringFormat format;
@@ -261,18 +261,18 @@ namespace FluentDesign
                 if (m_selectedIndex >0 )
                 {
                     m_selectedIndex -= 1;
-                    InvalidateRect(m_hPopupList, NULL, TRUE);
+                    InvalidateRect(m_hWnd, NULL, TRUE);
                 }
-                m_theme.SetKeyboardFocused(m_hPopupList);
+                m_theme.SetKeyboardFocused(m_hWnd);
                 return;
             case VK_DOWN:
             case VK_GAMEPAD_DPAD_DOWN:
                 if (m_selectedIndex < SendMessage(hWnd, LB_GETCOUNT, 0, 0) - 1 )
                 {
                     m_selectedIndex += 1;
-                    InvalidateRect(m_hPopupList, NULL, TRUE);
+                    InvalidateRect(m_hWnd, NULL, TRUE);
                 }
-                m_theme.SetKeyboardFocused(m_hPopupList);
+                m_theme.SetKeyboardFocused(m_hWnd);
                 return;
         }
     }
@@ -321,9 +321,9 @@ namespace FluentDesign
 
     void Popup::HandleListClick(int index)
     {
-        if (index >= 0 && index < (int)SendMessage(m_hPopupList, LB_GETCOUNT, 0, 0))
+        if (index >= 0 && index < (int)SendMessage(m_hWnd, LB_GETCOUNT, 0, 0))
         {
-            PopupItem *pItem = (PopupItem*)SendMessage(m_hPopupList, LB_GETITEMDATA, index, 0);
+            PopupItem *pItem = (PopupItem*)SendMessage(m_hWnd, LB_GETITEMDATA, index, 0);
             pItem->callback();
         }
     }

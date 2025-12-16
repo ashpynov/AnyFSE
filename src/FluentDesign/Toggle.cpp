@@ -38,11 +38,10 @@ using namespace Gdiplus;
 namespace FluentDesign
 {
     Toggle::Toggle(FluentDesign::Theme &theme)
-        : m_theme(theme)
+        : FluentControl(theme)
         , m_buttonMouseOver(false)
         , m_buttonPressed(false)
         , m_isChecked(false)
-        , m_hToggle(nullptr)
     {
         theme.OnDPIChanged += [This = this]() { This->UpdateLayout(); };
     }
@@ -63,25 +62,25 @@ namespace FluentDesign
         int width, int height
     )
     {
-        m_hToggle = CreateWindow(
+        m_hWnd = CreateWindow(
             L"BUTTON",
             L"",
             WS_VISIBLE | WS_CHILD | BS_CHECKBOX | WS_TABSTOP,
             x, y, m_theme.DpiScale(Layout_ItemWidth + Layout_TextWidth), m_theme.DpiScale(Layout_ItemHeight+1),
             hParent, NULL, GetModuleHandle(NULL), NULL);
 
-        m_theme.RegisterChild(m_hToggle);
-        SetWindowSubclass(m_hToggle, ToggleSubclassProc, 0, (DWORD_PTR)this);
+        m_theme.RegisterChild(m_hWnd);
+        SetWindowSubclass(m_hWnd, ToggleSubclassProc, 0, (DWORD_PTR)this);
 
-        return m_hToggle;
+        return m_hWnd;
     }
 
     Toggle::~Toggle()
     {
-        if (m_hToggle)
+        if (m_hWnd)
         {
-            DestroyWindow(m_hToggle);
-            m_hToggle = nullptr;
+            DestroyWindow(m_hWnd);
+            m_hWnd = nullptr;
         }
     }
 
@@ -95,7 +94,7 @@ namespace FluentDesign
         if ( m_isChecked != check)
         {
             m_isChecked = check;
-            InvalidateRect(m_hToggle, NULL, true);
+            InvalidateRect(m_hWnd, NULL, true);
             OnChanged.Notify();
         }
     }
@@ -311,7 +310,7 @@ namespace FluentDesign
     }
     void Toggle::UpdateLayout()
     {
-        SetWindowPos(m_hToggle, 0, 0, 0,
+        SetWindowPos(m_hWnd, 0, 0, 0,
                      m_theme.DpiScale(Layout_ItemWidth + Layout_TextWidth),
                      m_theme.DpiScale(Layout_ItemHeight + 1),
                      SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);

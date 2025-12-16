@@ -31,10 +31,11 @@
 #include "Tools/GdiPlus.hpp"
 #include "Tools/Event.hpp"
 #include "Theme.hpp"
+#include "FluentControl.hpp"
 
 namespace FluentDesign
 {
-    class Static
+    class Static : public FluentControl
     {
 
     private:
@@ -42,8 +43,6 @@ namespace FluentDesign
         int m_designHeight = 0;
 
         bool m_large;
-
-        HWND m_hStatic;
 
         std::wstring m_text;
         Theme::Colors m_colorId;
@@ -57,8 +56,6 @@ namespace FluentDesign
 
         void UpdateLayout();
 
-        Theme &m_theme;
-
     public:
         Static(Theme& theme);
         Static(
@@ -70,7 +67,6 @@ namespace FluentDesign
         HWND Create(HWND hParent, const std::wstring &text, int x, int y, int width, int height);
 
         HWND Create(HWND hParent, int x, int y, int width, int height);
-        HWND GetHwnd() const { return m_hStatic; }
 
         void SetText(const std::wstring& text);
 

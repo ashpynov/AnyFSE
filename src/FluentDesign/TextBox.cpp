@@ -35,8 +35,7 @@ namespace FluentDesign
 {
 
     TextBox::TextBox(FluentDesign::Theme& theme)
-        : m_theme(theme)
-        , m_hContainer(nullptr)
+        : FluentControl(theme)
         , m_hTextBox(nullptr)
     {
         theme.OnDPIChanged += [This = this]() { This->UpdateLayout(); };
@@ -58,7 +57,7 @@ namespace FluentDesign
         m_hParent = hParent;
         m_designedWidth = m_theme.DpiUnscale(width);
 
-        m_hContainer = CreateWindowEx(
+        m_hWnd = CreateWindowEx(
             WS_EX_CONTROLPARENT,
             L"STATIC",
             L"",
@@ -70,13 +69,13 @@ namespace FluentDesign
             GetModuleHandle(NULL),
             this);
 
-        if (!m_hContainer)
+        if (!m_hWnd)
         {
             return NULL;
         }
 
-        m_theme.RegisterChild(m_hContainer);
-        SetWindowSubclass(m_hContainer, ContainerSubclassProc, 0, (DWORD_PTR)this);
+        m_theme.RegisterChild(m_hWnd);
+        SetWindowSubclass(m_hWnd, ContainerSubclassProc, 0, (DWORD_PTR)this);
 
         // Create the actual TextBox control
         m_hTextBox = CreateWindowEx(
@@ -87,15 +86,15 @@ namespace FluentDesign
             m_theme.DpiScale(m_marginLeft), m_theme.DpiScale(m_marginTop),
             width - m_theme.DpiScale(m_marginLeft + m_marginRight),
             height - m_theme.DpiScale(m_marginTop + m_marginBottom),
-            m_hContainer,
+            m_hWnd,
             NULL,
             GetModuleHandle(NULL),
             NULL);
 
         if (!m_hTextBox)
         {
-            DestroyWindow(m_hContainer);
-            m_hContainer = nullptr;
+            DestroyWindow(m_hWnd);
+            m_hWnd = nullptr;
             return NULL;
         }
 
@@ -104,7 +103,7 @@ namespace FluentDesign
         SetWindowSubclass(m_hTextBox, TextBoxSubclassProc, 0, (DWORD_PTR)this);
         UpdateTextBoxColors();
 
-        return m_hContainer;
+        return m_hWnd;
     }
 
     void TextBox::Destroy()
@@ -115,11 +114,11 @@ namespace FluentDesign
             DestroyWindow(m_hTextBox);
             m_hTextBox = nullptr;
         }
-        if (m_hContainer)
+        if (m_hWnd)
         {
-            RemoveWindowSubclass(m_hContainer, ContainerSubclassProc, 0);
-            DestroyWindow(m_hContainer);
-            m_hContainer = nullptr;
+            RemoveWindowSubclass(m_hWnd, ContainerSubclassProc, 0);
+            DestroyWindow(m_hWnd);
+            m_hWnd = nullptr;
         }
     }
 
@@ -164,7 +163,7 @@ namespace FluentDesign
 
         int tbHeight = tbRect.bottom - tbRect.top;
 
-        SetWindowPos(m_hContainer, 0, 0, 0,
+        SetWindowPos(m_hWnd, 0, 0, 0,
                     m_theme.DpiScale(m_designedWidth),
                     tbHeight + m_theme.DpiScale(
                         m_marginTop + m_marginBottom
@@ -176,16 +175,16 @@ namespace FluentDesign
 
     void TextBox::Show(bool bShow)
     {
-        ShowWindow(m_hContainer, bShow ? SW_SHOW : SW_HIDE);
+        ShowWindow(m_hWnd, bShow ? SW_SHOW : SW_HIDE);
     }
 
     void TextBox::OnSize()
     {
-        if (!m_hContainer || !m_hTextBox)
+        if (!m_hWnd || !m_hTextBox)
             return;
 
         RECT rect;
-        GetClientRect(m_hContainer, &rect);
+        GetClientRect(m_hWnd, &rect);
 
         SetWindowPos(
             m_hTextBox,
@@ -208,9 +207,9 @@ namespace FluentDesign
 
     void TextBox::Invalidate()
     {
-        if (m_hContainer)
+        if (m_hWnd)
         {
-            InvalidateRect(m_hContainer, NULL, TRUE);
+            InvalidateRect(m_hWnd, NULL, TRUE);
         }
     }
 
@@ -322,7 +321,7 @@ namespace FluentDesign
     void TextBox::DrawContainer(HDC memDC)
     {
         RECT rect;
-        GetClientRect(m_hContainer, &rect);
+        GetClientRect(m_hWnd, &rect);
 
         // Use GDI+ for rounded rectangles
         Gdiplus::Graphics graphics(memDC);

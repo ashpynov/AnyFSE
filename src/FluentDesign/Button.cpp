@@ -38,13 +38,12 @@ using namespace Gdiplus;
 namespace FluentDesign
 {
     Button::Button(FluentDesign::Theme &theme)
-        : m_theme(theme)
+        : FluentControl(theme)
         , m_buttonMouseOver(false)
         , m_buttonPressed(false)
         , m_isIconButton(false)
         , m_bFlat(false)
         , m_bSquare(false)
-        , m_hButton(nullptr)
         , m_isSmallIcon(false)
         , m_textNormalColor(Theme::Colors::Text)
         , m_backgroundNormalColor(Theme::Colors::Button)
@@ -80,7 +79,7 @@ namespace FluentDesign
 
         m_designHeight = m_theme.DpiUnscale(height);
         m_designWidth = m_theme.DpiUnscale(width);
-        m_hButton = CreateWindow(
+        m_hWnd = CreateWindow(
             L"BUTTON",
             L"",
             WS_VISIBLE | WS_CHILD | BS_DEFCOMMANDLINK | WS_TABSTOP,
@@ -92,9 +91,9 @@ namespace FluentDesign
         {
             m_theme.OnDPIChanged += [This = this]() { This->UpdateLayout(); };
         }
-        m_theme.RegisterChild(m_hButton);
-        SetWindowSubclass(m_hButton, ButtonSubclassProc, 0, (DWORD_PTR)this);
-        return m_hButton;
+        m_theme.RegisterChild(m_hWnd);
+        SetWindowSubclass(m_hWnd, ButtonSubclassProc, 0, (DWORD_PTR)this);
+        return m_hWnd;
     }
 
     HWND Button::Create(HWND hParent, const std::wstring &text, const std::function<void()>& callback, int x, int y, int width, int height)
@@ -102,7 +101,7 @@ namespace FluentDesign
         Create(hParent, x, y, width, height);
         SetText(text);
         OnChanged += callback;
-        return m_hButton;
+        return m_hWnd;
     }
 
     void Button::SetText(const std::wstring &text)
@@ -113,7 +112,7 @@ namespace FluentDesign
         m_text = text;
         m_isIconButton = false;
        // SetWindowText(m_hButton, text.c_str());
-        InvalidateRect(m_hButton, NULL, FALSE);
+        InvalidateRect(m_hWnd, NULL, FALSE);
     }
 
     void Button::SetIcon(const std::wstring &glyph, bool bSmall)
@@ -125,52 +124,52 @@ namespace FluentDesign
         m_isIconButton = true;
         m_isSmallIcon = bSmall;
 
-        InvalidateRect(m_hButton, NULL, FALSE);
+        InvalidateRect(m_hWnd, NULL, FALSE);
     }
 
     void Button::Enable(bool bEnable)
     {
-        if ((bool)IsWindowEnabled(m_hButton) == bEnable)
+        if ((bool)IsWindowEnabled(m_hWnd) == bEnable)
             return;
 
-        SetWindowLong(m_hButton, GWL_STYLE, (GetWindowLong(m_hButton, GWL_STYLE) & ~WS_DISABLED) | (bEnable ? 0 : WS_DISABLED));
-        InvalidateRect(m_hButton, NULL, FALSE);
+        SetWindowLong(m_hWnd, GWL_STYLE, (GetWindowLong(m_hWnd, GWL_STYLE) & ~WS_DISABLED) | (bEnable ? 0 : WS_DISABLED));
+        InvalidateRect(m_hWnd, NULL, FALSE);
     }
 
     void Button::Show(bool bShow)
     {
-        ShowWindow(m_hButton, bShow ? SW_SHOW : SW_HIDE);
+        ShowWindow(m_hWnd, bShow ? SW_SHOW : SW_HIDE);
     }
 
     void Button::SetFlat(bool isFlat)
     {
         m_bFlat = isFlat;
-        SetWindowLong(m_hButton, GWL_STYLE, (GetWindowLong(m_hButton, GWL_STYLE) & ~BS_FLAT) | (isFlat ? BS_FLAT : 0));
-        InvalidateRect(m_hButton, NULL, FALSE);
+        SetWindowLong(m_hWnd, GWL_STYLE, (GetWindowLong(m_hWnd, GWL_STYLE) & ~BS_FLAT) | (isFlat ? BS_FLAT : 0));
+        InvalidateRect(m_hWnd, NULL, FALSE);
     }
 
     void Button::SetSquare(bool isSquare)
     {
         m_bSquare = isSquare;
-        InvalidateRect(m_hButton, NULL, FALSE);
+        InvalidateRect(m_hWnd, NULL, FALSE);
     }
 
     void Button::SetAlign(int bsStyle)
     {
-        long style = GetWindowLong(m_hButton, GWL_STYLE) & ~BS_CENTER;
-        SetWindowLong(m_hButton, GWL_STYLE, style | (bsStyle & BS_CENTER));
-        InvalidateRect(m_hButton, NULL, FALSE);
+        long style = GetWindowLong(m_hWnd, GWL_STYLE) & ~BS_CENTER;
+        SetWindowLong(m_hWnd, GWL_STYLE, style | (bsStyle & BS_CENTER));
+        InvalidateRect(m_hWnd, NULL, FALSE);
     }
 
     void Button::SetAngle(int angle)
     {
         m_iconAngle = angle;
-        InvalidateRect(m_hButton, NULL, FALSE);
+        InvalidateRect(m_hWnd, NULL, FALSE);
     }
 
     void Button::SetLinkStyle()
     {
-        SetWindowLong(m_hButton, GWL_STYLE, (GetWindowLong(m_hButton, GWL_STYLE) & ~BS_TYPEMASK) | BS_COMMANDLINK);
+        SetWindowLong(m_hWnd, GWL_STYLE, (GetWindowLong(m_hWnd, GWL_STYLE) & ~BS_TYPEMASK) | BS_COMMANDLINK);
 
         SetColors(
             Theme::Colors::TextAccented,  Theme::Colors::Transparent,
@@ -180,14 +179,14 @@ namespace FluentDesign
         SetAlign(BS_LEFT);
         SetFlat(true);
         SetSize(GetMinSize());
-        InvalidateRect(m_hButton, NULL, FALSE);
+        InvalidateRect(m_hWnd, NULL, FALSE);
     }
 
     void Button::SetSize(SIZE sz)
     {
         m_designHeight = m_theme.DpiUnscale(sz.cy);
         m_designWidth = m_theme.DpiUnscale(sz.cx);
-        SetWindowPos(m_hButton, NULL, 0, 0, sz.cx, sz.cy, SWP_NOMOVE | SWP_NOZORDER);
+        SetWindowPos(m_hWnd, NULL, 0, 0, sz.cx, sz.cy, SWP_NOMOVE | SWP_NOZORDER);
     }
 
     void Button::SetColors(Theme::Colors textNornal, Theme::Colors backgroundNormal, Theme::Colors textHover, Theme::Colors backgroundHover, Theme::Colors textPressed, Theme::Colors backgroundPressed)
@@ -198,7 +197,7 @@ namespace FluentDesign
         m_backgroundHoverColor = backgroundHover == Theme::Colors::Default ? m_backgroundHoverColor : backgroundHover;
         m_textPressedColor = textPressed == Theme::Colors::Default ? m_textPressedColor : textPressed;
         m_backgroundPressedColor = backgroundPressed == Theme::Colors::Default ? m_backgroundPressedColor : backgroundPressed;
-        InvalidateRect(m_hButton, NULL, TRUE);
+        InvalidateRect(m_hWnd, NULL, TRUE);
     }
 
     void Button::SetMenu(const std::vector<Popup::PopupItem> &items, int width, int align)
@@ -213,27 +212,27 @@ namespace FluentDesign
         static Popup popup(m_theme);
 
         RECT rect;
-        GetWindowRect(m_hButton, &rect);
+        GetWindowRect(m_hWnd, &rect);
         int x = (m_menuAlingment & TPM_RIGHTALIGN) ? rect.right
                 : (m_menuAlingment & TPM_CENTERALIGN) ? (rect.left + rect.right) / 2
                 : rect.left;
         int y = (m_menuAlingment & TPM_BOTTOMALIGN) ? rect.top
                 : (m_menuAlingment & TPM_VCENTERALIGN) ? (rect.top + rect.bottom) / 2
                 : rect.bottom;
-        popup.Show(m_hButton, x, y, m_menuItems, m_menuWidth, m_menuAlingment);
+        popup.Show(m_hWnd, x, y, m_menuItems, m_menuWidth, m_menuAlingment);
         m_theme.SwapFocus(popup.GetHwnd());
     }
 
     SIZE Button::GetMinSize()
     {
         RECT clientRect;
-        GetClientRect(m_hButton, &clientRect);
+        GetClientRect(m_hWnd, &clientRect);
 
-        HDC hdc = GetWindowDC(m_hButton);
+        HDC hdc = GetWindowDC(m_hWnd);
         Graphics graphics(hdc);
 
         StringFormat format;
-        long align = GetWindowLong(m_hButton, GWL_STYLE) & BS_CENTER;
+        long align = GetWindowLong(m_hWnd, GWL_STYLE) & BS_CENTER;
         format.SetAlignment(align == BS_LEFT ? StringAlignmentNear : align == BS_RIGHT ? StringAlignmentFar : StringAlignmentCenter);
         format.SetLineAlignment(StringAlignmentCenter);
         format.SetTrimming(StringTrimmingNone);
@@ -252,17 +251,17 @@ namespace FluentDesign
         RectF mr;
 
         graphics.MeasureString(m_text.c_str(), m_isIconButton ? 1 : -1, &font, br, &format, &mr);
-        ReleaseDC(m_hButton, hdc);
+        ReleaseDC(m_hWnd, hdc);
 
         return SIZE{(long)mr.Width, (long)mr.Height};
     }
 
     Button::~Button()
     {
-        if (m_hButton)
+        if (m_hWnd)
         {
-            DestroyWindow(m_hButton);
-            m_hButton = nullptr;
+            DestroyWindow(m_hWnd);
+            m_hWnd = nullptr;
         }
     }
 
@@ -280,7 +279,7 @@ namespace FluentDesign
         m_animationLoop = bInfinite;
         if (!active)
         {
-            m_animationTimer = SetTimer(m_hButton, 1, 10, NULL);
+            m_animationTimer = SetTimer(m_hWnd, 1, 10, NULL);
             SetAngle(m_startAngle);
         }
     }
@@ -292,7 +291,7 @@ namespace FluentDesign
 
     void Button::CancelAnimation(int endAngle)
     {
-        KillTimer(m_hButton, m_animationTimer);
+        KillTimer(m_hWnd, m_animationTimer);
         m_animationTimer = 0;
         SetAngle(endAngle);
     }
@@ -442,10 +441,10 @@ namespace FluentDesign
 
                 POINT pt;
                 GetCursorPos(&pt);
-                MapWindowPoints(NULL, m_hButton, &pt, 1);
+                MapWindowPoints(NULL, m_hWnd, &pt, 1);
 
                 RECT rc;
-                GetClientRect(m_hButton, &rc);
+                GetClientRect(m_hWnd, &rc);
                 if (PtInRect(&rc, pt) && !m_menuItems.size())
                 {
                     OnChanged.Notify();
@@ -538,7 +537,7 @@ namespace FluentDesign
         br = gdiRect;
         br.Inflate(-m_theme.DpiScaleF(1), -m_theme.DpiScaleF(1));
         StringFormat format;
-        long align = GetWindowLong(m_hButton, GWL_STYLE) & BS_CENTER;
+        long align = GetWindowLong(m_hWnd, GWL_STYLE) & BS_CENTER;
         format.SetAlignment(align == BS_LEFT ? StringAlignmentNear : align == BS_RIGHT ? StringAlignmentFar : StringAlignmentCenter);
         format.SetLineAlignment(StringAlignmentCenter);
         format.SetTrimming(StringTrimmingNone);
@@ -568,7 +567,7 @@ namespace FluentDesign
     }
     void Button::UpdateLayout()
     {
-        SetWindowPos(m_hButton, 0, 0, 0,
+        SetWindowPos(m_hWnd, 0, 0, 0,
                      m_theme.DpiScale(m_designWidth),
                      m_theme.DpiScale(m_designHeight),
                      SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);

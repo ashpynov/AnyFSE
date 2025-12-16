@@ -30,18 +30,14 @@
 #include <functional>
 #include "Tools/Event.hpp"
 #include "Theme.hpp"
+#include "FluentControl.hpp"
 
 namespace FluentDesign
 {
-    class ScrollView
+    class ScrollView : public FluentControl
     {
         static LRESULT CALLBACK ScrollViewSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
                                                        UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
-
-
-        Theme &m_theme;
-
-        HWND m_hScrollView;
 
         int m_contentHeight;
         int m_scrollPos;
@@ -61,7 +57,6 @@ namespace FluentDesign
         LRESULT OnPaint(HWND hWnd);
 
     public:
-        HWND GetHwnd() const { return m_hScrollView; }
         ScrollView(Theme& theme);
         ScrollView(Theme& theme, HWND hParent, int x, int y, int width, int height);
         HWND Create(HWND hParent, int x, int y, int width, int height);

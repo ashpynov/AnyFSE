@@ -30,10 +30,11 @@
 #include <functional>
 #include "Tools/Event.hpp"
 #include "Theme.hpp"
+#include "FluentControl.hpp"
 
 namespace FluentDesign
 {
-    class ComboBox
+    class ComboBox : public FluentControl
     {
         struct ComboItem
         {
@@ -51,7 +52,6 @@ namespace FluentDesign
         static const int Layout_ChevronMargin = 16;
         static const int Layout_CornerRadius = 8;
 
-        HWND m_hCombo;
         HIMAGELIST m_hImageList = NULL;
 
         std::vector<ComboItem> m_comboItems;
@@ -83,8 +83,6 @@ namespace FluentDesign
         void HandleListClick(int index);
 
         void UpdateLayout();
-
-        Theme &m_theme;
 
     public:
         ComboBox(Theme& theme);

@@ -29,15 +29,15 @@
 #include <commctrl.h>
 #include <string>
 #include "Theme.hpp"
+#include "FluentControl.hpp"
 #include "Tools/Event.hpp"
 
 namespace FluentDesign
 {
 
-    class TextBox
+    class TextBox : public FluentControl
     {
     private:
-        HWND m_hContainer = nullptr;
         HWND m_hTextBox = nullptr;
         HWND m_hParent = nullptr;
 
@@ -60,8 +60,6 @@ namespace FluentDesign
         std::wstring m_placeholder;
         bool m_showPlaceholder = false;
 
-        Theme &m_theme;
-
     public:
         TextBox(Theme &theme);
         TextBox(
@@ -75,8 +73,6 @@ namespace FluentDesign
         HWND Create(HWND hParent, int x, int y, int width, int height);
         void Destroy();
 
-        // Getters
-        HWND GetHandle() const { return m_hContainer; }
         HWND GetTextBoxHandle() const { return m_hTextBox; }
         std::wstring GetText() const;
 

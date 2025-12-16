@@ -42,11 +42,10 @@ namespace FluentDesign
     static const wchar_t *SETTINGS_LINE_CLASS = L"AnyFSE_SettingsLineClass";
 
     SettingsLine::SettingsLine(FluentDesign::Theme& theme)
-        : m_theme(theme)
+        : FluentControl(theme)
         , m_chevronButton(theme)
         , m_enabled(true)
         , m_hovered(false)
-        , m_hWnd(nullptr)
         , m_linePadding(8)
         , m_leftMargin(16)
         , m_state(State::Normal)
@@ -55,7 +54,7 @@ namespace FluentDesign
         , m_groupLine(nullptr)
         , m_icon(L'\0')
         , m_hIcon(nullptr)
-        ,m_secondaryTextRect{0}
+        , m_secondaryTextRect{0}
     {
 
     }

@@ -28,6 +28,7 @@
 #include <string>
 #include <functional>
 #include "Theme.hpp"
+#include "FluentControl.hpp"
 #include "Tools/Event.hpp"
 #include "Tools/Process.hpp"
 #include "Button.hpp"
@@ -35,7 +36,7 @@
 
 namespace FluentDesign
 {
-    class SettingsLine
+    class SettingsLine : public FluentControl
     {
     public:
         enum State
@@ -54,7 +55,6 @@ namespace FluentDesign
         int m_leftMargin;
 
     protected:
-        HWND m_hWnd;
         HWND m_hParent = nullptr;
 
         std::list<HWND> m_childControlsList;
@@ -102,9 +102,7 @@ namespace FluentDesign
         virtual LPARAM OnCommand(HWND hwnd, int msg, WPARAM wParam, LPARAM lParam) { return 0; };
         virtual LPARAM OnDrawItem(HWND hwnd, LPDRAWITEMSTRUCT dis) { return 0; };
 
-        Theme &m_theme;
         std::list<SettingsLine *> m_groupItemsList;
-
 
     public:
 

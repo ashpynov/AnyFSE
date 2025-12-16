@@ -30,10 +30,11 @@
 #include <functional>
 #include "Tools/Event.hpp"
 #include "Theme.hpp"
+#include "FluentControl.hpp"
 
 namespace FluentDesign
 {
-    class Toggle
+    class Toggle : public FluentControl
     {
 
     private:
@@ -42,7 +43,6 @@ namespace FluentDesign
         static const int Layout_TextWidth = 32;
 
 
-        HWND m_hToggle;
         bool m_buttonPressed;
         bool m_buttonMouseOver;
         int  m_pressedPos = 0;
@@ -58,7 +58,6 @@ namespace FluentDesign
 
         void UpdateLayout();
 
-        Theme &m_theme;
 
     public:
         Toggle(Theme& theme);
@@ -72,7 +71,6 @@ namespace FluentDesign
 
         ~Toggle();
 
-        HWND GetHwnd() const { return m_hToggle; }
         void SetCheck(bool isChecked);
         bool GetCheck();
         Event OnChanged;

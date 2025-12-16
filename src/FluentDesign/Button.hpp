@@ -31,10 +31,11 @@
 #include "Tools/Event.hpp"
 #include "Theme.hpp"
 #include "Popup.hpp"
+#include "FluentControl.hpp"
 
 namespace FluentDesign
 {
-    class Button
+    class Button : public FluentControl
     {
 
     private:
@@ -47,8 +48,6 @@ namespace FluentDesign
         int m_stepAngle;
         UINT_PTR m_animationTimer;
         bool m_animationLoop;
-
-        HWND m_hButton;
 
         bool m_buttonPressed;
         bool m_buttonMouseOver;
@@ -81,8 +80,6 @@ namespace FluentDesign
 
         void UpdateLayout();
 
-        Theme &m_theme;
-
     public:
         Button(Theme& theme);
         Button(
@@ -94,7 +91,6 @@ namespace FluentDesign
         HWND Create(HWND hParent, int x, int y, int width, int height);
         HWND Create(HWND hParent, const std::wstring& text, const std::function<void()>& callback, int x, int y, int width, int height);
 
-        HWND GetHwnd() const { return m_hButton; }
         void SetText(const std::wstring& text);
         void SetIcon(const std::wstring& glyph, bool bSmall = false);
         void Enable(bool bEnable);

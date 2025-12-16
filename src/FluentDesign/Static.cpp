@@ -39,11 +39,10 @@ using namespace Gdiplus;
 namespace FluentDesign
 {
     Static::Static(FluentDesign::Theme &theme)
-        : m_theme(theme)
+        : FluentControl(theme)
         , m_large(false)
         , m_colorId(Theme::Colors::Text)
         , m_pImage(nullptr)
-        , m_hStatic(nullptr)
     {
         m_format.SetAlignment(Gdiplus::StringAlignmentNear);
         m_format.SetLineAlignment(Gdiplus::StringAlignmentNear);
@@ -63,7 +62,7 @@ namespace FluentDesign
     {
         Create(hParent, x, y, width, height);
         SetText(text);
-        return m_hStatic;
+        return m_hWnd;
     }
 
     HWND Static::Create(HWND hParent, int x, int y, int width, int height )
@@ -71,7 +70,7 @@ namespace FluentDesign
 
         m_designHeight = m_theme.DpiUnscale(height);
         m_designWidth = m_theme.DpiUnscale(width);
-        m_hStatic = CreateWindow(
+        m_hWnd = CreateWindow(
             L"STATIC",
             L"",
             WS_VISIBLE | WS_CHILD,
@@ -83,9 +82,9 @@ namespace FluentDesign
         {
             m_theme.OnDPIChanged += [This = this]() { This->UpdateLayout(); };
         }
-        m_theme.RegisterChild(m_hStatic);
-        SetWindowSubclass(m_hStatic, StaticSubclassProc, 0, (DWORD_PTR)this);
-        return m_hStatic;
+        m_theme.RegisterChild(m_hWnd);
+        SetWindowSubclass(m_hWnd, StaticSubclassProc, 0, (DWORD_PTR)this);
+        return m_hWnd;
     }
 
     void Static::SetText(const std::wstring &text)
@@ -108,7 +107,7 @@ namespace FluentDesign
 
     void Static::Invalidate()
     {
-        InvalidateRect(m_hStatic, NULL, TRUE);
+        InvalidateRect(m_hWnd, NULL, TRUE);
     }
 
     void Static::LoadIcon(const std::wstring &iconPath, int iconSize)
@@ -130,10 +129,10 @@ namespace FluentDesign
             delete m_pImage;
             m_pImage = nullptr;
         }
-        if (m_hStatic)
+        if (m_hWnd)
         {
-            DestroyWindow(m_hStatic);
-            m_hStatic = nullptr;
+            DestroyWindow(m_hWnd);
+            m_hWnd = nullptr;
         }
     }
 
@@ -196,7 +195,7 @@ namespace FluentDesign
     }
     void Static::UpdateLayout()
     {
-        SetWindowPos(m_hStatic, 0, 0, 0,
+        SetWindowPos(m_hWnd, 0, 0, 0,
                      m_theme.DpiScale(m_designWidth),
                      m_theme.DpiScale(m_designHeight),
                      SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
