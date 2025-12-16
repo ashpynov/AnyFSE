@@ -9,7 +9,8 @@
 
 namespace AnyFSE::App::AppSettings::Settings
 {
-    class StartupAppEditor : protected FluentDesign::Dialog
+    using namespace FluentDesign;
+    class StartupEditDlg : protected Dialog
     {
         private:
             const int Layout_DialogWidth = 480;
@@ -26,19 +27,19 @@ namespace AnyFSE::App::AppSettings::Settings
             std::wstring &m_refPath;
             std::wstring &m_refArgs;
 
-            FluentDesign::Button m_okButton;
-            FluentDesign::Button m_cancelButton;
-            FluentDesign::Button m_browseButton;
+            Button m_okButton;
+            Button m_cancelButton;
+            Button m_browseButton;
 
-            FluentDesign::TextBox m_pathEdit;
-            FluentDesign::TextBox m_argsEdit;
+            TextBox m_pathEdit;
+            TextBox m_argsEdit;
 
-            FluentDesign::Static m_captionStatic;
-            FluentDesign::Static m_pathStatic;
-            FluentDesign::Static m_argsStatic;
+            Static m_captionStatic;
+            Static m_pathStatic;
+            Static m_argsStatic;
 
-            StartupAppEditor(std::wstring& refPath, std::wstring &refArgs )
-                : FluentDesign::Dialog()
+            StartupEditDlg(std::wstring& refPath, std::wstring &refArgs )
+                : Dialog()
                 , m_refPath(refPath)
                 , m_refArgs(refArgs)
                 , m_okButton(m_theme)
@@ -64,7 +65,7 @@ namespace AnyFSE::App::AppSettings::Settings
             void Create();
             float GetFooterDesignHeight() const { return float(Layout_Margins + Layout_ButtonHeight + Layout_ButtonPadding); }
             SIZE GetDialogDesignSize() { return SIZE{Layout_DialogWidth, Layout_DialogHeight}; }
-            FluentDesign::Theme::Colors GetDialogColor() { return FluentDesign::Theme::Colors::Panel; };
-            FluentDesign::Theme::Colors GetFooterColor() { return FluentDesign::Theme::Colors::Footer; };
+            Theme::Colors GetDialogColor() { return Theme::Colors::Panel; };
+            Theme::Colors GetFooterColor() { return Theme::Colors::Footer; };
     };
 }

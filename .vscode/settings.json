@@ -1,7 +1,7 @@
 {
     "explorer.fileNesting.enabled": true,
     "explorer.fileNesting.patterns": {
-        "*.cpp": "${basename}.h, ${basename}.hpp, ${basename}.cpp, ${basename}_*.cpp",
+        "*.cpp": "${basename}.h, ${basename}.hpp, ${basename}.tpp, ${basename}.cpp, ${basename}_*.cpp",
         "*.sln": "${basename}.*.vcxproj, ${basename}.vcxproj.*, ${basename}.*.vcxproj.user, ${basename}.vcxproj, ${basename}.sln, ${basename}.suo, ${basename}.*.props",
         "*.rc" : "${basename}.rc, ${basename}.h, ${basename}.aps"
     },

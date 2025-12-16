@@ -1,21 +1,21 @@
 #include <filesystem>
-#include "StartupAppEditor.hpp"
+#include "StartupEditDlg.hpp"
 
 namespace AnyFSE::App::AppSettings::Settings
 {
-    void StartupAppEditor::OnOk()
+    void StartupEditDlg::OnOk()
     {
         m_refPath = m_pathEdit.GetText();
         m_refArgs = m_argsEdit.GetText();
         FluentDesign::Dialog::OnOK();
     }
 
-    void StartupAppEditor::OnCancel()
+    void StartupEditDlg::OnCancel()
     {
         FluentDesign::Dialog::OnCancel();
     }
 
-    void StartupAppEditor::OnBrowse()
+    void StartupEditDlg::OnBrowse()
     {
         OPENFILENAME ofn = {};
         WCHAR szFile[MAX_PATH + 1] = {};
@@ -37,19 +37,19 @@ namespace AnyFSE::App::AppSettings::Settings
         }
     }
 
-    void StartupAppEditor::ValidatePath()
+    void StartupEditDlg::ValidatePath()
     {
         namespace fs = std::filesystem;
         m_okButton.Enable(fs::exists(fs::path(m_pathEdit.GetText())));
     }
 
-    INT_PTR StartupAppEditor::EditApp(HWND hParent, std::wstring &refPath, std::wstring &refArgs)
+    INT_PTR StartupEditDlg::EditApp(HWND hParent, std::wstring &refPath, std::wstring &refArgs)
     {
-        StartupAppEditor dialog(refPath, refArgs);
+        StartupEditDlg dialog(refPath, refArgs);
         return dialog.Show(hParent);
     }
 
-    void StartupAppEditor::Create()
+    void StartupEditDlg::Create()
     {
         RECT rc;
         GetClientRect(m_hDialog, &rc);

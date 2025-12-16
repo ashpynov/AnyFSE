@@ -36,7 +36,6 @@
 #include "Tools/Window.hpp"
 #include "Tools/Registry.hpp"
 #include "Tools/Process.hpp"
-#include "StartupAppEditor.hpp"
 
 #define byte ::byte
 
@@ -85,7 +84,6 @@ namespace AnyFSE::App::AppSettings::Settings
         }
         return res;
     }
-
 
     void SettingsDialog::CenterDialog(HWND hwnd)
     {
@@ -336,8 +334,8 @@ namespace AnyFSE::App::AppSettings::Settings
                 DeleteObject(back);
 
                 GetDialogRect(&r);
-                r.left += m_theme.DpiScale(Layout_MarginLeft);
-                r.top += m_theme.DpiScale(Layout_CaptionHeight);
+                r.left += m_theme.DpiScale(Layout::MarginLeft);
+                r.top += m_theme.DpiScale(Layout::CaptionHeight);
 
                 WCHAR *text1 = L"Any Full Screen Experience";
 
@@ -451,38 +449,9 @@ namespace AnyFSE::App::AppSettings::Settings
     void SettingsDialog::GetDialogRect(RECT *prc)
     {
         GetClientRect(m_hDialog, prc);
-        int width = min(m_theme.DpiScale(Layout_MaxWidth), prc->right - prc->left);
+        int width = min(m_theme.DpiScale(Layout::MaxWidth), prc->right - prc->left);
         prc->left = (prc->right - prc->left - width) / 2;
         prc->right = prc->left + width;
-    }
-
-    template<class T>
-    FluentDesign::SettingsLine& SettingsDialog::AddSettingsLine(std::list<SettingsLine>& page,
-        ULONG &top, const std::wstring& name, const std::wstring& desc, T& control,
-        int height, int padding, int contentMargin, int contentWidth, int contentHeight )
-    {
-        RECT rect;
-        GetDialogRect(&rect);
-        int width = rect.right - rect.left
-            - m_theme.DpiScale(Layout_MarginLeft - Layout_Border)
-            - m_theme.DpiScale(Layout_MarginRight - Layout_Border);
-
-        page.emplace_back(
-            m_theme, m_hScrollView, name, desc,
-            m_theme.DpiScale(Layout_MarginLeft - Layout_Border),
-            top, width,
-            m_theme.DpiScale(height),
-            padding,
-            [&](HWND parent) { return control.Create(parent, 0, 0,
-                m_theme.DpiScale(contentWidth), m_theme.DpiScale(contentHeight)); });
-
-        top += m_theme.DpiScale(height + padding);
-        if (contentMargin)
-        {
-            page.back().SetLeftMargin(contentMargin);
-        }
-
-        return page.back();
     }
 
     FluentDesign::SettingsLine& SettingsDialog::AddSettingsLine(
@@ -493,13 +462,13 @@ namespace AnyFSE::App::AppSettings::Settings
         RECT rect;
         GetDialogRect(&rect);
         int width = rect.right - rect.left
-            - m_theme.DpiScale(Layout_MarginLeft - Layout_Border)
-            - m_theme.DpiScale(Layout_MarginRight - Layout_Border);
+            - m_theme.DpiScale(Layout::MarginLeft - Layout::Border)
+            - m_theme.DpiScale(Layout::MarginRight - Layout::Border);
 
 
         page.emplace_back(
             m_theme, m_hScrollView, name, desc,
-            m_theme.DpiScale(Layout_MarginLeft - Layout_Border ),
+            m_theme.DpiScale(Layout::MarginLeft - Layout::Border ),
             top, width,
             m_theme.DpiScale(height),
             padding
@@ -514,8 +483,10 @@ namespace AnyFSE::App::AppSettings::Settings
         return page.back();
     }
 
-    void SettingsDialog::SwitchActivePage(std::list<SettingsLine> * pPageList, bool back)
+    void SettingsDialog::SwitchActivePage(const std::wstring& pageName, std::list<SettingsLine> * pPageList, bool back)
     {
+        m_pageName = pageName;
+
         if (!pPageList || pPageList == m_pActivePageList)
         {
             return;
@@ -579,48 +550,48 @@ namespace AnyFSE::App::AppSettings::Settings
         GetClientRect(m_hDialog, &rect);
 
         MoveWindow(m_captionStatic.GetHwnd(),
-            m_theme.DpiScale(Layout_BackButtonMargin * 2 + Layout_BackButtonSize),
-            m_theme.DpiScale(Layout_BackButtonMargin),
+            m_theme.DpiScale(Layout::BackButtonMargin * 2 + Layout::BackButtonSize),
+            m_theme.DpiScale(Layout::BackButtonMargin),
             m_theme.DpiScale(200),
-            m_theme.DpiScale(Layout_BackButtonSize - 4),
+            m_theme.DpiScale(Layout::BackButtonSize - 4),
             FALSE);
 
         MoveWindow(m_captionBackButton.GetHwnd(),
-            m_theme.DpiScale(Layout_BackButtonMargin),
-            m_theme.DpiScale(Layout_BackButtonMargin),
-            m_theme.DpiScale(Layout_BackButtonSize),
-            m_theme.DpiScale(Layout_BackButtonSize),
+            m_theme.DpiScale(Layout::BackButtonMargin),
+            m_theme.DpiScale(Layout::BackButtonMargin),
+            m_theme.DpiScale(Layout::BackButtonSize),
+            m_theme.DpiScale(Layout::BackButtonSize),
             FALSE);
 
         MoveWindow(m_captionMaximizeButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 2),
+            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth * 2),
             -1,
-            m_theme.DpiScale(Layout_CaptionButtonWidth ),
-            m_theme.DpiScale(Layout_CaptionHeight),
+            m_theme.DpiScale(Layout::CaptionButtonWidth ),
+            m_theme.DpiScale(Layout::CaptionHeight),
             FALSE);
 
         MoveWindow(m_captionMinimizeButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 3),
+            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth * 3),
             -1,
-            m_theme.DpiScale(Layout_CaptionButtonWidth),
-            m_theme.DpiScale(Layout_CaptionHeight),
+            m_theme.DpiScale(Layout::CaptionButtonWidth),
+            m_theme.DpiScale(Layout::CaptionHeight),
             FALSE);
 
         MoveWindow(m_captionCloseButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth),
+            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth),
             -1,
-            m_theme.DpiScale(Layout_CaptionButtonWidth),
-            m_theme.DpiScale(Layout_CaptionHeight),
+            m_theme.DpiScale(Layout::CaptionButtonWidth),
+            m_theme.DpiScale(Layout::CaptionHeight),
             FALSE);
 
         RECT scrollRect {
-            m_theme.DpiScale(Layout_Border),
-            rect.top + m_theme.DpiScale(Layout_MarginTop + GetSystemMetrics(SM_CYCAPTION)),
-            rect.right - m_theme.DpiScale(Layout_Border),
+            m_theme.DpiScale(Layout::Border),
+            rect.top + m_theme.DpiScale(Layout::MarginTop + GetSystemMetrics(SM_CYCAPTION)),
+            rect.right - m_theme.DpiScale(Layout::Border),
             rect.bottom
-                - m_theme.DpiScale(Layout_MarginBottom)
-                - m_theme.DpiScale(Layout_ButtonHeight)
-                - m_theme.DpiScale(Layout_ButtonPadding)
+                - m_theme.DpiScale(Layout::MarginBottom)
+                - m_theme.DpiScale(Layout::ButtonHeight)
+                - m_theme.DpiScale(Layout::ButtonPadding)
             };
 
         Window::MoveWindow(m_scrollView.GetHwnd(), &scrollRect, FALSE);
@@ -629,27 +600,27 @@ namespace AnyFSE::App::AppSettings::Settings
         GetDialogRect(&rect);
 
         rect.top = rect.bottom
-            - m_theme.DpiScale(Layout_MarginBottom)
-            - m_theme.DpiScale(Layout_ButtonHeight);
+            - m_theme.DpiScale(Layout::MarginBottom)
+            - m_theme.DpiScale(Layout::ButtonHeight);
 
-        rect.right -= m_theme.DpiScale(Layout_MarginRight);
-        rect.left  += m_theme.DpiScale(Layout_MarginLeft);
+        rect.right -= m_theme.DpiScale(Layout::MarginRight);
+        rect.left  += m_theme.DpiScale(Layout::MarginLeft);
 
         MoveWindow(m_okButton.GetHwnd(),
             rect.right
-                - m_theme.DpiScale(Layout_OKWidth)
-                - m_theme.DpiScale(Layout_ButtonPadding)
-                - m_theme.DpiScale(Layout_CloseWidth),
+                - m_theme.DpiScale(Layout::OKWidth)
+                - m_theme.DpiScale(Layout::ButtonPadding)
+                - m_theme.DpiScale(Layout::CloseWidth),
             rect.top,
-            m_theme.DpiScale(Layout_OKWidth),
-            m_theme.DpiScale(Layout_ButtonHeight),
+            m_theme.DpiScale(Layout::OKWidth),
+            m_theme.DpiScale(Layout::ButtonHeight),
             FALSE);
 
         MoveWindow(m_closeButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(Layout_CloseWidth),
+            rect.right - m_theme.DpiScale(Layout::CloseWidth),
             rect.top,
-            m_theme.DpiScale(Layout_CloseWidth),
-            m_theme.DpiScale(Layout_ButtonHeight),
+            m_theme.DpiScale(Layout::CloseWidth),
+            m_theme.DpiScale(Layout::ButtonHeight),
             FALSE);
 
         MoveUpdateControls();
@@ -674,65 +645,65 @@ namespace AnyFSE::App::AppSettings::Settings
         }
 
         MoveWindow(m_captionMaximizeButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 2 ),
+            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth * 2 ),
             rect.top,
-            m_theme.DpiScale(Layout_CaptionButtonWidth),
-            m_theme.DpiScale(Layout_CaptionHeight),
+            m_theme.DpiScale(Layout::CaptionButtonWidth),
+            m_theme.DpiScale(Layout::CaptionHeight),
             FALSE
         );
 
         MoveWindow(m_captionMinimizeButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 3 ),
+            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth * 3 ),
             rect.top,
-            m_theme.DpiScale(Layout_CaptionButtonWidth),
-            m_theme.DpiScale(Layout_CaptionHeight),
+            m_theme.DpiScale(Layout::CaptionButtonWidth),
+            m_theme.DpiScale(Layout::CaptionHeight),
             FALSE
         );
 
         MoveWindow(m_captionCloseButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth),
+            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth),
             rect.top,
-            m_theme.DpiScale(Layout_CaptionButtonWidth),
-            m_theme.DpiScale(Layout_CaptionHeight),
+            m_theme.DpiScale(Layout::CaptionButtonWidth),
+            m_theme.DpiScale(Layout::CaptionHeight),
             FALSE
         );
 
         MoveWindow(m_scrollView.GetHwnd(),
-            m_theme.DpiScale(Layout_Border),
-            rect.top + m_theme.DpiScale(Layout_MarginTop + GetSystemMetrics(SM_CYCAPTION)),
-            rect.right - m_theme.DpiScale(Layout_Border * 2),
+            m_theme.DpiScale(Layout::Border),
+            rect.top + m_theme.DpiScale(Layout::MarginTop + GetSystemMetrics(SM_CYCAPTION)),
+            rect.right - m_theme.DpiScale(Layout::Border * 2),
             rect.bottom
-                - m_theme.DpiScale(Layout_MarginBottom)
-                - m_theme.DpiScale(Layout_MarginTop + GetSystemMetrics(SM_CYCAPTION))
-                - m_theme.DpiScale(Layout_ButtonHeight)
-                - m_theme.DpiScale(Layout_ButtonPadding),
+                - m_theme.DpiScale(Layout::MarginBottom)
+                - m_theme.DpiScale(Layout::MarginTop + GetSystemMetrics(SM_CYCAPTION))
+                - m_theme.DpiScale(Layout::ButtonHeight)
+                - m_theme.DpiScale(Layout::ButtonPadding),
             FALSE
         );
 
         GetDialogRect(&rect);
         rect.top = rect.bottom
-            - m_theme.DpiScale(Layout_MarginBottom)
-            - m_theme.DpiScale(Layout_ButtonHeight);
+            - m_theme.DpiScale(Layout::MarginBottom)
+            - m_theme.DpiScale(Layout::ButtonHeight);
 
-        rect.right -= m_theme.DpiScale(Layout_MarginRight);
-        rect.left  += m_theme.DpiScale(Layout_MarginLeft);
+        rect.right -= m_theme.DpiScale(Layout::MarginRight);
+        rect.left  += m_theme.DpiScale(Layout::MarginLeft);
 
         MoveWindow(m_okButton.GetHwnd(),
             rect.right
-                - m_theme.DpiScale(Layout_OKWidth)
-                - m_theme.DpiScale(Layout_ButtonPadding)
-                - m_theme.DpiScale(Layout_CloseWidth),
+                - m_theme.DpiScale(Layout::OKWidth)
+                - m_theme.DpiScale(Layout::ButtonPadding)
+                - m_theme.DpiScale(Layout::CloseWidth),
             rect.top,
-            m_theme.DpiScale(Layout_OKWidth),
-            m_theme.DpiScale(Layout_ButtonHeight),
+            m_theme.DpiScale(Layout::OKWidth),
+            m_theme.DpiScale(Layout::ButtonHeight),
             FALSE
         );
 
         MoveWindow(m_closeButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(Layout_CloseWidth),
+            rect.right - m_theme.DpiScale(Layout::CloseWidth),
             rect.top,
-            m_theme.DpiScale(Layout_CloseWidth),
-            m_theme.DpiScale(Layout_ButtonHeight),
+            m_theme.DpiScale(Layout::CloseWidth),
+            m_theme.DpiScale(Layout::ButtonHeight),
             FALSE
         );
 
@@ -752,19 +723,11 @@ namespace AnyFSE::App::AppSettings::Settings
 
     void SettingsDialog::UpdateLayout()
     {
-        for (auto &page:
-            {
-                &m_customSettingPageList,
-                &m_splashSettingPageList,
-                &m_troubleshootSettingPageList,
-                &m_startupSettingPageList,
-                &m_updateSettingPageList
-            }
-        )
+        for (auto &page: m_pages)
         {
-            if (page != m_pActivePageList)
+            if (&(page->GetSettingsLines()) != m_pActivePageList)
             {
-                for (auto& line: *page)
+                for (auto& line: page->GetSettingsLines())
                 {
                     ShowWindow(line.GetHWnd(), SW_HIDE);
                 }
@@ -776,10 +739,10 @@ namespace AnyFSE::App::AppSettings::Settings
         RECT rect;
         GetDialogRect(&rect);
         int width = rect.right - rect.left
-            - m_theme.DpiScale(Layout_MarginLeft)
-            - m_theme.DpiScale(Layout_MarginRight);
+            - m_theme.DpiScale(Layout::MarginLeft)
+            - m_theme.DpiScale(Layout::MarginRight);
 
-        int left = rect.left + m_theme.DpiScale(Layout_MarginLeft);
+        int left = rect.left + m_theme.DpiScale(Layout::MarginLeft);
 
         ULONG top = -m_scrollView.GetScrollPos();
         if (m_pActivePageList)
@@ -806,288 +769,16 @@ namespace AnyFSE::App::AppSettings::Settings
         return FindWindow(L"AnyFSE", NULL);
     }
 
-    void SettingsDialog::AddCustomSettingsPage()
-    {
-        ULONG top = 0;
-
-        SettingsLine & parametersSettingsLine = AddSettingsLine(m_customSettingPageList, top,
-            L"Additional arguments",
-            L"Command line arguments passed to application",
-            m_additionalArgumentsEdit,
-            Layout_LineHeight, Layout_LinePadding, 0);
-
-        parametersSettingsLine.SetIcon(L'\xE62F');
-
-        SettingsLine & primarySettingsLine = AddSettingsLine(m_customSettingPageList, top,
-            L"Home application detection",
-            L"Parameters to detect home application is started",
-            Layout_LineHeightSmall, 0, 0);
-
-
-        primarySettingsLine.SetState(SettingsLine::State::Closed);
-        primarySettingsLine.OnChanged += delegate(UpdateLayout);
-        primarySettingsLine.SetIcon(L'\xF8A5');
-
-        primarySettingsLine.AddGroupItem(&AddSettingsLine(m_customSettingPageList, top,
-            L"Process name",
-            L"Name of home application process",
-            m_processNameEdit,
-            Layout_LineHeightSmall, 0, Layout_LineSmallMargin));
-
-        primarySettingsLine.AddGroupItem(&AddSettingsLine(m_customSettingPageList, top,
-            L"Window class name",
-            L"Class of application main window",
-            m_classEdit,
-            Layout_LineHeightSmall, 0, Layout_LineSmallMargin));
-
-        primarySettingsLine.AddGroupItem(&AddSettingsLine(m_customSettingPageList, top,
-            L"Window title",
-            L"Title of app window when it have been activated",
-            m_titleEdit,
-            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin));
-
-        SettingsLine & secondarySettingsLine = AddSettingsLine(m_customSettingPageList, top,
-            L"Alternative mode detection",
-            L"Parameters to detect home application is started in alternative mode",
-            Layout_LineHeightSmall, 0, 0);
-
-        secondarySettingsLine.SetState(SettingsLine::State::Closed);
-        secondarySettingsLine.OnChanged += delegate(UpdateLayout);
-        secondarySettingsLine.SetIcon(L'\xE737');
-
-        secondarySettingsLine.AddGroupItem(&AddSettingsLine(m_customSettingPageList, top,
-            L"Secondary process name",
-            L"Name of app process for alternative mode",
-            m_processNameAltEdit,
-            Layout_LineHeightSmall, 0, Layout_LineSmallMargin));
-
-        secondarySettingsLine.AddGroupItem(&AddSettingsLine(m_customSettingPageList, top,
-            L"Secondary window class name",
-            L"Alternative Class name of app window",
-            m_classAltEdit,
-            Layout_LineHeightSmall, 0, Layout_LineSmallMargin));
-
-        secondarySettingsLine.AddGroupItem(&AddSettingsLine(m_customSettingPageList, top,
-            L"Secondary window title",
-            L"Alternative Title of app window",
-            m_titleAltEdit,
-            Layout_LineHeightSmall, 0, Layout_LineSmallMargin));
-
-        AddSettingsLine(m_customSettingPageList, top,
-            L"",
-            L"",
-            m_customResetButton,
-            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin,
-            Layout_StartupAddWidth, Layout_StartupAddHeight
-        ).SetState(FluentDesign::SettingsLine::Caption);
-
-        m_customResetButton.SetText(L"Reset");
-        m_customResetButton.OnChanged = delegate(OnCustomReset);
-
-        m_additionalArgumentsEdit.OnChanged += delegate(UpdateCustomResetEnabled);
-        m_processNameEdit.OnChanged += delegate(UpdateCustomResetEnabled);
-        m_processNameAltEdit.OnChanged += delegate(UpdateCustomResetEnabled);
-        m_titleEdit.OnChanged += delegate(UpdateCustomResetEnabled);
-        m_titleAltEdit.OnChanged += delegate(UpdateCustomResetEnabled);
-        m_classEdit.OnChanged += delegate(UpdateCustomResetEnabled);
-        m_classAltEdit.OnChanged += delegate(UpdateCustomResetEnabled);
-    }
-
-    void SettingsDialog::OnGotoSplashFolder()
-    {
-        std::wstring path = Config::GetModulePath() + L"\\splash";
-
-        CreateDirectoryW(path.c_str(), NULL);
-        Process::StartProtocol(L"\"" + path + L"\"");
-    }
-
-    void SettingsDialog::AddSplashSettingsPage()
-    {
-        ULONG top = 0;
-        m_pSplashTextLine = &AddSettingsLine(m_splashSettingPageList, top,
-            L"Show Loading text",
-            L"",
-            m_splashShowTextToggle,
-            Layout_LineHeight, 0, 0);
-
-        m_pSplashTextLine->AddGroupItem(&AddSettingsLine(m_splashSettingPageList, top,
-            L"Use Custom Text",
-            L"",
-            m_splashCustomTextEdit,
-            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin));
-
-        m_pSplashLogoLine = &AddSettingsLine(m_splashSettingPageList, top,
-            L"Show Home application Logo",
-            L"",
-            m_splashShowLogoToggle,
-            Layout_LineHeight, 0, 0);
-
-        m_pSplashLogoLine->AddGroupItem(&AddSettingsLine(m_splashSettingPageList, top,
-            L"Animate Logo",
-            L"",
-            m_splashShowAnimationToggle,
-            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin));
-
-
-        m_pSplashVideoLine = &AddSettingsLine(m_splashSettingPageList, top,
-            L"Show Video",
-            L"Show random video from \"splash\" folder",
-            m_splashShowVideoToggle,
-            Layout_LineHeight, 0, 0);
-
-        m_pSplashVideoLine->OnLink = delegate(OnGotoSplashFolder);
-
-        m_pSplashVideoLine->AddGroupItem(&AddSettingsLine(m_splashSettingPageList, top,
-            L"Loop video",
-            L"",
-            m_splashShowVideoLoopToggle,
-            Layout_LineHeightSmall, 0, Layout_LineSmallMargin));
-
-        m_pSplashVideoLine->AddGroupItem(&AddSettingsLine(m_splashSettingPageList, top,
-            L"Mute video",
-            L"",
-            m_splashShowVideoMuteToggle,
-            Layout_LineHeightSmall, 0, Layout_LineSmallMargin));
-
-        m_pSplashVideoLine->AddGroupItem(&AddSettingsLine(m_splashSettingPageList, top,
-            L"Pause completed",
-            L"Show last frame when video completed earlier than home app start",
-            m_splashShowVideoPauseToggle,
-            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin));
-    }
-
-    void SettingsDialog::OnGotoLogsFolder()
-    {
-        std::wstring path = Config::GetModulePath() + L"\\logs";
-
-        CreateDirectoryW(path.c_str(), NULL);
-        Process::StartProtocol(L"\"" + path + L"\"");
-    }
-
-    void SettingsDialog::AddTroubleshootSettingsPage()
-    {
-        ULONG top = 0;
-        FluentDesign::SettingsLine &logLevel = AddSettingsLine(m_troubleshootSettingPageList,
-            top,
-            L"Log level",
-            L"Enable logs at specified level",
-            m_troubleLogLevelCombo,
-            Layout_LineHeight, Layout_LinePadding, 0,
-            Layout_LauncherComboWidth);
-
-        logLevel.OnLink = delegate(OnGotoLogsFolder);
-
-        for (int i = (int)LogLevels::Disabled; i < (int)LogLevels::Max; i++)
-        {
-            std::wstring level = Unicode::to_wstring(LogManager::LogLevelToString((LogLevels)i));
-            wchar_t buff[2] = {(wchar_t)i, 0};
-            m_troubleLogLevelCombo.AddItem(level, L"", buff);
-        }
-
-        AddSettingsLine(m_troubleshootSettingPageList,
-            top,
-            L"Aggressive Mode",
-            L"More simple and robust logic on XboxApp start, but you will lose any manual access to the XboxApp",
-            m_troubleAggressiveToggle,
-            Layout_LineHeight, Layout_LinePadding, 0);
-
-        AddSettingsLine(m_troubleshootSettingPageList,
-            top,
-            L"Leave full screen on Home app exit",
-            L"Exit to desktop mode after Home app was exited",
-            m_troubleExitOnExitToggle,
-            Layout_LineHeight, Layout_LinePadding, 0);
-    }
-
-    void SettingsDialog::AddStartupAppLine(const std::wstring& path, const std::wstring& args, bool enabled )
-    {
-        ULONG top = 0;
-        m_startupToggles.emplace_back(m_theme);
-        Toggle &startToggle = m_startupToggles.back();
-
-        SettingsLine & line = AddSettingsLine(m_startupSettingPageList, top,
-            L"",
-            L"",
-            startToggle,
-            Layout_LineHeight, Layout_LinePaddingSmall, 0,
-            Layout_StartupMenuButtonWidth, Layout_StartupMenuButtonHeight
-        );
-
-        SetStartupAppLine(&line, path, args);
-
-        line.SetMenu(
-            std::vector<FluentDesign::Popup::PopupItem>
-            {
-                FluentDesign::Popup::PopupItem(L"\xE13E", L"Modify",[This = this, pLine = &line](){This->OnStartupModify(pLine);}),
-                FluentDesign::Popup::PopupItem(L"\xE107", L"Delete",[This = this, pLine = &line](){This->OnStartupDelete(pLine);})
-            }
-        );
-        startToggle.SetCheck(enabled);
-        m_pStartupPageAppsHeader->AddGroupItem(&line);
-
-        m_pStartupAppLines.push_back(&line);
-    }
-
-    Toggle * SettingsDialog::GetStartupLineToggle(SettingsLine * pLine)
-    {
-        auto it = std::find_if(m_startupToggles.begin(), m_startupToggles.end(),
-             [pLine](const Toggle& obj) {return obj.GetHwnd() == pLine->GetChildControl();});
-        return it != m_startupToggles.end() ? &(*it) : nullptr;
-    }
-
-    void SettingsDialog::SetStartupAppLine(SettingsLine *pLine, const std::wstring& path, const std::wstring& args)
-    {
-        pLine->SetData(0, path);
-        pLine->SetData(1, args);
-
-
-        pLine->SetName(Config::GetApplicationName(path));
-        pLine->SetDescription(path + L" " + args);
-
-        if (!path.empty())
-        {
-            pLine->SetIcon(path);
-        }
-    }
-
-    void SettingsDialog::OnStartupAdd()
-    {
-        OnStartupModify(NULL);
-    }
-
-    void SettingsDialog::OnStartupModify(SettingsLine * pLine)
-    {
-        std::wstring path = pLine ? pLine->GetData(0) : L"";
-        std::wstring args = pLine ? pLine->GetData(1) : L"";
-        if (IDOK == StartupAppEditor::EditApp(m_hDialog, path, args))
-        {
-            pLine ? SetStartupAppLine(pLine, path, args) : AddStartupAppLine(path, args, true);
-            UpdateLayout();
-        }
-    }
-
-    void SettingsDialog::OnStartupDelete(SettingsLine * pLine)
-    {
-        if (pLine->GetGroupHeader())
-        {
-            pLine->GetGroupHeader()->DeleteGroupItem(pLine);
-        }
-        m_startupToggles.remove_if([pLine](const Toggle& obj) {return obj.GetHwnd() == pLine->GetChildControl();});
-        m_pStartupAppLines.remove_if([pLine](const SettingsLine* obj) {return obj == pLine;});
-        m_startupSettingPageList.remove_if([pLine](const SettingsLine& obj) {return &obj == pLine;});
-        UpdateLayout();
-    }
-
     void SettingsDialog::AddMinimizeButton()
     {
         RECT rect;
         GetClientRect(m_hDialog, &rect);
 
         m_captionMinimizeButton.Create(m_hDialog,
-            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 3 ),
+            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth * 3 ),
             -1,
-            m_theme.DpiScale(Layout_CaptionButtonWidth),
-            m_theme.DpiScale(Layout_CaptionHeight));
+            m_theme.DpiScale(Layout::CaptionButtonWidth),
+            m_theme.DpiScale(Layout::CaptionHeight));
 
         SetWindowLong(m_captionMinimizeButton.GetHwnd(), GWL_STYLE,
             GetWindowLong(m_captionMinimizeButton.GetHwnd(), GWL_STYLE) & ~WS_TABSTOP );
@@ -1103,10 +794,10 @@ namespace AnyFSE::App::AppSettings::Settings
         RECT rect;
         GetClientRect(m_hDialog, &rect);
         m_captionMaximizeButton.Create(m_hDialog,
-            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth * 2 ),
+            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth * 2 ),
             -1,
-            m_theme.DpiScale(Layout_CaptionButtonWidth),
-            m_theme.DpiScale(Layout_CaptionHeight));
+            m_theme.DpiScale(Layout::CaptionButtonWidth),
+            m_theme.DpiScale(Layout::CaptionHeight));
 
         UpdateMaximizeButtonIcon();
 
@@ -1124,10 +815,10 @@ namespace AnyFSE::App::AppSettings::Settings
         GetClientRect(m_hDialog, &rect);
 
         m_captionCloseButton.Create(m_hDialog,
-            rect.right - m_theme.DpiScale(Layout_CaptionButtonWidth),
+            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth),
             -1,
-            m_theme.DpiScale(Layout_CaptionButtonWidth),
-            m_theme.DpiScale(Layout_CaptionHeight));
+            m_theme.DpiScale(Layout::CaptionButtonWidth),
+            m_theme.DpiScale(Layout::CaptionHeight));
 
         SetWindowLong(m_captionCloseButton.GetHwnd(), GWL_STYLE,
             GetWindowLong(m_captionCloseButton.GetHwnd(), GWL_STYLE) & ~WS_TABSTOP );
@@ -1143,40 +834,46 @@ namespace AnyFSE::App::AppSettings::Settings
             Theme::Colors::Default, Theme::Colors::CloseButtonPressed);
     }
 
-    void SettingsDialog::AddStartupSettingsPage()
+    void SettingsDialog::AddCaption()
     {
-        ULONG top = 0;
-        SettingsLine &startupAppLinkLine = AddSettingsLine(m_startupSettingPageList, top,
-            L"Native startup settings",
-            L"Configure startup apps using native windows settings",
-            Layout_LineHeight, Layout_LinePadding, 0);
+        RECT rect;
+        GetClientRect(m_hDialog, &rect);
 
-        startupAppLinkLine.SetState(FluentDesign::SettingsLine::Link);
-        startupAppLinkLine.SetIcon(L'\xE18C');
-        startupAppLinkLine.OnChanged += delegate(OpenMSSettingsStartupApps);
+        m_captionStatic.Create(m_hDialog,
+            m_theme.DpiScale(Layout::BackButtonMargin * 2 + Layout::BackButtonSize),
+            m_theme.DpiScale(Layout::BackButtonMargin),
+            m_theme.DpiScale(200),
+            m_theme.DpiScale(Layout::BackButtonSize - 4));
+        m_captionStatic.Format().SetLineAlignment(Gdiplus::StringAlignment::StringAlignmentCenter);
 
-        m_pStartupPageAppsHeader = &AddSettingsLine(m_startupSettingPageList, top,
-            L"Additional startup applications",
-            L"Configure specific applications to be executed by AnyFSE on fullscreen experience enter",
-            Layout_LineHeight, 0, 0
+        m_captionStatic.SetText(L"Settings");
+
+        m_captionBackButton.Create(m_hDialog,
+            m_theme.DpiScale(Layout::BackButtonMargin),
+            m_theme.DpiScale(Layout::BackButtonMargin),
+            m_theme.DpiScale(Layout::BackButtonSize),
+            m_theme.DpiScale(Layout::BackButtonSize));
+
+        m_captionBackButton.SetIcon(L"\xE64E");
+        m_captionBackButton.OnChanged += delegate(OpenSettingsPage);
+        m_captionBackButton.SetFlat(true);
+        m_captionBackButton.Enable(false);
+    }
+
+    void SettingsDialog::AddScrollPanel()
+    {
+        RECT rect;
+        GetClientRect(m_hDialog, &rect);
+        m_hScrollView = m_scrollView.Create(m_hDialog,
+            m_theme.DpiScale(Layout::Border),
+            rect.top + m_theme.DpiScale(Layout::MarginTop + GetSystemMetrics(SM_CYCAPTION)),
+            rect.right - m_theme.DpiScale(Layout::Border * 2),
+            rect.bottom
+                - m_theme.DpiScale(Layout::MarginBottom)
+                - m_theme.DpiScale(Layout::MarginTop + GetSystemMetrics(SM_CYCAPTION))
+                - m_theme.DpiScale(Layout::ButtonHeight)
+                - m_theme.DpiScale(Layout::ButtonPadding)
         );
-
-        m_pStartupPageAppsHeader->SetState(FluentDesign::SettingsLine::Caption);
-
-        SettingsLine & line = AddSettingsLine(m_startupSettingPageList, top,
-            L"",
-            L"",
-            m_startupAddButton,
-            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin,
-            Layout_StartupAddWidth, Layout_StartupAddHeight
-        );
-
-        m_startupAddButton.SetText(L"Add");
-        m_startupAddButton.OnChanged = delegate(OnStartupAdd);
-        line.SetState(FluentDesign::SettingsLine::Caption);
-
-        //AddStartupAppLine(L"Playnite", L"C:\\Tools\\playnite\\PlayniteInstaller.exe", L"--hiddensplash");
-        //AddStartupAppLine(L"Explorer", L"c:\\windows\\explorer.exe", L"ms-settings:startupapps");
     }
 
     void SettingsDialog::OnInitDialog(HWND hwnd)
@@ -1184,255 +881,59 @@ namespace AnyFSE::App::AppSettings::Settings
         RECT rect;
         GetClientRect(m_hDialog, &rect);
 
-        m_captionStatic.Create(m_hDialog,
-            m_theme.DpiScale(Layout_BackButtonMargin * 2 + Layout_BackButtonSize),
-            m_theme.DpiScale(Layout_BackButtonMargin),
-            m_theme.DpiScale(200),
-            m_theme.DpiScale(Layout_BackButtonSize - 4));
-        m_captionStatic.Format().SetLineAlignment(Gdiplus::StringAlignment::StringAlignmentCenter);
-
-        m_captionStatic.SetText(L"Settings");
-
-        m_captionBackButton.Create(m_hDialog,
-            m_theme.DpiScale(Layout_BackButtonMargin),
-            m_theme.DpiScale(Layout_BackButtonMargin),
-            m_theme.DpiScale(Layout_BackButtonSize),
-            m_theme.DpiScale(Layout_BackButtonSize));
-
-        m_captionBackButton.SetIcon(L"\xE64E");
-        m_captionBackButton.OnChanged += delegate(OpenSettingsPage);
-        m_captionBackButton.SetFlat(true);
-        m_captionBackButton.Enable(false);
-
+        AddCaption();
         AddMinimizeButton();
         AddMaximizeButton();
         AddCloseButton();
-
-        m_hScrollView = m_scrollView.Create(m_hDialog,
-            m_theme.DpiScale(Layout_Border),
-            rect.top + m_theme.DpiScale(Layout_MarginTop + GetSystemMetrics(SM_CYCAPTION)),
-            rect.right - m_theme.DpiScale(Layout_Border * 2),
-            rect.bottom
-                - m_theme.DpiScale(Layout_MarginBottom)
-                - m_theme.DpiScale(Layout_MarginTop + GetSystemMetrics(SM_CYCAPTION))
-                - m_theme.DpiScale(Layout_ButtonHeight)
-                - m_theme.DpiScale(Layout_ButtonPadding)
-        );
-
+        AddScrollPanel();
 
         ULONG top = 0;
 
-        FluentDesign::SettingsLine &launcher = AddSettingsLine(m_settingPageList, top,
-            L"Choose home app",
-            L"Choose home application for full screen experience",
-            m_launcherCombo,
-            Layout_LineHeight, Layout_LauncherBrowsePadding, 0,
-            Layout_LauncherComboWidth );
+        for (auto& page: m_pages)
+        {
+            page->AddPage(m_settingPageList, top);
+        }
 
-        launcher.SetFrame(Gdiplus::FrameFlags::SIDE_NO_BOTTOM | Gdiplus::FrameFlags::CORNER_TOP);
-
-        FluentDesign::SettingsLine &browse = AddSettingsLine(m_settingPageList, top,
-            L"",
-            L"",
-            m_browseButton,
-            Layout_LauncherBrowseLineHeight, Layout_LinePadding, 0,
-            Layout_BrowseWidth, Layout_BrowseHeight);
-
-        browse.SetFrame(Gdiplus::FrameFlags::SIDE_NO_TOP | Gdiplus::FrameFlags::CORNER_BOTTOM);
-
-        m_pFseOnStartupLine = &AddSettingsLine(m_settingPageList, top,
-            L"Enter full screen experience on startup",
-            L"",
-            m_fseOnStartupToggle,
-            Layout_LineHeight, Layout_LinePadding, 0);
-
-        m_pCustomSettingsLine = &AddSettingsLine(m_settingPageList, top,
-            L"Use custom settings",
-            L"Change monitoring and startups settings for selected home application",
-            m_customSettingsToggle,
-            Layout_LineHeight, Layout_LinePadding, 0);
-
-        m_pCustomSettingsLine->SetState(FluentDesign::SettingsLine::Next);
-        m_pCustomSettingsLine->SetIcon(L'\xE115');
-        m_pCustomSettingsLine->OnChanged += delegate(OpenCustomSettingsPage);
-
-        AddCustomSettingsPage();
-
-        AddUpdateSettingsPage(top);
-
-        m_pSplashPageLine = &AddSettingsLine(m_settingPageList, top,
-            L"Splash screen settings",
-            L"Configure Look'n'Feel of splash screen during home app loading",
-            Layout_LineHeight, Layout_LinePadding, 0);
-
-        m_pSplashPageLine->SetState(FluentDesign::SettingsLine::Next);
-        m_pSplashPageLine->SetIcon(L'\xEB9F');
-        m_pSplashPageLine->OnChanged += delegate(OpenSplashSettingsPage);
-
-        AddSplashSettingsPage();
-
-        m_pTroubleshootPageLine = &AddSettingsLine(m_settingPageList, top,
-            L"Debug and Troubleshoot",
-            L"Configure logs and advanced parameters",
-            Layout_LineHeight, Layout_LinePadding, 0);
-
-        m_pTroubleshootPageLine->SetState(FluentDesign::SettingsLine::Next);
-        m_pTroubleshootPageLine->SetIcon(L'\xEBE8');
-        m_pTroubleshootPageLine->OnChanged += delegate(OpenTroubleshootSettingsPage);
-
-        AddTroubleshootSettingsPage();
-
-        m_pStartupPageLine = &AddSettingsLine(m_settingPageList, top,
-            L"Startup",
-            L"Apps that start automatically when you sign in full screen experience",
-            Layout_LineHeight, Layout_LinePadding, 0);
-
-        m_pStartupPageLine->SetState(FluentDesign::SettingsLine::Next);
-        m_pStartupPageLine->SetIcon(L'\xE18C');
-        m_pStartupPageLine->OnChanged += delegate(OpenStartupSettingsPage);
-
-        AddStartupSettingsPage();
-
-        AddSettingsLine(m_settingPageList, top,
-            L"Related support",
-            L"",
-            Layout_LineHeightSmall, 0, 0
-        ).SetState(FluentDesign::SettingsLine::Caption);
-
-        SettingsLine &support = AddSettingsLine(m_settingPageList, top,
-            L"Support and community",
-            L"",
-            Layout_LineHeight, 0, 0);
-
-        support.SetIcon(L'\xF6FA');
-        support.OnChanged += delegateparam(UpdateLine, &support);
-
-        SettingsLine &links = AddSettingsLine(m_settingPageList, top,
-            L"",
-            L"",
-            Layout_LineHeightSmall, Layout_LinePadding, Layout_LineSmallMargin);
-
-        support.AddGroupItem(&links);
-
-        // links.SetMaxColumns(1);
-        links.AddLinkButton(L"Discord AnyFSE community channel", L"https://discord.gg/AfkERzTEut");
-        links.AddLinkButton(L"GitHub repository", L"https://github.com/ashpynov/AnyFSE/");
-        links.AddLinkButton(L"Report issue or feature request", L"https://github.com/ashpynov/AnyFSE/issues");
-        links.AddLinkButton(L"Navigate to log files folder", Config::GetModulePath() + L"\\logs");
-
-        support.SetState(FluentDesign::SettingsLine::Opened);
 
         m_pActivePageList = &m_settingPageList;
         UpdateLayout();
 
         GetDialogRect(&rect);
         rect.top = rect.bottom
-            - m_theme.DpiScale(Layout_MarginBottom)
-            - m_theme.DpiScale(Layout_ButtonHeight);
+            - m_theme.DpiScale(Layout::MarginBottom)
+            - m_theme.DpiScale(Layout::ButtonHeight);
 
-        rect.right -= m_theme.DpiScale(Layout_MarginRight);
-        rect.left  += m_theme.DpiScale(Layout_MarginLeft);
+        rect.right -= m_theme.DpiScale(Layout::MarginRight);
+        rect.left  += m_theme.DpiScale(Layout::MarginLeft);
 
         AddUpdateControls();
 
         m_okButton.Create(m_hDialog,
             rect.right
-                - m_theme.DpiScale(Layout_OKWidth)
-                - m_theme.DpiScale(Layout_ButtonPadding)
-                - m_theme.DpiScale(Layout_CloseWidth),
+                - m_theme.DpiScale(Layout::OKWidth)
+                - m_theme.DpiScale(Layout::ButtonPadding)
+                - m_theme.DpiScale(Layout::CloseWidth),
             rect.top,
-            m_theme.DpiScale(Layout_OKWidth),
-            m_theme.DpiScale(Layout_ButtonHeight));
+            m_theme.DpiScale(Layout::OKWidth),
+            m_theme.DpiScale(Layout::ButtonHeight));
 
         m_okButton.SetText(L"Save");
 
         m_okButton.OnChanged += delegate(OnOk);
 
         m_closeButton.Create(m_hDialog,
-            rect.right - m_theme.DpiScale(Layout_CloseWidth),
+            rect.right - m_theme.DpiScale(Layout::CloseWidth),
             rect.top,
-            m_theme.DpiScale(Layout_CloseWidth),
-            m_theme.DpiScale(Layout_ButtonHeight));
+            m_theme.DpiScale(Layout::CloseWidth),
+            m_theme.DpiScale(Layout::ButtonHeight));
 
         m_closeButton.OnChanged += delegate(OnClose);
 
         m_closeButton.SetText(L"Discard and Close");
 
-        m_launcherCombo.OnChanged += delegate(OnLauncherChanged);
-
-        m_customSettingsToggle.OnChanged += delegate(OnCustomChanged);
-
-        m_splashShowTextToggle.OnChanged += delegate(OnShowTextChanged);
-        m_pSplashTextLine->OnChanged += delegate(UpdateLayout);
-
-        m_splashShowLogoToggle.OnChanged += delegate(OnShowLogoChanged);
-        m_pSplashLogoLine->OnChanged += delegate(UpdateLayout);
-
-        m_splashShowVideoToggle.OnChanged += delegate(OnShowVideoChanged);
-        m_pSplashVideoLine->OnChanged += delegate(UpdateLayout);
-
-        m_browseButton.SetText(L"Browse");
-        m_browseButton.OnChanged += delegate(OnBrowseLauncher);
-
-        m_currentLauncherPath = Config::Launcher.StartCommand;
-        Config::FindLaunchers(m_launchersList);
-        UpdateCombo();
-        Config::LoadLauncherSettings(m_currentLauncherPath, m_config);
-
-        bool customSettings = Config::CustomSettings;
-        m_customSettingsState = customSettings ? FluentDesign::SettingsLine::Next: FluentDesign::SettingsLine::Normal;
-
-        m_isCustom = (customSettings || m_config.IsCustom) && (
-            m_config.Type != LauncherType::Xbox
-            && m_config.Type != LauncherType::ArmouryCrate
-            && m_config.Type != LauncherType::OneGameLauncher
-        ) || m_config.Type == LauncherType::Custom;
-
-        m_isAggressive = Config::AggressiveMode && m_config.Type != LauncherType::Xbox;
-
-        for (auto app : Config::StartupApps)
+        for (auto& page: m_pages)
         {
-            AddStartupAppLine(app.Path, app.Args, app.Enabled);
-        }
-
-        UpdateLayout();
-        UpdateControls();
-        UpdateCustomSettings();
-        // m_customSettingsState = m_pCustomSettingsLine->GetState() != FluentDesign::SettingsLine::Normal
-        //                         ? m_pCustomSettingsLine->GetState()
-        //                         : FluentDesign::SettingsLine::Opened;
-    }
-
-    void SettingsDialog::ShowGroup(int groupIdx, bool show)
-    {
-        // To do
-    }
-
-    void SettingsDialog::OnBrowseLauncher()
-    {
-        OPENFILENAME ofn = {};
-        WCHAR szFile[MAX_PATH] = {};
-
-        wcsncpy_s(szFile, m_currentLauncherPath.c_str(), MAX_PATH);
-
-        ofn.lStructSize = sizeof(ofn);
-        ofn.hwndOwner = m_hDialog;
-        ofn.lpstrFile = szFile;
-        ofn.nMaxFile = sizeof(szFile);
-        ofn.lpstrFilter = L"Launchers (*.exe)\0*.exe\0\0";
-        ofn.nFilterIndex = 1;
-        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-
-        if (GetOpenFileName(&ofn))
-        {
-            if (m_currentLauncherPath != szFile)
-            {
-                m_currentLauncherPath = szFile;
-                Config::LoadLauncherSettings(m_currentLauncherPath, m_config);
-                UpdateCombo();
-                UpdateControls();
-                UpdateCustomSettings();
-            }
+            page->LoadControls();
         }
     }
 
@@ -1464,287 +965,19 @@ namespace AnyFSE::App::AppSettings::Settings
         EndDialog(m_hDialog, IDCANCEL);
     }
 
-    void SettingsDialog::InitCustomControls()
+    void SettingsDialog::SaveSettings()
     {
-        INITCOMMONCONTROLSEX icex;
-        icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-        icex.dwICC = ICC_STANDARD_CLASSES;
-        ::InitCommonControlsEx(&icex);
-    }
+        for (auto& page: m_pages)
+        {
+            page->SaveControls();
+        }
 
-    void SettingsDialog::OnShowTextChanged()
-    {
-        m_pSplashTextLine->SetState(m_splashShowTextToggle.GetCheck()
-            ? FluentDesign::SettingsLine::Opened
-            : FluentDesign::SettingsLine::Normal);
-
-        UpdateLayout();
-    }
-
-    void SettingsDialog::OnShowLogoChanged()
-    {
-        m_pSplashLogoLine->SetState(m_splashShowLogoToggle.GetCheck()
-            ? FluentDesign::SettingsLine::Opened
-            : FluentDesign::SettingsLine::Normal);
-
-        UpdateLayout();
-    }
-
-    void SettingsDialog::OnShowVideoChanged()
-    {
-        m_pSplashVideoLine->SetState(m_splashShowVideoToggle.GetCheck()
-            ? FluentDesign::SettingsLine::Opened
-            : FluentDesign::SettingsLine::Normal);
-
-        UpdateLayout();
-    }
-
-    void SettingsDialog::OnCustomChanged()
-    {
-        m_isCustom = m_customSettingsToggle.GetCheck();
-        m_pCustomSettingsLine->SetState(m_customSettingsToggle.GetCheck()
-            ? FluentDesign::SettingsLine::Next
-            : FluentDesign::SettingsLine::Normal);
-        UpdateLayout();
-    }
-
-    void SettingsDialog::OnCustomReset()
-    {
-        m_config = m_defaultConfig;
-        UpdateCustomSettings();
-    }
-
-    void SettingsDialog::UpdateCustomResetEnabled()
-    {
-        bool bEnable =
-               Unicode::to_lower(m_additionalArgumentsEdit.GetText()) != Unicode::to_lower(m_defaultConfig.StartArg)
-            || Unicode::to_lower(m_processNameEdit.GetText()) != Unicode::to_lower(m_defaultConfig.ProcessName)
-            || Unicode::to_lower(m_processNameAltEdit.GetText()) != Unicode::to_lower(m_defaultConfig.ProcessNameAlt)
-            || Unicode::to_lower(m_titleEdit.GetText()) != Unicode::to_lower(m_defaultConfig.WindowTitle)
-            || Unicode::to_lower(m_titleAltEdit.GetText()) != Unicode::to_lower(m_defaultConfig.WindowTitleAlt)
-            || Unicode::to_lower(m_classEdit.GetText()) != Unicode::to_lower(m_defaultConfig.ClassName)
-            || Unicode::to_lower(m_classAltEdit.GetText()) != Unicode::to_lower(m_defaultConfig.ClassNameAlt)
-        ;
-        m_customResetButton.Enable(bEnable);
+        Config::Save();
     }
 
     void SettingsDialog::OpenSettingsPage()
     {
-        m_pageName = L"";
-        SwitchActivePage(&m_settingPageList, true);
+        SwitchActivePage(L"", &m_settingPageList, true);
         m_theme.SwapFocus(m_settingPageList.front().GetHWnd());
-    }
-
-    void SettingsDialog::OpenCustomSettingsPage()
-    {
-        m_pageName = L"Custom settings";
-        SwitchActivePage(&m_customSettingPageList);
-    }
-
-    void SettingsDialog::OpenSplashSettingsPage()
-    {
-        m_pageName = L"Splash settings";
-        SwitchActivePage(&m_splashSettingPageList);
-    }
-
-    void SettingsDialog::OpenTroubleshootSettingsPage()
-    {
-        m_pageName = L"Troubleshoot";
-        SwitchActivePage(&m_troubleshootSettingPageList);
-    }
-
-    void SettingsDialog::OpenStartupSettingsPage()
-    {
-        m_pageName = L"Startup";
-        SwitchActivePage(&m_startupSettingPageList);
-    }
-
-    void SettingsDialog::OpenMSSettingsStartupApps()
-    {
-        Process::StartProtocol(L"ms-settings:startupapps");
-    }
-
-    void SettingsDialog::UpdateControls()
-    {
-        Config::GetLauncherDefaults(m_currentLauncherPath, m_defaultConfig);
-
-        if (m_defaultConfig.Type == LauncherType::None)
-        {
-            m_pFseOnStartupLine->Enable(false);
-            m_fseOnStartupToggle.SetCheck(false);
-        }
-        else
-        {
-            m_pFseOnStartupLine->Enable();
-            m_fseOnStartupToggle.SetCheck(Config::FseOnStartup);
-        }
-
-        bool alwaysSettings = m_defaultConfig.Type==LauncherType::Custom;
-        bool noSettings =
-                m_defaultConfig.Type == LauncherType::Xbox
-            ||  m_defaultConfig.Type == LauncherType::ArmouryCrate
-            || m_defaultConfig.Type == LauncherType::OneGameLauncher
-            || m_defaultConfig.Type == LauncherType::None;
-
-        bool haveSettings = m_isCustom && !noSettings || alwaysSettings;
-        bool enableCheck = !alwaysSettings && !noSettings;
-
-        m_customSettingsToggle.SetCheck(haveSettings);
-
-        FluentDesign::SettingsLine::State state =
-            haveSettings
-                ? FluentDesign::SettingsLine::Next
-                : FluentDesign::SettingsLine::Normal;
-
-        m_pCustomSettingsLine->SetState(state);
-
-        if (haveSettings && !enableCheck)
-        {
-            m_pCustomSettingsLine->Enable(haveSettings);
-            EnableWindow(m_pCustomSettingsLine->GetChildControl(), enableCheck);
-            m_pCustomSettingsLine->Invalidate();
-        }
-        else
-        {
-            m_pCustomSettingsLine->Enable(enableCheck);
-        }
-
-
-        if (!haveSettings)
-        {
-            m_config = m_defaultConfig;
-            UpdateCustomSettings();
-        }
-
-        m_troubleLogLevelCombo.SelectItem(min(max((int)LogLevels::Disabled, (int)Config::LogLevel), (int)LogLevels::Max));
-        m_troubleAggressiveToggle.SetCheck(Config::AggressiveMode);
-
-        m_troubleExitOnExitToggle.SetCheck(Config::ExitFSEOnHomeExit);
-
-        m_splashShowTextToggle.SetCheck(Config::SplashShowText);
-        m_splashCustomTextEdit.SetText(Config::SplashCustomText);
-
-        m_splashShowLogoToggle.SetCheck(Config::SplashShowLogo);
-        m_splashShowAnimationToggle.SetCheck(Config::SplashShowAnimation);
-
-        m_splashShowVideoToggle.SetCheck(Config::SplashShowVideo);
-        m_splashShowVideoLoopToggle.SetCheck(Config::SplashVideoLoop);
-        m_splashShowVideoMuteToggle.SetCheck(Config::SplashVideoMute);
-        m_splashShowVideoPauseToggle.SetCheck(Config::SplashVideoPause);
-
-        UpdateSettingsLoadControls();
-    }
-
-    void SettingsDialog::OnLauncherChanged()
-    {
-        m_currentLauncherPath = m_launcherCombo.GetCurentValue();;
-        Config::LoadLauncherSettings(m_currentLauncherPath, m_config);
-        UpdateControls();
-        UpdateCustomSettings();
-    }
-
-
-    void SettingsDialog::UpdateCombo()
-    {
-        m_launcherCombo.Reset();
-
-        for ( auto& launcher: m_launchersList)
-        {
-            LauncherConfig info;
-            Config::GetLauncherDefaults(launcher, info);
-            Config::UpdatePortableLauncher(info);
-            m_launcherCombo.AddItem(info.Name, info.IconFile, info.StartCommand);
-        }
-        size_t index = List::index_of(m_launchersList, m_currentLauncherPath);
-
-        if (index == List::npos)
-        {
-            LauncherConfig info;
-            Config::GetLauncherDefaults(m_currentLauncherPath, info);
-            Config::UpdatePortableLauncher(info);
-            m_launcherCombo.AddItem(info.Name, info.IconFile, info.StartCommand, 1);
-            index = 1;
-        }
-
-        m_launcherCombo.SelectItem((int)index);
-    }
-
-    void SettingsDialog::UpdateCustomSettings()
-    {
-        // Set values
-        m_additionalArgumentsEdit.SetText(m_config.StartArg);
-        m_processNameEdit.SetText(m_config.ProcessName);
-        m_processNameAltEdit.SetText(m_config.ProcessNameAlt);
-        m_titleEdit.SetText(m_config.WindowTitle);
-        m_titleAltEdit.SetText(m_config.WindowTitleAlt);
-        m_classEdit.SetText(m_config.ClassName);
-        m_classAltEdit.SetText(m_config.ClassNameAlt);
-
-        UpdateCustomResetEnabled();
-    }
-    void SettingsDialog::SaveSettings()
-    {
-        const std::wstring gamingConfiguration = L"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration";
-        const std::wstring startupToGamingHome = L"StartupToGamingHome";
-        const std::wstring gamingHomeApp = L"GamingHomeApp";
-        const std::wstring xboxApp = L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";
-
-        if (m_config.Type == LauncherType::None)
-        {
-            Registry::DeleteValue(gamingConfiguration, gamingHomeApp);
-            Registry::WriteBool(gamingConfiguration, startupToGamingHome, false);
-        }
-        else
-        {
-            Registry::WriteBool(gamingConfiguration, startupToGamingHome, m_fseOnStartupToggle.GetCheck());
-            Registry::WriteString(gamingConfiguration, gamingHomeApp, xboxApp);
-        }
-
-        Config::Launcher.StartCommand = m_config.StartCommand;
-        Config::CustomSettings = m_customSettingsToggle.GetCheck();
-        Config::CustomSettings = m_customSettingsToggle.GetCheck();
-        Config::Launcher.StartArg = m_additionalArgumentsEdit.GetText();
-        Config::Launcher.ProcessName = m_processNameEdit.GetText();
-        Config::Launcher.WindowTitle = m_titleEdit.GetText();
-        Config::Launcher.ProcessNameAlt = m_processNameAltEdit.GetText();
-        Config::Launcher.WindowTitleAlt = m_titleAltEdit.GetText();
-        Config::Launcher.ClassName = m_classEdit.GetText();
-        Config::Launcher.ClassNameAlt = m_classAltEdit.GetText();
-        Config::Launcher.IconFile = m_config.IconFile;
-
-
-        Config::SplashShowText = m_splashShowTextToggle.GetCheck();
-        Config::SplashCustomText = m_splashCustomTextEdit.GetText();
-
-        Config::SplashShowLogo = m_splashShowLogoToggle.GetCheck();
-        Config::SplashShowAnimation = m_splashShowAnimationToggle.GetCheck();
-
-        Config::SplashShowVideo = m_splashShowVideoToggle.GetCheck();
-        Config::SplashVideoLoop = m_splashShowVideoLoopToggle.GetCheck();
-        Config::SplashVideoMute = m_splashShowVideoMuteToggle.GetCheck();
-        Config::SplashVideoPause = m_splashShowVideoPauseToggle.GetCheck();
-
-        Config::LogLevel = (LogLevels)m_troubleLogLevelCombo.GetSelectedIndex();
-        Config::AggressiveMode = m_troubleAggressiveToggle.GetCheck();
-        Config::ExitFSEOnHomeExit = m_troubleExitOnExitToggle.GetCheck();
-
-        Config::StartupApps.clear();
-
-        for (auto pLine : m_pStartupAppLines)
-        {
-            Toggle *toggle = GetStartupLineToggle(pLine);
-
-            Config::StartupApps.push_back(
-                StartupApp {
-                    pLine->GetData(0),
-                    pLine->GetData(1),
-                    toggle ? toggle->GetCheck() : true
-                }
-            );
-        }
-
-        UpdateSettingsSaveControls();
-
-        Config::Save();
     }
 }

@@ -16,6 +16,7 @@
 #include <string>
 #include <Tools/Event.hpp>
 #include "SettingsDialog.hpp"
+#include "SettingsLayout.hpp"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -29,17 +30,17 @@ namespace AnyFSE::App::AppSettings::Settings
         GetDialogRect(&rect);
 
         rect.top = rect.bottom
-            - m_theme.DpiScale(Layout_MarginBottom)
-            - m_theme.DpiScale(Layout_UpdateHeight);
+            - m_theme.DpiScale(Layout::MarginBottom)
+            - m_theme.DpiScale(Layout::UpdateHeight);
 
-        rect.right -= m_theme.DpiScale(Layout_MarginRight);
-        rect.left  += m_theme.DpiScale(Layout_MarginLeft);
+        rect.right -= m_theme.DpiScale(Layout::MarginRight);
+        rect.left  += m_theme.DpiScale(Layout::MarginLeft);
 
         m_updateCheckButton.Create(m_hDialog,
             rect.left,
             rect.top,
-            m_theme.DpiScale(Layout_UpdateHeight),
-            m_theme.DpiScale(Layout_UpdateHeight));
+            m_theme.DpiScale(Layout::UpdateHeight),
+            m_theme.DpiScale(Layout::UpdateHeight));
 
         m_updateCheckButton.SetIcon(L"\xE117");
         m_updateCheckButton.OnChanged += delegate(OnCheckUpdate);
@@ -47,20 +48,20 @@ namespace AnyFSE::App::AppSettings::Settings
         m_updateCheckButton.Enable(true);
 
         m_updateCurrentText.Create(m_hDialog,
-            rect.left + m_theme.DpiScale(Layout_UpdateHeight + Layout_ButtonPadding / 4),
+            rect.left + m_theme.DpiScale(Layout::UpdateHeight + Layout::ButtonPadding / 4),
             rect.top,
             m_theme.DpiScale(200),
-            m_theme.DpiScale(Layout_UpdateHeight)
+            m_theme.DpiScale(Layout::UpdateHeight)
         );
         m_updateCurrentText.Format().SetLineAlignment(Gdiplus::StringAlignment::StringAlignmentCenter);
 
         m_updateCurrentText.SetColor(Theme::Colors::TextDisabled);
 
         m_updateButton.Create(m_hDialog,
-            rect.left + m_theme.DpiScale(Layout_UpdateHeight + Layout_ButtonPadding / 4),
-            rect.top + m_theme.DpiScale(Layout_UpdateHeight) / 2,
+            rect.left + m_theme.DpiScale(Layout::UpdateHeight + Layout::ButtonPadding / 4),
+            rect.top + m_theme.DpiScale(Layout::UpdateHeight) / 2,
             m_theme.DpiScale(200),
-            m_theme.DpiScale(Layout_UpdateHeight) / 2
+            m_theme.DpiScale(Layout::UpdateHeight) / 2
         );
 
         m_updateButton.Show(false);
@@ -75,7 +76,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         // m_updateButton.OnChanged += delegate(OnUpdate);
         SIZE sz = m_updateButton.GetMinSize();
-        SetWindowPos(m_updateButton.GetHwnd(), NULL, 0, 0, sz.cx, m_theme.DpiScale(Layout_UpdateHeight) / 2, SWP_NOMOVE | SWP_NOZORDER);
+        SetWindowPos(m_updateButton.GetHwnd(), NULL, 0, 0, sz.cx, m_theme.DpiScale(Layout::UpdateHeight) / 2, SWP_NOMOVE | SWP_NOZORDER);
 
         OnUpdateNotification();
     }
@@ -86,33 +87,33 @@ namespace AnyFSE::App::AppSettings::Settings
         GetDialogRect(&rect);
 
         rect.top = rect.bottom
-            - m_theme.DpiScale(Layout_MarginBottom)
-            - m_theme.DpiScale(Layout_UpdateHeight);
+            - m_theme.DpiScale(Layout::MarginBottom)
+            - m_theme.DpiScale(Layout::UpdateHeight);
 
-        rect.right -= m_theme.DpiScale(Layout_MarginRight);
-        rect.left  += m_theme.DpiScale(Layout_MarginLeft);
+        rect.right -= m_theme.DpiScale(Layout::MarginRight);
+        rect.left  += m_theme.DpiScale(Layout::MarginLeft);
 
         MoveWindow(m_updateCheckButton.GetHwnd(),
             rect.left,
             rect.top,
-            m_theme.DpiScale(Layout_UpdateHeight),
-            m_theme.DpiScale(Layout_UpdateHeight),
+            m_theme.DpiScale(Layout::UpdateHeight),
+            m_theme.DpiScale(Layout::UpdateHeight),
             FALSE);
 
         SIZE sz = m_updateButton.GetMinSize();
         MoveWindow(m_updateButton.GetHwnd(),
-            rect.left + m_theme.DpiScale(Layout_UpdateHeight + Layout_ButtonPadding / 4),
-            rect.top + m_theme.DpiScale(Layout_UpdateHeight) / 2,
+            rect.left + m_theme.DpiScale(Layout::UpdateHeight + Layout::ButtonPadding / 4),
+            rect.top + m_theme.DpiScale(Layout::UpdateHeight) / 2,
             sz.cx,
-            m_theme.DpiScale(Layout_UpdateHeight) / 2,
+            m_theme.DpiScale(Layout::UpdateHeight) / 2,
             FALSE
         );
 
          MoveWindow(m_updateCurrentText.GetHwnd(),
-            rect.left + m_theme.DpiScale(Layout_UpdateHeight + Layout_ButtonPadding / 4),
+            rect.left + m_theme.DpiScale(Layout::UpdateHeight + Layout::ButtonPadding / 4),
             rect.top,
             m_theme.DpiScale(200),
-            m_theme.DpiScale(Layout_UpdateHeight) / ((GetWindowLong(m_updateButton.GetHwnd(), GWL_STYLE) & WS_VISIBLE) ? 2 : 1),
+            m_theme.DpiScale(Layout::UpdateHeight) / ((GetWindowLong(m_updateButton.GetHwnd(), GWL_STYLE) & WS_VISIBLE) ? 2 : 1),
             FALSE
         );
     }
@@ -170,7 +171,7 @@ namespace AnyFSE::App::AppSettings::Settings
         {
             m_updateButton.SetText(aVersion);
             SIZE sz = m_updateButton.GetMinSize();
-            SetWindowPos(m_updateButton.GetHwnd(), NULL, 0, 0, sz.cx, m_theme.DpiScale(Layout_UpdateHeight) / 2, SWP_NOMOVE | SWP_NOZORDER);
+            SetWindowPos(m_updateButton.GetHwnd(), NULL, 0, 0, sz.cx, m_theme.DpiScale(Layout::UpdateHeight) / 2, SWP_NOMOVE | SWP_NOZORDER);
             m_updateButton.Enable(enableStatus);
             m_updateButton.Show(true);
         }
@@ -180,7 +181,7 @@ namespace AnyFSE::App::AppSettings::Settings
             m_updateButton.SetText(L"");
         }
         SetWindowPos(m_updateCurrentText.GetHwnd(), NULL, 0, 0, m_theme.DpiScale(200),
-            m_theme.DpiScale(Layout_UpdateHeight) / (showSecond ? 2 : 1),
+            m_theme.DpiScale(Layout::UpdateHeight) / (showSecond ? 2 : 1),
             SWP_NOMOVE | SWP_NOZORDER);
 
         m_updateCurrentText.SetText(cVersion);
