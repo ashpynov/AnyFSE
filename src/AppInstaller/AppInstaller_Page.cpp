@@ -483,20 +483,20 @@ namespace AnyFSE
 
     bool AppInstaller::DeleteOldFiles(const std::wstring& dir)
     {
+        wchar_t modulePath[MAX_PATH];
+        GetModuleFileName(NULL, modulePath, MAX_PATH);
+        std::wstring moduleName = Unicode::to_lower(modulePath);
+
         fs::path path(dir);
         if (fs::is_directory(path))
         {
             for (const auto & entry : fs::directory_iterator(path))
             {
-                if (!entry.is_regular_file())
+                if (!entry.is_regular_file() || Unicode::to_lower(entry.path().wstring()) == moduleName)
                 {
                     continue;
                 }
                 std::wstring ext = Unicode::to_lower(entry.path().extension().wstring());
-                if (Unicode::to_lower(entry.path().filename().wstring()).find(L"anyfse.updater") == 0)
-                {
-                    continue;
-                }
 
                 if (ext == L".log" || ext == L".exe" || ext == L".dll")
                 {
