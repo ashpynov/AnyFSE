@@ -117,6 +117,11 @@ namespace FluentDesign
         return *this;
     }
 
+    std::wstring & Button::GetText()
+    {
+        return m_text;
+    }
+
     Button& Button::SetIcon(const std::wstring &glyph, bool bSmall)
     {
         if (m_text == glyph)

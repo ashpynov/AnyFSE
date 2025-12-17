@@ -98,7 +98,7 @@ namespace FluentDesign
         Button& Create(HWND hParent, const std::wstring& text, const std::function<void()>& callback, int x, int y, int width, int height);
 
         Button& SetText(const std::wstring& text);
-        Button& SetIcon(const std::wstring& glyph, bool bSmall = false);
+        Button &SetIcon(const std::wstring &glyph, bool bSmall = false);
         Button& Enable(bool bEnable);
         Button& SetTabStop(bool bTabStop);
         Button& Show(bool bShow);
@@ -124,6 +124,8 @@ namespace FluentDesign
         void Animate(int startAngle, int stopAngle, int duration, bool bInfinite);
         void CompleteAnimation();
         void CancelAnimation(int endAngle = 0);
+
+        std::wstring& GetText();
 
         Event OnChanged;
         Event OnButtonDown;

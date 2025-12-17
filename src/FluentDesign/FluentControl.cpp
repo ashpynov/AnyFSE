@@ -112,6 +112,9 @@ namespace FluentDesign
 
     void FluentControl::SetSize(LONG cx, LONG cy)
     {
+        RECT rc;
+        Window::GetChildRect(m_hWnd, &rc);
+
         if (cx != -1)
         {
             m_designMargins.Right = m_theme.DpiUnscaleF(cx);
@@ -122,5 +125,6 @@ namespace FluentDesign
             m_designMargins.Bottom = m_theme.DpiUnscaleF(cy);
         }
         ReflowControl(NULL);
+        RedrawWindow(GetParent(m_hWnd), &rc, 0, RDW_INVALIDATE);
     }
 }

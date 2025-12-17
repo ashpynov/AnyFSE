@@ -115,9 +115,12 @@ namespace AnyFSE::App::AppSettings::Settings
 
         if (showSecond)
         {
-            m_updateButton.SetText(aVersion);
-            SIZE sz = m_updateButton.GetMinSize();
-            m_updateButton.SetSize(sz.cx, m_theme.DpiScale(Layout::UpdateHeight) / 2);
+            if (m_updateButton.GetText() != aVersion)
+            {
+                m_updateButton.SetText(aVersion);
+                SIZE sz = m_updateButton.GetMinSize();
+                m_updateButton.SetSize(sz.cx, m_theme.DpiScale(Layout::UpdateHeight) / 2);
+            }
             m_updateButton
                 .Enable(enableStatus)
                 .Show(true);
@@ -165,6 +168,7 @@ namespace AnyFSE::App::AppSettings::Settings
         {
             UpdateVersionStatusDelay(100);
         }
+        Config::SaveUpdateVersion(info.newVersion);
         Updater::Subscribe(m_hDialog, WM_UPDATE_NOTIFICATION);
     }
 
