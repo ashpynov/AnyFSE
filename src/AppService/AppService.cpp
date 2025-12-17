@@ -170,7 +170,14 @@ namespace AnyFSE::App::AppService
 
             log.Debug("Entering Main service loop, noClient mode %s", bNoClient ? "On" : "Off");
 
-            AppControlStateLoop.Notify((Config::AggressiveMode && !bNoClient) ? AppEvents::XBOX_DENY : AppEvents::XBOX_ALLOW);
+            if (bNoClient || Config::Launcher.Type == LauncherType::None || Config::Launcher.Type == LauncherType::Xbox)
+            {
+                AppControlStateLoop.Notify(AppEvents::XBOX_ALLOW);
+            }
+            else if (Config::AggressiveMode) 
+            {
+                AppControlStateLoop.Notify(AppEvents::XBOX_DENY);
+            };
 
             CreateBackgroundWindow();
             StartMonitoring(bNoClient || Config::Launcher.Type == LauncherType::None || Config::Launcher.Type == LauncherType::Xbox);

@@ -169,8 +169,14 @@ namespace AnyFSE::App::AppControl
 
         AppControlStateLoop.NotifyRemote(AppEvents::START);
         AppControlStateLoop.Start();
-
-        AppControlStateLoop.NotifyRemote(Config::AggressiveMode ? AppEvents::XBOX_DENY : AppEvents::XBOX_ALLOW);
+        if (Config::Launcher.Type != LauncherType::None || Config::Launcher.Type != LauncherType::Xbox)
+        {
+            AppControlStateLoop.Notify(AppEvents::START);
+            if (Config::AggressiveMode)
+            {
+                AppControlStateLoop.NotifyRemote(AppEvents::XBOX_DENY);
+            }
+        }
 
         return 0;
     }

@@ -82,6 +82,8 @@ namespace AnyFSE::App::AppControl::StateLoop
 
     void AppControlStateLoop::OnStart()
     {
+        log.Debug("Start AnyFSE in %s mode", IsInFSEMode() ? "FSE" : "Desktop" );
+
         if (IsInFSEMode())
         {
             ShowSplash();
