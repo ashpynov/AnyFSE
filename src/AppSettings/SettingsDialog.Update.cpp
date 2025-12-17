@@ -18,104 +18,50 @@
 #include "SettingsDialog.hpp"
 #include "SettingsLayout.hpp"
 
-#pragma comment(lib, "ws2_32.lib")
-
 namespace AnyFSE::App::AppSettings::Settings
 {
     static Logger log = LogManager::GetLogger("Settings");
 
     void SettingsDialog::AddUpdateControls()
     {
-        RECT rect;
-        GetDialogRect(&rect);
+        int left = Layout::MarginLeft;
+        int top = -Layout::MarginBottom - Layout::UpdateHeight;
 
-        rect.top = rect.bottom
-            - m_theme.DpiScale(Layout::MarginBottom)
-            - m_theme.DpiScale(Layout::UpdateHeight);
+        m_updateCheckButton
+            .SetAnchor(Align::BottomLeft(), GetDialogCenteredRect)
+            .Create(m_hDialog, left, top, Layout::UpdateHeight, Layout::UpdateHeight)
+            .SetIcon(L"\xE117")
+            .SetFlat(true)
+            .Enable(true)
+            .OnChanged += delegate(OnCheckUpdate);
 
-        rect.right -= m_theme.DpiScale(Layout::MarginRight);
-        rect.left  += m_theme.DpiScale(Layout::MarginLeft);
-
-        m_updateCheckButton.Create(m_hDialog,
-            rect.left,
-            rect.top,
-            m_theme.DpiScale(Layout::UpdateHeight),
-            m_theme.DpiScale(Layout::UpdateHeight));
-
-        m_updateCheckButton.SetIcon(L"\xE117");
-        m_updateCheckButton.OnChanged += delegate(OnCheckUpdate);
-        m_updateCheckButton.SetFlat(true);
-        m_updateCheckButton.Enable(true);
-
-        m_updateCurrentText.Create(m_hDialog,
-            rect.left + m_theme.DpiScale(Layout::UpdateHeight + Layout::ButtonPadding / 4),
-            rect.top,
-            m_theme.DpiScale(200),
-            m_theme.DpiScale(Layout::UpdateHeight)
-        );
-        m_updateCurrentText.Format().SetLineAlignment(Gdiplus::StringAlignment::StringAlignmentCenter);
+        m_updateCurrentText
+            .SetAnchor(Align::BottomLeft(), GetDialogCenteredRect)
+            .Create(m_hDialog, left + Layout::UpdateHeight + Layout::ButtonPadding / 4, top, 200, Layout::UpdateHeight );
 
         m_updateCurrentText.SetColor(Theme::Colors::TextDisabled);
+        m_updateCurrentText.Format().SetLineAlignment(Gdiplus::StringAlignment::StringAlignmentCenter);
 
-        m_updateButton.Create(m_hDialog,
-            rect.left + m_theme.DpiScale(Layout::UpdateHeight + Layout::ButtonPadding / 4),
-            rect.top + m_theme.DpiScale(Layout::UpdateHeight) / 2,
-            m_theme.DpiScale(200),
-            m_theme.DpiScale(Layout::UpdateHeight) / 2
-        );
-
-        m_updateButton.Show(false);
-        m_updateButton.SetLinkStyle();
-        m_updateButton.SetMenu(
-            std::vector<Popup::PopupItem>
-            {
-                Popup::PopupItem(L"\xE2B4", L"View release", delegate(OnShowVersion)),
-                Popup::PopupItem(L"\xEDAB", L"Download & update", delegate(OnUpdate))
-            }, 400, TPM_LEFTALIGN
-        );
+        m_updateButton
+            .SetAnchor(Align::BottomLeft(), GetDialogCenteredRect)
+            .Create(m_hDialog,
+                left + Layout::UpdateHeight + Layout::ButtonPadding / 4, top + Layout::UpdateHeight / 2,
+                200, Layout::UpdateHeight / 2 )
+            .Show(false)
+            .SetLinkStyle()
+            .SetMenu(
+                std::vector<Popup::PopupItem>
+                {
+                    Popup::PopupItem(L"\xE2B4", L"View release", delegate(OnShowVersion)),
+                    Popup::PopupItem(L"\xEDAB", L"Download & update", delegate(OnUpdate))
+                }, 400, TPM_LEFTALIGN
+            );
 
         // m_updateButton.OnChanged += delegate(OnUpdate);
         SIZE sz = m_updateButton.GetMinSize();
-        SetWindowPos(m_updateButton.GetHwnd(), NULL, 0, 0, sz.cx, m_theme.DpiScale(Layout::UpdateHeight) / 2, SWP_NOMOVE | SWP_NOZORDER);
+        m_updateButton.SetSize(sz.cx, -1);
 
         OnUpdateNotification();
-    }
-
-    void SettingsDialog::MoveUpdateControls()
-    {
-        RECT rect;
-        GetDialogRect(&rect);
-
-        rect.top = rect.bottom
-            - m_theme.DpiScale(Layout::MarginBottom)
-            - m_theme.DpiScale(Layout::UpdateHeight);
-
-        rect.right -= m_theme.DpiScale(Layout::MarginRight);
-        rect.left  += m_theme.DpiScale(Layout::MarginLeft);
-
-        MoveWindow(m_updateCheckButton.GetHwnd(),
-            rect.left,
-            rect.top,
-            m_theme.DpiScale(Layout::UpdateHeight),
-            m_theme.DpiScale(Layout::UpdateHeight),
-            FALSE);
-
-        SIZE sz = m_updateButton.GetMinSize();
-        MoveWindow(m_updateButton.GetHwnd(),
-            rect.left + m_theme.DpiScale(Layout::UpdateHeight + Layout::ButtonPadding / 4),
-            rect.top + m_theme.DpiScale(Layout::UpdateHeight) / 2,
-            sz.cx,
-            m_theme.DpiScale(Layout::UpdateHeight) / 2,
-            FALSE
-        );
-
-         MoveWindow(m_updateCurrentText.GetHwnd(),
-            rect.left + m_theme.DpiScale(Layout::UpdateHeight + Layout::ButtonPadding / 4),
-            rect.top,
-            m_theme.DpiScale(200),
-            m_theme.DpiScale(Layout::UpdateHeight) / ((GetWindowLong(m_updateButton.GetHwnd(), GWL_STYLE) & WS_VISIBLE) ? 2 : 1),
-            FALSE
-        );
     }
 
     bool SettingsDialog::SetVersionStatus(const Updater::UpdateInfo& uiInfo)
@@ -171,19 +117,18 @@ namespace AnyFSE::App::AppSettings::Settings
         {
             m_updateButton.SetText(aVersion);
             SIZE sz = m_updateButton.GetMinSize();
-            SetWindowPos(m_updateButton.GetHwnd(), NULL, 0, 0, sz.cx, m_theme.DpiScale(Layout::UpdateHeight) / 2, SWP_NOMOVE | SWP_NOZORDER);
-            m_updateButton.Enable(enableStatus);
-            m_updateButton.Show(true);
+            m_updateButton.SetSize(sz.cx, m_theme.DpiScale(Layout::UpdateHeight) / 2);
+            m_updateButton
+                .Enable(enableStatus)
+                .Show(true);
         }
         else
         {
-            m_updateButton.Show(false);
-            m_updateButton.SetText(L"");
+            m_updateButton
+                .Show(false)
+                .SetText(L"");
         }
-        SetWindowPos(m_updateCurrentText.GetHwnd(), NULL, 0, 0, m_theme.DpiScale(200),
-            m_theme.DpiScale(Layout::UpdateHeight) / (showSecond ? 2 : 1),
-            SWP_NOMOVE | SWP_NOZORDER);
-
+        m_updateCurrentText.SetSize(-1, m_theme.DpiScale(Layout::UpdateHeight) / (showSecond ? 2 : 1));
         m_updateCurrentText.SetText(cVersion);
 
         if (enableAnimation)

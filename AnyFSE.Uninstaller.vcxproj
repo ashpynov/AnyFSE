@@ -95,6 +95,8 @@
     <ClCompile Include="src\AppUninstaller\AppUninstaller.cpp" />
     <ClCompile Include="src\FluentDesign\Theme.cpp" />
     <ClCompile Include="src\FluentDesign\Theme_Colors.cpp" />
+    <ClCompile Include="src\FluentDesign\FluentControl.cpp" />
+    <ClCompile Include="src\FluentDesign\Align.cpp" />
     <ClCompile Include="src\FluentDesign\Button.cpp" />
     <ClCompile Include="src\FluentDesign\Static.cpp" />
     <ClCompile Include="src\FluentDesign\Popup.cpp" />

@@ -57,12 +57,18 @@ namespace FluentDesign
         void UpdateLayout();
 
     public:
-        Static(Theme& theme);
+        Static(Theme &theme, Align::Anchor align = Align::None, GetParentRectFunc getParentRect = GetParentRect);
         Static(
             Theme& theme,
             HWND hParent,
             int x, int y,
             int width, int height);
+
+        Static& SetAnchor(Align::Anchor anchor, GetParentRectFunc getParentRect = GetParentRect)
+        {
+            FluentControl::SetAnchor(anchor, getParentRect);
+            return *this;
+        }
 
         HWND Create(HWND hParent, const std::wstring &text, int x, int y, int width, int height);
 

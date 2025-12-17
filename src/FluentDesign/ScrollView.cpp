@@ -241,8 +241,8 @@ namespace FluentDesign
         }
     }
 
-    ScrollView::ScrollView(Theme &theme)
-        : FluentControl(theme)
+    ScrollView::ScrollView(Theme &theme, Align::Anchor align, GetParentRectFunc getParentRect)
+        : FluentControl(theme, align, getParentRect)
         , m_hovered(false)
         , m_dragging(false)
         , m_thumbRect{0}
@@ -265,6 +265,8 @@ namespace FluentDesign
 
     HWND ScrollView::Create(HWND hParent, int x, int y, int width, int height)
     {
+        AnchoredSizePos(hParent, x, y, width, height);
+
         m_hWnd = CreateWindowEx(
             WS_EX_CONTROLPARENT,
             L"STATIC",
@@ -275,6 +277,7 @@ namespace FluentDesign
 
         m_viewHeight = height;
         UpdateScrollBar();
+        SetWindowLongPtr(m_hWnd, GWLP_USERDATA, (LONG_PTR)this);
         SetWindowSubclass(m_hWnd, ScrollViewSubclassProc, 0, (DWORD_PTR)this);
         return m_hWnd;
     }

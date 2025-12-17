@@ -73,6 +73,7 @@ namespace FluentDesign
         }
 
         // Subclass the popup listbox
+        SetWindowLongPtr(m_hWnd, GWLP_USERDATA, (LONG_PTR)this);
         SetWindowSubclass(m_hWnd, PopupSubclassProc, 0, (DWORD_PTR)this);
 
         // Set item height

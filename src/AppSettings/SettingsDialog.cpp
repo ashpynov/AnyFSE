@@ -30,6 +30,7 @@
 #include "Configuration/Config.hpp"
 #include "FluentDesign/Theme.hpp"
 #include "FluentDesign/Popup.hpp"
+#include "FluentDesign/Align.hpp"
 #include "Tools/List.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
@@ -333,7 +334,7 @@ namespace AnyFSE::App::AppSettings::Settings
                 FillRect(paint.MemDC(), &r, back);
                 DeleteObject(back);
 
-                GetDialogRect(&r);
+                GetDialogCenteredRect(m_theme, m_hDialog, &r);
                 r.left += m_theme.DpiScale(Layout::MarginLeft);
                 r.top += m_theme.DpiScale(Layout::CaptionHeight);
 
@@ -446,12 +447,28 @@ namespace AnyFSE::App::AppSettings::Settings
         return FALSE;
     }
 
-    void SettingsDialog::GetDialogRect(RECT *prc)
+    BOOL SettingsDialog::GetDialogClientRect(Theme &theme, HWND hDialog, RECT *prc)
     {
-        GetClientRect(m_hDialog, prc);
-        int width = min(m_theme.DpiScale(Layout::MaxWidth), prc->right - prc->left);
+        GetClientRect(hDialog, prc);
+
+        if ( (GetWindowLong(hDialog, GWL_STYLE) & WS_MAXIMIZE))
+        {
+            InflateRect(prc, -theme.DpiScale(5), -theme.DpiScale(5));
+        }
+        else
+        {
+            prc->top = -1;
+        }
+        return S_OK;
+    }
+
+    BOOL SettingsDialog::GetDialogCenteredRect(Theme &theme, HWND hDialog, RECT *prc)
+    {
+        GetClientRect(hDialog, prc);
+        int width = min(theme.DpiScale(Layout::MaxWidth), prc->right - prc->left);
         prc->left = (prc->right - prc->left - width) / 2;
         prc->right = prc->left + width;
+        return S_OK;
     }
 
     FluentDesign::SettingsLine& SettingsDialog::AddSettingsLine(
@@ -460,7 +477,7 @@ namespace AnyFSE::App::AppSettings::Settings
         int height, int padding, int contentMargin, int contentWidth, int contentHeight )
     {
         RECT rect;
-        GetDialogRect(&rect);
+        GetDialogCenteredRect(m_theme, m_hDialog, &rect);
         int width = rect.right - rect.left
             - m_theme.DpiScale(Layout::MarginLeft - Layout::Border)
             - m_theme.DpiScale(Layout::MarginRight - Layout::Border);
@@ -545,169 +562,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
     void SettingsDialog::UpdateDpiLayout()
     {
-
-        RECT rect;
-        GetClientRect(m_hDialog, &rect);
-
-        MoveWindow(m_captionStatic.GetHwnd(),
-            m_theme.DpiScale(Layout::BackButtonMargin * 2 + Layout::BackButtonSize),
-            m_theme.DpiScale(Layout::BackButtonMargin),
-            m_theme.DpiScale(200),
-            m_theme.DpiScale(Layout::BackButtonSize - 4),
-            FALSE);
-
-        MoveWindow(m_captionBackButton.GetHwnd(),
-            m_theme.DpiScale(Layout::BackButtonMargin),
-            m_theme.DpiScale(Layout::BackButtonMargin),
-            m_theme.DpiScale(Layout::BackButtonSize),
-            m_theme.DpiScale(Layout::BackButtonSize),
-            FALSE);
-
-        MoveWindow(m_captionMaximizeButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth * 2),
-            -1,
-            m_theme.DpiScale(Layout::CaptionButtonWidth ),
-            m_theme.DpiScale(Layout::CaptionHeight),
-            FALSE);
-
-        MoveWindow(m_captionMinimizeButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth * 3),
-            -1,
-            m_theme.DpiScale(Layout::CaptionButtonWidth),
-            m_theme.DpiScale(Layout::CaptionHeight),
-            FALSE);
-
-        MoveWindow(m_captionCloseButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth),
-            -1,
-            m_theme.DpiScale(Layout::CaptionButtonWidth),
-            m_theme.DpiScale(Layout::CaptionHeight),
-            FALSE);
-
-        RECT scrollRect {
-            m_theme.DpiScale(Layout::Border),
-            rect.top + m_theme.DpiScale(Layout::MarginTop + GetSystemMetrics(SM_CYCAPTION)),
-            rect.right - m_theme.DpiScale(Layout::Border),
-            rect.bottom
-                - m_theme.DpiScale(Layout::MarginBottom)
-                - m_theme.DpiScale(Layout::ButtonHeight)
-                - m_theme.DpiScale(Layout::ButtonPadding)
-            };
-
-        Window::MoveWindow(m_scrollView.GetHwnd(), &scrollRect, FALSE);
-
-
-        GetDialogRect(&rect);
-
-        rect.top = rect.bottom
-            - m_theme.DpiScale(Layout::MarginBottom)
-            - m_theme.DpiScale(Layout::ButtonHeight);
-
-        rect.right -= m_theme.DpiScale(Layout::MarginRight);
-        rect.left  += m_theme.DpiScale(Layout::MarginLeft);
-
-        MoveWindow(m_okButton.GetHwnd(),
-            rect.right
-                - m_theme.DpiScale(Layout::OKWidth)
-                - m_theme.DpiScale(Layout::ButtonPadding)
-                - m_theme.DpiScale(Layout::CloseWidth),
-            rect.top,
-            m_theme.DpiScale(Layout::OKWidth),
-            m_theme.DpiScale(Layout::ButtonHeight),
-            FALSE);
-
-        MoveWindow(m_closeButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(Layout::CloseWidth),
-            rect.top,
-            m_theme.DpiScale(Layout::CloseWidth),
-            m_theme.DpiScale(Layout::ButtonHeight),
-            FALSE);
-
-        MoveUpdateControls();
-
         UpdateLayout();
-    }
-
-    void SettingsDialog::ArrangeControls()
-    {
-        RECT rect;
-        GetClientRect(m_hDialog, &rect);
-
-        bool bMaximized = (GetWindowLong(m_hDialog, GWL_STYLE) & WS_MAXIMIZE);
-
-        if (bMaximized)
-        {
-            InflateRect(&rect, -m_theme.DpiScale(5), -m_theme.DpiScale(5));
-        }
-        else
-        {
-            rect.top = -1;
-        }
-
-        MoveWindow(m_captionMaximizeButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth * 2 ),
-            rect.top,
-            m_theme.DpiScale(Layout::CaptionButtonWidth),
-            m_theme.DpiScale(Layout::CaptionHeight),
-            FALSE
-        );
-
-        MoveWindow(m_captionMinimizeButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth * 3 ),
-            rect.top,
-            m_theme.DpiScale(Layout::CaptionButtonWidth),
-            m_theme.DpiScale(Layout::CaptionHeight),
-            FALSE
-        );
-
-        MoveWindow(m_captionCloseButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth),
-            rect.top,
-            m_theme.DpiScale(Layout::CaptionButtonWidth),
-            m_theme.DpiScale(Layout::CaptionHeight),
-            FALSE
-        );
-
-        MoveWindow(m_scrollView.GetHwnd(),
-            m_theme.DpiScale(Layout::Border),
-            rect.top + m_theme.DpiScale(Layout::MarginTop + GetSystemMetrics(SM_CYCAPTION)),
-            rect.right - m_theme.DpiScale(Layout::Border * 2),
-            rect.bottom
-                - m_theme.DpiScale(Layout::MarginBottom)
-                - m_theme.DpiScale(Layout::MarginTop + GetSystemMetrics(SM_CYCAPTION))
-                - m_theme.DpiScale(Layout::ButtonHeight)
-                - m_theme.DpiScale(Layout::ButtonPadding),
-            FALSE
-        );
-
-        GetDialogRect(&rect);
-        rect.top = rect.bottom
-            - m_theme.DpiScale(Layout::MarginBottom)
-            - m_theme.DpiScale(Layout::ButtonHeight);
-
-        rect.right -= m_theme.DpiScale(Layout::MarginRight);
-        rect.left  += m_theme.DpiScale(Layout::MarginLeft);
-
-        MoveWindow(m_okButton.GetHwnd(),
-            rect.right
-                - m_theme.DpiScale(Layout::OKWidth)
-                - m_theme.DpiScale(Layout::ButtonPadding)
-                - m_theme.DpiScale(Layout::CloseWidth),
-            rect.top,
-            m_theme.DpiScale(Layout::OKWidth),
-            m_theme.DpiScale(Layout::ButtonHeight),
-            FALSE
-        );
-
-        MoveWindow(m_closeButton.GetHwnd(),
-            rect.right - m_theme.DpiScale(Layout::CloseWidth),
-            rect.top,
-            m_theme.DpiScale(Layout::CloseWidth),
-            m_theme.DpiScale(Layout::ButtonHeight),
-            FALSE
-        );
-
-        MoveUpdateControls();
     }
 
     void SettingsDialog::UpdateLine(SettingsLine * line)
@@ -723,6 +578,8 @@ namespace AnyFSE::App::AppSettings::Settings
 
     void SettingsDialog::UpdateLayout()
     {
+        m_theme.ReflowChilds(m_hDialog);
+
         for (auto &page: m_pages)
         {
             if (&(page->GetSettingsLines()) != m_pActivePageList)
@@ -734,10 +591,8 @@ namespace AnyFSE::App::AppSettings::Settings
             }
         }
 
-        ArrangeControls();
-
         RECT rect;
-        GetDialogRect(&rect);
+        GetDialogCenteredRect(m_theme, m_hDialog, &rect);
         int width = rect.right - rect.left
             - m_theme.DpiScale(Layout::MarginLeft)
             - m_theme.DpiScale(Layout::MarginRight);
@@ -769,172 +624,107 @@ namespace AnyFSE::App::AppSettings::Settings
         return FindWindow(L"AnyFSE", NULL);
     }
 
-    void SettingsDialog::AddMinimizeButton()
+    void SettingsDialog::AddCaptionButtons()
     {
-        RECT rect;
-        GetClientRect(m_hDialog, &rect);
+        m_captionStatic
+            .SetAnchor(Align::TopLeft(), GetDialogClientRect)
+            .Create(m_hDialog, Layout::BackButtonMargin * 2 + Layout::BackButtonSize, Layout::BackButtonMargin, 200, Layout::BackButtonSize - 4);
+        m_captionStatic.Format().SetLineAlignment(Gdiplus::StringAlignment::StringAlignmentCenter);
+        m_captionStatic.SetText(L"Settings");
 
-        m_captionMinimizeButton.Create(m_hDialog,
-            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth * 3 ),
-            -1,
-            m_theme.DpiScale(Layout::CaptionButtonWidth),
-            m_theme.DpiScale(Layout::CaptionHeight));
+        m_captionBackButton
+            .SetAnchor(Align::TopLeft(), GetDialogClientRect)
+            .Create(m_hDialog, Layout::BackButtonMargin, Layout::BackButtonMargin, Layout::BackButtonSize, Layout::BackButtonSize)
+            .SetIcon(L"\xE64E")
+            .SetFlat(true)
+            .Enable(false)
+            .OnChanged += delegate(OpenSettingsPage);
 
-        SetWindowLong(m_captionMinimizeButton.GetHwnd(), GWL_STYLE,
-            GetWindowLong(m_captionMinimizeButton.GetHwnd(), GWL_STYLE) & ~WS_TABSTOP );
+       m_captionMinimizeButton
+            .SetAnchor(Align::TopRight(), GetDialogClientRect)
+            .Create(m_hDialog, -Layout::CaptionButtonWidth * 3, 0, Layout::CaptionButtonWidth, Layout::CaptionHeight)
+            .SetTabStop(false)
+            .SetIcon(L"\xE921", true)
+            .SetFlat(true)
+            .SetSquare(true)
+            .OnChanged += delegate(OnMinimize);
 
-        m_captionMinimizeButton.SetIcon(L"\xE921", true);
-        m_captionMinimizeButton.OnChanged += delegate(OnMinimize);
-        m_captionMinimizeButton.SetFlat(true);
-        m_captionMinimizeButton.SetSquare(true);
-    }
-
-    void SettingsDialog::AddMaximizeButton()
-    {
-        RECT rect;
-        GetClientRect(m_hDialog, &rect);
-        m_captionMaximizeButton.Create(m_hDialog,
-            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth * 2 ),
-            -1,
-            m_theme.DpiScale(Layout::CaptionButtonWidth),
-            m_theme.DpiScale(Layout::CaptionHeight));
+        m_captionMaximizeButton
+            .SetAnchor(Align::TopRight(), GetDialogClientRect)
+            .Create(m_hDialog, -Layout::CaptionButtonWidth * 2, 0, Layout::CaptionButtonWidth, Layout::CaptionHeight)
+            .SetTabStop(false)
+            .SetFlat(true)
+            .SetSquare(true)
+            .OnChanged += delegate(OnMaximize);
 
         UpdateMaximizeButtonIcon();
 
-        SetWindowLong(m_captionMaximizeButton.GetHwnd(), GWL_STYLE,
-            GetWindowLong(m_captionMaximizeButton.GetHwnd(), GWL_STYLE) & ~WS_TABSTOP );
-
-        m_captionMaximizeButton.SetFlat(true);
-        m_captionMaximizeButton.SetSquare(true);
-        m_captionMaximizeButton.OnChanged += delegate(OnMaximize);
-    }
-
-    void SettingsDialog::AddCloseButton()
-    {
-        RECT rect;
-        GetClientRect(m_hDialog, &rect);
-
-        m_captionCloseButton.Create(m_hDialog,
-            rect.right - m_theme.DpiScale(Layout::CaptionButtonWidth),
-            -1,
-            m_theme.DpiScale(Layout::CaptionButtonWidth),
-            m_theme.DpiScale(Layout::CaptionHeight));
-
-        SetWindowLong(m_captionCloseButton.GetHwnd(), GWL_STYLE,
-            GetWindowLong(m_captionCloseButton.GetHwnd(), GWL_STYLE) & ~WS_TABSTOP );
-
-        m_captionCloseButton.SetIcon(L"\xE8BB", true);
-        m_captionCloseButton.OnChanged += delegate(OnClose);
-        m_captionCloseButton.SetFlat(true);
-        m_captionCloseButton.SetSquare(true);
-
-        m_captionCloseButton.SetColors(
-            Theme::Colors::Default, Theme::Colors::Default,
-            Theme::Colors::Default, Theme::Colors::CloseButtonHover,
-            Theme::Colors::Default, Theme::Colors::CloseButtonPressed);
-    }
-
-    void SettingsDialog::AddCaption()
-    {
-        RECT rect;
-        GetClientRect(m_hDialog, &rect);
-
-        m_captionStatic.Create(m_hDialog,
-            m_theme.DpiScale(Layout::BackButtonMargin * 2 + Layout::BackButtonSize),
-            m_theme.DpiScale(Layout::BackButtonMargin),
-            m_theme.DpiScale(200),
-            m_theme.DpiScale(Layout::BackButtonSize - 4));
-        m_captionStatic.Format().SetLineAlignment(Gdiplus::StringAlignment::StringAlignmentCenter);
-
-        m_captionStatic.SetText(L"Settings");
-
-        m_captionBackButton.Create(m_hDialog,
-            m_theme.DpiScale(Layout::BackButtonMargin),
-            m_theme.DpiScale(Layout::BackButtonMargin),
-            m_theme.DpiScale(Layout::BackButtonSize),
-            m_theme.DpiScale(Layout::BackButtonSize));
-
-        m_captionBackButton.SetIcon(L"\xE64E");
-        m_captionBackButton.OnChanged += delegate(OpenSettingsPage);
-        m_captionBackButton.SetFlat(true);
-        m_captionBackButton.Enable(false);
+        m_captionCloseButton
+            .SetAnchor(Align::TopRight(), GetDialogClientRect)
+            .Create(m_hDialog, -Layout::CaptionButtonWidth, 0, Layout::CaptionButtonWidth, Layout::CaptionHeight)
+            .SetTabStop(false)
+            .SetIcon(L"\xE8BB", true)
+            .SetFlat(true)
+            .SetSquare(true)
+            .SetColors(
+                Theme::Colors::Default, Theme::Colors::Default,
+                Theme::Colors::Default, Theme::Colors::CloseButtonHover,
+                Theme::Colors::Default, Theme::Colors::CloseButtonPressed)
+            .OnChanged += delegate(OnClose);
     }
 
     void SettingsDialog::AddScrollPanel()
     {
-        RECT rect;
-        GetClientRect(m_hDialog, &rect);
-        m_hScrollView = m_scrollView.Create(m_hDialog,
-            m_theme.DpiScale(Layout::Border),
-            rect.top + m_theme.DpiScale(Layout::MarginTop + GetSystemMetrics(SM_CYCAPTION)),
-            rect.right - m_theme.DpiScale(Layout::Border * 2),
-            rect.bottom
-                - m_theme.DpiScale(Layout::MarginBottom)
-                - m_theme.DpiScale(Layout::MarginTop + GetSystemMetrics(SM_CYCAPTION))
-                - m_theme.DpiScale(Layout::ButtonHeight)
-                - m_theme.DpiScale(Layout::ButtonPadding)
+        m_hScrollView = m_scrollView
+            .SetAnchor(Align::Client(), GetDialogClientRect)
+            .Create(m_hDialog,
+                Layout::Border,
+                Layout::MarginTop + GetSystemMetrics(SM_CYCAPTION),
+                - Layout::Border,
+                - Layout::MarginBottom - Layout::ButtonHeight - Layout::ButtonPadding
         );
+    }
+
+    void SettingsDialog::AddFooterButtons()
+    {
+        AddUpdateControls();
+
+        m_okButton
+            .SetAnchor(Align::BottomRight(), GetDialogCenteredRect)
+            .Create(m_hDialog,
+                - Layout::OKWidth - Layout::ButtonPadding - Layout::CloseWidth -  Layout::MarginRight,
+                - Layout::MarginBottom - Layout::ButtonHeight,
+                Layout::OKWidth,
+                Layout::ButtonHeight)
+            .SetText(L"Save")
+            .OnChanged += delegate(OnOk);
+
+        m_closeButton
+            .SetAnchor(Align::BottomRight(), GetDialogCenteredRect)
+            .Create(m_hDialog,
+                - Layout::CloseWidth - Layout::MarginRight,
+                - Layout::MarginBottom - Layout::ButtonHeight,
+                Layout::CloseWidth,
+                Layout::ButtonHeight)
+            .SetText(L"Discard and Close")
+            .OnChanged += delegate(OnClose);
     }
 
     void SettingsDialog::OnInitDialog(HWND hwnd)
     {
-        RECT rect;
-        GetClientRect(m_hDialog, &rect);
-
-        AddCaption();
-        AddMinimizeButton();
-        AddMaximizeButton();
-        AddCloseButton();
+        AddCaptionButtons();
         AddScrollPanel();
+        AddFooterButtons();
 
         ULONG top = 0;
-
         for (auto& page: m_pages)
         {
             page->AddPage(m_settingPageList, top);
+            page->LoadControls();
         }
-
 
         m_pActivePageList = &m_settingPageList;
         UpdateLayout();
-
-        GetDialogRect(&rect);
-        rect.top = rect.bottom
-            - m_theme.DpiScale(Layout::MarginBottom)
-            - m_theme.DpiScale(Layout::ButtonHeight);
-
-        rect.right -= m_theme.DpiScale(Layout::MarginRight);
-        rect.left  += m_theme.DpiScale(Layout::MarginLeft);
-
-        AddUpdateControls();
-
-        m_okButton.Create(m_hDialog,
-            rect.right
-                - m_theme.DpiScale(Layout::OKWidth)
-                - m_theme.DpiScale(Layout::ButtonPadding)
-                - m_theme.DpiScale(Layout::CloseWidth),
-            rect.top,
-            m_theme.DpiScale(Layout::OKWidth),
-            m_theme.DpiScale(Layout::ButtonHeight));
-
-        m_okButton.SetText(L"Save");
-
-        m_okButton.OnChanged += delegate(OnOk);
-
-        m_closeButton.Create(m_hDialog,
-            rect.right - m_theme.DpiScale(Layout::CloseWidth),
-            rect.top,
-            m_theme.DpiScale(Layout::CloseWidth),
-            m_theme.DpiScale(Layout::ButtonHeight));
-
-        m_closeButton.OnChanged += delegate(OnClose);
-
-        m_closeButton.SetText(L"Discard and Close");
-
-        for (auto& page: m_pages)
-        {
-            page->LoadControls();
-        }
     }
 
     void SettingsDialog::OnOk()

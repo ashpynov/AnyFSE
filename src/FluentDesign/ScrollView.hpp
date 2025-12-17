@@ -57,8 +57,15 @@ namespace FluentDesign
         LRESULT OnPaint(HWND hWnd);
 
     public:
-        ScrollView(Theme& theme);
+        ScrollView(Theme &theme, Align::Anchor align = Align::Client(), GetParentRectFunc getParentRect = GetParentRect);
         ScrollView(Theme& theme, HWND hParent, int x, int y, int width, int height);
+
+        ScrollView& SetAnchor(Align::Anchor anchor, GetParentRectFunc getParentRect = GetParentRect)
+        {
+            FluentControl::SetAnchor(anchor, getParentRect);
+            return *this;
+        }
+
         HWND Create(HWND hParent, int x, int y, int width, int height);
 
         void SetContentHeight(int newHeight);

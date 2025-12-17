@@ -81,29 +81,38 @@ namespace FluentDesign
         void UpdateLayout();
 
     public:
-        Button(Theme& theme);
+        Button(Theme &theme, Align::Anchor align = Align::None, GetParentRectFunc getParentRect = GetParentRect);
         Button(
             Theme& theme,
             HWND hParent,
             int x, int y,
             int width, int height);
 
-        HWND Create(HWND hParent, int x, int y, int width, int height);
-        HWND Create(HWND hParent, const std::wstring& text, const std::function<void()>& callback, int x, int y, int width, int height);
+        Button& SetAnchor(Align::Anchor anchor, GetParentRectFunc getParentRect = GetParentRect)
+        {
+            FluentControl::SetAnchor(anchor, getParentRect);
+            return *this;
+        }
 
-        void SetText(const std::wstring& text);
-        void SetIcon(const std::wstring& glyph, bool bSmall = false);
-        void Enable(bool bEnable);
-        void Show(bool bShow);
+        Button& Create(HWND hParent, int x, int y, int width, int height);
+        Button& Create(HWND hParent, const std::wstring& text, const std::function<void()>& callback, int x, int y, int width, int height);
 
-        void SetFlat(bool isFlat);
-        void SetSquare(bool isSquare);
-        void SetAlign(int bsStyle);
+        Button& SetText(const std::wstring& text);
+        Button& SetIcon(const std::wstring& glyph, bool bSmall = false);
+        Button& Enable(bool bEnable);
+        Button& SetTabStop(bool bTabStop);
+        Button& Show(bool bShow);
+
+        Button& SetFlat(bool isFlat);
+        Button& SetSquare(bool isSquare);
+        Button& SetAlign(int bsStyle);
         void SetAngle(int angle);
-        void SetLinkStyle();
-        void SetSize(SIZE sz);
+        Button& SetLinkStyle();
 
-        void SetColors(Theme::Colors textNornal, Theme::Colors backgroundNormal = Theme::Colors::Default,
+        void SetSize(SIZE sz) { SetSize(sz.cx, sz.cy); };
+        void SetSize(LONG cx, LONG cy);
+
+        Button&  SetColors(Theme::Colors textNornal, Theme::Colors backgroundNormal = Theme::Colors::Default,
                        Theme::Colors textHover = Theme::Colors::Default, Theme::Colors backgroundHover = Theme::Colors::Default,
                        Theme::Colors textPressed = Theme::Colors::Default, Theme::Colors backgroundPressed = Theme::Colors::Default);
 

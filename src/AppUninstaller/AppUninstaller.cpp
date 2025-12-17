@@ -327,14 +327,14 @@ namespace AnyFSE
             rc.bottom - m_theme.DpiScale(Layout_ButtonHeight),
             m_theme.DpiScale(Layout_ButtonWidth),
             m_theme.DpiScale(Layout_ButtonHeight)
-        ));
+        ).GetHwnd());
 
         page.push_back( m_rightButton.Create(m_hDialog,
             rc.right - m_theme.DpiScale(Layout_ButtonWidth),
             rc.bottom - m_theme.DpiScale(Layout_ButtonHeight),
             m_theme.DpiScale(Layout_ButtonWidth),
             m_theme.DpiScale(Layout_ButtonHeight)
-        ));
+        ).GetHwnd());
 
         m_captionStatic.SetLarge(true);
         m_captionStatic.SetColor(Theme::Colors::TextAccented);

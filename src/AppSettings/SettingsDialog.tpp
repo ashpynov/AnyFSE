@@ -36,7 +36,7 @@ namespace AnyFSE::App::AppSettings::Settings
         int height, int padding, int contentMargin, int contentWidth, int contentHeight )
     {
         RECT rect;
-        GetDialogRect(&rect);
+        GetDialogCenteredRect(m_theme, m_hDialog, &rect);
         int width = rect.right - rect.left
             - m_theme.DpiScale(Layout::MarginLeft - Layout::Border)
             - m_theme.DpiScale(Layout::MarginRight - Layout::Border);
@@ -47,8 +47,12 @@ namespace AnyFSE::App::AppSettings::Settings
             top, width,
             m_theme.DpiScale(height),
             padding,
-            [&](HWND parent) { return control.Create(parent, 0, 0,
-                m_theme.DpiScale(contentWidth), m_theme.DpiScale(contentHeight)); });
+            [&](HWND parent)
+            {
+                control.Create(parent, 0, 0, m_theme.DpiScale(contentWidth), m_theme.DpiScale(contentHeight));
+                return control.GetHwnd();
+            }
+        );
 
         top += m_theme.DpiScale(height + padding);
         if (contentMargin)

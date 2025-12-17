@@ -207,6 +207,8 @@ namespace FluentDesign
         const void DpiUnscaleChilds(HWND parent, std::map<HWND,Gdiplus::RectF>& storage);
         const void DpiScaleChilds(HWND parent, const std::map<HWND,Gdiplus::RectF>& storage);
 
+        const void ReflowChilds(HWND parent);
+
         bool IsDarkThemeEnabled();
         COLORREF GetAccentColor();
 

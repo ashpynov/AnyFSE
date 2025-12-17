@@ -97,18 +97,16 @@ namespace AnyFSE::App::AppSettings::Settings
             , m_captionCloseButton(m_theme)
             , m_captionMinimizeButton(m_theme)
             , m_captionMaximizeButton(m_theme)
-
-
+            , m_scrollView(m_theme)
             , m_okButton(m_theme)
             , m_closeButton(m_theme)
-
             , m_pActivePageList(nullptr)
 
             // SettingsDialog_Update
-            , m_updateCheckButton(m_theme)
-            , m_updateCurrentText(m_theme)
-            , m_updateButton(m_theme)
-            , m_scrollView(m_theme)
+            , m_updateCheckButton(m_theme, Align::BottomLeft(), GetDialogCenteredRect)
+            , m_updateCurrentText(m_theme, Align::BottomLeft(), GetDialogCenteredRect)
+            , m_updateButton(m_theme, Align::BottomLeft(), GetDialogCenteredRect)
+
         {
             m_pages.push_back(new Page::LauncherPage(m_theme, *this));
             m_pages.push_back(new Page::SplashPage(m_theme, *this));
@@ -129,7 +127,9 @@ namespace AnyFSE::App::AppSettings::Settings
     private:
         static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
         INT_PTR InstanceDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-        void GetDialogRect(RECT *prc);
+
+        static BOOL GetDialogClientRect(Theme& theme, HWND hDialog, RECT *prc);
+        static BOOL GetDialogCenteredRect(Theme& theme, HWND hDialog, RECT *prc);
 
         void SaveSettings();
 
@@ -159,9 +159,7 @@ namespace AnyFSE::App::AppSettings::Settings
         Button m_captionMinimizeButton;
         Button m_captionMaximizeButton;
         Button m_captionCloseButton;
-
         ScrollView m_scrollView;
-
         Button m_okButton;
         Button m_closeButton;
 
@@ -172,14 +170,11 @@ namespace AnyFSE::App::AppSettings::Settings
 
 
         void UpdateDpiLayout();
-        void ArrangeControls();
         HWND GetMainWindow();
 
-        void AddCaption();
+        void AddCaptionButtons();
         void AddScrollPanel();
-        void AddMinimizeButton();
-        void AddMaximizeButton();
-        void AddCloseButton();
+        void AddFooterButtons();
 
         Button m_updateCheckButton;
         Static m_updateCurrentText;

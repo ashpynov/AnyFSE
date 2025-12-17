@@ -26,6 +26,7 @@
 #include "Tools/GdiPlus.hpp"
 #include "Tools/Window.hpp"
 #include "Logging/LogManager.hpp"
+
 #include <dwmapi.h>
 #include <commctrl.h>
 #pragma comment(lib, "dwmapi.lib")
@@ -540,7 +541,7 @@ namespace FluentDesign
             }
             hChild = GetWindow(hChild, GW_HWNDNEXT);
         }
-    };
+    }
 
     POINT GetCenterPoint(HWND hwnd)
     {

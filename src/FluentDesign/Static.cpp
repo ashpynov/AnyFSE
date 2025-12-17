@@ -38,8 +38,8 @@ using namespace Gdiplus;
 
 namespace FluentDesign
 {
-    Static::Static(FluentDesign::Theme &theme)
-        : FluentControl(theme)
+    Static::Static(Theme &theme, Align::Anchor align, GetParentRectFunc getParentRect)
+        : FluentControl(theme, align, getParentRect)
         , m_large(false)
         , m_colorId(Theme::Colors::Text)
         , m_pImage(nullptr)
@@ -67,6 +67,7 @@ namespace FluentDesign
 
     HWND Static::Create(HWND hParent, int x, int y, int width, int height )
     {
+        AnchoredSizePos(hParent, x, y, width, height);
 
         m_designHeight = m_theme.DpiUnscale(height);
         m_designWidth = m_theme.DpiUnscale(width);
@@ -83,6 +84,7 @@ namespace FluentDesign
             m_theme.OnDPIChanged += [This = this]() { This->UpdateLayout(); };
         }
         m_theme.RegisterChild(m_hWnd);
+        SetWindowLongPtr(m_hWnd, GWLP_USERDATA, (LONG_PTR)this);
         SetWindowSubclass(m_hWnd, StaticSubclassProc, 0, (DWORD_PTR)this);
         return m_hWnd;
     }

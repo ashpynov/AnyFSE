@@ -77,6 +77,7 @@ namespace FluentDesign
 
 
         m_theme.RegisterChild(m_hWnd);
+        SetWindowLongPtr(m_hWnd, GWLP_USERDATA, (LONG_PTR)this);
         SetWindowSubclass(m_hWnd, ComboBoxSubclassProc, 0, (DWORD_PTR)this);
         return m_hWnd;
     }
