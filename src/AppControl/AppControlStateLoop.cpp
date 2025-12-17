@@ -529,7 +529,7 @@ namespace AnyFSE::App::AppControl::StateLoop
         HWND launcherHwnd = GetLauncherWindow();
         if (launcherHwnd)
         {
-            Process::BringWindowToForeground(launcherHwnd);
+            Process::BringWindowToForeground(launcherHwnd, SW_SHOWMAXIMIZED);
 
             HMONITOR hMonitor = MonitorFromWindow(launcherHwnd, MONITOR_DEFAULTTONEAREST);
             MONITORINFOEX monitorInfo = {};

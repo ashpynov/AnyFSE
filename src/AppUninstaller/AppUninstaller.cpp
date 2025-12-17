@@ -86,8 +86,8 @@ namespace AnyFSE
 
         LPDLGTEMPLATE dlgTemplate = (LPDLGTEMPLATE)GlobalLock(hGlobal);
 
-        dlgTemplate->style = DS_MODALFRAME | WS_POPUP | WS_CLIPCHILDREN | WS_CAPTION;
-        dlgTemplate->dwExtendedStyle = WS_EX_WINDOWEDGE;
+        dlgTemplate->style = DS_MODALFRAME | WS_POPUP | WS_CLIPCHILDREN | WS_CAPTION | WS_MINIMIZEBOX;
+        dlgTemplate->dwExtendedStyle = WS_EX_WINDOWEDGE | WS_EX_APPWINDOW;
         dlgTemplate->cdit = 0;  // No controls
         dlgTemplate->x = 0;
         dlgTemplate->y = 0;

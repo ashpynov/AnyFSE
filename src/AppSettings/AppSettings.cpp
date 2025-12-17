@@ -46,8 +46,7 @@ int WINAPI Main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
     if (hDialogWnd)
     {
         ShowWindow(hDialogWnd, SW_SHOWNORMAL);
-        SetForegroundWindow(hDialogWnd);
-        SetActiveWindow(hDialogWnd);
+        Process::BringWindowToForeground(hDialogWnd);
         return 0;
     }
 

@@ -50,6 +50,11 @@ namespace AnyFSE::Tools::Process
             ? 0 : FindFirstByName(path.filename().wstring());
     }
 
+    HWND FindAppWindow(HANDLE hProcess)
+    {
+        return GetWindow(std::set<DWORD>{GetProcessId(hProcess)}, WS_EX_APPWINDOW);
+    }
+
     DWORD FindFirstByName(const std::wstring &processName)
     {
         HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -348,7 +353,7 @@ namespace AnyFSE::Tools::Process
         return searchData.foundWindow;
     }
 
-    bool BringWindowToForeground(HWND hWnd)
+    bool BringWindowToForeground(HWND hWnd, int nCmdShow)
     {
         if (!IsWindow(hWnd))
         {
@@ -357,7 +362,7 @@ namespace AnyFSE::Tools::Process
 
         if (IsIconic(hWnd))
         {
-            ShowWindow(hWnd, SW_SHOWMAXIMIZED);
+            ShowWindow(hWnd, nCmdShow);
         }
 
         if (GetForegroundWindow() == hWnd)
