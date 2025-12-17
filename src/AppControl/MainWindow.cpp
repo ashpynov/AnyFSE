@@ -445,7 +445,7 @@ namespace AnyFSE::App::AppControl::Window
     {
         KillTimer(m_hWnd, m_updateTimerId);
 
-        if (delay < 0)
+        if (delay <= 0)
         {
             log.Debug("Stop Updater Schedule");
             return;
