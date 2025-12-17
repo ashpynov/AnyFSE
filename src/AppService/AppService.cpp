@@ -190,6 +190,7 @@ namespace AnyFSE::App::AppService
                     log.Debug("Reload");
                     Config::Load();
                     AnyFSE::Logging::LogManager::Initialize("AnyFSE/Service", Config::LogLevel, Config::LogPath);
+                    log.Debug("** Reloading **");
                     bNoClient = false;
                     break;
 

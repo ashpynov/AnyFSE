@@ -59,15 +59,10 @@ namespace AnyFSE::Logging
             LogWriter.close();
         }
 
-        // DeleteFile(FilePath.c_str());
+        DeleteFile(FilePath.c_str());
     }
     void LogManager::Initialize(const string &appName, LogLevels level, const std::wstring& filePath)
     {
-        if (!ApplicationName.empty())
-        {
-            return;
-        }
-
         LogToConsole = IsDebuggerPresent() != 0;
         ApplicationName = appName;
         Level = LogToConsole ? LogLevels::Trace : level;
