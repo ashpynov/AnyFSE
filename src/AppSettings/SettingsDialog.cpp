@@ -167,6 +167,9 @@ namespace AnyFSE::App::AppSettings::Settings
                 SetWindowText(hwnd, L"AnyFSE Settings");
                 OnInitDialog(hwnd);
                 RestoreWindowPlacement();
+                BringWindowToTop(m_hDialog);
+                SetForegroundWindow(m_hDialog);
+                SetActiveWindow(m_hDialog);
             }
             return TRUE;
 

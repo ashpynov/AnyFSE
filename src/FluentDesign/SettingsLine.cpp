@@ -204,7 +204,10 @@ namespace FluentDesign
                     RECT childRect;
                     GetClientRect((HWND)lParam, &childRect);
                     DrawBackground((HDC)wParam, childRect, false);
-                    m_theme.DrawChildFocus((HDC)wParam, (HWND)lParam, (HWND)lParam);
+                    for ( HWND hChild = GetWindow(m_hWnd, GW_CHILD); hChild; hChild = GetWindow(hChild, GW_HWNDNEXT))
+                    {
+                        m_theme.DrawChildFocus((HDC)wParam, (HWND)lParam, hChild);
+                    }
                 }
             }
             return 1; // We handle background in WM_PAINT
@@ -238,12 +241,10 @@ namespace FluentDesign
         // Draw text
         DrawText(paint.MemDC());
 
-        for (auto child : m_childControlsList)
+        for ( HWND hChild = GetWindow(m_hWnd, GW_CHILD); hChild; hChild = GetWindow(hChild, GW_HWNDNEXT))
         {
-            m_theme.DrawChildFocus(paint.MemDC(), m_hWnd, child);
+            m_theme.DrawChildFocus(paint.MemDC(), m_hWnd, hChild);
         }
-
-        m_theme.DrawChildFocus(paint.MemDC(), m_hWnd, m_chevronButton.GetHwnd());
     }
 
     void SettingsLine::DrawBackground(HDC hdc, const RECT &rect, bool frame)
