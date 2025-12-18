@@ -377,10 +377,11 @@ namespace AnyFSE::App::AppSettings::Settings
                     ::DrawText(paint.MemDC(), m_pageName.c_str(), -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
                 }
 
-                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_okButton.GetHwnd());
-                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_closeButton.GetHwnd());
-                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_updateCheckButton.GetHwnd());
-                m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, m_updateButton.GetHwnd());
+                HWND hFocused = GetFocus();
+                if (hFocused && (GetParent(hFocused) == m_hDialog))
+                {
+                    m_theme.DrawChildFocus(paint.MemDC(), m_hDialog, hFocused);
+                }
 
                 SelectObject(paint.MemDC(), oldFont);
             }

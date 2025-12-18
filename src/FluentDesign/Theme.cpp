@@ -261,7 +261,7 @@ namespace FluentDesign
                     {
                         This->DrawChildFocus((HDC)wParam, child, child);
                     }
-                    else
+                    else if (GetParent(focused) == hWnd)
                     {
                         This->DrawChildFocus((HDC)wParam, child, focused);
                     }
@@ -308,7 +308,7 @@ namespace FluentDesign
         }
         else if (!_wcsicmp(className, L"BUTTON"))
         {
-            if (GetWindowLong(hWnd, GWL_STYLE) & BS_CHECKBOX)
+            if ((GetWindowLong(hWnd, GWL_STYLE) & BS_TYPEMASK) == BS_CHECKBOX)
             {
                 return DpiScaleF(m_focusToggleMargins);
             }
