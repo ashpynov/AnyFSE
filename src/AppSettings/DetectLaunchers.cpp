@@ -204,14 +204,18 @@ namespace AnyFSE::Configuration
 
     std::wstring Config::GetPathFromCommand(const std::wstring &uninstallCommand)
     {
+        std::wstring name;
         size_t pos = uninstallCommand.find(L'\"');
-        if (pos == std::string::npos)
+        if (pos != std::string::npos)
         {
-            return fs::path(uninstallCommand).wstring();
+            size_t last = uninstallCommand.find(L'\"', pos + 1);
+            name = last != std::string::npos ? uninstallCommand.substr(pos + 1, last - pos - 1) : uninstallCommand.substr(pos+1);
         }
-
-        size_t last = uninstallCommand.find(L'\"', pos + 1);
-        std::wstring name = last != std::string::npos ? uninstallCommand.substr(pos + 1, last - pos - 1) : uninstallCommand.substr(pos+1);
+        else
+        {
+            name = fs::path(uninstallCommand).wstring();
+        }
+        std::replace(name.begin(), name.end(), L'/', L'\\');
         return name;
     }
 

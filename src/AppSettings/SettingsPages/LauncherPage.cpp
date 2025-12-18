@@ -1,3 +1,4 @@
+#include <filesystem>
 #include "Tools/Registry.hpp"
 #include "Tools/Event.hpp"
 #include "Tools/Unicode.hpp"
@@ -204,7 +205,11 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         OPENFILENAME ofn = {};
         WCHAR szFile[MAX_PATH] = {};
 
-        wcsncpy_s(szFile, m_currentLauncherPath.c_str(), MAX_PATH);
+        if (m_currentLauncherPath.find(L"://") == std::wstring::npos
+            && std::filesystem::exists(m_currentLauncherPath))
+        {
+            wcsncpy_s(szFile, m_currentLauncherPath.c_str(), MAX_PATH);
+        }
 
         ofn.lStructSize = sizeof(ofn);
         ofn.hwndOwner = m_dialog.GetHwnd();
