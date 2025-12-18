@@ -476,6 +476,7 @@ namespace AnyFSE::App::AppControl::Window
                 if ( result == IDOK)
                 {
                     OnReconfigure.Notify();
+                    LoadLogoImage();
                     return TRUE;
                 }
             }

@@ -47,6 +47,12 @@ namespace AnyFSE::App::AppControl::Window
 
     BOOL MainWindow::LoadLogoImage()
     {
+        if (m_pLogoImage)
+        {
+            delete m_pLogoImage;
+            m_pLogoImage = NULL;
+        }
+
         if (!Config::SplashShowLogo)
         {
             return FALSE;
