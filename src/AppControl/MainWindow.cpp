@@ -40,6 +40,7 @@
 #include "Updater/Updater.AppControl.hpp"
 #include "Tools/Notification.hpp"
 #include "Tools/PowerEfficiency.hpp"
+#include "Tools/Paths.hpp"
 
 #pragma comment(lib, "mpr.lib")
 
@@ -505,7 +506,7 @@ namespace AnyFSE::App::AppControl::Window
         m_currentVideo = L"";
 
         namespace fs = std::filesystem;
-        std::wstring mediaPath = Config::SplashVideoPath.empty() ? Config::GetModulePath() + L"\\splash" : Config::SplashVideoPath;
+        std::wstring mediaPath = Config::SplashVideoPath.empty() ? Tools::Paths::GetDataPath() + L"\\splash" : Config::SplashVideoPath;
 
         std::vector<fs::path> videoFiles;
 

@@ -5,41 +5,36 @@
 #include <DbgHelp.h>
 #include <string>
 #include <ctime>
+#include <filesystem>
+#include "Tools/Paths.hpp"
 
 #pragma comment(lib, "Dbghelp.lib")
 
-namespace ToolsEx
+namespace AnyFSE::ToolsEx
 {
     inline bool WriteMiniDump(EXCEPTION_POINTERS* pExceptionInfo)
     {
-        wchar_t modulePath[MAX_PATH] = {0};
-        if (!GetModuleFileNameW(NULL, modulePath, MAX_PATH))
-            return false;
-
-        // Derive directory (exe folder) and executable base name
-        wchar_t* lastSlash = wcsrchr(modulePath, L'\\');
-        std::wstring exeDir = modulePath;
-        std::wstring exeName = modulePath;
-        if (lastSlash)
+        std::wstring modulePath = Tools::Paths::GetExeFileName();
+        if (modulePath.empty())
         {
-            exeDir.assign(modulePath, (size_t)(lastSlash - modulePath));
-            exeName = lastSlash + 1;
+            return false;
         }
 
-        // strip extension from exeName
-        size_t dot = exeName.rfind(L'.');
-        if (dot != std::wstring::npos)
-            exeName.erase(dot);
+        std::wstring exeName = std::filesystem::path(modulePath)
+                                   .filename()
+                                   .replace_extension(L"")
+                                   .wstring();
+
+        std::wstring dataDir = Tools::Paths::GetDataPath();
 
         // ensure dumps directory exists: <exeDir>\dumps
-        std::wstring dumpsDir = exeDir + L"\\dumps";
+        std::wstring dumpsDir = dataDir + L"\\dumps";
         if (!CreateDirectoryW(dumpsDir.c_str(), NULL))
         {
             DWORD err = GetLastError();
             if (err != ERROR_ALREADY_EXISTS)
             {
-                // if we cannot create dumps dir, fall back to exeDir
-                dumpsDir = exeDir;
+                return false;
             }
         }
 

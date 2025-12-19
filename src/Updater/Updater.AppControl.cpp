@@ -13,6 +13,7 @@
 #include "Updater/Updater.Command.hpp"
 
 #include "Tools/Unicode.hpp"
+#include "Tools/Paths.hpp"
 
 #include "Configuration/nlohmann/json.hpp"
 #include "Configuration/Config.hpp"
@@ -218,17 +219,18 @@ namespace AnyFSE::Updater
 
     std::wstring GetModuleVersion()
     {
-        wchar_t modulePath[MAX_PATH] = {0};
-        if (!GetModuleFileNameW(NULL, modulePath, MAX_PATH))
+        std::wstring modulePath = Tools::Paths::GetExeFileName();
+
+        if (modulePath.empty())
             return L"0.0.0";
 
         DWORD dummy = 0;
-        DWORD len = GetFileVersionInfoSizeW(modulePath, &dummy);
+        DWORD len = GetFileVersionInfoSizeW(modulePath.c_str(), &dummy);
         if (len == 0)
             return L"0.0.0";
 
         std::vector<char> data(len);
-        if (!GetFileVersionInfoW(modulePath, 0, len, data.data()))
+        if (!GetFileVersionInfoW(modulePath.c_str(), 0, len, data.data()))
             return L"0.0.0";
 
         VS_FIXEDFILEINFO *vinfo = nullptr;
@@ -397,7 +399,7 @@ namespace AnyFSE::Updater
 
         // convert assetName to wstring
         std::wstring wname = Tools::Unicode::to_wstring(assetName);
-        std::wstring localPath = Config::GetModulePath() + L"\\AnyFSE." + tag + L".Update.exe";
+        std::wstring localPath = Tools::Paths::GetDataPath() + L"\\AnyFSE." + tag + L".Update.exe";
 
         // download
         std::wstring wurl = Tools::Unicode::to_wstring(downloadUrl);

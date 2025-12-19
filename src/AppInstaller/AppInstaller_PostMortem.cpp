@@ -26,6 +26,7 @@
 #include "Logging/LogManager.hpp"
 #include "ToolsEx/TaskManager.hpp"
 #include "Tools/Unicode.hpp"
+#include "Tools/Paths.hpp"
 #include "AppInstaller.hpp"
 
 
@@ -37,19 +38,15 @@ namespace AnyFSE
 
     std::wstring GetModuleVersion(const std::wstring &file)
     {
-        wchar_t modulePath[MAX_PATH] = {0};
-        wcsncpy_s(modulePath, file.c_str(), MAX_PATH);
-
-        if (!GetModuleFileNameW(NULL, modulePath, MAX_PATH))
-            return L"";
+        std::wstring modulePath = Tools::Paths::GetExeFileName();
 
         DWORD dummy = 0;
-        DWORD len = GetFileVersionInfoSizeW(modulePath, &dummy);
+        DWORD len = GetFileVersionInfoSizeW(modulePath.c_str(), &dummy);
         if (len == 0)
             return L"";
 
         std::vector<char> data(len);
-        if (!GetFileVersionInfoW(modulePath, 0, len, data.data()))
+        if (!GetFileVersionInfoW(modulePath.c_str(), 0, len, data.data()))
             return L"";
 
         VS_FIXEDFILEINFO *vinfo = nullptr;

@@ -4,6 +4,7 @@
 #include "AppSettings/SettingsLayout.hpp"
 #include "AppSettings/SettingsDialog.hpp"
 #include "TroubleshootPage.hpp"
+#include "Tools/Paths.hpp"
 
 
 namespace AnyFSE::App::AppSettings::Settings::Page
@@ -73,7 +74,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
     void TroubleshootPage::OnGotoLogsFolder()
     {
-        std::wstring path = Config::GetModulePath() + L"\\logs";
+        std::wstring path = Tools::Paths::GetDataPath() + L"\\logs";
 
         CreateDirectoryW(path.c_str(), NULL);
         Process::StartProtocol(L"\"" + path + L"\"");

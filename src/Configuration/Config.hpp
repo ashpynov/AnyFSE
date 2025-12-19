@@ -112,10 +112,7 @@ namespace AnyFSE::Configuration
             static void UpdatePortableLauncher(LauncherConfig &out);
             static bool FindLaunchers(std::list<std::wstring> &found);
 
-            // safe
-            static std::wstring GetModulePath();
-
-            static std::string GetConfigFileA();
+            static std::string GetConfigFileA(bool readOnly = true);
             static void Load();
             static bool LoadLauncherSettings(const nlohmann::json &config, const std::wstring &path, LauncherConfig &out);
             static bool LoadLauncherSettings(const std::wstring &path, LauncherConfig &out);

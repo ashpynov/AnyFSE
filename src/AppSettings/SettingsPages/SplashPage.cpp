@@ -2,6 +2,7 @@
 #include "AppSettings/SettingsLayout.hpp"
 #include "AppSettings/SettingsDialog.hpp"
 #include "SplashPage.hpp"
+#include "Tools/Paths.hpp"
 
 
 namespace AnyFSE::App::AppSettings::Settings::Page
@@ -110,7 +111,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
     void SplashPage::OnGotoSplashFolder()
     {
-        std::wstring path = Config::GetModulePath() + L"\\splash";
+        std::wstring path = Tools::Paths::GetDataPath() + L"\\splash";
 
         CreateDirectoryW(path.c_str(), NULL);
         Process::StartProtocol(L"\"" + path + L"\"");

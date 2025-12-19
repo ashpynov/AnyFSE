@@ -42,6 +42,7 @@
 #include "ToolsEx/ProcessEx.hpp"
 #include "ToolsEx/TaskManager.hpp"
 #include "Tools/Registry.hpp"
+#include "Tools/Paths.hpp"
 
 
 #pragma comment(lib, "Shell32.lib")
@@ -351,16 +352,7 @@ namespace AnyFSE
         const std::wstring &buttonLeft,
         const std::function<void()> &callbackLeft)
     {
-        if (icon.empty())
-        {
-            wchar_t modulePath[MAX_PATH];
-            GetModuleFileName(NULL, modulePath, MAX_PATH);
-            m_imageStatic.LoadIcon(modulePath, 128);
-        }
-        else
-        {
-            m_imageStatic.LoadIcon(icon, 128);
-        }
+        m_imageStatic.LoadIcon(icon.empty() ? Tools::Paths::GetExeFileName() : icon, 128);
 
         m_captionStatic.SetText(caption);
         m_textStatic.SetText(text);
@@ -416,18 +408,16 @@ namespace AnyFSE
 
     void AppUninstaller::Uninstall()
     {
-        wchar_t moduleName[MAX_PATH + 1];
-        GetModuleFileName(GetModuleHandle(NULL), moduleName, MAX_PATH);
-        std::wstring path = fs::path(moduleName).parent_path().wstring();
-
         TerminateAnyFSE();
         ToolsEx::TaskManager::RemoveTask();
 
-        bool removeDir = DeleteFiles(path);
+        DeleteFiles(Tools::Paths::GetDataPath());
+
+        bool removeDir = DeleteFiles(Tools::Paths::GetExePath());
 
         Registry::DeleteKey(L"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AnyFSE");
 
-        AutoDeleteSelf(path, removeDir);
+        AutoDeleteSelf(Paths::GetExePath(), removeDir);
     }
 
     void AppUninstaller::OnUninstall()
@@ -488,7 +478,7 @@ namespace AnyFSE
 
         if (fs::exists(path + L"\\logs"))
         {
-            fs::remove_all(path + L"\\dumps");
+            fs::remove_all(path + L"\\logs");
         }
 
         if (fs::exists(path + L"\\splash") && fs::is_empty(path + L"\\splash"))
@@ -496,6 +486,7 @@ namespace AnyFSE
             fs::remove(path + L"\\splash");
         }
 
+        fs::remove(path);
         return ListDir(path, L"*").size() <= 1;
     }
 

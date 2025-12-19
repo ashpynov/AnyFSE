@@ -38,6 +38,7 @@
 #include "ToolsEx/TaskManager.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/Registry.hpp"
+#include "Tools/Paths.hpp"
 #include "AppInstaller.hpp"
 #include "Logging/LogManager.hpp"
 
@@ -127,16 +128,8 @@ namespace AnyFSE
         const std::function<void()> &callbackLeft,
         bool showBrowse)
     {
-        if (icon.empty())
-        {
-            wchar_t modulePath[MAX_PATH];
-            GetModuleFileName(NULL, modulePath, MAX_PATH);
-            m_imageStatic.LoadIcon(modulePath, 128);
-        }
-        else
-        {
-            m_imageStatic.LoadIcon(icon, 128);
-        }
+
+        m_imageStatic.LoadIcon(icon.empty() ? Tools::Paths::GetExeFileName() : icon, 128);
 
         m_captionStatic.SetText(caption);
         m_textStatic.SetText(text);
@@ -483,9 +476,7 @@ namespace AnyFSE
 
     bool AppInstaller::DeleteOldFiles(const std::wstring& dir)
     {
-        wchar_t modulePath[MAX_PATH];
-        GetModuleFileName(NULL, modulePath, MAX_PATH);
-        std::wstring moduleName = Unicode::to_lower(modulePath);
+        std::wstring moduleName = Unicode::to_lower(Paths::GetExeFileName());
 
         fs::path path(dir);
         if (fs::is_directory(path))
@@ -579,7 +570,7 @@ namespace AnyFSE
     {
         if (FAILED(SHCreateDirectoryExW(NULL, path.c_str(), NULL)))
         {
-            throw std::exception("Cannot create folder");
+            throw std::exception("Cannot create binary folder");
         }
 
         HINSTANCE hInstance = GetModuleHandle(NULL);
@@ -678,9 +669,7 @@ namespace AnyFSE
         batch << L")\n\n";
 
         // Delete this batch file
-        WCHAR path[MAX_PATH];
-        GetModuleFileName(GetModuleHandle(NULL), path, MAX_PATH);
-        batch << L"del /f /q \"" << path << "\"\n";
+        batch << L"del /f /q \"" << Tools::Paths::GetExeFileName() << "\"\n";
         batch << L"del /f /q \"" << batchPath << L"\"\n";
 
         batch << L"echo Cleaning complete!\n";

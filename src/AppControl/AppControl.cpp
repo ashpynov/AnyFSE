@@ -49,7 +49,7 @@
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    ToolsEx::InstallUnhandledExceptionHandler();
+    AnyFSE::ToolsEx::InstallUnhandledExceptionHandler();
     return AnyFSE::App::AppControl::AppControl::WinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
 }
 

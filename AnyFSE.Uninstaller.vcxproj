@@ -107,6 +107,7 @@
     <ClCompile Include="src\Tools\Process.cpp" />
     <ClCompile Include="src\Tools\Window.cpp" />
     <ClCompile Include="src\Tools\Icon.cpp" />
+    <ClCompile Include="src\Tools\Paths.cpp" />
     <ClCompile Include="src\ToolsEx\ProcessEx.cpp" />
     <ClCompile Include="src\ToolsEx\TaskManager.cpp" />
     <ClCompile Include="src\ToolsEx\Admin.cpp" />

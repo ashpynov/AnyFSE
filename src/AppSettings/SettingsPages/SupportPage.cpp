@@ -2,6 +2,7 @@
 #include "AppSettings/SettingsLayout.hpp"
 #include "AppSettings/SettingsDialog.hpp"
 #include "SupportPage.hpp"
+#include "Tools/Paths.hpp"
 
 
 namespace AnyFSE::App::AppSettings::Settings::Page
@@ -33,7 +34,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         links.AddLinkButton(L"Discord AnyFSE community channel", L"https://discord.gg/AfkERzTEut");
         links.AddLinkButton(L"GitHub repository", L"https://github.com/ashpynov/AnyFSE/");
         links.AddLinkButton(L"Report issue or feature request", L"https://github.com/ashpynov/AnyFSE/issues");
-        links.AddLinkButton(L"Navigate to log files folder", Config::GetModulePath() + L"\\logs");
+        links.AddLinkButton(L"Navigate to log files folder", Tools::Paths::GetDataPath() + L"\\logs");
 
         support.SetState(FluentDesign::SettingsLine::Opened);
 

@@ -21,6 +21,7 @@
     <ClCompile Include="src\Tools\Process.cpp" />
     <ClCompile Include="src\Tools\Event.cpp" />
     <ClCompile Include="src\Tools\Unicode.cpp" />
+    <ClCompile Include="src\Tools\Paths.cpp" />
     <ClCompile Include="src\Tools\PowerEfficiency.cpp" />
     <ClCompile Include="src\ToolsEx\*.cpp" />
 

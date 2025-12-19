@@ -48,7 +48,6 @@
 
   <ItemGroup>
     <ApplicationFiles Include="$(OutDir)*.dll" />
-    <ApplicationFiles Include="$(OutDir)splash" />
     <ApplicationFiles Include="$(OutDir)*.exe" Exclude="$(OutDir)$(TargetName).exe" />
   </ItemGroup>
   <ItemGroup>
@@ -128,6 +127,7 @@
     <ClCompile Include="src\Tools\Window.cpp" />
     <ClCompile Include="src\Tools\Process.cpp" />
     <ClCompile Include="src\Tools\Icon.cpp" />
+    <ClCompile Include="src\Tools\Paths.cpp" />
     <ClCompile Include="src\ToolsEx\ProcessEx.cpp" />
     <ClCompile Include="src\ToolsEx\TaskManager.cpp" />
     <ClCompile Include="src\ToolsEx\Admin.cpp" />

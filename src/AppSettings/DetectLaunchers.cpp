@@ -28,6 +28,7 @@
 #include "Tools/Unicode.hpp"
 #include "Tools/Packages.hpp"
 #include "Configuration/Config.hpp"
+#include "Tools/Paths.hpp"
 
 namespace AnyFSE::Configuration
 {
@@ -137,7 +138,7 @@ namespace AnyFSE::Configuration
     void Config::FindLocal(std::list<std::wstring>& found)
     {
         namespace fs = std::filesystem;
-        std::wstring modulePath = Config::GetModulePath();
+        std::wstring modulePath = Tools::Paths::GetExePath();
         if (fs::exists(fs::path(modulePath + L"\\Playnite.FullscreenApp.exe")))
         {
             found.push_back(modulePath + L"\\Playnite.FullscreenApp.exe");

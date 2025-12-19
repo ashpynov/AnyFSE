@@ -23,6 +23,7 @@
 
 #include "Admin.hpp"
 #include "Tools/Process.hpp"
+#include "Tools/Paths.hpp"
 
 namespace AnyFSE::ToolsEx::Admin
 {
@@ -52,12 +53,11 @@ namespace AnyFSE::ToolsEx::Admin
 
     BOOL RequestAdminElevation(const std::wstring& args)
     {
-        wchar_t modulePath[MAX_PATH];
-        GetModuleFileName(NULL, modulePath, MAX_PATH);
+        std::wstring modulePath = Tools::Paths::GetExeFileName();
 
         SHELLEXECUTEINFO sei = { sizeof(sei) };
         sei.lpVerb = L"runas";  // Request UAC elevation
-        sei.lpFile = modulePath;
+        sei.lpFile = modulePath.c_str();
         sei.nShow = SW_SHOWNORMAL;
         sei.fMask = SEE_MASK_NOCLOSEPROCESS;
 

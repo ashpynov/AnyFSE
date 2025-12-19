@@ -43,7 +43,7 @@
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    ToolsEx::InstallUnhandledExceptionHandler();
+    AnyFSE::ToolsEx::InstallUnhandledExceptionHandler();
     return AnyFSE::App::AppService::AppService::ServiceMain(hInstance, hPrevInstance, lpCmdLine);
 }
 
@@ -174,7 +174,7 @@ namespace AnyFSE::App::AppService
             {
                 AppControlStateLoop.Notify(AppEvents::XBOX_ALLOW);
             }
-            else if (Config::AggressiveMode) 
+            else if (Config::AggressiveMode)
             {
                 AppControlStateLoop.Notify(AppEvents::XBOX_DENY);
             };
@@ -227,12 +227,8 @@ namespace AnyFSE::App::AppService
 
     void AppService::Restart(bool bSuspended)
     {
-        // Get current executable path
-        TCHAR modulePath[MAX_PATH];
-        GetModuleFileName(NULL, modulePath, MAX_PATH);
 
-
-        std::wstring fullCommand = std::wstring(L"\"") + modulePath + L"\"";
+        std::wstring fullCommand = std::wstring(L"\"") + Tools::Paths::GetExeFileName() + L"\"";
 
         if (bSuspended)
         {
@@ -343,16 +339,7 @@ namespace AnyFSE::App::AppService
         si.lpDesktop = L"winsta0\\default";
 
         // Path to your ETW monitoring application
-        wchar_t modulePath[MAX_PATH];
-        GetModuleFileName(NULL, modulePath, MAX_PATH);
-
-        wchar_t * path = wcsrchr(modulePath,'\\');
-        if (path)
-        {
-            *path = '\0';
-        }
-
-        std::wstring fullCommand = std::wstring(L"\"") + modulePath + L"\\AnyFSE.exe\" /Control";
+        std::wstring fullCommand = std::wstring(L"\"") + Tools::Paths::GetExePath() + L"\\AnyFSE.exe\" /Control";
 
         // Create writable buffer for command line
         std::vector<wchar_t> cmdLine(MAX_PATH);
@@ -414,7 +401,7 @@ namespace AnyFSE::App::AppService
                 log.Debug("*** Resume from suspend ***" );
                 ExitService(COMPLETE_RELOAD);
             }
-            
+
         });
 
         AppControlStateLoop.OnSuspend = ([]()

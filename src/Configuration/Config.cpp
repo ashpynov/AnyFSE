@@ -26,6 +26,7 @@
 #include <sstream>
 #include "Config.hpp"
 #include "Tools/Unicode.hpp"
+#include "Tools/Paths.hpp"
 #include "nlohmann/json.hpp"
 
 #pragma comment(lib, "version.lib")
@@ -43,8 +44,6 @@ namespace nlohmann
             value = Unicode::to_wstring(narrow_str);
         }
     };
-
-
 }
 
 namespace AnyFSE::Configuration
@@ -82,24 +81,34 @@ namespace AnyFSE::Configuration
     bool            Config::UpdatePreRelease = false;
     bool            Config::UpdateNotifications = true;
 
-    std::wstring Config::GetModulePath()
-    {
-        wchar_t path[MAX_PATH];
-        GetModuleFileNameW(NULL, path, MAX_PATH);
-        fs::path binary = path;
-        return binary.parent_path().wstring();
-    }
-
     bool Config::IsConfigured()
     {
         return fs::exists(GetConfigFileA());
     }
 
-    std::string Config::GetConfigFileA()
+    std::string Config::GetConfigFileA(bool readOnly)
     {
-        char path[MAX_PATH];
-        GetModuleFileNameA(NULL, path, MAX_PATH);
-        return fs::path(path).parent_path().string() + "\\AnyFSE.json";
+        if (!readOnly)
+        {
+            std::wstring _path = Tools::Paths::GetExePath() + L"\\AnyFSE.json";
+            FILE *file = 0;
+            if (false && !_wfopen_s(&file, _path.c_str(), L"a") && file)
+            {
+                fclose(file);
+            }
+            else
+            {
+                wchar_t appData[MAX_PATH]={0};
+                ExpandEnvironmentStringsW(L"%PROGRAMDATA%\\AnyFSE", appData, MAX_PATH);
+                _path = std::wstring(appData) + L"\\AnyFSE.json";
+            }
+            if (!fs::exists(fs::path(_path)))
+            {
+                CreateDirectoryW(fs::path(_path).parent_path().wstring().c_str(), NULL);
+            }
+            return Unicode::to_string(_path);
+        }
+        return Unicode::to_string(Tools::Paths::GetDataPath() + L"\\AnyFSE.json");
     }
 
     json Config::GetConfig()
@@ -119,7 +128,7 @@ namespace AnyFSE::Configuration
 
     void Config::Load()
     {
-        LogPath = GetModulePath() + L"\\logs";
+        LogPath = Tools::Paths::GetDataPath() + L"\\logs";
         XBoxProcessName = std::wstring(L"XboxPcApp.exe");
 
         json config = GetConfig();
@@ -235,7 +244,7 @@ namespace AnyFSE::Configuration
         config["Update"]["LastCheck"]            = UpdateLastCheck;
         config["Update"]["CheckInterval"]        = UpdateCheckInterval;
 
-        std::ofstream file(GetConfigFileA());
+        std::ofstream file(GetConfigFileA(false));
         file << config.dump(4);
         file.close();
     }
@@ -249,7 +258,7 @@ namespace AnyFSE::Configuration
         config["WindowPos"]["Bottom"] = rcNormalPosition.bottom;
         config["WindowPos"]["State"] = cmdShow;
 
-        std::ofstream file(GetConfigFileA());
+        std::ofstream file(GetConfigFileA(false));
         file << config.dump(4);
         file.close();
     }
@@ -284,7 +293,7 @@ namespace AnyFSE::Configuration
         config["Update"]["LastVersion"] = Config::UpdateLastVersion;
         config["Update"]["LastCheck"] = Config::UpdateLastCheck;
 
-        std::ofstream file(GetConfigFileA());
+        std::ofstream file(GetConfigFileA(false));
         file << config.dump(4);
         file.close();
     }

@@ -81,7 +81,7 @@ namespace AnyFSE::App::StateLoop
 
     void AppStateLoop::Wait(DWORD timeout)
     {
-        if (!m_isRunning.exchange(false))
+        if (m_isRunning.exchange(false))
         {
             SetTimer(std::chrono::milliseconds(timeout), [this]() { SetEvent(m_hQueueCondition); }, false);
         }
@@ -146,7 +146,7 @@ namespace AnyFSE::App::StateLoop
                 }
                 // Wait for events or timer expiration
                 lock.unlock();
-                
+
                 bool result = true;
                 try
                 {

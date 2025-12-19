@@ -29,6 +29,7 @@
 #include <string>
 #include <filesystem>
 #include "Logging/LogManager.hpp"
+#include "Tools/Paths.hpp"
 
 #pragma comment(lib, "taskschd.lib")
 #include "TaskManager.hpp"
@@ -48,12 +49,8 @@ namespace AnyFSE::ToolsEx::TaskManager
         bool result = false;
 
         // Get current executable path
-        wchar_t modulePath[MAX_PATH];
-        GetModuleFileNameW(NULL, modulePath, MAX_PATH);
-        wchar_t * path = wcsrchr(modulePath,'\\');
-        if (path) { *path = '\0'; }
-
-        std::wstring exePath = exeFile.empty() ? std::wstring(modulePath) + L"\\AnyFSE.Service.exe" : exeFile;
+        std::wstring installPath = Tools::Paths::GetExePath();
+        std::wstring exePath = exeFile.empty() ? installPath + L"\\AnyFSE.Service.exe" : exeFile;
 
         ITaskService *pService = NULL;
         ITaskFolder *pRootFolder = NULL;
