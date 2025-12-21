@@ -227,7 +227,7 @@ namespace FluentDesign
         {
             thumbWidth = m_theme.DpiScale(m_hovered ? 6 : 2);
 
-            m_thumbRect.left = m_scrollBarRect.right - thumbWidth;
+            m_thumbRect.left = m_scrollBarRect.right - thumbWidth - m_theme.DpiScale(m_hovered ? 2 : 0);
             m_thumbRect.right = m_thumbRect.left + thumbWidth;
 
             thumbHeight = max((m_viewHeight * height / m_contentHeight), m_theme.DpiScale(20));
