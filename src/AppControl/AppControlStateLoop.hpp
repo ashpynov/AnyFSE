@@ -39,6 +39,7 @@ namespace AnyFSE::App::AppControl::StateLoop
             std::uint64_t m_exitingTimer;
             std::uint64_t m_restartDelayTimer;
 
+            bool m_activePreventXbox;
 
             LONGLONG m_xboxAge;
             LONGLONG m_deviceFormAge;

@@ -46,7 +46,7 @@ namespace AnyFSE::ToolsEx::ProcessEx
         DWORD processId = Process::FindFirstByName(processName);
         if (processId == 0)
         {
-            log.Error("Kill process failed: %s process tot found", Unicode::to_string(processName).c_str());
+            log.Error("Kill process failed: %s process not found", Unicode::to_string(processName).c_str());
             return ERROR_PROC_NOT_FOUND;
         }
 

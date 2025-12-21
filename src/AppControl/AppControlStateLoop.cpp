@@ -51,12 +51,14 @@ namespace AnyFSE::App::AppControl::StateLoop
         , m_homeAge(0)
         , m_waitStartTime(0)
         , launcherPid(0)
+        , m_activePreventXbox (false)
     {
 
     }
 
     AppControlStateLoop::~AppControlStateLoop()
     {
+        m_activePreventXbox = false;
         if (m_preventTimer) CancelTimer(m_preventTimer);
         if (m_waitLauncherTimer) CancelTimer(m_waitLauncherTimer);
     }
@@ -262,6 +264,13 @@ namespace AnyFSE::App::AppControl::StateLoop
     void AppControlStateLoop::OnLauncherTimer()
     {
         log.Trace("Launcher check %d ms", GetTickCount64() - m_waitStartTime);
+
+        if (m_activePreventXbox && IsXboxActive())
+        {
+            log.Warn("Active prevention cycle detected XBox");
+            KillXbox();
+        }
+
         if (IsLauncherActive())
         {
             log.Debug("Launcher activated");
@@ -285,6 +294,7 @@ namespace AnyFSE::App::AppControl::StateLoop
     {
         log.Debug("Prevent Timer Completed");
         m_preventTimer = 0;
+        m_activePreventXbox = false;
         NotifyRemote(AppEvents::XBOX_ALLOW);
     }
 
@@ -326,7 +336,7 @@ namespace AnyFSE::App::AppControl::StateLoop
 
     bool AppControlStateLoop::IsPreventIsActive()
     {
-        return 0 != m_preventTimer;
+        return m_activePreventXbox || 0 != m_preventTimer;
     }
 
     bool AppControlStateLoop::IsWaitingLauncher()
