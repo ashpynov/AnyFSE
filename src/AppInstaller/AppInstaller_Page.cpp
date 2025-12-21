@@ -245,6 +245,14 @@ namespace AnyFSE
         }
     }
 
+    bool AppInstaller::IsConfigured()
+    {
+        wchar_t appData[MAX_PATH]={0};
+        ExpandEnvironmentStringsW(L"%PROGRAMDATA%\\AnyFSE", appData, MAX_PATH);
+        return fs::exists(fs::path(std::wstring(appData) + L"\\AnyFSE.json"))
+            || fs::exists(m_pathEdit.GetText() + L"\\AnyFSE.json");
+    }
+
     void AppInstaller::ShowErrorPage(const std::wstring &caption, const std::wstring &text, const std::wstring &icon)
     {
         ShowPage(icon.empty() ? Icon_Error : icon,

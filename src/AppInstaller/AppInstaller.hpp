@@ -142,6 +142,7 @@ namespace AnyFSE
             void ShowPathPage();
             void ShowProgressPage();
             void ShowCompletePage();
+            bool IsConfigured();
             void CollectPostMortemInfo(const std::wstring &path);
             void ShowErrorPage(const std::wstring &caption, const std::wstring &text, const std::wstring &icon = L"");
 
