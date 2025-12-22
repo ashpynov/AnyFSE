@@ -38,7 +38,8 @@ namespace AnyFSE::App::AppControl
 
     public:
         static bool ApiIsAvailable;
-        static bool IsActive();
+        static bool IsFullscreenMode();
+        static bool IsDesktopMode();
         static bool ExitFSEMode();
         GamingExperience();
         ~GamingExperience();

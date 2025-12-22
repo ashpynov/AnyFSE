@@ -78,6 +78,8 @@ namespace AnyFSE::App::AppControl::StateLoop
             case AppEvents::QUERY_END_SESSION: return OnQueryEndSession();
             case AppEvents::END_SESSION:       return OnEndSession();
             case AppEvents::DISCONNECT:        return OnDisconnect();
+            case AppEvents::SESSION_LOCK:      return OnSessionLock();
+            case AppEvents::SESSION_UNLOCK:    return OnSessionUnLock();
             default: break;
         }
     }
@@ -86,7 +88,7 @@ namespace AnyFSE::App::AppControl::StateLoop
     {
         log.Debug("Start AnyFSE in %s mode", IsInFSEMode() ? "FSE" : "Desktop" );
 
-        if (IsInFSEMode())
+        if (Config::Launcher.Type != LauncherType::None && Config::Launcher.Type != LauncherType::Xbox && IsInFSEMode())
         {
             ShowSplash();
             KillXbox();
@@ -117,7 +119,7 @@ namespace AnyFSE::App::AppControl::StateLoop
     {
         log.Debug("OnXboxDetected: XBoxStartDetected in %s Mode", IsInFSEMode() ? "FSE" : "Desktop" );
 
-        if (IsSplashActive() || IsPreventIsActive() || IsWaitingLauncher())
+        if (IsSplashActive() || (IsPreventIsActive() && IsLauncherActive()) || IsWaitingLauncher())
         {
             log.Debug("OnXboxDetected: During %s => Kill it",
                   IsSplashActive()      ? "Splash is Active"
@@ -126,7 +128,7 @@ namespace AnyFSE::App::AppControl::StateLoop
             KillXbox();
             FocusLauncher();
         }
-        else if (!IsLauncherActive() && (Config::AggressiveMode || IsHomeLaunch()))
+        else if (!IsLauncherActive() && (Config::AggressiveMode || IsHomeLaunch() || IsPreventIsActive()))
         {
             log.Debug("OnXboxDetected: Launcher is not active => Kill It. Start Launcher with splash");
             // if (IsInFSEMode())
@@ -187,7 +189,8 @@ namespace AnyFSE::App::AppControl::StateLoop
 
     void AppControlStateLoop::OnGameModeExit()
     {
-        log.Debug("Exited Game Mode, do nothing");
+        log.Debug("*** Exited Game Mode, Create tray icon ***");
+        m_splash.CreateTrayIcon();
     }
 
     void AppControlStateLoop::OnDeviceForm()
@@ -210,6 +213,18 @@ namespace AnyFSE::App::AppControl::StateLoop
         SetLastError(WS_E_ENDPOINT_DISCONNECTED);
         m_splash.ExitOnError();
         Stop();
+    }
+
+    void AppControlStateLoop::OnSessionLock()
+    {
+        log.Debug("OnSessionLock: Hold splash animation");
+        m_splash.Suspend(true);
+    }
+
+    void AppControlStateLoop::OnSessionUnLock()
+    {
+        log.Debug("OnSessionLock: Resume splash animation");
+        m_splash.Suspend(false);
     }
 
     void AppControlStateLoop::OnOpenHome()
@@ -308,7 +323,7 @@ namespace AnyFSE::App::AppControl::StateLoop
     // State Checkers
     bool AppControlStateLoop::IsInFSEMode()
     {
-        return GamingExperience::IsActive();
+        return GamingExperience::IsFullscreenMode();
     }
 
     bool AppControlStateLoop::IsLauncherActive()

@@ -52,9 +52,15 @@ namespace AnyFSE::App::AppControl
 
     bool GamingExperience::ApiIsAvailable = isApiSetImplemented("api-ms-win-gaming-experience-l1-1-0");
 
-    bool GamingExperience::IsActive()
+    bool GamingExperience::IsFullscreenMode()
     {
         return ApiIsAvailable && IsGamingFullScreenExperienceActive();
+    }
+
+    bool GamingExperience::IsDesktopMode()
+    {
+        return !ApiIsAvailable
+            || (IsGamingFullScreenExperienceSupported() && !IsGamingFullScreenExperienceActive());
     }
 
     bool GamingExperience::ExitFSEMode()
@@ -74,7 +80,7 @@ namespace AnyFSE::App::AppControl
                 log.Debug(
                     "FullScreenExperienceChangeNotification is registered. "
                     "Current mode is %s",
-                    GamingExperience::IsActive() ? "Fullscreeen experience" : "Windows Desktop"
+                    GamingExperience::IsFullscreenMode() ? "Fullscreeen experience" : "Windows Desktop"
                 );
             }
             else

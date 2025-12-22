@@ -145,15 +145,6 @@ namespace AnyFSE::App::AppControl
             return 0;
         }
 
-        if (GamingExperience::IsActive())
-        {
-            mainWindow.Show();
-        }
-        else
-        {
-            mainWindow.Hide();
-        }
-
         if (!AppControlStateLoop.NotifyRemote(AppEvents::CONNECT, 5000))
         {
             log.Error("Cant connect to service, exiting");
@@ -169,9 +160,8 @@ namespace AnyFSE::App::AppControl
 
         AppControlStateLoop.NotifyRemote(AppEvents::START);
         AppControlStateLoop.Start();
-        if (Config::Launcher.Type != LauncherType::None || Config::Launcher.Type != LauncherType::Xbox)
+        if (Config::Launcher.Type != LauncherType::None && Config::Launcher.Type != LauncherType::Xbox)
         {
-            AppControlStateLoop.Notify(AppEvents::START);
             if (Config::AggressiveMode)
             {
                 AppControlStateLoop.NotifyRemote(AppEvents::XBOX_DENY);
@@ -296,19 +286,32 @@ namespace AnyFSE::App::AppControl
         fseMonitor.OnExperienseChanged += ([&AppControlStateLoop, &mainWindow]()
         {
             log.Debug(
-                "Mode is changed to %s\n",
-                GamingExperience::IsActive() ? "Fullscreeen experience" : "Windows Desktop"
+                "Mode is changed to %s\n application loop is %s\n",
+                GamingExperience::IsFullscreenMode() ? "Fullscreeen experience" : "Windows Desktop",
+                AppControlStateLoop.IsRunning() ? "RUNNING" : "NOT Running"
             );
             if (!AppControlStateLoop.IsRunning())
             {
                 SetLastError(StartControl(AppControlStateLoop, mainWindow));
                 mainWindow.ExitOnError();
             }
-
-            AppControlStateLoop.Notify(GamingExperience::IsActive() ? AppEvents::GAMEMODE_ENTER : AppEvents::GAMEMODE_EXIT);
+            else
+            {
+                AppControlStateLoop.Notify(GamingExperience::IsFullscreenMode() ? AppEvents::GAMEMODE_ENTER : AppEvents::GAMEMODE_EXIT);
+            }
         });
 
         Tools::EnablePowerEfficencyMode(true);
+
+        if (GamingExperience::IsDesktopMode())
+        {
+            log.Debug("In Desktop mode, create tray now");
+            mainWindow.CreateTrayIcon();
+        }
+        else if (GamingExperience::IsFullscreenMode())
+        {
+            mainWindow.Show(true);
+        }
 
         log.Debug("Run window loop.");
 

@@ -53,12 +53,14 @@ namespace AnyFSE::App::AppControl::Window
         int m_result = ERROR_RESTART_APPLICATION;
         bool m_empty = false;
         bool m_successChecked = false;
+        bool m_suspended = false;
+        bool m_trayCreated = false;
 
         static WNDCLASS WC;
         static LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
         static void LoadStringSafe(UINT nStrID, LPTSTR szBuf, UINT nBufLen);
         void OnCreate();
-        void CreateTrayIcon();
+
         void OnPaint();
 
         void OnTray(LPARAM message);
@@ -79,11 +81,14 @@ namespace AnyFSE::App::AppControl::Window
         bool Show(bool empty = false);
         bool Start();
         bool Hide();
+        void Suspend(bool bSuspend);
         bool Create(LPCWSTR className, HINSTANCE hInstance, LPCTSTR windowName);
         static int RunLoop();
 
         bool IsVisible();
         int ExitOnError();
+
+        void CreateTrayIcon();
 
         void StartUpdateCheck();
         Event OnStartWindow;

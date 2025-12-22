@@ -57,6 +57,7 @@ namespace AnyFSE::App::AppService
     AppServiceStateLoop AppService::AppControlStateLoop;
     HWND                AppService::m_hwnd;
     bool                AppService::m_suspended = true;
+    bool                AppService::m_bSessionLocked = false;
 
     static const int COMPLETE_EXIT = 0;
     static const int COMPLETE_RESTART = 1;
@@ -284,9 +285,30 @@ namespace AnyFSE::App::AppService
     //static
     LRESULT CALLBACK AppService::BackgroundWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
-        if (msg == WM_WTSSESSION_CHANGE && wParam == WTS_SESSION_LOGON)
+        if (msg == WM_WTSSESSION_CHANGE)
         {
-            LaunchAppInUserSession((DWORD)lParam);
+
+        }
+        if (msg == WM_WTSSESSION_CHANGE)
+        {
+            log.Debug("WM_WTSSESSION_CHANGE with wParam=0x%x, lParam=0x%x", wParam, lParam);
+            switch (wParam)
+            {
+                case WTS_SESSION_LOGON:
+                    log.Debug("SESSION_LOGON: with wParam=0x%x, lParam=0x%x", wParam, lParam);
+                    LaunchAppInUserSession((DWORD)lParam);
+                    break;
+                case WTS_SESSION_LOCK:
+                    log.Debug("SESSION_LOCK: with wParam=0x%x, lParam=0x%x", wParam, lParam);
+                    m_bSessionLocked = true;
+                    AppControlStateLoop.NotifyRemote(AppEvents::SESSION_LOCK);
+                    break;
+                case WTS_SESSION_UNLOCK:
+                    log.Debug("SESSION_UNLOCK: with wParam=0x%x, lParam=0x%x", wParam, lParam);
+                    m_bSessionLocked = false;
+                    AppControlStateLoop.NotifyRemote(AppEvents::SESSION_UNLOCK);
+                    break;
+            }
         }
         else if (msg == WM_USER)
         {
@@ -396,6 +418,8 @@ namespace AnyFSE::App::AppService
         AppControlStateLoop.OnConnect = ([]()
         {
             log.Debug("*** Connect command recieved ***" );
+            AppControlStateLoop.NotifyRemote(m_bSessionLocked ? AppEvents::SESSION_LOCK : AppEvents::SESSION_UNLOCK);
+            AppControlStateLoop.NotifyRemote(AppEvents::START);
             if (m_suspended)
             {
                 log.Debug("*** Resume from suspend ***" );

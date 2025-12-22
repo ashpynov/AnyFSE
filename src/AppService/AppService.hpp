@@ -36,6 +36,7 @@ namespace AnyFSE::App::AppService
         static bool                 xboxIsDenied;
         static const std::wstring   XBoxProcessName;
         static bool                 m_suspended;
+        static bool                 m_bSessionLocked;
 
     public:
         static int WINAPI ServiceMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine);

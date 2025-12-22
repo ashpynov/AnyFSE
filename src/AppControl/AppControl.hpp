@@ -41,7 +41,7 @@ namespace AnyFSE::App::AppControl
         static bool AsControl(LPSTR lpCmdLine);
         static bool IsServiceAvailable();
         static bool AsSettings(LPSTR lpCmdLine);
-            static bool NeedAdmin(LPSTR lpCmdLine);
-            static int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
+        static bool NeedAdmin(LPSTR lpCmdLine);
+        static int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
     };
 }

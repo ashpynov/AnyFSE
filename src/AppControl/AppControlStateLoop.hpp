@@ -66,6 +66,8 @@ namespace AnyFSE::App::AppControl::StateLoop
             void OnQueryEndSession();
             void OnEndSession();
             void OnDisconnect();
+            void OnSessionLock();
+            void OnSessionUnLock();
             void OnOpenHome();
             void OnLauncherTimer();
             void OnPreventTimer();

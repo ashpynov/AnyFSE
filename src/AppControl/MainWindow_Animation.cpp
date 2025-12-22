@@ -67,7 +67,6 @@ namespace AnyFSE::App::AppControl::Window
         return (m_pLogoImage && m_pLogoImage->GetLastStatus() == Gdiplus::Status::Ok);
     }
 
-
     void MainWindow::OnPaintAnimated()
     {
         using namespace Gdiplus;
@@ -144,7 +143,6 @@ namespace AnyFSE::App::AppControl::Window
         return TRUE;
     }
 
-
     BOOL MainWindow::StartAnimation()
     {
         if (Config::SplashShowAnimation && Config::SplashShowLogo && !m_hAnimationTimer && m_pLogoImage)
@@ -153,6 +151,7 @@ namespace AnyFSE::App::AppControl::Window
         }
         return TRUE;
     }
+
     BOOL MainWindow::StopAnimation()
     {
         if (m_hAnimationTimer)

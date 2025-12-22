@@ -123,7 +123,7 @@ namespace AnyFSE::App::AppControl::Window
         {
             m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, Config::SplashVideoPause, m_hWnd);
 
-            if (!m_empty)
+            if (!m_empty && !m_suspended)
             {
                 if (Config::SplashShowVideo)
                 {
@@ -145,6 +145,7 @@ namespace AnyFSE::App::AppControl::Window
         m_empty = false;
         if (IsWindowVisible(m_hWnd))
         {
+            log.Debug("Start animation");
             m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, Config::SplashVideoPause, m_hWnd);
             m_videoPlayer.Play();
             StartAnimation();
@@ -231,7 +232,8 @@ namespace AnyFSE::App::AppControl::Window
         if (uMsg == WM_TASKBARCREATED)
         {
             log.Debug("Explorer start taskbar ready");
-            CreateTrayIcon();
+            OnStartWindow.Notify();
+            ExitOnError();
             return DefWindowProc(m_hWnd, uMsg, wParam, lParam);
         }
         else if (uMsg == WM_UPDATER_COMMAND)
@@ -306,12 +308,15 @@ namespace AnyFSE::App::AppControl::Window
 
     void MainWindow::OnCreate()
     {
-        CreateTrayIcon();
         InitAnimationResources();
     }
 
     void MainWindow::CreateTrayIcon()
     {
+        if (m_trayCreated)
+        {
+            return;
+        }
         SetLastError(0);
         NOTIFYICONDATA stData;
         ZeroMemory(&stData, sizeof(stData));
@@ -327,9 +332,7 @@ namespace AnyFSE::App::AppControl::Window
             log.Debug("Can not create tray icon");
             return;
         }
-
-        OnStartWindow.Notify();
-        ExitOnError();
+        m_trayCreated = true;
     }
 
     void MainWindow::OnPaint()
@@ -371,32 +374,9 @@ namespace AnyFSE::App::AppControl::Window
             popup.Show(m_hWnd, pt.x, pt.y, popupItems, 300, TPM_LEFTALIGN | TPM_BOTTOMALIGN);
             theme.SwapFocus(popup.GetHwnd());
             break;
-
-            HMENU hMenu = LoadMenu(WC.hInstance, MAKEINTRESOURCE(IDR_POPUP));
-            if (hMenu)
-            {
-                HMENU hSubMenu = GetSubMenu(hMenu, 0);
-                UINT selectedCmd = 0;
-                if (hSubMenu)
-                {
-                    POINT stPoint;
-                    GetCursorPos(&stPoint);
-
-                    selectedCmd = TrackPopupMenuEx(
-                        hSubMenu,
-                        TPM_RETURNCMD | TPM_NONOTIFY | TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON,
-                        stPoint.x, stPoint.y, m_hWnd, NULL);
-                }
-
-                DestroyMenu(hMenu);
-                if (selectedCmd != 0)
-                {
-                    // Handle menu command
-                    SendMessage(m_hWnd, WM_COMMAND, MAKEWPARAM(selectedCmd, 0), 0);
-                }
-            }
         }
-        break;
+        default:
+            break;
         }
     }
 
@@ -563,5 +543,34 @@ namespace AnyFSE::App::AppControl::Window
 
         m_currentVideo = videoFiles[GetTickCount64() % videoFiles.size()].wstring().c_str();
     }
-}
 
+    void MainWindow::Suspend(bool bSuspend)
+    {
+        if (m_suspended == bSuspend)
+        {
+            log.Debug(">>> Resuspend");
+            return;
+        }
+
+        m_suspended = bSuspend;
+
+        if (IsWindowVisible(m_hWnd))
+        {
+            if (bSuspend)
+            {
+                Tools::EnablePowerEfficencyMode(true);
+                m_videoPlayer.Pause();
+                StopAnimation();
+            }
+            else
+            {
+                Tools::EnablePowerEfficencyMode(false);
+                Start();
+            }
+        }
+        else
+        {
+            log.Debug("Splash is not visible");
+        }
+    }
+}

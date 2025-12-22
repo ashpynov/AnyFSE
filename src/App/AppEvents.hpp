@@ -45,6 +45,8 @@ namespace AnyFSE::App
         RESTART_SERVICE,
         DISCONNECT,
         RELOAD_SERVICE,
+        SESSION_LOCK,
+        SESSION_UNLOCK
     };
 }
 

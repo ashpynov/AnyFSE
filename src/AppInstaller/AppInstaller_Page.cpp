@@ -240,7 +240,7 @@ namespace AnyFSE
                 L"Done",
                 L"AnyFSE installation has been completed.\n\nPress Configure change settings.\n",
                 L"Configure", delegate(OnSettings),
-                fs::exists(m_pathEdit.GetText() + L"\\AnyFSE.json") ? L"Done" : L"", delegate(OnDone)
+                IsConfigured() ? L"Done" : L"", delegate(OnDone)
             );
         }
     }
