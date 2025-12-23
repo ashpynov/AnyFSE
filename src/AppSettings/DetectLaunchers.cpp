@@ -37,7 +37,7 @@ namespace AnyFSE::Configuration
     void Config::GetStartupConfigured()
     {
         FseOnStartup = IsXboxConfigured() && IsFseOnStartupConfigured();
-        Launcher.StartCommand = FseOnStartup ? GetXboxPath(Launcher.StartCommand) : L"";
+        Launcher.StartCommand = FseOnStartup ? GetXboxPath(Launcher.StartCommand) : Launcher.StartCommand;
     }
 
     void Config::UpdatePortableLauncher(LauncherConfig & out)
