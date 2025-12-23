@@ -88,9 +88,15 @@ namespace AnyFSE::Configuration
 
     std::string Config::GetConfigFileA(bool readOnly)
     {
+        std::wstring _path = Tools::Paths::GetDataPath() + L"\\AnyFSE.json";
+        if (readOnly || fs::exists(fs::path(_path)))
+        {
+            return Unicode::to_string(_path);
+        }
+
         if (!readOnly)
         {
-            std::wstring _path = Tools::Paths::GetExePath() + L"\\AnyFSE.json";
+            _path = Tools::Paths::GetExePath() + L"\\AnyFSE.json";
             FILE *file = 0;
             if (false && !_wfopen_s(&file, _path.c_str(), L"a") && file)
             {
@@ -98,17 +104,14 @@ namespace AnyFSE::Configuration
             }
             else
             {
-                wchar_t appData[MAX_PATH]={0};
-                ExpandEnvironmentStringsW(L"%PROGRAMDATA%\\AnyFSE", appData, MAX_PATH);
-                _path = std::wstring(appData) + L"\\AnyFSE.json";
+                _path = Tools::Paths::GetProgramDataPath() + L"\\AnyFSE.json";
             }
             if (!fs::exists(fs::path(_path)))
             {
                 CreateDirectoryW(fs::path(_path).parent_path().wstring().c_str(), NULL);
             }
-            return Unicode::to_string(_path);
         }
-        return Unicode::to_string(Tools::Paths::GetDataPath() + L"\\AnyFSE.json");
+        return Unicode::to_string(_path);
     }
 
     json Config::GetConfig()

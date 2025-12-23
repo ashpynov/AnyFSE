@@ -32,11 +32,17 @@ namespace AnyFSE::Tools::Paths
         return _path;
     }
 
-    std::wstring GetDataPath()
+    std::wstring GetProgramDataPath()
     {
         wchar_t appData[MAX_PATH]={0};
         ExpandEnvironmentStringsW(L"%PROGRAMDATA%\\AnyFSE", appData, MAX_PATH);
-        return (std::filesystem::exists(std::filesystem::path(std::wstring(appData) + L"\\AnyFSE.json")))
+        return appData;
+    }
+
+    std::wstring GetDataPath()
+    {
+        std::wstring appData = GetProgramDataPath();
+        return (std::filesystem::exists(std::filesystem::path(appData + L"\\AnyFSE.json")))
             ? appData
             : GetExePath();
     }
