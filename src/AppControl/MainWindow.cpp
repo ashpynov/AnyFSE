@@ -368,11 +368,14 @@ namespace AnyFSE::App::AppControl::Window
                 FluentDesign::Popup::PopupItem(L"\xE733", L"Quit",
                     [This = this]() { SendMessage(This->m_hWnd, WM_COMMAND, MAKEWPARAM(ID_QUIT, 0), 0); })
             };
-            POINT pt;
-            GetCursorPos(&pt);
-            SetForegroundWindow(m_hWnd);
-            popup.Show(m_hWnd, pt.x, pt.y, popupItems, 300, TPM_LEFTALIGN | TPM_BOTTOMALIGN);
-            theme.SwapFocus(popup.GetHwnd());
+            if (!popup.IsVisible())
+            {
+                POINT pt;
+                GetCursorPos(&pt);
+                SetForegroundWindow(m_hWnd);
+                popup.Show(m_hWnd, pt.x, pt.y, popupItems, 300, TPM_LEFTALIGN | TPM_BOTTOMALIGN);
+                theme.SwapFocus(popup.GetHwnd());
+            }
             break;
         }
         default:

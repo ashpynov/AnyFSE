@@ -87,6 +87,7 @@ namespace AnyFSE::App::AppControl::Window
 
         bool IsVisible();
         int ExitOnError();
+        HWND GetHwnd() { return m_hWnd; }
 
         void CreateTrayIcon();
 

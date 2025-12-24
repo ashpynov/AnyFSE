@@ -88,5 +88,7 @@ namespace FluentDesign
         void DrawPopupItem(HWND hWnd, HDC hdc, RECT itemRect, int itemId);
 
         void HandleListClick(int index);
+
+        bool IsVisible() { return m_popupVisible; }
     };
 }
