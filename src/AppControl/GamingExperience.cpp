@@ -65,7 +65,8 @@ namespace AnyFSE::App::AppControl
 
     bool GamingExperience::ExitFSEMode()
     {
-        SetGamingFullScreenExperience(FALSE);
+        HRESULT hres = SetGamingFullScreenExperience(FALSE);
+        log.Debug("Set FSE off return %u", hres);
         return false;
     }
 

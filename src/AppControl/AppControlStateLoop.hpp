@@ -38,8 +38,10 @@ namespace AnyFSE::App::AppControl::StateLoop
             std::uint64_t m_waitLauncherTimer;
             std::uint64_t m_exitingTimer;
             std::uint64_t m_restartDelayTimer;
+            std::uint64_t m_fseExitTimer;
 
             bool m_activePreventXbox;
+            bool m_wasGameBar;
 
             LONGLONG m_xboxAge;
             LONGLONG m_deviceFormAge;
@@ -72,7 +74,10 @@ namespace AnyFSE::App::AppControl::StateLoop
             void OnLauncherTimer();
             void OnPreventTimer();
             void OnExitingTimer();
+            void OnFSEExitTimer();
+            void CheckFSEExited();
 
+            bool IsExitCancelled();
             bool IsInFSEMode();
             bool IsLauncherActive();
             bool IsLauncherStarted();
@@ -87,6 +92,8 @@ namespace AnyFSE::App::AppControl::StateLoop
             bool IsHomeLaunch();
             bool IsXboxActive();
             bool IsOnSettings();
+            bool IsFSEExiting();
+
 
             void ShowSplash();
             void StartSplash();

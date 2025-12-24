@@ -52,6 +52,8 @@ namespace AnyFSE::App::AppControl::StateLoop
         , m_waitStartTime(0)
         , launcherPid(0)
         , m_activePreventXbox (false)
+        , m_fseExitTimer(0)
+        , m_wasGameBar(false)
     {
 
     }
@@ -119,7 +121,12 @@ namespace AnyFSE::App::AppControl::StateLoop
     {
         log.Debug("OnXboxDetected: XBoxStartDetected in %s Mode", IsInFSEMode() ? "FSE" : "Desktop" );
 
-        if (IsSplashActive() || (IsPreventIsActive() && IsLauncherActive()) || IsWaitingLauncher())
+        if ((IsFSEExiting() || IsExiting()) && IsPreventIsActive())
+        {
+            log.Debug("OnXboxDetected during exiting");
+            KillXbox();
+        }
+        else if (IsSplashActive() || (IsPreventIsActive() && IsLauncherActive()) || IsWaitingLauncher())
         {
             log.Debug("OnXboxDetected: During %s => Kill it",
                   IsSplashActive()      ? "Splash is Active"
@@ -158,9 +165,14 @@ namespace AnyFSE::App::AppControl::StateLoop
 
     void AppControlStateLoop::OnLauncherStopped()
     {
+        log.Debug("Launcher stop is detected mode is  %s, launcher is %s",
+            IsInFSEMode() ? "FSE" : "Desktop",
+            IsLauncherActive() ? "Active" : "NOT active"
+        );
+
         if (IsInFSEMode() && !IsLauncherActive())
         {
-            m_exitingTimer = AppStateLoop::SetTimer(std::chrono::seconds(30), [this](){ this->OnExitingTimer();}, false );
+            m_fseExitTimer = AppStateLoop::SetTimer(std::chrono::seconds(1), [this](){ this->OnFSEExitTimer();}, true );
             ShowSplash();
             PreventTimeout();
             ExitFSEMode();
@@ -191,6 +203,7 @@ namespace AnyFSE::App::AppControl::StateLoop
     {
         log.Debug("*** Exited Game Mode, Create tray icon ***");
         m_splash.CreateTrayIcon();
+        CheckFSEExited();
     }
 
     void AppControlStateLoop::OnDeviceForm()
@@ -280,7 +293,7 @@ namespace AnyFSE::App::AppControl::StateLoop
     {
         log.Trace("Launcher check %d ms", GetTickCount64() - m_waitStartTime);
 
-        if (m_activePreventXbox && IsXboxActive())
+        if (IsPreventIsActive() && IsXboxActive())
         {
             log.Warn("Active prevention cycle detected XBox");
             KillXbox();
@@ -318,6 +331,44 @@ namespace AnyFSE::App::AppControl::StateLoop
         log.Debug("OnExitingTimer completed and we are still alive?????");
         m_exitingTimer = 0;
         CloseSplash();
+    }
+
+    bool AppControlStateLoop::IsExitCancelled()
+    {
+        return IsFSEExiting() && IsInFSEMode() && m_wasGameBar && !IsOnGamebar();
+    }
+
+    void AppControlStateLoop::OnFSEExitTimer()
+    {
+        m_wasGameBar |= IsOnGamebar();
+        CheckFSEExited();
+    }
+
+    void AppControlStateLoop::CheckFSEExited()
+    {
+        if (IsExitCancelled())
+        {
+            log.Debug("Exit FSE were Cancelled.");
+            AppStateLoop::CancelTimer(m_fseExitTimer);
+            m_fseExitTimer = 0;
+            m_wasGameBar = false;
+
+            if (IsInFSEMode())
+            {
+                log.Debug("Still in FSE, RESTART launcher");
+                m_splash.Start();
+                StartLauncher();
+                WaitLauncher();
+            }
+        }
+        else if (IsFSEExiting() && !IsInFSEMode())
+        {
+            log.Debug("Exit FSE were Cancelled, Relaunch launcher");
+            AppStateLoop::CancelTimer(m_fseExitTimer);
+            m_fseExitTimer = 0;
+            CloseSplash();
+            m_wasGameBar = false;
+        }
     }
 
     // State Checkers
@@ -407,6 +458,11 @@ namespace AnyFSE::App::AppControl::StateLoop
         return false;
     }
 
+    bool AppControlStateLoop::IsFSEExiting()
+    {
+        return 0 != m_fseExitTimer;
+    }
+
     bool AppControlStateLoop::IsHomeLaunch()
     {
         LONGLONG age = GetTickCount64() - m_homeAge;
@@ -449,7 +505,7 @@ namespace AnyFSE::App::AppControl::StateLoop
     void AppControlStateLoop::ShowSplash()
     {
         log.Debug("Show Splash");
-        m_splash.Show(IsExiting() || m_isRestart);
+        m_splash.Show(IsExiting()  || IsFSEExiting() || m_isRestart);
     }
 
     void AppControlStateLoop::StartSplash()
@@ -462,19 +518,19 @@ namespace AnyFSE::App::AppControl::StateLoop
     {
         log.Debug("Killing Xbox");
         NotifyRemote(AppEvents::XBOX_DENY);
+        m_activePreventXbox = true;
     }
 
     void AppControlStateLoop::ExitFSEMode()
     {
+        log.Debug("ExitFSEMode");
         GamingExperience::ExitFSEMode();
-        AppStateLoop::CancelTimer(m_exitingTimer);
-        m_exitingTimer = 0;
-        CloseSplash();
+        m_wasGameBar = IsOnGamebar();
     }
 
     void AppControlStateLoop::StartLauncher()
     {
-        if (IsExiting())
+        if (IsExiting() || IsFSEExiting())
         {
             log.Debug("During exiting procedure ignore launcher start");
         }
@@ -515,7 +571,7 @@ namespace AnyFSE::App::AppControl::StateLoop
 
     void AppControlStateLoop::WaitLauncher()
     {
-        if (!m_waitLauncherTimer && !m_exitingTimer)
+        if (!m_waitLauncherTimer && !m_exitingTimer && !IsFSEExiting())
         {
             log.Debug("Set timer for await Launcher");
             m_waitStartTime = GetTickCount64();
