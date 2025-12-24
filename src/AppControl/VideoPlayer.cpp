@@ -203,6 +203,8 @@ namespace AnyFSE::App::AppControl::Window
 
                 m_pPlayer->Release();
                 m_pPlayer = nullptr;
+                DestroyWindow(m_hwndVideo);
+                m_hwndVideo = nullptr;
             }
 
             MFShutdown();
@@ -389,6 +391,10 @@ namespace AnyFSE::App::AppControl::Window
 
         m_pPlayer->Release();
         m_pPlayer = nullptr;
+
+        DestroyWindow(m_hwndVideo);
+        m_hwndVideo = nullptr;
+
         m_bInitialized = false;
     }
 
