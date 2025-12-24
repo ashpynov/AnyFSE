@@ -44,6 +44,7 @@ namespace AnyFSE::App::StateLoop
     {
         Stop();
         DeleteObject(m_hQueueCondition);
+        Wait(0);
     }
 
     void AppStateLoop::Notify(AppEvents event)
@@ -177,15 +178,13 @@ namespace AnyFSE::App::StateLoop
             }
 
             AnyFSE::App::Message ipcMessage;
-            LONGLONG eol = GetTickCount64() - MESSAGES_EOL;
             while (m_ipcChannel.Read(&ipcMessage))
             {
-                if (ipcMessage.ticks > eol)
+                if (ipcMessage.ticks > (LONGLONG) GetTickCount64() - MESSAGES_EOL)
                 {
                     lock.unlock();
-                    #ifdef _TRACE
-                        _log.Trace("Got message: %d (%ldms)", ipcMessage.event, GetTickCount64()-ipcMessage.ticks);
-                    #endif
+                    _log.Trace("Got message: %s(%d) (delay %ldms)", AppEventsName(ipcMessage.event), ipcMessage.event, GetTickCount64()-ipcMessage.ticks);
+
                     ProcessEvent(ipcMessage.event);
                     lock.lock();
                 }

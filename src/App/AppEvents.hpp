@@ -48,6 +48,34 @@ namespace AnyFSE::App
         SESSION_LOCK,
         SESSION_UNLOCK
     };
+
+    static const char * AppEventsName(AppEvents code)
+    {
+        switch (code)
+        {
+            case AppEvents::CONNECT:            return "CONNECT";
+            case AppEvents::START:              return "START";
+            case AppEvents::START_APPS:         return "START_APPS";
+            case AppEvents::XBOX_DETECTED:      return "XBOX_DETECTED";
+            case AppEvents::LAUNCHER_STOPPED:   return "LAUNCHER_STOPPED";
+            case AppEvents::GAMEMODE_ENTER:     return "GAMEMODE_ENTER";
+            case AppEvents::GAMEMODE_EXIT:      return "GAMEMODE_EXIT";
+            case AppEvents::OPEN_HOME:          return "OPEN_HOME";
+            case AppEvents::OPEN_DEVICE_FORM:   return "OPEN_DEVICE_FORM";
+            case AppEvents::XBOX_DENY:          return "XBOX_DENY";
+            case AppEvents::XBOX_ALLOW:         return "XBOX_ALLOW";
+            case AppEvents::SUSPEND_SERVICE:    return "SUSPEND_SERVICE";
+            case AppEvents::EXIT_SERVICE:       return "EXIT_SERVICE";
+            case AppEvents::QUERY_END_SESSION:  return "QUERY_END_SESSION";
+            case AppEvents::END_SESSION:        return "END_SESSION";
+            case AppEvents::RESTART_SERVICE:    return "RESTART_SERVICE";
+            case AppEvents::DISCONNECT:         return "DISCONNECT";
+            case AppEvents::RELOAD_SERVICE:     return "RELOAD_SERVICE";
+            case AppEvents::SESSION_LOCK:       return "SESSION_LOCK";
+            case AppEvents::SESSION_UNLOCK:     return "SESSION_UNLOCK";
+        }
+        return "UNKNOWN";
+    }
 }
 
 using namespace AnyFSE::App;
