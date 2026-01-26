@@ -486,7 +486,6 @@ namespace AnyFSE
             fs::remove(path + L"\\splash");
         }
 
-        fs::remove(path);
         return ListDir(path, L"*").size() <= 1;
     }
 
@@ -518,7 +517,7 @@ namespace AnyFSE
             // Delete installation directory
             batch << L"if exist \"" << path << L"\" (\n";
             batch << L"  echo Deleting: " << path << L"\n";
-            batch << L"  rd /q \"" << path << L"\"\n";
+            batch << L"  rd /s /q \"" << path << L"\"\n";
             batch << L")\n\n";
         }
 
