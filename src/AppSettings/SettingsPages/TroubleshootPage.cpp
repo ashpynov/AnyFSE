@@ -51,6 +51,13 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             L"Exit to desktop mode after Home app was exited",
             m_troubleExitOnExitToggle,
             Layout::LineHeight, Layout::LinePadding, 0);
+
+        m_dialog.AddSettingsLine(m_pageLinesList,
+            topPage,
+            L"Smart Docked Mode",
+            L"Exit FSE/Gaming Mode if external monitor or large screen (docked) is detected",
+            m_smartDockedModeToggle,
+            Layout::LineHeight, Layout::LinePadding, 0);
     }
 
     void TroubleshootPage::LoadControls()
@@ -58,6 +65,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_troubleLogLevelCombo.SelectItem(min(max((int)LogLevels::Disabled, (int)Config::LogLevel), (int)LogLevels::Max));
         m_troubleAggressiveToggle.SetCheck(Config::AggressiveMode);
         m_troubleExitOnExitToggle.SetCheck(Config::ExitFSEOnHomeExit);
+        m_smartDockedModeToggle.SetCheck(Config::EnableSmartDockedMode);
     }
 
     void TroubleshootPage::SaveControls()
@@ -65,6 +73,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         Config::LogLevel = (LogLevels)m_troubleLogLevelCombo.GetSelectedIndex();
         Config::AggressiveMode = m_troubleAggressiveToggle.GetCheck();
         Config::ExitFSEOnHomeExit = m_troubleExitOnExitToggle.GetCheck();
+        Config::EnableSmartDockedMode = m_smartDockedModeToggle.GetCheck();
     }
 
     void TroubleshootPage::OpenTroubleshootSettingsPage()

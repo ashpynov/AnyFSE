@@ -162,6 +162,7 @@ namespace AnyFSE::Configuration
             static std::list<StartupApp> StartupApps;
 
             static bool ExitFSEOnHomeExit;
+            static bool EnableSmartDockedMode;
 
             static bool         UpdatePreRelease;
             static bool         UpdateNotifications;

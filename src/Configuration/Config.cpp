@@ -74,6 +74,7 @@ namespace AnyFSE::Configuration
     DWORD           Config::RestartDelay = 1000;
     std::list<StartupApp> Config::StartupApps;
     bool            Config::ExitFSEOnHomeExit = false;
+    bool            Config::EnableSmartDockedMode = false;
 
     int             Config::UpdateCheckInterval = -2;
     std::wstring    Config::UpdateLastCheck;
@@ -156,6 +157,7 @@ namespace AnyFSE::Configuration
         SplashVideoPause        = config.value(jp("/Splash/Video/Pause"),    true);
         StartupApps             = config.value(jp("/StartupApps"),           std::list<StartupApp>());
         ExitFSEOnHomeExit       = config.value(jp("/Extra/ExitFSEOnHomeExit"), false);
+        EnableSmartDockedMode   = config.value(jp("/EnableSmartDockedMode"), false);
 
         UpdatePreRelease        = config.value(jp("/Update/PreRelease"),     false);
         UpdateNotifications     = config.value(jp("/Update/Notifications"),  true);
@@ -240,6 +242,7 @@ namespace AnyFSE::Configuration
         config["StartupApps"]                   = StartupApps;
 
         config["Extra"]["ExitFSEOnHomeExit"]     = ExitFSEOnHomeExit;
+        config["EnableSmartDockedMode"]          = EnableSmartDockedMode;
 
         config["Update"]["PreRelease"]           = UpdatePreRelease;
         config["Update"]["Notifications"]        = UpdateNotifications;

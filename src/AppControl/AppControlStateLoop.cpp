@@ -92,6 +92,27 @@ namespace AnyFSE::App::AppControl::StateLoop
 
         if (Config::Launcher.Type != LauncherType::None && Config::Launcher.Type != LauncherType::Xbox && IsInFSEMode())
         {
+            int monitors = GetSystemMetrics(SM_CMONITORS);
+            
+            // Check physical screen size (Docked if screen > 8 inches / 200mm width)
+            // Handhelds are usually < 160mm wide. External monitors are > 300mm.
+            HDC hdc = GetDC(NULL);
+            int horzSize = GetDeviceCaps(hdc, HORZSIZE); // Width in millimeters
+            ReleaseDC(NULL, hdc);
+
+            bool isDocked = (monitors > 1) || (horzSize > 250); // 250mm ~ 10 inches
+
+            if (Config::EnableSmartDockedMode && isDocked)
+            {
+                log.Info("Smart Docked Mode detected (Monitors: %d, Width: %dmm). Simulating Session End in 1.5s...", monitors, horzSize);
+                AppStateLoop::SetTimer(std::chrono::milliseconds(1500), [this]()
+                {
+                    log.Info("Smart Docked Mode: Simulating Launcher Stop.");
+                    OnLauncherStopped();
+                }, false);
+                return;
+            }
+
             ShowSplash();
             KillXbox();
             StartLauncher();

@@ -22,6 +22,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             , m_troubleLogLevelCombo(m_theme)
             , m_troubleAggressiveToggle(m_theme)
             , m_troubleExitOnExitToggle(m_theme)
+            , m_smartDockedModeToggle(m_theme)
         {}
 
         std::list<SettingsLine> &GetSettingsLines() { return m_pageLinesList;  };
@@ -39,5 +40,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         ComboBox m_troubleLogLevelCombo;
         Toggle m_troubleAggressiveToggle;
         Toggle m_troubleExitOnExitToggle;
+        Toggle m_smartDockedModeToggle;
     };
 };
