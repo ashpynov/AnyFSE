@@ -41,6 +41,7 @@
 #include "Tools/Notification.hpp"
 #include "Tools/PowerEfficiency.hpp"
 #include "Tools/Paths.hpp"
+#include "GamingExperience.hpp"
 
 #pragma comment(lib, "mpr.lib")
 
@@ -363,6 +364,8 @@ namespace AnyFSE::App::AppControl::Window
             theme.AttachWindow(m_hWnd);
             static FluentDesign::Popup popup(theme);
             static std::vector<FluentDesign::Popup::PopupItem> popupItems{
+                FluentDesign::Popup::PopupItem(L"\xE93A", L"Enter Full Screen ",
+                    [This = this]() { SendMessage(This->m_hWnd, WM_COMMAND, MAKEWPARAM(ID_FULLSCREEN, 0), 0); }),
                 FluentDesign::Popup::PopupItem(L"\xE713", L"Configure",
                     [This = this]() { SendMessage(This->m_hWnd, WM_COMMAND, MAKEWPARAM(ID_CONFIGURE, 0), 0); }),
                 FluentDesign::Popup::PopupItem(L"\xE733", L"Quit",
@@ -449,6 +452,9 @@ namespace AnyFSE::App::AppControl::Window
     {
         switch (command)
         {
+        case ID_FULLSCREEN:
+            GamingExperience::EnterFSEMode();
+            return TRUE;
         case ID_CONFIGURE:
             {
                 // Ensure normal priority while settings dialog runs

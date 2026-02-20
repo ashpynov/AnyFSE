@@ -185,17 +185,18 @@ namespace AnyFSE::Tools::Process
         wcscpy_s(cmdLine.data(), MAX_PATH, fullCommand.c_str());
 
         if (!CreateProcessW(
-                NULL,           // No module name (use command line)
-                cmdLine.data(), // Command line
-                NULL,           // Process handle not inheritable
-                NULL,           // Thread handle not inheritable
-                FALSE,          // Set handle inheritance to FALSE
-                0,              // No creation flags
-                NULL,           // Use parent's environment block
-                NULL,           // Use parent's starting directory
-                &si,            // Pointer to STARTUPINFO structure
-                &pi))           // Pointer to PROCESS_INFORMATION structure
+            NULL,           // No module name (use command line)
+            cmdLine.data(), // Command line
+            NULL,           // Process handle not inheritable
+            NULL,           // Thread handle not inheritable
+            FALSE,          // Set handle inheritance to FALSE
+            0,              // No creation flags
+            NULL,           // Use parent's environment block
+            NULL,           // Use parent's starting directory
+            &si,            // Pointer to STARTUPINFO structure
+            &pi))           // Pointer to PROCESS_INFORMATION structure
         {
+            log.Error(log.APIError(), "Can't CreateProcess:", Unicode::to_string(cmdLine.data()) );
             return 0;
         }
 

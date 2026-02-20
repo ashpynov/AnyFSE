@@ -295,7 +295,7 @@ namespace AnyFSE::App::AppControl
                 SetLastError(StartControl(AppControlStateLoop, mainWindow));
                 mainWindow.ExitOnError();
             }
-            else
+            else if (Config::Launcher.Type != LauncherType::None)
             {
                 AppControlStateLoop.Notify(GamingExperience::IsFullscreenMode() ? AppEvents::GAMEMODE_ENTER : AppEvents::GAMEMODE_EXIT);
             }
