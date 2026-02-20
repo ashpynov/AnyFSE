@@ -486,7 +486,11 @@ namespace AnyFSE
             fs::remove(path + L"\\splash");
         }
 
-        fs::remove(path);
+        if (fs::is_empty(path))
+        {
+            fs::remove(path);
+        }
+
         return ListDir(path, L"*").size() <= 1;
     }
 
