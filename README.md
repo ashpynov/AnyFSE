@@ -73,7 +73,9 @@ Since version 0.10 permisssion requirements was redesigned:
 ## Splash Videos
 AnyFSE may show shuffled video as splash during your launcher is loading.
 
-To do this, Create folder 'splash' next to AnyFSE.exe and put there you favourite mp4 or webm videos. files will be shuffled each time splash screen is shown.
+To do this, Create folder 'splash' in configuration folder (usually c:\ProgramData\AnyFSE) and put there you favourite mp4 or webm videos. Files will be shuffled each time splash screen is shown.
+
+> If you're not sure about the location of the 'splash' folder in your case, open AnyFSE settings, then go to Splash settings. The 'Show random video from splash folder' option is actually a link and will open the path where you need to place your video.
 
 For sure it will be good idea to suppress native splash screens of launchers, to do so enable custom settings and add startup argument to prevent native splash (for Playnite it is ```--hidesplashscreen``` option).
 
