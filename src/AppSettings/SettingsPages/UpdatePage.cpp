@@ -70,7 +70,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         Config::UpdateCheckInterval = (int)(short)m_checkIntervalCombo.GetCurentValue().c_str()[0];
         Config::UpdatePreRelease = m_preReleaseToggle.GetCheck();
         Config::UpdateNotifications = m_notificationsToggle.GetCheck();
-        Updater::NotifyConfigUpdated();
+        // Updater::NotifyConfigUpdated();
     }
 
     void UpdatePage::OpenUpdateSettingsPage()

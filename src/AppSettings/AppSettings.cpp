@@ -42,7 +42,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 __declspec(dllexport)
 int WINAPI Main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    HWND hDialogWnd = Process::GetWindow(std::set<DWORD>{GetCurrentProcessId()}, 0 , L"#32770", L"");
+    HWND hDialogWnd = FindWindow(AnyFSE::App::AppSettings::Settings::SettingsDialog::DialogClassName, NULL);
     if (hDialogWnd)
     {
         ShowWindow(hDialogWnd, SW_SHOWNORMAL);

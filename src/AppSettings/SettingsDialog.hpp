@@ -63,6 +63,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         // SettingsDialog_Update
         static const UINT WM_UPDATE_NOTIFICATION = WM_USER + 2;
+        inline static const wchar_t* DialogClassName = L"AnyFSESettingsDialogClass";
 
         HWND GetHwnd() { return m_hDialog; }
 

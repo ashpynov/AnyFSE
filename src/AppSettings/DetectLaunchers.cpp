@@ -141,8 +141,8 @@ namespace AnyFSE::Configuration
         std::wstring modulePath = Tools::Paths::GetExePath();
         if (fs::exists(fs::path(modulePath + L"\\Playnite.FullscreenApp.exe")))
         {
-            found.push_back(modulePath + L"\\Playnite.FullscreenApp.exe");
-            found.push_back(modulePath + L"\\Playnite.DesktopApp.exe");
+            found.push_back(fs::path(modulePath).append(L"Playnite.FullscreenApp.exe").wstring());
+            found.push_back(fs::path(modulePath).append(L"Playnite.DesktopApp.exe").wstring());
         }
     }
 
@@ -151,8 +151,8 @@ namespace AnyFSE::Configuration
         std::wstring installPath = GetInstallPath(L"Playnite");
         if (!installPath.empty())
         {
-            found.push_back(installPath + L"\\Playnite.FullscreenApp.exe");
-            found.push_back(installPath + L"\\Playnite.DesktopApp.exe");
+            found.push_back(fs::path(installPath).append(L"Playnite.FullscreenApp.exe").wstring());
+            found.push_back(fs::path(installPath).append(L"Playnite.DesktopApp.exe").wstring());
         }
     }
 
@@ -161,7 +161,7 @@ namespace AnyFSE::Configuration
         std::wstring installPath = GetInstallPath(L"Steam");
         if (!installPath.empty())
         {
-            found.push_back(installPath + L"\\Steam.exe");
+            found.push_back(fs::path(installPath).append(L"Steam.exe").wstring());
         }
     }
 
@@ -170,7 +170,7 @@ namespace AnyFSE::Configuration
         std::wstring installPath = SearchAppUserModel(L"LaunchBox");
         if (!installPath.empty())
         {
-            found.push_back(installPath + L"\\BigBox.exe");
+            found.push_back(fs::path(installPath).append(L"BigBox.exe").wstring());
         }
     }
 
@@ -188,7 +188,7 @@ namespace AnyFSE::Configuration
         std::wstring installPath = Registry::ReadString(L"HKCU\\Software\\RetroBat", L"LatestKnownInstallPath");
         if (!installPath.empty())
         {
-            found.push_back(installPath + L"\\RetroBat.exe");
+            found.push_back(fs::path(installPath).append(L"RetroBat.exe").wstring());
         }
     }
 
@@ -199,7 +199,7 @@ namespace AnyFSE::Configuration
         std::wstring installPath = Packages::GetAppxInstallLocation(L"Microsoft.GamingApp_8wekyb3d8bbwe");
         if (!installPath.empty())
         {
-            found.push_back(installPath + L"\\XboxPcApp.exe");
+            found.push_back(fs::path(installPath).append(L"XboxPcApp.exe").wstring());
         }
     }
 

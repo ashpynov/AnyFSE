@@ -2,10 +2,11 @@
 <Project DefaultTargets="Build" ToolsVersion="15.0"
     xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <AssemblyVersion>0.10.9</AssemblyVersion>
+        <AssemblyVersion>1.0.0</AssemblyVersion>
         <AssemblyProduct>AnyFSE</AssemblyProduct>
         <AssemblyCompany>Artem Shpynov</AssemblyCompany>
-        <AssemblyCopyright>Copyright © 2025 Artem Shpynov. All rights reserved.</AssemblyCopyright>
+        <AssemblyDescription>AnyFSE Home application launcher</AssemblyDescription>
+        <AssemblyCopyright>Copyright © 2026 Artem Shpynov. All rights reserved.</AssemblyCopyright>
         <AssemblyInternalName>$(TargetName)</AssemblyInternalName>
     </PropertyGroup>
     <ItemDefinitionGroup>

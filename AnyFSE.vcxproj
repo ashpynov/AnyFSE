@@ -1,40 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup Label="Globals">
-    <VCProjectVersion>17.0</VCProjectVersion>
-    <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{C4D8E9A2-1B7F-43C5-9D0E-F8A2B6C7D1E3}</ProjectGuid>
-    <RootNamespace>AnyFSE</RootNamespace>
-    <TargetName>AnyFSE</TargetName>
-    <ConfigurationType>Application</ConfigurationType>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <AssemblyDescription>AnyFSE Home application launcher</AssemblyDescription>
-  </PropertyGroup>
-  <Import Project="AnyFSE.vcxproj.props" />
+    <ItemGroup Label="ProjectConfigurations">
+        <ProjectConfiguration Include="Debug|x64">
+            <Configuration>Debug</Configuration>
+            <Platform>x64</Platform>
+        </ProjectConfiguration>
+        <ProjectConfiguration Include="Release|x64">
+            <Configuration>Release</Configuration>
+            <Platform>x64</Platform>
+        </ProjectConfiguration>
+    </ItemGroup>
+    <Import Project="AnyFSE.Version.props" />
 
-  <ItemDefinitionGroup>
-    <Link>
-      <DelayLoadDLLs>api-ms-win-gaming-experience-l1-1-0.dll;GdiPlus.dll</DelayLoadDLLs>
-    </Link>
-  </ItemDefinitionGroup>
+    <PropertyGroup Label="Globals">
+        <ProjectGuid>{9D1A8C46-5C52-4E5A-B0EE-123456789ABC}</ProjectGuid>
+        <Keyword>Win32Proj</Keyword>
+        <RootNamespace>$(AssemblyProduct)</RootNamespace>
+        <TargetName>$(AssemblyProduct)</TargetName>
+        <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+        <DefaultLanguage>En-US</DefaultLanguage>
+        <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+        <AppName>$(AssemblyProduct)</AppName>
+        <Publisher>$(AssemblyCompany)</Publisher>
+        <Description>$(AssemblyDescription)</Description>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(VCTargetsPath)'==''" >
+        <VCTargetsPath>C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\</VCTargetsPath>
+    </PropertyGroup>
+    <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+        <ConfigurationType>Application</ConfigurationType>
+        <UseDebugLibraries>true</UseDebugLibraries>
+        <PlatformToolset>v143</PlatformToolset>
+        <CharacterSet>Unicode</CharacterSet>
+        <OutDir>build\$(Configuration)\</OutDir>
+        <IntermediateOutputPath>build\objs\$(TargetName)\$(Configuration)\</IntermediateOutputPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+        <ConfigurationType>Application</ConfigurationType>
+        <UseDebugLibraries>false</UseDebugLibraries>
+        <PlatformToolset>v143</PlatformToolset>
+        <WholeProgramOptimization>true</WholeProgramOptimization>
+        <CharacterSet>Unicode</CharacterSet>
+        <OutDir>build\$(Configuration)\</OutDir>
+        <IntermediateOutputPath>build\objs\$(TargetName)\$(Configuration)\</IntermediateOutputPath>
+    </PropertyGroup>
+    <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+    <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+        <ClCompile>
+            <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+            <PreprocessorDefinitions>
+                _STATIC_CPPLIB;_DISABLE_DEPRECATE_STATIC_CPPLIB;WIN32;WIN64;_WIN64;_AMD64_;_DEBUG;_WINDOWS;
+                VER_VERSION_STR="$(AssemblyVersion)";
+                VER_PRODUCT_NAME="$(AssemblyProduct)";
+                VER_COMPANY_NAME="$(AssemblyCompany)";
+                %(PreprocessorDefinitions)
+            </PreprocessorDefinitions>
+            <WarningLevel>Level3</WarningLevel>
+            <Optimization>Disabled</Optimization>
+            <LanguageStandard>stdcpp17</LanguageStandard>
+            <AdditionalIncludeDirectories>
+                $(SolutionDir)src;
+                %(AdditionalIncludeDirectories)
+            </AdditionalIncludeDirectories>
+        </ClCompile>
+    </ItemDefinitionGroup>
+    <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+        <ClCompile>
+            <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+            <PreprocessorDefinitions>
+                _STATIC_CPPLIB;_DISABLE_DEPRECATE_STATIC_CPPLIB;WIN32;WIN64;_WIN64;_AMD64_;_WINDOWS;
+                VER_VERSION_STR="$(AssemblyVersion)";
+                VER_PRODUCT_NAME="$(AssemblyProduct)";
+                VER_COMPANY_NAME="$(AssemblyCompany)";
+                %(PreprocessorDefinitions)
+            </PreprocessorDefinitions>
+            <WarningLevel>Level3</WarningLevel>
+            <Optimization>MaxSpeed</Optimization>
+            <LanguageStandard>stdcpp17</LanguageStandard>
+            <EnableFunctionLevelLinking>true</EnableFunctionLevelLinking>
+            <AdditionalIncludeDirectories>
+                $(SolutionDir)src;
+                %(AdditionalIncludeDirectories)
+            </AdditionalIncludeDirectories>
+        </ClCompile>
+    </ItemDefinitionGroup>
 
-  <ItemGroup>
-    <ClCompile Include="src\App\*.cpp" />
-    <ClCompile Include="src\AppControl\*.cpp" />
-    <ClCompile Include="src\Configuration\*.cpp" />
-    <ClCompile Include="src\Logging\*.cpp" />
-    <ClCompile Include="src\Tools\*.cpp"/>
-    <ClCompile Include="src\FluentDesign\Theme.cpp"/>
-    <ClCompile Include="src\FluentDesign\Theme_Colors.cpp"/>
-    <ClCompile Include="src\FluentDesign\Popup.cpp"/>
-    <ClInclude Include="src\App\Application.hpp" />
-    <ClCompile Include="src\Updater\Updater.AppControl.cpp" />
-    <ClCompile Include="src\Updater\Updater.cpp" />
-    <ClInclude Include="src\resource.h" />
-    <ResourceCompile Include="src\Resource.rc" />
-    <Image Include="media\AnyFSEIcon.ico" />
+    <ItemDefinitionGroup>
+        <Link>
+            <DelayLoadDLLs>api-ms-win-gaming-experience-l1-1-0.dll;GdiPlus.dll</DelayLoadDLLs>
+        </Link>
+    </ItemDefinitionGroup>
 
-  </ItemGroup>
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+    <ItemGroup>
+        <ClCompile Include="src\App\*.cpp" />
+        <ClCompile Include="src\Configuration\*.cpp" />
+        <ClCompile Include="src\Logging\*.cpp" />
+        <ClCompile Include="src\Tools\*.cpp" />
+        <ClCompile Include="src\FluentDesign\*.cpp" />
+        <ClCompile Include="src\Updater\Updater.cpp" />
+        <ClCompile Include="src\Updater\Updater.AppControl.cpp" />
+        <ClInclude Include="src\resource.h" />
+        <ResourceCompile Include="src\Resource.rc" />
+        <Image Include="media\AnyFSEIcon.ico" />
+    </ItemGroup>
+
+    <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+
+
+    <!-- Import packaging targets -->
+    <!-- <Import Project="AnyFSE.Packaging.props" /> -->
+
 </Project>

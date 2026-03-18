@@ -49,7 +49,19 @@ namespace AnyFSE::App::AppSettings::Settings
 
     INT_PTR SettingsDialog::Show(HINSTANCE hInstance)
     {
-        size_t size = sizeof(DLGTEMPLATE) + sizeof(WORD) * 3; // menu, class, title
+
+        WNDCLASSEX wc = {0};
+        wc.cbSize = sizeof(WNDCLASSEX);
+        wc.lpfnWndProc = DefDlgProc;  // Use DefDlgProc for dialog classes!
+        wc.hInstance = hInstance;
+        wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+        wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+        wc.lpszClassName = DialogClassName;
+        wc.cbWndExtra = DLGWINDOWEXTRA;  // CRITICAL for dialogs!
+
+        ATOM atom = RegisterClassEx(&wc);
+
+        size_t size = sizeof(DLGTEMPLATE) + sizeof(WORD) * 103; // menu, class, title
         HGLOBAL hGlobal = GlobalAlloc(GHND, size);
         if (!hGlobal)
         {
@@ -73,11 +85,14 @@ namespace AnyFSE::App::AppSettings::Settings
         // No menu, class, or title
         WORD* ptr = (WORD*)(dlgTemplate + 1);
         *ptr++ = 0; // No menu
-        *ptr++ = 0; // Default dialog class
+
+        wcscpy_s((wchar_t*)ptr, wcslen(DialogClassName) + 1, DialogClassName);
+        ptr += wcslen(DialogClassName) + 1;  // Move past string + null terminator
         *ptr++ = 0; // No title
 
         GlobalUnlock(hGlobal);
         INT_PTR res = DialogBoxIndirectParam(hInstance, dlgTemplate, NULL, DialogProc, (LPARAM)this);
+        DWORD err = GetLastError();
         GlobalFree(hGlobal);
         if (res == -1)
         {

@@ -16,70 +16,13 @@
     "tasks": [
         {
             "type": "shell",
-            "label": "Build AnyFSE.Service Debug",
-            "command": "msbuild.exe",
-            "args": [
-                "AnyFSE.Service.vcxproj",
-                "-property:Configuration=Debug",
-                "-property:Platform=x64",
-                "-target:Build"
-            ],
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
-        },
-        {
-            "type": "shell",
-            "label": "Build AnyFSE App Debug",
-            "command": "msbuild.exe",
-            "args": [
-                "AnyFSE.vcxproj",
-                "-property:Configuration=Debug",
-                "-property:Platform=x64",
-                "-target:Build"
-            ],
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-            "dependsOn":[
-                "Build AnyFSE.Settings Debug"
-            ]
-        },
-        {
-            "type": "shell",
-            "label": "Build AnyFSE.Settings Debug",
-            "command": "msbuild.exe",
-            "args": [
-                "AnyFSE.Settings.vcxproj",
-                "-property:Configuration=Debug",
-                "-property:Platform=x64",
-                "-target:Build"
-            ],
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
-        },
-        {
-            "type": "shell",
             "label": "Build AnyFSE Release",
             "command": "msbuild.exe",
             "args": [
                 "AnyFSE.sln",
                 "-property:Configuration=Release",
                 "-property:Platform=x64",
-                "-target:Clean;Build"
+                "-target:Clean;AnyFSE;AnyFSE_Settings"
             ],
             "problemMatcher": [
                 "$msCompile"
@@ -115,7 +58,7 @@
                 "AnyFSE.sln",
                 "-property:Configuration=Debug",
                 "-property:Platform=x64",
-                "-target:Build"
+                "-target:AnyFSE;AnyFSE_Settings"
             ],
             "problemMatcher": [
                 "$msCompile"
@@ -126,75 +69,15 @@
             }
         },
         {
+            "label": "Package",
             "type": "shell",
-            "label": "Build AnyFSE.Uninstaller Debug",
-            "command": "msbuild.exe",
+            "command": "msbuild",
             "args": [
-                "AnyFSE.Uninstaller.vcxproj",
-                "-property:Configuration=Debug",
-                "-property:Platform=x64",
+                "${workspaceFolder}/AnyFSE.sln",
+                "/p:Configuration=Release",
+                "/p:Platform=x64"
             ],
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
-        },
-        {
-            "type": "shell",
-            "label": "Build AnyFSE.Uninstaller Release",
-            "command": "msbuild.exe",
-            "args": [
-                "AnyFSE.Uninstaller.vcxproj",
-                "-property:Configuration=Release",
-                "-property:Platform=x64",
-            ],
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        },
-        {
-            "type": "shell",
-            "label": "Build AnyFSE.Installer Release",
-            "command": "msbuild.exe",
-            "args": [
-                "AnyFSE.Installer.vcxproj",
-                "-property:Configuration=Release",
-                "-property:Platform=x64",
-            ],
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "dependsOn":[
-                "Build AnyFSE Release",
-            ]
-        },
-        {
-            "type": "shell",
-            "label": "Build AnyFSE.Installer Debug",
-            "command": "msbuild.exe",
-            "args": [
-                "AnyFSE.Installer.vcxproj",
-                "-property:Configuration=Debug",
-                "-property:Platform=x64",
-            ],
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
+            "group": "build"
         }
     ]
 }

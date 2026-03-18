@@ -177,13 +177,13 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         if (m_config.Type == LauncherType::None)
         {
-            Registry::DeleteValue(gamingConfiguration, gamingHomeApp);
-            Registry::WriteBool(gamingConfiguration, startupToGamingHome, false);
+            //Registry::DeleteValue(gamingConfiguration, gamingHomeApp);
+            //Registry::WriteBool(gamingConfiguration, startupToGamingHome, false);
         }
         else
         {
-            Registry::WriteBool(gamingConfiguration, startupToGamingHome, m_fseOnStartupToggle.GetCheck());
-            Registry::WriteString(gamingConfiguration, gamingHomeApp, xboxApp);
+            //Registry::WriteBool(gamingConfiguration, startupToGamingHome, m_fseOnStartupToggle.GetCheck());
+            //Registry::WriteString(gamingConfiguration, gamingHomeApp, xboxApp);
         }
 
         Config::Launcher.StartCommand = m_config.StartCommand;

@@ -18,8 +18,8 @@ namespace AnyFSE::Updater
     struct UpdateInfo
     {
         UpdaterState uiState = UpdaterState::Idle;
-        std::wstring newVersion;
-        std::wstring downloadPath;
+        std::wstring newVersion = L"\0";
+        std::wstring downloadPath = L"\0";
         long long lCommandAge = 0;
         UpdaterState uiCommand = UpdaterState::Idle;
     };

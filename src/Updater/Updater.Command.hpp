@@ -39,8 +39,8 @@ namespace AnyFSE::Updater
     struct UPDATEINFO
     {
         UpdaterState uiState;
-        wchar_t newVersion[MAX_PATH];
-        wchar_t downloadPath[MAX_PATH];
+        wchar_t newVersion[MAX_PATH] = L"\0";
+        wchar_t downloadPath[MAX_PATH] = L"\0";
         long long lCommandAge;
         UpdaterState uiCommand;
 

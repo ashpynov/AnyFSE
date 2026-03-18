@@ -11,49 +11,9 @@
             "program": "AnyFSE.exe",
             "args": [""],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Debug",
+            "cwd": "${workspaceFolder}/build/Debug",
             "environment": [],
-            "preLaunchTask": "Build AnyFSE App Debug"
-        },
-        {
-            "name": "Debug AnyFSE.Service",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "AnyFSE.Service.exe",
-            "args": ["/suspend"],
-
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Debug",
-            "environment": [],
-            "preLaunchTask": "Build AnyFSE.Service Debug"
-        },
-        {
-            "name": "Debug Installer",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "AnyFSE.Installer.exe",
-            "args": [""],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Debug",
-            "environment": [],
-            "preLaunchTask": "Build AnyFSE.Installer Debug"
-        },
-        {
-            "name": "Debug Uninstaller",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "unins000.exe",
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin/Debug",
-            "environment": [],
-            "preLaunchTask": "Build AnyFSE.Uninstaller Debug"
+            "preLaunchTask": "Build AnyFSE Debug"
         }
-    ],
-    "compounds": [
-    {
-      "name": "Debug Service/Control",
-      "configurations": ["Debug AnyFSE.Service", "Debug AnyFSE"],
-      "stopAll": true
-    }
-  ]
+    ]
 }

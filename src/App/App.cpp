@@ -1,0 +1,248 @@
+// MIT License
+//
+// Copyright (c) 2025 Artem Shpynov
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+
+
+#include <windows.h>
+#include <iostream>
+#include "resource.h"
+#include <tchar.h>
+#include <commctrl.h>
+#include <strsafe.h>
+
+#include "Logging/LogManager.hpp"
+#include "Configuration/Config.hpp"
+#include "Tools/Process.hpp"
+#include "Tools/Notification.hpp"
+#include "Tools/PowerEfficiency.hpp"
+#include "Tools/Registry.hpp"
+#include "Tools/Unicode.hpp"
+
+#include "App/App.hpp"
+#include "App/GamingExperience.hpp"
+#include "App/MainWindow.hpp"
+//#include "App/AppControlStateLoop.hpp"
+#include "App/App.hpp"
+#include "AppSettings/SettingsDialog.hpp"
+//#include "App/Application.hpp"
+#include "App/Launchers.hpp"
+#include "App/JumpList.hpp"
+#include "App.hpp"
+
+
+#pragma comment(lib, "comctl32.lib")
+#pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+//#include "ToolsEx/Minidump.hpp"
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+{
+    //AnyFSE::ToolsEx::InstallUnhandledExceptionHandler();
+    return AnyFSE::App::App::WinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
+}
+
+namespace AnyFSE::App
+{
+    static Logger log = LogManager::GetLogger("Application");
+
+    int App::CallLibrary(const WCHAR * library, HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+    {
+        HMODULE hModuleDll = NULL;
+        static MainFunc *Main = nullptr;
+
+        int result = INT_MIN;
+        do
+        {
+            hModuleDll = LoadLibrary(library);
+            if (!hModuleDll)
+            {
+                break;
+            }
+
+            MainFunc Main = (MainFunc)GetProcAddress(hModuleDll, "Main");
+            if( !Main )
+            {
+                break;
+            }
+            result = (int)Main(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
+
+        } while (false);
+
+        if (result == INT_MIN)
+        {
+            LPSTR messageBuffer = nullptr;
+            DWORD size = FormatMessageA(
+                FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                    FORMAT_MESSAGE_FROM_SYSTEM |
+                    FORMAT_MESSAGE_IGNORE_INSERTS,
+                NULL,
+                GetLastError(),
+                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                (LPSTR)&messageBuffer,
+                0,
+                NULL);
+            MessageBoxA(NULL, messageBuffer, "Call module error", MB_OK | MB_ICONERROR);
+            LocalFree(messageBuffer);
+        }
+
+        if (hModuleDll)
+            FreeLibrary(hModuleDll);
+
+        return result;
+    }
+
+    int App::ShowSettings()
+    {
+        return CallLibrary(L"AnyFSE.Settings.dll", GetModuleHandle(NULL), NULL, NULL, 0);;
+    }
+
+    void App::InitCustomControls()
+    {
+        INITCOMMONCONTROLSEX icex;
+        icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+        icex.dwICC = ICC_STANDARD_CLASSES;
+        ::InitCommonControlsEx(&icex);
+    }
+
+    bool App::AsFSE(LPSTR lpCmdLine)
+    {
+        return (_strnicmp(lpCmdLine, "/FSE", 4) == 0);
+    }
+
+    bool App::AsSettings(LPSTR lpCmdLine)
+    {
+        // Settings or Config is not exists
+        //
+        if (_strnicmp(lpCmdLine, "/Settings", 9) == 0 || !Config::IsConfigured())
+        {
+             return true;
+        }
+
+        // or Launcher == None or Launcher == Xbox
+        if (Config::Launcher.Type == LauncherType::None
+         || Config::Launcher.Type == LauncherType::Xbox)
+        {
+            return true;
+        }
+
+        // Registry != AnyFSE
+        const std::wstring AnyFSEApp = L"AnyFSE_hzj39hntkw714!App";
+        const std::wstring selectedApp = Registry::ReadString(
+            L"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration",
+            L"GamingHomeApp");
+
+        if (_wcsicmp(selectedApp.c_str(), AnyFSEApp.c_str() ) != 0)
+        {
+            return true;
+        }
+
+        // TODO check launcher is available
+
+        return false;
+    }
+
+    int WINAPI App::WinMain(HINSTANCE hInstance,
+                    HINSTANCE hPrevInstance,
+                    LPSTR lpCmdLine,
+                    int nCmdShow)
+    {
+        Config::Load();
+        AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
+
+        if (FindWindow(L"AnyFSE", NULL))
+        {
+            log.Debug("Application control is executed already, exiting\n");
+            return 0;
+        }
+
+        AnyFSE::App::JumpList::RegisterJumpList();
+
+        int exitCode = -1;
+        SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+
+
+        if (!GamingExperience::ApiIsAvailable)
+        {
+            log.Critical("Fullscreen Gaming API is not detected, exiting\n");
+            InitCustomControls();
+            TaskDialog(NULL, hInstance,
+                       L"Error",
+                       L"Gaming Fullscreen Experiense API is not detected",
+                       L"Fullscreen experiense is not available on your version of windows.\n"
+                       L"It is supported since Windows 25H2 version for Handheld Devices",
+                       TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
+            return -1;
+        }
+
+        log.Debug("\n\nApplication control is started (hInstance=%08x)", hInstance);
+
+        if (AsFSE(lpCmdLine))
+        {
+            return GamingExperience::EnterFSEMode();
+        }
+
+        if (AsSettings(lpCmdLine))
+        {
+            return ShowSettings();
+        }
+
+        if (Launchers::IsLauncherActive())
+        {
+            Launchers::FocusLauncher();
+            return 0;
+        }
+
+        Launchers::LauncherOnBoot();
+        Launchers::StartLauncher();
+
+        Sleep(500);
+
+        if (Launchers::IsLauncherActive())
+        {
+            return 0;
+        }
+
+        Window::MainWindow mainWindow;
+
+        if (!mainWindow.Create(L"AnyFSE", hInstance, (Config::Launcher.Name + L" is launching").c_str()))
+        {
+            return (int)GetLastError();
+        }
+
+        Tools::EnablePowerEfficencyMode(true);
+
+        mainWindow.Show();
+        exitCode = Window::MainWindow::RunLoop();
+
+        log.Debug("Loop finished. Time to exit");
+
+        if (exitCode)
+        {
+            log.Warn(log.APIError(exitCode),"Exiting with code: (%d) error", exitCode);
+        }
+        else
+        {
+            log.Debug("Job is done!");
+        }
+
+        return (int)exitCode;
+    }
+};
