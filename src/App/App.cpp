@@ -124,16 +124,31 @@ namespace AnyFSE::App
 
     bool App::AsFSE(LPSTR lpCmdLine)
     {
-        return (_strnicmp(lpCmdLine, "/FSE", 4) == 0);
+        for (char *a = lpCmdLine; *a; a++)
+        {
+            if (_strnicmp(a, "/FSE", 4) == 0)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     bool App::AsSettings(LPSTR lpCmdLine)
     {
         // Settings or Config is not exists
         //
-        if (_strnicmp(lpCmdLine, "/Settings", 9) == 0 || !Config::IsConfigured())
+        if (!Config::IsConfigured())
         {
-             return true;
+            return true;
+        }
+
+        for (char *a = lpCmdLine; *a; a++)
+        {
+            if (_strnicmp(a, "/Settings", 9) == 0)
+            {
+                return true;
+            }
         }
 
         // or Launcher == None or Launcher == Xbox
@@ -192,7 +207,7 @@ namespace AnyFSE::App
             return -1;
         }
 
-        log.Debug("\n\nApplication control is started (hInstance=%08x)", hInstance);
+        log.Debug("\n\nApplication control is started (hInstance=%08x) args: [%s]", hInstance, lpCmdLine);
 
         if (AsFSE(lpCmdLine))
         {

@@ -113,7 +113,7 @@ namespace AnyFSE::App::AppSettings::Settings
             m_pages.push_back(new Page::SplashPage(m_theme, *this));
             m_pages.push_back(new Page::UpdatePage(m_theme, *this));
             m_pages.push_back(new Page::TroubleshootPage(m_theme, *this));
-            m_pages.push_back(new Page::StartupPage(m_theme, *this));
+            //m_pages.push_back(new Page::StartupPage(m_theme, *this));
             m_pages.push_back(new Page::SupportPage(m_theme, *this));
         }
 

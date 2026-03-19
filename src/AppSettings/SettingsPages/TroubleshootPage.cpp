@@ -37,7 +37,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             wchar_t buff[2] = {(wchar_t)i, 0};
             m_troubleLogLevelCombo.AddItem(level, L"", buff);
         }
-
+/*
         m_dialog.AddSettingsLine(m_pageLinesList,
             topPage,
             L"Aggressive Mode",
@@ -51,6 +51,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             L"Exit to desktop mode after Home app was exited",
             m_troubleExitOnExitToggle,
             Layout::LineHeight, Layout::LinePadding, 0);
+*/
     }
 
     void TroubleshootPage::LoadControls()

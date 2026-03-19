@@ -46,6 +46,11 @@
         <uap3:Extension Category="windows.appExtension">
           <uap3:AppExtension Name="windows.gamingApp" Id="App" DisplayName="$(AppName)" Description="$(Description)" PublicFolder="Public" />
         </uap3:Extension>
+        <uap:Extension Category="windows.protocol">
+          <uap:Protocol Name="anyfse">
+            <uap:DisplayName>AnyFSE Protocol</uap:DisplayName>
+          </uap:Protocol>
+        </uap:Extension>
       </Extensions>
     </Application>
   </Applications>
