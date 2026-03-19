@@ -10,7 +10,8 @@
   xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
   xmlns:uap18="http://schemas.microsoft.com/appx/manifest/uap/windows10/18"
   xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
-  IgnorableNamespaces="uap uap3 uap4 rescap uap18 desktop">
+  xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
+  IgnorableNamespaces="uap uap3 uap4 rescap uap18 desktop desktop6">
 
   <Identity
     Name="$(AppName)"
@@ -21,10 +22,12 @@
     <DisplayName>.</DisplayName>
     <PublisherDisplayName>.</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
+    <desktop6:RegistryWriteVirtualization>disabled</desktop6:RegistryWriteVirtualization>
+    <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
   </Properties>
 
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.26200.7462" MaxVersionTested="10.0.26200.7653" />
   </Dependencies>
 
   <Resources>
@@ -57,6 +60,7 @@
 
   <Capabilities>
     <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="unvirtualizedResources"/>
     <uap4:CustomCapability Name="Microsoft.appCategory.gamingHome_8wekyb3d8bbwe" />
   </Capabilities>
 

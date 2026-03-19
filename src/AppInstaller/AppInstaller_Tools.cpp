@@ -131,12 +131,12 @@ namespace AnyFSE
 
             d::PackageManager packageManager;
 
-            auto packages = packageManager.FindPackages(packageFamilyName);
-            for (auto& package : packages)
-            {
-                auto removing = packageManager.RemovePackageAsync(package.Id().FullName());
-                auto removed = removing.get();
-            }
+            // auto packages = packageManager.FindPackages(packageFamilyName);
+            // for (auto& package : packages)
+            // {
+            //     auto removing = packageManager.RemovePackageAsync(package.Id().FullName());
+            //     auto removed = removing.get();
+            // }
 
             f::Uri packageUri(fs::absolute(packageFilePath).wstring());
             std::wcerr << packageUri.ToString().c_str() << std::endl;

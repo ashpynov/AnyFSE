@@ -28,6 +28,7 @@
     <CharacterSet>Unicode</CharacterSet>
     <PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
     <OutputDirectory>build\$(Configuration)\</OutputDirectory>
+    <IntermediateOutputPath>build\objs\$(TargetName)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>

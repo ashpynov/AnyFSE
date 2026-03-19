@@ -10,7 +10,6 @@
 
   <PropertyGroup>
     <OutDir>build\$(Configuration)\</OutDir>
-    <VersionRevision>0</VersionRevision>
     <Version>$(AssemblyVersion).$(VersionRevision)</Version>
     <TargetName>$(AssemblyProduct)</TargetName>
     <DefaultLanguage>En-US</DefaultLanguage>
@@ -56,10 +55,6 @@
     <Copy
       SourceFiles="@(DllFiles)"
       DestinationFolder="$(AppPackageContentsDir)\" />
-
-    <!-- <Copy
-      SourceFiles="$(OutDir)$(TargetName).exe"
-      DestinationFolder="$(AppPackageContentsDir)" /> -->
 
     <Copy
       SourceFiles="$(MSBuildProjectDirectory)\AppxManifest.xml"

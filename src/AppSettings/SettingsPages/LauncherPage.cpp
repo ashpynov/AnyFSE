@@ -6,10 +6,12 @@
 #include "AppSettings/SettingsLayout.hpp"
 #include "AppSettings/SettingsDialog.hpp"
 #include "LauncherPage.hpp"
-
+#include "Logging/LogManager.hpp"
 
 namespace AnyFSE::App::AppSettings::Settings::Page
 {
+    static Logger log = LogManager::GetLogger("Settings/Launcher");
+
     void LauncherPage::AddPage(std::list<SettingsLine>& settingPageList, ULONG &top)
     {
         FluentDesign::SettingsLine &launcher = m_dialog.AddSettingsLine(settingPageList, top,
@@ -174,17 +176,27 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         const std::wstring startupToGamingHome = L"StartupToGamingHome";
         const std::wstring gamingHomeApp = L"GamingHomeApp";
         const std::wstring xboxApp = L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";
+        const std::wstring anyFSEApp = L"AnyFSE_hzj39hntkw714!App";
 
         if (m_config.Type == LauncherType::None)
         {
-            //Registry::DeleteValue(gamingConfiguration, gamingHomeApp);
-            //Registry::WriteBool(gamingConfiguration, startupToGamingHome, false);
+            Registry::DeleteValue(gamingConfiguration, gamingHomeApp);
+            Registry::WriteBool(gamingConfiguration, startupToGamingHome, false);
+        }
+        else if (m_config.Type == LauncherType::Xbox)
+        {
+            log.Debug("Saving xBox as launcher");
+            Registry::WriteBool(gamingConfiguration, startupToGamingHome, m_fseOnStartupToggle.GetCheck());
+            Registry::WriteString(gamingConfiguration, gamingHomeApp, xboxApp);
         }
         else
         {
-            //Registry::WriteBool(gamingConfiguration, startupToGamingHome, m_fseOnStartupToggle.GetCheck());
-            //Registry::WriteString(gamingConfiguration, gamingHomeApp, xboxApp);
+            log.Debug("Saving AnyFse as launcher");
+            Registry::WriteBool(gamingConfiguration, startupToGamingHome, m_fseOnStartupToggle.GetCheck());
+            Registry::WriteString(gamingConfiguration, gamingHomeApp, anyFSEApp);
         }
+
+        log.Debug("Saved launcher: %s", Unicode::to_string(Registry::ReadString(gamingConfiguration, gamingHomeApp)).c_str());
 
         Config::Launcher.StartCommand = m_config.StartCommand;
         Config::CustomSettings = m_customSettingsToggle.GetCheck();
