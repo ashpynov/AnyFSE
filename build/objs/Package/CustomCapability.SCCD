@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<CustomCapabilityDescriptor xmlns="http://schemas.microsoft.com/appx/2018/sccd" xmlns:s="http://schemas.microsoft.com/appx/2018/sccd">
-  <CustomCapabilities>
-    <CustomCapability Name="Microsoft.appCategory.gamingHome_8wekyb3d8bbwe" />
-  </CustomCapabilities>
-  <AuthorizedEntities AllowAny="true"/>
-  <Catalog>FFFF</Catalog>
-</CustomCapabilityDescriptor>
