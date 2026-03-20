@@ -25,10 +25,8 @@ namespace AnyFSE::Tools
                                    .replace_extension(L"")
                                    .wstring();
 
-        std::wstring dataDir = Tools::Paths::GetDataPath();
-
         // ensure dumps directory exists: <exeDir>\dumps
-        std::wstring dumpsDir = dataDir + L"\\dumps";
+        std::wstring dumpsDir = Tools::Paths::GetDumpsPath();
         if (!CreateDirectoryW(dumpsDir.c_str(), NULL))
         {
             DWORD err = GetLastError();

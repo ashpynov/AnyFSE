@@ -123,7 +123,6 @@ namespace AnyFSE::Configuration
     {
         size_t existed = found.size();
         found.push_back(L"");
-        FindLocal(found);
         FindInstalledLaunchers(found);
         return found.size() > existed;
     }
@@ -139,17 +138,6 @@ namespace AnyFSE::Configuration
         FindArmoryCrate(found);
         FindXbox(found);
         return found.size() > existed;
-    }
-
-    void Config::FindLocal(std::list<std::wstring>& found)
-    {
-        namespace fs = std::filesystem;
-        std::wstring modulePath = Tools::Paths::GetExePath();
-        if (fs::exists(fs::path(modulePath + L"\\Playnite.FullscreenApp.exe")))
-        {
-            found.push_back(fs::path(modulePath).append(L"Playnite.FullscreenApp.exe").wstring());
-            found.push_back(fs::path(modulePath).append(L"Playnite.DesktopApp.exe").wstring());
-        }
     }
 
     void Config::FindPlaynite(std::list<std::wstring>& found)

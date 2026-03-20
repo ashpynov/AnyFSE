@@ -75,7 +75,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
     void TroubleshootPage::OnGotoLogsFolder()
     {
-        std::wstring path = Tools::Paths::GetDataPath() + L"\\logs";
+        std::wstring path = Tools::Paths::GetLogsPath();
 
         CreateDirectoryW(path.c_str(), NULL);
         Process::StartProtocol(L"\"" + path + L"\"");

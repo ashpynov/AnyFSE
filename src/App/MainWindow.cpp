@@ -299,7 +299,7 @@ namespace AnyFSE::App::Window
         m_currentVideo = L"";
 
         namespace fs = std::filesystem;
-        std::wstring mediaPath = Config::SplashVideoPath.empty() ? Tools::Paths::GetDataPath() + L"\\splash" : Config::SplashVideoPath;
+        std::wstring mediaPath = Config::SplashVideoPath.empty() ? Tools::Paths::GetSplashDefaultPath() : Config::SplashVideoPath;
 
         std::vector<fs::path> videoFiles;
 

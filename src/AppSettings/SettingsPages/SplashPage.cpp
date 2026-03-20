@@ -111,7 +111,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
     void SplashPage::OnGotoSplashFolder()
     {
-        std::wstring path = Tools::Paths::GetDataPath() + L"\\splash";
+        std::wstring path = Tools::Paths::GetSplashDefaultPath();
 
         CreateDirectoryW(path.c_str(), NULL);
         Process::StartProtocol(L"\"" + path + L"\"");

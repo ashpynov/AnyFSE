@@ -87,30 +87,7 @@ namespace AnyFSE::Configuration
 
     std::string Config::GetConfigFileA(bool readOnly)
     {
-        std::wstring _path = Tools::Paths::GetDataPath() + L"\\AnyFSE.json";
-        if (readOnly || fs::exists(fs::path(_path)))
-        {
-            return Unicode::to_string(_path);
-        }
-
-        if (!readOnly)
-        {
-            _path = Tools::Paths::GetExePath() + L"\\AnyFSE.json";
-            FILE *file = 0;
-            if (false && !_wfopen_s(&file, _path.c_str(), L"a") && file)
-            {
-                fclose(file);
-            }
-            else
-            {
-                _path = Tools::Paths::GetProgramDataPath() + L"\\AnyFSE.json";
-            }
-            if (!fs::exists(fs::path(_path)))
-            {
-                CreateDirectoryW(fs::path(_path).parent_path().wstring().c_str(), NULL);
-            }
-        }
-        return Unicode::to_string(_path);
+        return Unicode::to_string(Tools::Paths::GetConfigPath() + L"\\AnyFSE.json");
     }
 
     json Config::GetConfig()
@@ -130,7 +107,7 @@ namespace AnyFSE::Configuration
 
     void Config::Load()
     {
-        LogPath = Tools::Paths::GetDataPath() + L"\\logs";
+        LogPath = Tools::Paths::GetLogsPath();
 
         json config = GetConfig();
 

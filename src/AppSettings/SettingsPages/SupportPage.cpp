@@ -32,9 +32,13 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         // links.SetMaxColumns(1);
         links.AddLinkButton(L"Discord AnyFSE community channel", L"https://discord.gg/AfkERzTEut");
+        links.AddLinkButton(L"Navigate to log files folder", Tools::Paths::GetLogsPath());
+
         links.AddLinkButton(L"GitHub repository", L"https://github.com/ashpynov/AnyFSE/");
+        links.AddLinkButton(L"Navigate to config files folder", Tools::Paths::GetConfigPath());
+
         links.AddLinkButton(L"Report issue or feature request", L"https://github.com/ashpynov/AnyFSE/issues");
-        links.AddLinkButton(L"Navigate to log files folder", Tools::Paths::GetDataPath() + L"\\logs");
+        links.AddLinkButton(L"Navigate to splash files folder", Tools::Paths::GetSplashDefaultPath());
 
         support.SetState(FluentDesign::SettingsLine::Opened);
 

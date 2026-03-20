@@ -5,19 +5,92 @@
 #include <filesystem>
 #include "Paths.hpp"
 
+#include <winrt/Windows.Storage.h>
+#pragma comment(lib, "windowsapp.lib")      // WinRT runtime
+
 namespace AnyFSE::Tools::Paths
 {
-    std::wstring GetExePath()
+    using namespace winrt;
+    using namespace Windows::Storage;
+
+    std::wstring GetAppLocalPath()
     {
-        static std::wstring _path;
-        if (_path.empty())
+        static std::wstring path = L"";
+        if (path.empty())
         {
-            wchar_t path[MAX_PATH];
-            ::GetModuleFileNameW(NULL, path, MAX_PATH);
-            std::filesystem::path binary = path;
-            _path = binary.parent_path().wstring();
+            init_apartment();
+
+            try
+            {
+                path = ApplicationData::Current().LocalFolder().Path();
+            }
+            catch(const winrt::hresult_error&)
+            {
+                path = GetAppPath() + L"\\LocalState";
+            }
         }
-        return _path;
+        return path;
+    }
+
+    std::wstring GetAppLocalCachePath()
+    {
+        static std::wstring path = L"";
+        if (path.empty())
+        {
+            init_apartment();
+            try
+            {
+                path = ApplicationData::Current().LocalCacheFolder().Path();
+            }
+            catch(const winrt::hresult_error&)
+            {
+                path = GetAppPath() + L"\\LocalCache";
+            }
+        }
+        return path;
+    }
+
+    std::wstring GetAppTempPath()
+    {
+        static std::wstring path = L"";
+        if (path.empty())
+        {
+            init_apartment();
+            try
+            {
+                path = ApplicationData::Current().TemporaryFolder().Path();
+            }
+            catch(const winrt::hresult_error&)
+            {
+                path = GetAppPath() + L"\\TempState";
+            }
+        }
+        return path;
+    }
+
+    std::wstring GetConfigPath()
+    {
+        return Tools::Paths::GetAppLocalPath();
+    }
+
+    std::wstring GetLogsPath()
+    {
+        return Tools::Paths::GetAppLocalCachePath() + L"\\logs";
+    }
+
+    std::wstring GetTempPath()
+    {
+        return Tools::Paths::GetAppTempPath() + L"\\tmp";
+    }
+
+    std::wstring GetDumpsPath()
+    {
+        return Tools::Paths::GetAppTempPath() + L"\\dumps";
+    }
+
+    std::wstring GetSplashDefaultPath()
+    {
+        return Tools::Paths::GetDataPath() + L"\\splash";
     }
 
     std::wstring GetExeFileName()
@@ -32,18 +105,18 @@ namespace AnyFSE::Tools::Paths
         return _path;
     }
 
-    std::wstring GetProgramDataPath()
+    std::wstring GetDataPath()
     {
         wchar_t appData[MAX_PATH]={0};
         ExpandEnvironmentStringsW(L"%PROGRAMDATA%\\AnyFSE", appData, MAX_PATH);
+        //Local\Packages\AnyFSE_hzj39hntkw714\LocalState
         return appData;
     }
 
-    std::wstring GetDataPath()
+    std::wstring GetAppPath()
     {
-        std::wstring appData = GetProgramDataPath();
-        return (std::filesystem::exists(std::filesystem::path(appData + L"\\AnyFSE.json")))
-            ? appData
-            : GetExePath();
+        wchar_t appData[MAX_PATH]={0};
+        ExpandEnvironmentStringsW(L"%LOCALAPPDATA%\\Packages\\AnyFSE_hzj39hntkw714", appData, MAX_PATH);
+        return appData;
     }
 }

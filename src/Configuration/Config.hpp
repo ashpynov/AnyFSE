@@ -95,7 +95,6 @@ namespace AnyFSE::Configuration
             static bool IsAnyFSEConfigured();
             static bool FindInstalledLaunchers(std::list<std::wstring> &found);
             static std::wstring GetXboxPath(const std::wstring &launcher);
-            static void FindLocal(std::list<std::wstring>& found);
             static void FindPlaynite(std::list<std::wstring>& found);
             static void FindSteam(std::list<std::wstring>& found);
             static void FindBigBox(std::list<std::wstring>& found);

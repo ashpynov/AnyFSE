@@ -358,7 +358,7 @@ namespace AnyFSE::Updater
 
         // convert assetName to wstring
         std::wstring wname = Tools::Unicode::to_wstring(assetName);
-        std::wstring localPath = Tools::Paths::GetDataPath() + L"\\AnyFSE." + tag + L".Update.exe";
+        std::wstring localPath = Tools::Paths::GetTempPath() + L"\\AnyFSE." + tag + L".Update.exe";
 
         // download
         std::wstring wurl = Tools::Unicode::to_wstring(downloadUrl);
