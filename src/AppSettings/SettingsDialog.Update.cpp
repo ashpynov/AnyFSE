@@ -17,6 +17,7 @@
 #include <Tools/Event.hpp>
 #include "SettingsDialog.hpp"
 #include "SettingsLayout.hpp"
+#include "Tools/Notification.hpp"
 
 namespace AnyFSE::App::AppSettings::Settings
 {
@@ -168,6 +169,13 @@ namespace AnyFSE::App::AppSettings::Settings
         {
             UpdateVersionStatusDelay(100);
         }
+        if (Config::UpdateNotifications
+            && !info.newVersion.empty()
+            && info.newVersion != Config::UpdateLastVersion)
+        {
+            Notification::ShowNewVersion(NULL, info.newVersion);
+        }
+
         Config::SaveUpdateVersion(info.newVersion);
         Updater::Subscribe(m_hDialog, WM_UPDATE_NOTIFICATION);
     }

@@ -251,12 +251,6 @@ namespace AnyFSE::App::Window
             log.Info("EndSession recieved");
             OnEndSession.Notify();
             break;
-        case WM_USER:
-            if (Config::UpdateNotifications)
-            {
-                Notification::ShowCurrentVersion(m_hWnd, wParam);
-            }
-            return 0;
         }
         return DefWindowProc(m_hWnd, uMsg, wParam, lParam);
     }

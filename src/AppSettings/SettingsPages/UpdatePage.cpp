@@ -19,7 +19,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         dialogLine.SetState(FluentDesign::SettingsLine::Next);
         dialogLine.SetIcon(L'\xEDAB');
-        dialogLine.OnChanged += delegate(OpenUpdateSettingsPage);
+
 
         ULONG topPage = 0;
 
@@ -29,16 +29,14 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             m_checkIntervalCombo,
             Layout::LineHeight, Layout::LinePadding, 0);
 
-        m_checkIntervalCombo.OnChanged = delegate(UpdateSettingsChangedCheck);
-
         m_checkIntervalCombo.AddItem(L"Manual", L"", {(wchar_t)-2, 0});
         m_checkIntervalCombo.AddItem(L"On settings open", L"", {(wchar_t)-1, 0});
-        m_checkIntervalCombo.AddItem(L"On windows boot", L"", {(wchar_t)0, 0});
+        // m_checkIntervalCombo.AddItem(L"On windows boot", L"", {(wchar_t)0, 0});
 
-        m_checkIntervalCombo.AddItem(L"Hourly", L"", {(wchar_t)1, 0});
-        m_checkIntervalCombo.AddItem(L"Daily", L"", {(wchar_t)24, 0});
-        m_checkIntervalCombo.AddItem(L"Weekly", L"", {(wchar_t)168, 0});
-        m_checkIntervalCombo.AddItem(L"Monthly", L"", {(wchar_t)720, 0});
+        // m_checkIntervalCombo.AddItem(L"Hourly", L"", {(wchar_t)1, 0});
+        // m_checkIntervalCombo.AddItem(L"Daily", L"", {(wchar_t)24, 0});
+        // m_checkIntervalCombo.AddItem(L"Weekly", L"", {(wchar_t)168, 0});
+        // m_checkIntervalCombo.AddItem(L"Monthly", L"", {(wchar_t)720, 0});
 
 
         m_dialog.AddSettingsLine(m_pageLinesList, topPage,
@@ -47,15 +45,18 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             m_preReleaseToggle,
             Layout::LineHeight, Layout::LinePadding, 0);
 
-        m_preReleaseToggle.OnChanged = delegate(UpdateSettingsChangedCheck);
-
         m_dialog.AddSettingsLine(m_pageLinesList, topPage,
             L"Show notifications",
             L"Show popup notifications if new version available",
             m_notificationsToggle,
             Layout::LineHeight, Layout::LinePadding, 0);
 
+        LoadControls();
+
         m_notificationsToggle.OnChanged = delegate(SaveControls);
+        dialogLine.OnChanged += delegate(OpenUpdateSettingsPage);
+        m_preReleaseToggle.OnChanged = delegate(UpdateSettingsChangedCheck);
+        m_checkIntervalCombo.OnChanged = delegate(UpdateSettingsChangedCheck);
     }
 
     void UpdatePage::LoadControls()
@@ -70,7 +71,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         Config::UpdateCheckInterval = (int)(short)m_checkIntervalCombo.GetCurentValue().c_str()[0];
         Config::UpdatePreRelease = m_preReleaseToggle.GetCheck();
         Config::UpdateNotifications = m_notificationsToggle.GetCheck();
-        // Updater::NotifyConfigUpdated();
     }
 
     void UpdatePage::OpenUpdateSettingsPage()
