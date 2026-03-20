@@ -42,10 +42,9 @@
     <MakeDir Directories="$(AppPackageContentsDir)\Assets" />
 
     <ItemGroup>
-      <ExeFiles Include="$(OutDir)/*.exe" />
-      <DllFiles Include="$(OutDir)/*.dll" />
+      <ExeFiles Include="$(OutDir)/$(TargetName).exe" />
+      <DllFiles Include="$(OutDir)/$(TargetName)*.dll" />
     </ItemGroup>
-
 
 
     <Copy
