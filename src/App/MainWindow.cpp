@@ -36,10 +36,7 @@
 #include "App/App.hpp"
 #include "App/MainWindow.hpp"
 #include "MainWindow.hpp"
-#include "Updater/Updater.hpp"
-#include "Updater/Updater.AppControl.hpp"
 #include "Tools/Notification.hpp"
-#include "Tools/PowerEfficiency.hpp"
 #include "Tools/Paths.hpp"
 #include "GamingExperience.hpp"
 
@@ -56,7 +53,6 @@ namespace AnyFSE::App::Window
         , m_pLogoImage(nullptr)
         , m_gdiplusToken(0ll)
         , WM_TASKBARCREATED(RegisterWindowMessage(L"TaskbarCreated"))
-        , WM_UPDATER_COMMAND(RegisterWindowMessage(L"AnyFSE.Updater.Command"))
     {
         ZeroMemory(&WC, sizeof(WC));
     }
@@ -128,10 +124,6 @@ namespace AnyFSE::App::Window
 
             if (!m_empty && !m_suspended)
             {
-                if (Config::SplashShowVideo)
-                {
-                    Tools::EnablePowerEfficencyMode(false);
-                }
                 m_videoPlayer.Play();
                 StartAnimation();
             }
@@ -166,8 +158,6 @@ namespace AnyFSE::App::Window
             StopAnimation();
         }
 
-        Tools::EnablePowerEfficencyMode(true);
-
         return true;
     }
 
@@ -184,12 +174,6 @@ namespace AnyFSE::App::Window
             PostMessage(m_hWnd, WM_DESTROY, (WPARAM)error, 0);
         }
         return error;
-    }
-
-    void MainWindow::StartUpdateCheck()
-    {
-        Updater::Subscribe(m_hWnd, WM_UPDATE_NOTIFICATION);
-        ScheduleCheck();
     }
 
     // static
@@ -238,14 +222,6 @@ namespace AnyFSE::App::Window
             OnStartWindow.Notify();
             ExitOnError();
             return DefWindowProc(m_hWnd, uMsg, wParam, lParam);
-        }
-        else if (uMsg == WM_UPDATER_COMMAND)
-        {
-            if (Updater::UpdaterHandleCommand(m_hWnd, wParam, lParam))
-            {
-                OnUpdateCheck();
-            }
-            return FALSE;
         };
         switch (uMsg)
         {
@@ -261,20 +237,11 @@ namespace AnyFSE::App::Window
             m_result = (int)wParam;
             OnDestroy();
             break;
-        case WM_TRAY:
-            OnTray(lParam);
-            return 0;
         case WM_TIMER:
             OnTimer(wParam);
             return 0;
         case WM_SIZE:
             m_videoPlayer.Resize();
-            break;
-        case WM_COMMAND:
-            if (OnCommand(LOWORD(wParam)))
-            {
-                return 0;
-            }
             break;
         case WM_QUERYENDSESSION:
             log.Info("QueryEndSession recieved");
@@ -284,17 +251,11 @@ namespace AnyFSE::App::Window
             log.Info("EndSession recieved");
             OnEndSession.Notify();
             break;
-        case WM_UPDATE_NOTIFICATION:
-            OnUpdateNotification();
-            return 0;
         case WM_USER:
             if (Config::UpdateNotifications)
             {
                 Notification::ShowCurrentVersion(m_hWnd, wParam);
             }
-            return 0;
-        case WM_UPDATE_CHECK:
-            OnUpdateCheck();
             return 0;
         }
         return DefWindowProc(m_hWnd, uMsg, wParam, lParam);
@@ -314,30 +275,6 @@ namespace AnyFSE::App::Window
         InitAnimationResources();
     }
 
-    void MainWindow::CreateTrayIcon()
-    {
-        if (m_trayCreated)
-        {
-            return;
-        }
-        SetLastError(0);
-        NOTIFYICONDATA stData;
-        ZeroMemory(&stData, sizeof(stData));
-        stData.cbSize = sizeof(stData);
-        stData.hWnd = m_hWnd;
-        stData.uID = 1;
-        stData.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-        stData.uCallbackMessage = WM_TRAY;
-        stData.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON));
-        LoadStringSafe(IDS_TIP, stData.szTip, _countof(stData.szTip));
-        if (!Shell_NotifyIcon(NIM_ADD, &stData))
-        {
-            log.Debug("Can not create tray icon");
-            return;
-        }
-        m_trayCreated = true;
-    }
-
     void MainWindow::OnPaint()
     {
         if (!m_empty && (Config::SplashShowAnimation || Config::SplashShowLogo || Config::SplashShowText))
@@ -352,138 +289,9 @@ namespace AnyFSE::App::Window
         }
     }
 
-    void MainWindow::OnTray(LPARAM message)
-    {
-        switch (message)
-        {
-        case WM_LBUTTONDOWN:
-        case WM_LBUTTONDBLCLK:
-            SendMessage(m_hWnd, WM_COMMAND, ID_CONFIGURE, 0);
-            break;
-        case WM_RBUTTONDOWN:
-        {
-            static FluentDesign::Theme theme;
-            theme.AttachWindow(m_hWnd);
-            static FluentDesign::Popup popup(theme);
-            static std::vector<FluentDesign::Popup::PopupItem> popupItems{
-                FluentDesign::Popup::PopupItem(L"\xE93A", L"Enter Full Screen ",
-                    [This = this]() { SendMessage(This->m_hWnd, WM_COMMAND, MAKEWPARAM(ID_FULLSCREEN, 0), 0); }),
-                FluentDesign::Popup::PopupItem(L"\xE713", L"Configure",
-                    [This = this]() { SendMessage(This->m_hWnd, WM_COMMAND, MAKEWPARAM(ID_CONFIGURE, 0), 0); }),
-                FluentDesign::Popup::PopupItem(L"\xE733", L"Quit",
-                    [This = this]() { SendMessage(This->m_hWnd, WM_COMMAND, MAKEWPARAM(ID_QUIT, 0), 0); })
-            };
-            if (!popup.IsVisible())
-            {
-                POINT pt;
-                GetCursorPos(&pt);
-                SetForegroundWindow(m_hWnd);
-                popup.Show(m_hWnd, pt.x, pt.y, popupItems, 300, TPM_LEFTALIGN | TPM_BOTTOMALIGN);
-                theme.SwapFocus(popup.GetHwnd());
-            }
-            break;
-        }
-        default:
-            break;
-        }
-    }
-
-    BOOL MainWindow::FreeResources()
-    {
-        NOTIFYICONDATA stData;
-        ZeroMemory(&stData, sizeof(stData));
-        stData.cbSize = sizeof(stData);
-        stData.hWnd = m_hWnd;
-        Shell_NotifyIcon(NIM_DELETE, &stData);
-        FreeAnimationResources();
-        return TRUE;
-    }
-
-    void MainWindow::OnUpdateNotification()
-    {
-        Updater::Subscribe(m_hWnd, WM_UPDATE_NOTIFICATION);
-
-        Updater::UpdateInfo upd = Updater::GetLastUpdateInfo();
-        if (upd.uiState == Updater::NetworkFailed &&
-            ((Config::UpdateCheckInterval == 0 && !m_successChecked) || Config::UpdateCheckInterval > 0)
-        )
-        {
-            ScheduleCheck();
-        }
-        else if (upd.uiState == Updater::UpdaterState::Done
-                && upd.uiCommand == Updater::UpdaterState::CheckingUpdate
-                )
-        {
-            m_successChecked = true;
-            if (Config::UpdateNotifications && !upd.newVersion.empty() && upd.newVersion != Config::UpdateLastVersion)
-            {
-                Notification::ShowNewVersion(m_hWnd, upd.newVersion);
-            }
-            Config::SaveUpdateVersion(upd.newVersion);
-            OnUpdateCheck();
-        }
-    }
-
-    void MainWindow::OnUpdateCheck()
-    {
-        int delay = Updater::ScheduledCheckAsync(Config::UpdateLastCheck, Config::UpdateCheckInterval, Config::UpdatePreRelease, m_hWnd, WM_UPDATE_NOTIFICATION);
-        ScheduleCheck(delay);
-    }
-
-    void MainWindow::ScheduleCheck(int delay)
-    {
-        KillTimer(m_hWnd, m_updateTimerId);
-
-        if (delay <= 0)
-        {
-            log.Debug("Stop Updater Schedule");
-            return;
-        }
-
-        log.Debug("Schedule updater check in %ds/%.2fh", delay, (float)delay / 3600);
-
-        SetTimer(m_hWnd, m_updateTimerId, (UINT)delay * 1000,
-            [](HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
-            {
-                KillTimer(hWnd, idEvent);
-                SendMessage(hWnd, WM_UPDATE_CHECK, 0, 0);
-            });
-    }
-
-    BOOL MainWindow::OnCommand(WORD command)
-    {
-        switch (command)
-        {
-        case ID_FULLSCREEN:
-            GamingExperience::EnterFSEMode();
-            return TRUE;
-        case ID_CONFIGURE:
-            {
-                // Ensure normal priority while settings dialog runs
-                Tools::EnablePowerEfficencyMode(false);
-                int result = App::ShowSettings();
-                // Restore idle/low-power after settings dialog closes
-                Tools::EnablePowerEfficencyMode(true);
-
-                if ( result == IDOK)
-                {
-                    OnReconfigure.Notify();
-                    LoadLogoImage();
-                    return TRUE;
-                }
-            }
-            return FALSE;
-        case ID_QUIT:
-            m_result = 0;
-            DestroyWindow(m_hWnd);
-            return TRUE;
-        }
-        return FALSE;
-    }
-
     void MainWindow::OnDestroy()
     {
-        FreeResources();
+        FreeAnimationResources();
         PostQuitMessage(m_result);
     }
 
@@ -569,13 +377,11 @@ namespace AnyFSE::App::Window
         {
             if (bSuspend)
             {
-                Tools::EnablePowerEfficencyMode(true);
                 m_videoPlayer.Pause();
                 StopAnimation();
             }
             else
             {
-                Tools::EnablePowerEfficencyMode(false);
                 Start();
             }
         }

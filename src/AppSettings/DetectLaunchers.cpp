@@ -36,8 +36,12 @@ namespace AnyFSE::Configuration
 
     void Config::GetStartupConfigured()
     {
-        FseOnStartup = IsXboxConfigured() && IsFseOnStartupConfigured();
-        Launcher.StartCommand = FseOnStartup ? GetXboxPath(Launcher.StartCommand) : Launcher.StartCommand;
+        FseOnStartup = IsFseOnStartupConfigured();
+        Launcher.StartCommand = IsXboxConfigured()
+            ? GetXboxPath(Launcher.StartCommand)
+            : IsAnyFSEConfigured()
+            ? Launcher.StartCommand
+            : L"";
     }
 
     void Config::UpdatePortableLauncher(LauncherConfig & out)
@@ -83,13 +87,15 @@ namespace AnyFSE::Configuration
             L"GamingHomeApp") == L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";
     }
 
+    bool Config::IsAnyFSEConfigured()
+    {
+        return Registry::ReadString(
+            L"Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration",
+            L"GamingHomeApp") == L"AnyFSE_hzj39hntkw714!App";
+    }
+
     std::wstring Config::GetXboxPath(const std::wstring& launcher)
     {
-        if (!launcher.empty())
-        {
-            return launcher;
-        }
-
         if (IsXboxConfigured())
         {
             std::list<std::wstring> xbox;

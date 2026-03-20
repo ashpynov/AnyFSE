@@ -35,14 +35,8 @@ namespace AnyFSE::App::Window
 {
     class MainWindow
     {
-    public:
-        static const UINT WM_TRAY = WM_USER + 1;
-        static const UINT WM_UPDATE_NOTIFICATION = WM_USER + 2;
-        static const UINT WM_UPDATE_CHECK = WM_USER + 3;
-        static const UINT WM_UPDATE_COMMAND = WM_USER + 4;
     private:
         const UINT WM_TASKBARCREATED;
-        const UINT WM_UPDATER_COMMAND;
 
         HICON m_hIcon = NULL;
         HWND m_hWnd;
@@ -54,7 +48,6 @@ namespace AnyFSE::App::Window
         bool m_empty = false;
         bool m_successChecked = false;
         bool m_suspended = false;
-        bool m_trayCreated = false;
 
         static WNDCLASS WC;
         static LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -63,9 +56,6 @@ namespace AnyFSE::App::Window
 
         void OnPaint();
 
-        void OnTray(LPARAM message);
-        BOOL FreeResources();
-        BOOL OnCommand(WORD command);
         void OnDestroy();
 
         void OnUpdateNotification();
@@ -88,8 +78,6 @@ namespace AnyFSE::App::Window
         bool IsVisible();
         int ExitOnError();
         HWND GetHwnd() { return m_hWnd; }
-
-        void CreateTrayIcon();
 
         void StartUpdateCheck();
         Event OnStartWindow;

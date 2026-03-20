@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug AnyFSE",
+            "name": "Debug AnyFSE Settings",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "AnyFSE.exe",
@@ -13,6 +13,18 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build/Debug",
             "environment": [],
+            "preLaunchTask": "Build AnyFSE Debug"
+        },
+        {
+            "name": "Debug with Coverage",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/AnyFSE.exe",
+            "args": ["settings"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal",
             "preLaunchTask": "Build AnyFSE Debug"
         },
         {

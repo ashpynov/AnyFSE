@@ -57,7 +57,6 @@ namespace AnyFSE::Configuration
     std::wstring    Config::LogPath = L"";
     bool            Config::CustomSettings;
     LauncherConfig  Config::Launcher;
-    std::wstring    Config::XBoxProcessName;
     bool            Config::AggressiveMode = false;
     bool            Config::FseOnStartup = false;
     bool            Config::SplashShowAnimation = true;
@@ -132,7 +131,6 @@ namespace AnyFSE::Configuration
     void Config::Load()
     {
         LogPath = Tools::Paths::GetDataPath() + L"\\logs";
-        XBoxProcessName = std::wstring(L"XboxPcApp.exe");
 
         json config = GetConfig();
 

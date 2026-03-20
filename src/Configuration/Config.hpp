@@ -92,7 +92,8 @@ namespace AnyFSE::Configuration
             static void GetStartupConfigured();
             static bool IsFseOnStartupConfigured();
             static bool IsXboxConfigured();
-            static bool FindInstalledLaunchers(std::list<std::wstring>& found);
+            static bool IsAnyFSEConfigured();
+            static bool FindInstalledLaunchers(std::list<std::wstring> &found);
             static std::wstring GetXboxPath(const std::wstring &launcher);
             static void FindLocal(std::list<std::wstring>& found);
             static void FindPlaynite(std::list<std::wstring>& found);
@@ -139,7 +140,6 @@ namespace AnyFSE::Configuration
 
             static LogLevels LogLevel;
             static std::wstring LogPath;
-            static std::wstring XBoxProcessName;
 
             static bool AggressiveMode;
             static bool FseOnStartup;

@@ -19,6 +19,9 @@
     <RootNamespace>AnyFSE</RootNamespace>
     <AssemblyDescription>AnyFSE Installer</AssemblyDescription>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(VCTargetsPath)'==''" >
+    <VCTargetsPath>C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\</VCTargetsPath>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="AnyFSE.Version.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -114,6 +117,7 @@
     <ClCompile Include="src\AppInstaller\AppInstaller.cpp" />
     <ClCompile Include="src\AppInstaller\AppInstaller_Page.cpp" />
     <ClCompile Include="src\AppInstaller\AppInstaller_Tools.cpp" />
+    <ClCompile Include="src\AppInstaller\Admin.cpp" />
     <ClCompile Include="src\FluentDesign\Theme.cpp" />
     <ClCompile Include="src\FluentDesign\FluentControl.cpp" />
     <ClCompile Include="src\FluentDesign\Align.cpp" />
@@ -130,7 +134,6 @@
     <ClCompile Include="src\Tools\Process.cpp" />
     <ClCompile Include="src\Tools\Icon.cpp" />
     <ClCompile Include="src\Tools\Paths.cpp" />
-    <ClCompile Include="src\ToolsEx\Admin.cpp" />
     <ClCompile Include="src\Logging\*.cpp" />
     <ClCompile Include="src\App\GamingExperience.cpp" />
   </ItemGroup>

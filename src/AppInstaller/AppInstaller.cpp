@@ -37,7 +37,7 @@
 #include "Tools/Unicode.hpp"
 #include "Tools/Window.hpp"
 #include "Tools/Process.hpp"
-#include "ToolsEx/Admin.hpp"
+#include "AppInstaller/Admin.hpp"
 #include "App/GamingExperience.hpp"
 
 #pragma comment(lib, "delayimp.lib")

@@ -68,6 +68,22 @@
                 "isDefault": true
             }
         },
+
+        {
+            "label": "Run Program with Coverage",
+            "type": "shell",
+            "command": "C:\\Progra~1\\OpenCppCoverage\\OpenCppCoverage.exe",
+            "args": [
+                "--sources",
+                "${workspaceFolder}",
+                "--export_type",
+                "cobertura:${workspaceFolder}\\coverage.xml",
+                "--",
+                "${workspaceFolder}\\build\\Debug\\AnyFSE.exe"
+            ],
+            "dependsOn": ["Build AnyFSE Debug"],
+            "group": "none"
+        },
         {
             "label": "Package",
             "type": "shell",

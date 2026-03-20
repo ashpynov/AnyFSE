@@ -10,7 +10,7 @@
 
 #pragma comment(lib, "Dbghelp.lib")
 
-namespace AnyFSE::ToolsEx
+namespace AnyFSE::Tools
 {
     inline bool WriteMiniDump(EXCEPTION_POINTERS* pExceptionInfo)
     {

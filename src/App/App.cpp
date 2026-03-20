@@ -33,29 +33,23 @@
 #include "Configuration/Config.hpp"
 #include "Tools/Process.hpp"
 #include "Tools/Notification.hpp"
-#include "Tools/PowerEfficiency.hpp"
 #include "Tools/Registry.hpp"
 #include "Tools/Unicode.hpp"
 
 #include "App/App.hpp"
 #include "App/GamingExperience.hpp"
 #include "App/MainWindow.hpp"
-//#include "App/AppControlStateLoop.hpp"
-#include "App/App.hpp"
-#include "AppSettings/SettingsDialog.hpp"
-//#include "App/Application.hpp"
 #include "App/Launchers.hpp"
 #include "App/JumpList.hpp"
-#include "App.hpp"
 
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
-//#include "ToolsEx/Minidump.hpp"
+#include "Tools/Minidump.hpp"
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    //AnyFSE::ToolsEx::InstallUnhandledExceptionHandler();
+    AnyFSE::Tools::InstallUnhandledExceptionHandler();
     return AnyFSE::App::App::WinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
 }
 
@@ -241,8 +235,6 @@ namespace AnyFSE::App
         {
             return (int)GetLastError();
         }
-
-        Tools::EnablePowerEfficencyMode(true);
 
         mainWindow.Show();
         exitCode = Window::MainWindow::RunLoop();

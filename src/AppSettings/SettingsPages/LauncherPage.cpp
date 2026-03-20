@@ -285,13 +285,12 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         if (m_defaultConfig.Type == LauncherType::None)
         {
             m_pFseOnStartupLine->Enable(false);
-            m_fseOnStartupToggle.SetCheck(false);
         }
         else
         {
             m_pFseOnStartupLine->Enable();
-            m_fseOnStartupToggle.SetCheck(Config::FseOnStartup);
         }
+        m_fseOnStartupToggle.SetCheck(Config::FseOnStartup);
 
         bool alwaysSettings = m_defaultConfig.Type==LauncherType::Custom;
         bool noSettings =

@@ -5,10 +5,6 @@
 #define IDS_TIP                         1
 
 #define IDI_ICON                        101
-#define IDR_POPUP                       102
-#define ID_FULLSCREEN                   40000
-#define ID_CONFIGURE                    40001
-#define ID_QUIT                         40002
 
 // Next default values for new objects
 //

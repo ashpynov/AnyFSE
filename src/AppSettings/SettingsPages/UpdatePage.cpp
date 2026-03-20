@@ -1,4 +1,4 @@
-#include "Updater/Updater.AppSettings.hpp"
+#include "Updater/Updater.hpp"
 #include "Tools/Event.hpp"
 #include "AppSettings/SettingsLayout.hpp"
 #include "AppSettings/SettingsDialog.hpp"

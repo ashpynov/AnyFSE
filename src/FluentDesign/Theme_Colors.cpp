@@ -158,7 +158,7 @@ namespace FluentDesign
 
             m_colors[ToggleBorderOnDisabled] = GetGrey(60);
             m_colors[ToggleTrackOnDisabled] = GetGrey(60);
-            m_colors[ToggleThumbOnDisabled] = GetGrey(0);
+            m_colors[ToggleThumbOnDisabled] = GetGrey(128);
             m_colors[ToggleBorderOffDisabled] = GetGrey(60);
             m_colors[ToggleTrackOffDisabled] = GetGrey(39);
             m_colors[ToggleThumbOffDisabled] = GetGrey(60);
@@ -231,7 +231,7 @@ namespace FluentDesign
 
             m_colors[ToggleBorderOnDisabled] = GetGrey(160);
             m_colors[ToggleTrackOnDisabled] = GetGrey(160);
-            m_colors[ToggleThumbOnDisabled] = GetGrey(255);
+            m_colors[ToggleThumbOnDisabled] = GetGrey(128);
             m_colors[ToggleBorderOffDisabled] = GetGrey(197);
             m_colors[ToggleTrackOffDisabled] = GetGrey(251);
             m_colors[ToggleThumbOffDisabled] = GetGrey(160);

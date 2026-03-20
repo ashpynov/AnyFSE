@@ -135,7 +135,7 @@ namespace AnyFSE::App::Window
         {
             KillTimer(m_hWnd, m_launcherCheckTimerId);
             m_hLauncherCheckTimer = NULL;
-            OnCommand(ID_QUIT);
+            DestroyWindow(m_hWnd);
         }
     }
 
