@@ -178,9 +178,18 @@
     <ItemGroup>
       <CertificateFile Include="$(MSBuildProjectDirectory)\*.cer" />
     </ItemGroup>
+    <PropertyGroup>
+      <!-- First, calculate the incremented value -->
+      <NewVersionRevision>$([MSBuild]::Add($(VersionRevision), 1))</NewVersionRevision>
+    </PropertyGroup>
     <Copy
       SourceFiles="@(CertificateFile)"
       DestinationFolder="$(OutDir)\" />
+
+    <XmlPoke
+      XmlInputPath="$(MSBuildProjectDirectory)/AnyFSE.Version.props"
+      Query="/*/*/*[local-name()='VersionRevision']"
+      Value="$(NewVersionRevision)"/>
   </Target>
 
 </Project>

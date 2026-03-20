@@ -11,25 +11,29 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 {
     void TroubleshootPage::AddPage(std::list<SettingsLine>& settingPageList, ULONG &top)
     {
-        SettingsLine & dialogLine = m_dialog.AddSettingsLine(settingPageList, top,
-            L"Debug and Troubleshoot",
-            L"Configure logs and advanced parameters",
-            Layout::LineHeight, Layout::LinePadding, 0);
+        // SettingsLine & dialogLine = m_dialog.AddSettingsLine(settingPageList, top,
+        //     L"Debug and Troubleshoot",
+        //     L"Configure logs and advanced parameters",
+        //     Layout::LineHeight, Layout::LinePadding, 0);
 
-        dialogLine.SetState(FluentDesign::SettingsLine::Next);
-        dialogLine.SetIcon(L'\xEBE8');
-        dialogLine.OnChanged += delegate(OpenTroubleshootSettingsPage);
+        // dialogLine.SetState(FluentDesign::SettingsLine::Next);
+        // dialogLine.SetIcon(L'\xEBE8');
+        // dialogLine.OnChanged += delegate(OpenTroubleshootSettingsPage);
 
         ULONG topPage = 0;
-        FluentDesign::SettingsLine &logLevel = m_dialog.AddSettingsLine(m_pageLinesList,
-            topPage,
-            L"Log level",
-            L"Enable logs at specified level",
+        FluentDesign::SettingsLine &logLevel = m_dialog.AddSettingsLine(settingPageList,
+            top,
+            L"Set logs for troubleshoot",
+            L"Navigate to log files folder",
             m_troubleLogLevelCombo,
             Layout::LineHeight, Layout::LinePadding, 0,
             Layout::LauncherComboWidth);
 
+        logLevel.SetIcon(L'\xEBE8');
         logLevel.OnLink = delegate(OnGotoLogsFolder);
+
+        // logLevel.SetState(FluentDesign::SettingsLine::Link);
+        // logLevel.OnChanged += delegate(OnGotoLogsFolder);
 
         for (int i = (int)LogLevels::Disabled; i < (int)LogLevels::Max; i++)
         {

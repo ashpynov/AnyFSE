@@ -1,18 +1,17 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="15.0"
-    xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <PropertyGroup>
-        <AssemblyVersion>0.90.1</AssemblyVersion>
-        <VersionRevision>0</VersionRevision>
-        <AssemblyProduct>AnyFSE</AssemblyProduct>
-        <AssemblyCompany>Artem Shpynov</AssemblyCompany>
-        <AssemblyDescription>AnyFSE Home application launcher</AssemblyDescription>
-        <AssemblyCopyright>Copyright © 2026 Artem Shpynov. All rights reserved.</AssemblyCopyright>
-        <AssemblyInternalName>$(TargetName)</AssemblyInternalName>
-    </PropertyGroup>
-    <ItemDefinitionGroup>
-        <ResourceCompile>
-            <PreprocessorDefinitions>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <AssemblyVersion>0.90.1</AssemblyVersion>
+    <VersionRevision>3</VersionRevision>
+    <AssemblyProduct>AnyFSE</AssemblyProduct>
+    <AssemblyCompany>Artem Shpynov</AssemblyCompany>
+    <AssemblyDescription>AnyFSE Home application launcher</AssemblyDescription>
+    <AssemblyCopyright>Copyright © 2026 Artem Shpynov. All rights reserved.</AssemblyCopyright>
+    <AssemblyInternalName>$(TargetName)</AssemblyInternalName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ResourceCompile>
+      <PreprocessorDefinitions>
                 VER_VERSION=$(AssemblyVersion.Replace('.', ',')),0;
                 VER_VERSION_STR=\"$(AssemblyVersion)\";
                 COMPANY_NAME=\"$(AssemblyCompany)\";
@@ -23,6 +22,6 @@
                 ORIGINAL_FILENAME=\"$(TargetName)$(TargetExt)\";
                 %(PreprocessorDefinitions)
             </PreprocessorDefinitions>
-        </ResourceCompile>
-    </ItemDefinitionGroup>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
 </Project>
