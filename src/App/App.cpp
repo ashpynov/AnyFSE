@@ -250,6 +250,19 @@ namespace AnyFSE::App
             log.Debug("Job is done!");
         }
 
+        // while (HANDLE hProcess = Launchers::GetLauncherProcess())
+        // {
+        //     log.Debug("Start waiting %x", hProcess);
+
+        //     DWORD waitResult = WAIT_TIMEOUT;
+        //     do
+        //     {
+        //         waitResult = WaitForSingleObject(hProcess, 1000);
+        //         log.Debug("Wait Result %u", waitResult);
+        //     } while (waitResult == WAIT_TIMEOUT);
+
+        //     CloseHandle(hProcess);
+        // };
         return (int)exitCode;
     }
 };

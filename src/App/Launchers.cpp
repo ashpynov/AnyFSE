@@ -92,7 +92,6 @@ namespace AnyFSE::App::Launchers
 
     bool IsLauncherActive()
     {
-        std::set<DWORD> processIds;
         const LauncherConfig& launcher = Config::Launcher;
         return GetLauncherWindow();
     }
@@ -150,5 +149,28 @@ namespace AnyFSE::App::Launchers
             );
         }
         return launcherHwnd;
+    }
+
+    HANDLE GetLauncherProcess()
+    {
+        HWND hWnd = GetLauncherWindow();
+        if (!hWnd)
+        {
+            return NULL;
+        }
+
+        DWORD processId;
+        GetWindowThreadProcessId(hWnd, &processId);
+        if (processId == 0)
+        {
+            return false;
+        }
+
+        // Open process with desired access
+        return OpenProcess(
+            SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION,
+            FALSE,
+            processId
+        );
     }
 }
