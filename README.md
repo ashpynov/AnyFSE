@@ -44,6 +44,15 @@ You launcher should be installed additionally.
 
 Please note: that AnyFSE work only when it is selected as home application in Settings->Gaming->Full screen experience.
 
+> [!IMPORTANT]
+> As soon as package should be signed to be selectable as full screen home application, and I have not ability to got code signin certificate from trusted authorities - I had to use own signed certificate.
+> Installer will add it to trusted authorities section automatically without ability to uninstall
+> If you would like to revoke it:
+> 1. Run Certlm.msc.
+> 2. Open Trusted Root Certification Authorities -> Certificates
+> 3. Find "Artem Shpynov" certificate -> press right mouse button -> Delete
+
+
 ### How to launch and configure
 
 In start menu find AnyFSE application. Press right mouse key and choose 'Configure' task.
@@ -53,6 +62,12 @@ In start menu find AnyFSE application. Press right mouse key and choose 'Configu
 Open Settings -> Apps -> Instaled apps.
 
 Find AnyFSE and select "Uninstall"
+
+> [!IMPORTANT]
+> To revoke installed certificate:
+> 1. Run Certlm.msc.
+> 2. Open Trusted Root Certification Authorities -> Certificates
+> 3. Find "Artem Shpynov" certificate -> press right mouse button -> Delete
 
 ## Splash Videos
 AnyFSE may show shuffled video as splash during your launcher is loading.
