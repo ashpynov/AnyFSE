@@ -45,8 +45,8 @@ You launcher should be installed additionally.
 Please note: that AnyFSE work only when it is selected as home application in Settings->Gaming->Full screen experience.
 
 > [!IMPORTANT]
-> As soon as package should be signed to be selectable as full screen home application, and I have not ability to got code signin certificate from trusted authorities - I had to use own signed certificate.
-> Installer will add it to trusted authorities section automatically without ability to uninstall
+> As soon as package should be signed to be selectable as full screen home application, and I have not ability to got code signin certificate from trusted authorities. So I had to use self-signed certificate.
+> Installer will add it to trusted authorities section automatically.
 > If you would like to revoke it:
 > 1. Run Certlm.msc.
 > 2. Open Trusted Root Certification Authorities -> Certificates
