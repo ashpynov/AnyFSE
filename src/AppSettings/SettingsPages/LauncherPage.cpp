@@ -176,7 +176,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         const std::wstring startupToGamingHome = L"StartupToGamingHome";
         const std::wstring gamingHomeApp = L"GamingHomeApp";
         const std::wstring xboxApp = L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";
-        const std::wstring anyFSEApp = L"AnyFSE_hzj39hntkw714!App";
+        const std::wstring anyFSEApp = L"ArtemShpynov.AnyFSE_by4wjhxmygwn4!App";
 
         if (m_config.Type == LauncherType::None)
         {

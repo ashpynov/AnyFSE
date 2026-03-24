@@ -61,16 +61,6 @@
 
     <XmlPoke
       XmlInputPath="$(AppPackageContentsDir)\AppxManifest.xml"
-      Query="//*[local-name()='Identity']/@Name"
-      Value="$(AppName)" />
-
-    <XmlPoke
-      XmlInputPath="$(AppPackageContentsDir)\AppxManifest.xml"
-      Query="//*[local-name()='Identity']/@Publisher"
-      Value="CN=$(Publisher)" />
-
-    <XmlPoke
-      XmlInputPath="$(AppPackageContentsDir)\AppxManifest.xml"
       Query="//*[local-name()='Identity']/@Version"
       Value="$(Version)" />
 
@@ -155,7 +145,7 @@
   <Target Name="GetCertificateThumbprint">
     <Message Text="Finding certificate for: $(CertificateName)" Importance="high" />
 
-    <Exec Command="powershell -NoProfile -Command &quot;try { $cert = Get-ChildItem -Path 'Cert:\CurrentUser\My' | Where-Object { $_.Subject -like '*$(CertificateName)*' } | Select-Object -First 1; if (-not $cert) { throw 'Certificate not found' }; $cert.Thumbprint } catch { Write-Error $_.Exception.Message; exit 1 }&quot;" ContinueOnError="false" ConsoleToMSBuild="true">
+    <Exec Command="powershell -NoProfile -Command &quot;try { $cert = Get-ChildItem -Path 'Cert:\CurrentUser\My' | Where-Object { $_.Subject -like '*DDCC7751-898D-4BC9-B80C-4AA73E5D5762*' } | Select-Object -First 1; if (-not $cert) { throw 'Certificate not found' }; $cert.Thumbprint } catch { Write-Error $_.Exception.Message; exit 1 }&quot;" ContinueOnError="false" ConsoleToMSBuild="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="CertificateThumbprint" />
     </Exec>
 

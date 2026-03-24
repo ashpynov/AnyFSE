@@ -153,7 +153,7 @@ namespace AnyFSE::App
         }
 
         // Registry != AnyFSE
-        const std::wstring AnyFSEApp = L"AnyFSE_hzj39hntkw714!App";
+        const std::wstring AnyFSEApp = L"ArtemShpynov.AnyFSE_by4wjhxmygwn4!App";
         const std::wstring selectedApp = Registry::ReadString(
             L"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration",
             L"GamingHomeApp");

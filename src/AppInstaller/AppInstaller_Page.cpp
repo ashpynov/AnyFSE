@@ -313,7 +313,7 @@ namespace AnyFSE
             SetCurrentProgress(L"Install package");
             CheckSuccess(InstallPackage(
                 path.wstring() + L"/AnyFSE-" + Unicode::to_wstring(VER_VERSION_STR) + L".appx",
-                L"AnyFSE_hzj39hntkw714"
+                L"ArtemShpynov.AnyFSE_by4wjhxmygwn4"
             ));
 
             SetCurrentProgress(L"Cleanup files");

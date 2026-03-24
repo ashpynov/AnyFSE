@@ -109,14 +109,14 @@ namespace AnyFSE::Tools::Paths
     {
         wchar_t appData[MAX_PATH]={0};
         ExpandEnvironmentStringsW(L"%PROGRAMDATA%\\AnyFSE", appData, MAX_PATH);
-        //Local\Packages\AnyFSE_hzj39hntkw714\LocalState
+        //Local\Packages\ArtemShpynov.AnyFSE_by4wjhxmygwn4\LocalState
         return appData;
     }
 
     std::wstring GetAppPath()
     {
         wchar_t appData[MAX_PATH]={0};
-        ExpandEnvironmentStringsW(L"%LOCALAPPDATA%\\Packages\\AnyFSE_hzj39hntkw714", appData, MAX_PATH);
+        ExpandEnvironmentStringsW(L"%LOCALAPPDATA%\\Packages\\ArtemShpynov.AnyFSE_by4wjhxmygwn4", appData, MAX_PATH);
         return appData;
     }
 }

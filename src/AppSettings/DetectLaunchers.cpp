@@ -91,7 +91,7 @@ namespace AnyFSE::Configuration
     {
         return Registry::ReadString(
             L"Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration",
-            L"GamingHomeApp") == L"AnyFSE_hzj39hntkw714!App";
+            L"GamingHomeApp") == L"ArtemShpynov.AnyFSE_by4wjhxmygwn4!App";
     }
 
     std::wstring Config::GetXboxPath(const std::wstring& launcher)

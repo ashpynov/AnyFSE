@@ -14,16 +14,16 @@
   IgnorableNamespaces="uap uap3 uap4 rescap uap18 desktop desktop6">
 
   <Identity
-    Name="$(AppName)"
-    Publisher="CN=$(Publisher)"
-    Version="$(Version)" />
+    Name="ArtemShpynov.AnyFSE"
+    Publisher="CN=DDCC7751-898D-4BC9-B80C-4AA73E5D5762"
+    Version="$(Version)"
+    ProcessorArchitecture="x64" />
 
   <Properties>
     <DisplayName>.</DisplayName>
     <PublisherDisplayName>.</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
     <desktop6:RegistryWriteVirtualization>disabled</desktop6:RegistryWriteVirtualization>
-    <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
   </Properties>
 
   <Dependencies>

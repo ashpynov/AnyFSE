@@ -21,7 +21,7 @@
         <DefaultLanguage>En-US</DefaultLanguage>
         <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
         <AppName>$(AssemblyProduct)</AppName>
-        <Publisher>$(AssemblyCompany)</Publisher>
+        <Publisher>DDCC7751-898D-4BC9-B80C-4AA73E5D5762</Publisher>
         <Description>$(AssemblyDescription)</Description>
     </PropertyGroup>
     <PropertyGroup Condition="'$(VCTargetsPath)'==''" >
