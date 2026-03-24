@@ -56,6 +56,26 @@ Please note: that AnyFSE work only when it is selected as home application in Se
 > 2. Open Trusted Root Certification Authorities -> Certificates
 > 3. Find "Artem Shpynov" certificate -> press right mouse button -> Delete
 
+### Manual installation
+
+In case if your antivirus still blames on AnyFSE.Installer.exe file - you may install package manualy. (Same action as installer do):
+
+1. Uninstall AnyFSE pre-0.90 version to avoid conflicting.
+2. Install Artem Shpynov Root certificate:
+- Download certificate: https://github.com/ashpynov/AnyFSE/releases/download/v0.90.1/Artem.Shpynov.cer and open it.
+- Press 'Install certificate',
+- Select store location 'Local Machine',
+- Press 'Next'
+- Allow changes
+- Select 'Place all certificates in the folowing store'
+- Press 'Browse' and select 'Trusted Root Certificate Authorities' and press OK and then Next.
+- Certificate installation is Done. It is enougth to do it once.
+3. Allow installation of packages in developer mode:
+- Open Settings -> System -> Advanced and turn on 'Developer Mode'
+- You can disable it after installation
+4. Now you can dowload and install appx package https://github.com/ashpynov/AnyFSE/releases/download/***version***/AnyFSE-***version***.appx
+5. After installing you may turn off developer mode.
+
 
 ### How to launch and configure
 
