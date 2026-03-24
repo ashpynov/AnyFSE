@@ -54,7 +54,7 @@ Please note: that AnyFSE work only when it is selected as home application in Se
 > If you would like to revoke it:
 > 1. Run Certlm.msc.
 > 2. Open Trusted Root Certification Authorities -> Certificates
-> 3. Find "Artem Shpynov" certificate -> press right mouse button -> Delete
+> 3. Find "DDCC7751-898D-4BC9-B80C-4AA73E5D5762" (Artem Shpynov Code signin) certificate -> press right mouse button -> Delete
 
 ### Manual installation
 
@@ -73,7 +73,7 @@ In case if your antivirus still blames on AnyFSE.Installer.exe file - you may in
 3. Allow installation of packages in developer mode:
 - Open Settings -> System -> Advanced and turn on 'Developer Mode'
 - You can disable it after installation
-4. Now you can dowload and install appx package https://github.com/ashpynov/AnyFSE/releases/download/***version***/AnyFSE-***version***.appx
+4. Now you can dowload and install appx package https://github.com/ashpynov/AnyFSE/releases/download/v*version*/AnyFSE-*version*.appx
 5. After installing you may turn off developer mode.
 
 

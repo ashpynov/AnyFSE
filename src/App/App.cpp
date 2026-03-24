@@ -203,6 +203,19 @@ namespace AnyFSE::App
 
         log.Debug("\n\nApplication control is started (hInstance=%08x) args: [%s]", hInstance, lpCmdLine);
 
+        bool bFirstLaunch = false;
+
+        if (!GlobalFindAtom(L"ArtemShpynov.AnyFSE_by4wjhxmygwn4"))
+        {
+            GlobalAddAtom(L"ArtemShpynov.AnyFSE_by4wjhxmygwn4");
+            log.Debug("First launch at fullscreen experience mode");
+            bFirstLaunch = true;
+        }
+        else
+        {
+            log.Debug("Subsequence launch at fullscreen experience mode");
+        }
+
         if (AsFSE(lpCmdLine))
         {
             return GamingExperience::EnterFSEMode();
@@ -223,6 +236,11 @@ namespace AnyFSE::App
         Launchers::StartLauncher();
 
         Sleep(500);
+
+        if (GamingExperience::IsFullscreenMode() && bFirstLaunch)
+        {
+            Launchers::LaunchStartupApps();
+        };
 
         if (Launchers::IsLauncherActive())
         {

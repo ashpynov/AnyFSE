@@ -173,4 +173,29 @@ namespace AnyFSE::App::Launchers
             processId
         );
     }
+
+    void LaunchStartupApps()
+    {
+        log.Debug("Launching Startup Applications" );
+        for (auto app : Config::StartupApps)
+        {
+            if (app.Enabled)
+            {
+                log.Debug("Launching: %s %s", Unicode::to_string(app.Path).c_str(), Unicode::to_string(app.Args).c_str() );
+                Process::StartProcess(app.Path, app.Args);
+            }
+        }
+    }
+
+    bool HasStartupApps()
+    {
+        for (auto app : Config::StartupApps)
+        {
+            if (app.Enabled)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }
