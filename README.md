@@ -40,6 +40,16 @@ Same for cases when AnyFSE executed from gamebar.
 
 ## Install, Configure and Uninstall
 
+> [!WARNING]
+> ### Microsoft Defender flag
+> The AnyFSE.Installer.exe randomly may triggers a Defender detection: Trojan:Win32/Sabsik.FL.A!ml or Program:Script/Wacapew.A!ml, or other *!ml signatures (depends from the Moon phase).
+>
+> As soon as software packaged as a portable .exe or a .zip file that extracts and runs itself can be flagged because this is a common malware delivery method. The act of self-extraction is seen as suspicious.
+>
+> So You may add it to exclusion list or proceed to "Manual installation" section.
+>
+> P.S. If you know how to deal with this  - let me know.
+
 ### How to install
 
 Just Launch AnyFSE.Installer.exe. Wait few seconds to complete and Configure.
