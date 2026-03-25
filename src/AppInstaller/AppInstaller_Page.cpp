@@ -303,7 +303,7 @@ namespace AnyFSE
                 CheckSuccess(true);
             }
 
-            bool isRootCertInstalled = IsRootCertificateInstalled(Unicode::to_wstring(VER_COMPANY_NAME));
+            bool isRootCertInstalled = IsRootCertificateInstalled(Unicode::to_wstring(VER_PUBLISHER_CN));
             if (!isRootCertInstalled)
             {
                 SetCurrentProgress(L"Install publisher certificate");

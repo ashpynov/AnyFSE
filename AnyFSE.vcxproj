@@ -21,7 +21,7 @@
         <DefaultLanguage>En-US</DefaultLanguage>
         <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
         <AppName>$(AssemblyProduct)</AppName>
-        <Publisher>DDCC7751-898D-4BC9-B80C-4AA73E5D5762</Publisher>
+        <Publisher>$(AssemblyCompany)</Publisher>
         <Description>$(AssemblyDescription)</Description>
     </PropertyGroup>
     <PropertyGroup Condition="'$(VCTargetsPath)'==''" >
@@ -54,6 +54,7 @@
                 VER_VERSION_STR="$(AssemblyVersion)";
                 VER_PRODUCT_NAME="$(AssemblyProduct)";
                 VER_COMPANY_NAME="$(AssemblyCompany)";
+                VER_PUBLISHER_CN="$(PublisherCN)";
                 %(PreprocessorDefinitions)
             </PreprocessorDefinitions>
             <WarningLevel>Level3</WarningLevel>
@@ -73,6 +74,7 @@
                 VER_VERSION_STR="$(AssemblyVersion)";
                 VER_PRODUCT_NAME="$(AssemblyProduct)";
                 VER_COMPANY_NAME="$(AssemblyCompany)";
+                VER_PUBLISHER_CN="$(PublisherCN)";
                 %(PreprocessorDefinitions)
             </PreprocessorDefinitions>
             <WarningLevel>Level3</WarningLevel>

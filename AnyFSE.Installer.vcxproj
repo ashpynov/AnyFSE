@@ -73,6 +73,7 @@
         VER_VERSION_STR="$(AssemblyVersion)";
         VER_PRODUCT_NAME="$(AssemblyProduct)";
         VER_COMPANY_NAME="$(AssemblyCompany)";
+        VER_PUBLISHER_CN="$(PublisherCN)";
         %(PreprocessorDefinitions)
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)src</AdditionalIncludeDirectories>
@@ -99,6 +100,7 @@
         VER_VERSION_STR="$(AssemblyVersion)";
         VER_PRODUCT_NAME="$(AssemblyProduct)";
         VER_COMPANY_NAME="$(AssemblyCompany)";
+        VER_PUBLISHER_CN="$(PublisherCN)";
         %(PreprocessorDefinitions)
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)src</AdditionalIncludeDirectories>

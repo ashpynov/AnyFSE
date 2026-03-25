@@ -130,6 +130,11 @@ namespace AnyFSE::App
 
     bool App::AsSettings(LPSTR lpCmdLine)
     {
+        // no gamingapp:/// protocol specified
+        if (strlen(lpCmdLine) == 0)
+        {
+            return true;
+        }
         // Settings or Config is not exists
         //
         if (!Config::IsConfigured())
@@ -244,6 +249,7 @@ namespace AnyFSE::App
 
         if (Launchers::IsLauncherActive())
         {
+            log.Debug("Launcher quick start was detected, exiting");
             return 0;
         }
 

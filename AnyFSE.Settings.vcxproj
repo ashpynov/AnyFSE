@@ -52,6 +52,7 @@
                 VER_VERSION_STR="$(AssemblyVersion)";
                 VER_PRODUCT_NAME="$(AssemblyProduct)";
                 VER_COMPANY_NAME="$(AssemblyCompany)";
+                VER_PUBLISHER_CN="$(PublisherCN)";
                 %(PreprocessorDefinitions)
             </PreprocessorDefinitions>
             <WarningLevel>Level3</WarningLevel>
@@ -72,6 +73,7 @@
                 VER_VERSION_STR="$(AssemblyVersion)";
                 VER_PRODUCT_NAME="$(AssemblyProduct)";
                 VER_COMPANY_NAME="$(AssemblyCompany)";
+                VER_PUBLISHER_CN="$(PublisherCN)";
                 %(PreprocessorDefinitions)
             </PreprocessorDefinitions>
             <WarningLevel>Level3</WarningLevel>
