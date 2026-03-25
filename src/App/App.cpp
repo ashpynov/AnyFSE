@@ -239,19 +239,10 @@ namespace AnyFSE::App
 
         Launchers::LauncherOnBoot();
         Launchers::StartLauncher();
-
-        Sleep(500);
-
         if (GamingExperience::IsFullscreenMode() && bFirstLaunch)
         {
             Launchers::LaunchStartupApps();
         };
-
-        if (Launchers::IsLauncherActive())
-        {
-            log.Debug("Launcher quick start was detected, exiting");
-            return 0;
-        }
 
         Window::MainWindow mainWindow;
 
@@ -259,8 +250,8 @@ namespace AnyFSE::App
         {
             return (int)GetLastError();
         }
-
         mainWindow.Show();
+
         exitCode = Window::MainWindow::RunLoop();
 
         log.Debug("Loop finished. Time to exit");
