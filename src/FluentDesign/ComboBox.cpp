@@ -102,8 +102,12 @@ namespace FluentDesign
     {
         ComboItem &cb = *(m_comboItems.insert(pos != -1 ? m_comboItems.begin() + pos : m_comboItems.end(), ComboItem{name, icon, value, -1}));
 
-        HICON hIcon = Icon::LoadIcon(cb.icon, 32);
-        cb.iconIndex = hIcon ? ImageList_AddIcon(m_hImageList, hIcon) : -1;
+        cb.iconIndex = -1;
+        if (icon[0] < 0xE001)
+        {
+            HICON hIcon = Icon::LoadIcon(cb.icon, 32);
+            cb.iconIndex = hIcon ? ImageList_AddIcon(m_hImageList, hIcon) : -1;
+        }
 
         InvalidateRect(m_hWnd, NULL, FALSE);
         return pos == -1 ? (int)m_comboItems.size() : pos;
@@ -320,6 +324,20 @@ namespace FluentDesign
             ImageList_Draw(m_hImageList, item.iconIndex, hdc, rect.left, imageY, ILD_NORMAL);
             rect.left += m_theme.DpiScale(Layout_ImageSize + Layout_IconMargin);
         }
+        else
+        {
+            if (!item.icon.empty())
+            {
+                RECT glyphRect = rect;
+                glyphRect.right = glyphRect.left + m_theme.DpiScale(Layout_ImageSize);
+
+                (HFONT)SelectObject(hdc, m_theme.GetFont_GlyphNormal());
+
+                ::DrawText(hdc, item.icon.c_str(), -1, &glyphRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                (HFONT) SelectObject(hdc, m_theme.GetFont_Text());
+                rect.left += m_theme.DpiScale(Layout_ImageSize + Layout_IconMargin);
+            }
+        }
 
         ::DrawText(hdc, item.name.c_str(), -1, &rect,
                    DT_LEFT | DT_VCENTER | DT_SINGLELINE);
@@ -343,6 +361,8 @@ namespace FluentDesign
     {
         if (m_popupVisible)
             return;
+
+        OnDropDown.Notify();
 
         // Calculate popup position (below the button)
         RECT buttonRect;

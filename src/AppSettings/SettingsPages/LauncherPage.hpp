@@ -53,6 +53,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         LauncherConfig m_defaultConfig;
         std::wstring m_currentLauncherPath;
         std::list<std::wstring> m_launchersList;
+        std::list<std::wstring> m_notInstalledLaunchersList;
 
 
         ComboBox m_launcherCombo;
@@ -83,6 +84,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         void OpenSettingsPage();
         void OpenCustomSettingsPage();
         void UpdateControls();
+        void OnLauncherDropDown();
         void OnLauncherChanged();
         void UpdateCombo();
         void UpdateCustomSettings();

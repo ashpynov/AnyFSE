@@ -32,6 +32,7 @@ namespace AnyFSE::Configuration
             LauncherType::PlayniteFullscreen, {
                 LauncherType::PlayniteFullscreen,
                 L"Playnite Fullscreen",
+                L"https://playnite.link/download/PlayniteInstaller.exe",
                 L"Playnite.FullscreenApp.exe",
                 L"--hidesplashscreen",
                 WS_EX_APPWINDOW, 0,                 // ExStyle, NoStyle
@@ -48,6 +49,7 @@ namespace AnyFSE::Configuration
             LauncherType::PlayniteDesktop, {
                 LauncherType::PlayniteDesktop,
                 L"Playnite Desktop",
+                L"https://playnite.link/download/PlayniteInstaller.exe",
                 L"Playnite.DesktopApp.exe",
                 L"--hidesplashscreen",
                 WS_EX_APPWINDOW, 0,
@@ -64,6 +66,7 @@ namespace AnyFSE::Configuration
             LauncherType::Steam, {
                 LauncherType::Steam,
                 L"Steam Big Picture Mode",
+                L"https://store.steampowered.com/about/",
                 L"Steam.exe",
                 L"steam://open/bigpicture",
                 WS_EX_APPWINDOW, WS_THICKFRAME,
@@ -82,6 +85,7 @@ namespace AnyFSE::Configuration
             LauncherType::BigBox, {
                 LauncherType::BigBox,
                 L"BigBox",
+                L"https://www.launchbox-app.com/download",
                 L"BigBox.exe",
                 L"",
                 WS_EX_APPWINDOW, 0,
@@ -92,6 +96,7 @@ namespace AnyFSE::Configuration
             LauncherType::OneGameLauncher, {
                 LauncherType::OneGameLauncher,
                 L"One Game Launcher",
+                L"https://apps.microsoft.com/detail/9p1nxtw0ppmj",
                 L"ogl://",
                 L"",
                 0, WS_VISIBLE,
@@ -111,6 +116,7 @@ namespace AnyFSE::Configuration
             LauncherType::RetroBat, {
                 LauncherType::RetroBat,
                 L"RetroBat",
+                L"https://www.retrobat.org/download/",
                 L"RetroBat.exe",
                 L"",
                 0, 0,
@@ -125,6 +131,7 @@ namespace AnyFSE::Configuration
             LauncherType::ArmouryCrate, {
                 LauncherType::ArmouryCrate,
                 L"Armoury Crate",
+                L"https://armoury-crate.com/#download",
                 L"asusac://",
                 L"",
                 0, WS_VISIBLE,
@@ -144,6 +151,7 @@ namespace AnyFSE::Configuration
             LauncherType::Xbox, {
                 LauncherType::Xbox,
                 L"Xbox",
+                L"",
                 L"XBoxPcApp.exe"
             }
         },

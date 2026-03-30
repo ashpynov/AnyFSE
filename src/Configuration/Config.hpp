@@ -52,6 +52,7 @@ namespace AnyFSE::Configuration
     {
         LauncherType Type = LauncherType::None;
         std::wstring Name;
+        std::wstring URL;
         std::wstring StartCommand;
         std::wstring StartArg;
 
@@ -94,6 +95,7 @@ namespace AnyFSE::Configuration
             static bool IsXboxConfigured();
             static bool IsAnyFSEConfigured();
             static bool FindInstalledLaunchers(std::list<std::wstring> &found);
+            static bool FindNotInstalledLaunchers(std::list<std::wstring> &found);
             static std::wstring GetXboxPath(const std::wstring &launcher);
             static void FindPlaynite(std::list<std::wstring>& found);
             static void FindSteam(std::list<std::wstring>& found);

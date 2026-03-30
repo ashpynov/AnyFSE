@@ -102,7 +102,9 @@ namespace FluentDesign
         void SelectItem(const std::wstring &value);
         std::wstring GetCurentValue();
         int GetSelectedIndex() const { return m_selectedIndex; };
+
         Event OnChanged;
+        Event OnDropDown;
 
         void ShowPopup();
         void HidePopup();

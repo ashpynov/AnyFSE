@@ -51,6 +51,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         AddCustomPage();
 
         m_launcherCombo.OnChanged += delegate(OnLauncherChanged);
+        m_launcherCombo.OnDropDown += delegate(OnLauncherDropDown);
 
         m_customSettingsToggle.OnChanged += delegate(OnCustomChanged);
 
@@ -151,6 +152,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     {
         m_currentLauncherPath = Config::Launcher.StartCommand;
         Config::FindLaunchers(m_launchersList);
+        Config::FindNotInstalledLaunchers(m_notInstalledLaunchersList);
         UpdateCombo();
         Config::LoadLauncherSettings(m_currentLauncherPath, m_config);
 
@@ -330,9 +332,34 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         }
     }
 
+    void LauncherPage::OnLauncherDropDown()
+    {
+        std::list<std::wstring> notInstalled;
+        Config::FindNotInstalledLaunchers(notInstalled);
+
+        if (notInstalled.size() != m_notInstalledLaunchersList.size())
+        {
+            m_launchersList.clear();
+            m_notInstalledLaunchersList.clear();
+            Config::FindLaunchers(m_launchersList);
+            Config::FindNotInstalledLaunchers(m_notInstalledLaunchersList);
+            UpdateCombo();
+        }
+    }
+
     void LauncherPage::OnLauncherChanged()
     {
-        m_currentLauncherPath = m_launcherCombo.GetCurentValue();;
+        std::wstring selected = m_launcherCombo.GetCurentValue();
+        if (List::index_of(m_notInstalledLaunchersList, selected) != List::npos)
+        {
+            LauncherConfig conf;
+            Config::LoadLauncherSettings(selected, conf);
+            Process::StartProtocol(conf.URL);
+            UpdateCombo();
+            return;
+        }
+
+        m_currentLauncherPath = selected;
         Config::LoadLauncherSettings(m_currentLauncherPath, m_config);
         UpdateControls();
         UpdateCustomSettings();
@@ -358,6 +385,16 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             Config::UpdatePortableLauncher(info);
             m_launcherCombo.AddItem(info.Name, info.IconFile, info.StartCommand, 1);
             index = 1;
+        }
+
+        if (m_notInstalledLaunchersList.size())
+        {
+            for (auto& launcher: m_notInstalledLaunchersList)
+            {
+                LauncherConfig info;
+                Config::GetLauncherDefaults(launcher, info);
+                m_launcherCombo.AddItem(info.Name, L"\xE118", info.StartCommand);
+            }
         }
 
         m_launcherCombo.SelectItem((int)index);

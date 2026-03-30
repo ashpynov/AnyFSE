@@ -22,6 +22,7 @@
 //
 
 #include <filesystem>
+#include <set>
 #include <windows.h>
 #include "Configuration/Config.hpp"
 #include "Tools/Registry.hpp"
@@ -29,6 +30,7 @@
 #include "Tools/Packages.hpp"
 #include "Configuration/Config.hpp"
 #include "Tools/Paths.hpp"
+
 
 namespace AnyFSE::Configuration
 {
@@ -138,6 +140,35 @@ namespace AnyFSE::Configuration
         FindArmoryCrate(found);
         FindXbox(found);
         return found.size() > existed;
+    }
+
+    bool Config::FindNotInstalledLaunchers(std::list<std::wstring>& found)
+    {
+        std::list<std::wstring> executables;
+        FindInstalledLaunchers(executables);
+
+        std::set<std::wstring> installed;
+
+        for (auto it : executables)
+        {
+            if (fs::exists(it))
+            {
+                installed.insert(Unicode::to_lower(fs::path(it).filename().wstring()));
+            }
+            else
+            {
+                installed.insert(Unicode::to_lower(it));
+            }
+        }
+
+        for (auto it = Config::LauncherConfigsMap.begin(); it != Config::LauncherConfigsMap.end(); ++it)
+        {
+            if (installed.find(Unicode::to_lower(it->second.StartCommand)) == installed.end())
+            {
+                found.push_back(Unicode::to_lower(it->second.StartCommand));
+            }
+        }
+        return found.size() > 0;
     }
 
     void Config::FindPlaynite(std::list<std::wstring>& found)
