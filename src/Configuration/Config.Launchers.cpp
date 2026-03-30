@@ -96,7 +96,7 @@ namespace AnyFSE::Configuration
             LauncherType::OneGameLauncher, {
                 LauncherType::OneGameLauncher,
                 L"One Game Launcher",
-                L"https://apps.microsoft.com/detail/9p1nxtw0ppmj",
+                L"https://ogl.app/",
                 L"ogl://",
                 L"",
                 0, WS_VISIBLE,
