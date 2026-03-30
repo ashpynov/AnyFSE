@@ -25,9 +25,9 @@ using json = nlohmann::json;
 
 namespace AnyFSE::Updater
 {
-    const wchar_t *GIT_API_HOST = L"api.codeberg.org";
+    const wchar_t *GITHUB_API_HOST = L"api.github.com";
     const std::wstring REPO_PATH = L"/repos/ashpynov/AnyFSE"; // adjust if repository differs
-    const std::wstring RELEASE_PAGE = L"https://codeberg.org/ashpynov/AnyFSE/releases/tag/";
+    const std::wstring RELEASE_PAGE = L"https://github.com/ashpynov/AnyFSE/releases/tag/";
 
     static UINT WM_UPDATER_COMMAND = RegisterWindowMessage(L"AnyFSE.Updater.Command");
     static bool m_bThreadExecuted = false;
@@ -73,7 +73,7 @@ namespace AnyFSE::Updater
             throw std::runtime_error("WinHttpOpen failed");
         }
 
-        HINTERNET hConnect = WinHttpConnect(hSession, GIT_API_HOST, INTERNET_DEFAULT_HTTPS_PORT, 0);
+        HINTERNET hConnect = WinHttpConnect(hSession, GITHUB_API_HOST, INTERNET_DEFAULT_HTTPS_PORT, 0);
         if (!hConnect)
         {
             WinHttpCloseHandle(hSession);

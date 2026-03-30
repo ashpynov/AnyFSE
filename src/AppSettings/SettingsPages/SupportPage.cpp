@@ -34,10 +34,10 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         links.AddLinkButton(L"Discord AnyFSE community channel", L"https://discord.gg/AfkERzTEut");
         links.AddLinkButton(L"Navigate to log files folder", Tools::Paths::GetLogsPath());
 
-        links.AddLinkButton(L"Source repository", L"https://codeberg.org/ashpynov/AnyFSE/");
+        links.AddLinkButton(L"GitHub repository", L"https://github.com/ashpynov/AnyFSE/");
         links.AddLinkButton(L"Navigate to config files folder", Tools::Paths::GetConfigPath());
 
-        links.AddLinkButton(L"Report issue or feature request", L"https://codeberg.org/ashpynov/AnyFSE/issues");
+        links.AddLinkButton(L"Report issue or feature request", L"https://github.com/ashpynov/AnyFSE/issues");
         links.AddLinkButton(L"Navigate to splash files folder", Tools::Paths::GetSplashDefaultPath());
 
         support.SetState(FluentDesign::SettingsLine::Opened);
