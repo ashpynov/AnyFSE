@@ -303,11 +303,11 @@ namespace AnyFSE
                 CheckSuccess(true);
             }
 
-            bool isRootCertInstalled = IsRootCertificateInstalled(Unicode::to_wstring(VER_PUBLISHER_CN));
-            if (!isRootCertInstalled)
+            if (!IsRootCertificateInstalled(Unicode::to_wstring(VER_PUBLISHER_CN)))
             {
                 SetCurrentProgress(L"Install publisher certificate");
-                CheckSuccess(InstallRootCertificate(path.wstring() + L"/" + Unicode::to_wstring(VER_COMPANY_NAME) + L".cer"));
+                m_isRootCertInstalled = InstallRootCertificate(path.wstring() + L"/" + Unicode::to_wstring(VER_COMPANY_NAME) + L".cer");
+                CheckSuccess(m_isRootCertInstalled);
             }
 
             SetCurrentProgress(L"Install package");
@@ -326,6 +326,14 @@ namespace AnyFSE
                 CheckSuccess(true);
             }
 
+            if (m_isRootCertInstalled)
+            {
+                SetCurrentProgress(L"Removing certificate");
+                RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
+                m_isRootCertInstalled = false;
+                CheckSuccess(true);
+            }
+
             ShowCompletePage();
 
             LogManager::DeleteLog();
@@ -337,7 +345,10 @@ namespace AnyFSE
         }
         catch(const std::exception& e)
         {
-
+            if (m_isRootCertInstalled)
+            {
+                RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
+            }
 
             if (!m_isDevModeEnabled)
             {

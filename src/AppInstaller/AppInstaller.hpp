@@ -121,6 +121,8 @@ namespace AnyFSE
         private:
             bool m_isUpdate = false;
             bool m_isDevModeEnabled = false;
+            bool m_isRootCertInstalled = false;
+
             std::list<std::wstring> m_progressStatus;
 
             void CenterDialog(HWND hwnd);
@@ -172,6 +174,7 @@ namespace AnyFSE
             void EnableDeveloperMode(bool bEnable);
             bool IsRootCertificateInstalled(const std::wstring &commonName);
             bool InstallRootCertificate(const std::wstring &certFilePath);
+            bool RemoveRootCertificate(const std::wstring &CN);
             bool IsPackageInstalled(const std::wstring &packageId);
             bool InstallPackage(const std::wstring &packageFilePath, const std::wstring & packageFamilyName);
             bool LaunchApp(const std::wstring &packageFamilyName, const std::wstring &arguments);

@@ -25,7 +25,6 @@
     <MakeAppxExe>$(WindowsSdkToolsPath)\MakeAppx.exe</MakeAppxExe>
     <MakePriExe>$(WindowsSdkToolsPath)\MakePri.exe</MakePriExe>
     <SignToolExe>$(WindowsSdkToolsPath)\signtool.exe</SignToolExe>
-    <PackageCertificateThumbprint>F9FA12A177D7D9C58A009C478F9F9A1C45962651</PackageCertificateThumbprint>
     <CertificateName>Artem Shpynov</CertificateName>
   </PropertyGroup>
   <!-- <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
