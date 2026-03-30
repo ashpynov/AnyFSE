@@ -143,6 +143,10 @@ namespace AnyFSE::Configuration
     void Config::FindPlaynite(std::list<std::wstring>& found)
     {
         std::wstring installPath = GetInstallPath(L"Playnite");
+        if (installPath.empty())
+        {
+            installPath = GetAssociationPath(L"Playnite.ext");
+        }
         if (!installPath.empty())
         {
             found.push_back(fs::path(installPath).append(L"Playnite.FullscreenApp.exe").wstring());
@@ -260,6 +264,20 @@ namespace AnyFSE::Configuration
             subkeyNameSize = 255;
         }
         RegCloseKey(hKey);
+        return L"";
+    }
+
+    std::wstring Config::GetAssociationPath(const std::wstring &extName)
+    {
+        std::wstring path = Registry::ReadString(L"HKCR\\" + extName + L"\\shell\\open\\command", L"", L"");
+        if (!path.empty())
+        {
+            std::wstring exe = GetPathFromCommand(path);
+            if (fs::exists(exe))
+            {
+                return fs::path(exe).parent_path().wstring();
+            }
+        }
         return L"";
     }
 

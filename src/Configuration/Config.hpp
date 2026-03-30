@@ -105,6 +105,7 @@ namespace AnyFSE::Configuration
 
             static std::wstring GetPathFromCommand(const std::wstring &uninstallCommand);
             static std::wstring SearchAppUserModel(const std::wstring &displayName);
+            static std::wstring GetAssociationPath(const std::wstring &extName);
             static std::wstring GetInstallPath(const std::wstring &displayName);
 
         public:
