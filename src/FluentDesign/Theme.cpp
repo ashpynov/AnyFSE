@@ -302,7 +302,9 @@ namespace FluentDesign
     {
         WCHAR className[MAX_PATH + 1];
         GetClassNameW(hWnd, className, MAX_PATH);
-        if (!_wcsicmp(className, L"STATIC") || !_wcsicmp(className, L"EDIT"))
+        if (!_wcsicmp(className, L"STATIC")
+        || !_wcsicmp(className, L"EDIT")
+        || !_wcsicmp(className, L"LISTBOX"))
         {
             return NAN;
         }
@@ -344,6 +346,7 @@ namespace FluentDesign
 
     void Theme::DrawChildFocus(HDC hdc, HWND parent, HWND child)
     {
+
         if (!child || !m_isKeyboardFocus || GetFocus() != child || !IsWindowVisible(child)) return;
 
         float offset = FocusOffsetByWndClass(child);

@@ -129,6 +129,8 @@ namespace FluentDesign
         COLORREF captionColor = GetColorRef(FluentDesign::Theme::Colors::Dialog);
         DwmSetWindowAttribute(m_hParentWnd, DWMWA_CAPTION_COLOR, &captionColor, sizeof(captionColor));
 
+        bool colorHeader = Registry::ReadBool(L"HKCU\\Software\\Microsoft\\Windows\\DWM", L"ColorPrevalence", false);
+
         if (m_isDark)
         {
             m_colors[Transparent] = 0xFF000000;
@@ -136,6 +138,7 @@ namespace FluentDesign
             m_colors[TextSecondary] = GetGrey(200);
             m_colors[TextDisabled] = GetGrey(128);
             m_colors[TextAccented] = GetAccent(204);
+            m_colors[TextInactiveHeader] = colorHeader ?  GetAccent(80) : GetGrey(115);
 
             m_colors[FocusFrame] = GetGrey(200);
 
@@ -209,6 +212,7 @@ namespace FluentDesign
             m_colors[TextSecondary] = GetGrey(96);
             m_colors[TextDisabled] = GetGrey(160);
             m_colors[TextAccented] = GetAccent(128);
+            m_colors[TextInactiveHeader] = colorHeader ?  GetAccent(128) : GetGrey(160);
 
             m_colors[FocusFrame] = GetGrey(27);
 

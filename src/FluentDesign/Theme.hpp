@@ -42,6 +42,7 @@ namespace FluentDesign
             TextSecondary,
             TextDisabled,
             TextAccented,
+            TextInactiveHeader,
 
             FocusFrame,
 

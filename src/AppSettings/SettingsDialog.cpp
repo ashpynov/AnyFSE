@@ -283,9 +283,9 @@ namespace AnyFSE::App::AppSettings::Settings
                     bool ownchild = IsChild(m_hDialog, own);
                     bActive |= child || ownchild || own == m_hDialog;
                 }
-                m_captionMinimizeButton.SetColors(bActive ? Theme::Colors::Text : Theme::Colors::TextAccented);
-                m_captionMaximizeButton.SetColors(bActive ? Theme::Colors::Text : Theme::Colors::TextAccented);
-                m_captionCloseButton.SetColors(bActive ? Theme::Colors::Text : Theme::Colors::TextAccented);
+                m_captionMinimizeButton.SetColors(bActive ? Theme::Colors::Text : Theme::Colors::TextInactiveHeader);
+                m_captionMaximizeButton.SetColors(bActive ? Theme::Colors::Text : Theme::Colors::TextInactiveHeader);
+                m_captionCloseButton.SetColors(bActive ? Theme::Colors::Text : Theme::Colors::TextInactiveHeader);
             }
             return FALSE;
 
