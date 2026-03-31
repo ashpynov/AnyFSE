@@ -237,12 +237,36 @@ namespace AnyFSE::App
             return 0;
         }
 
-        Launchers::LauncherOnBoot();
-        Launchers::StartLauncher();
-        if (GamingExperience::IsFullscreenMode() && bFirstLaunch)
+        bool restartDetected = false;
+
+        if ((Config::Launcher.Type == LauncherType::PlayniteDesktop
+            || Config::Launcher.Type == LauncherType::PlayniteFullscreen)
+            && GamingExperience::IsFullscreenMode() && !bFirstLaunch)
         {
-            Launchers::LaunchStartupApps();
-        };
+            log.Debug("Looking for Playnite process");
+
+            restartDetected = Launchers::HasLauncherProcess();
+            if (!restartDetected)
+            {
+                Sleep(500);
+                log.Debug("Once more Looking for Playnite process");
+                restartDetected = Launchers::HasLauncherProcess();
+            }
+        }
+
+        if (!restartDetected)
+        {
+            Launchers::LauncherOnBoot();
+            Launchers::StartLauncher();
+            if (GamingExperience::IsFullscreenMode() && bFirstLaunch)
+            {
+                Launchers::LaunchStartupApps();
+            };
+        }
+        else
+        {
+            log.Debug("Restart Playnite is detected");
+        }
 
         Window::MainWindow mainWindow;
 
@@ -250,7 +274,8 @@ namespace AnyFSE::App
         {
             return (int)GetLastError();
         }
-        mainWindow.Show();
+
+        mainWindow.Show(restartDetected);
 
         exitCode = Window::MainWindow::RunLoop();
 

@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <AssemblyVersion>0.90.8</AssemblyVersion>
-    <VersionRevision>0</VersionRevision>
+    <VersionRevision>3</VersionRevision>
     <AssemblyProduct>AnyFSE</AssemblyProduct>
     <AssemblyCompany>Artem Shpynov</AssemblyCompany>
     <AssemblyDescription>AnyFSE Home application launcher</AssemblyDescription>

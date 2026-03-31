@@ -151,6 +151,14 @@ namespace AnyFSE::App::Launchers
         return launcherHwnd;
     }
 
+    bool HasLauncherProcess()
+    {
+        return 0 != Process::FindFirstByName(Config::Launcher.ProcessName)
+            || 0 != Process::FindFirstByName(Config::Launcher.ProcessNameAlt)
+            || 0 != Process::FindFirstByExe(Config::Launcher.StartCommand)
+            || IsLauncherActive();
+    }
+
     HANDLE GetLauncherProcess()
     {
         HWND hWnd = GetLauncherWindow();

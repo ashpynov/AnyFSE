@@ -33,6 +33,7 @@ namespace AnyFSE::App::Launchers
 
     void FocusLauncher();
     HWND GetLauncherWindow();
+    bool HasLauncherProcess();
     HANDLE GetLauncherProcess();
     void LaunchStartupApps();
     bool HasStartupApps();
