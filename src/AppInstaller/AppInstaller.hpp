@@ -166,8 +166,12 @@ namespace AnyFSE
             bool AutoDeleteSelf();
             bool DeleteOldVersion();
             bool DeleteOldFiles(const std::wstring &dir);
-            bool ExtractEmbeddedZip(const std::wstring &path);
 
+#ifdef OFFLINE_INSTALLER
+            bool ExtractEmbeddedZip(const std::wstring &path);
+#else
+            bool DownloadFiles(const std::wstring &path);
+#endif
 
             // Tools
             bool IsDeveloperModeEnabled();

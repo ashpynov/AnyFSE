@@ -34,4 +34,6 @@ END
 
 2                ICON                    "..\\..\\media\\AnyFSEInstaller.ico"
 
+#ifdef OFFLINE_INSTALLER
 3                ZIP                     BUILD_ARCHIVE
+#endif

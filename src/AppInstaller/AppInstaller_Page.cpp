@@ -40,6 +40,8 @@
 #include "AppInstaller.hpp"
 #include "Logging/LogManager.hpp"
 
+#pragma comment(lib, "urlmon.lib")
+
 namespace AnyFSE
 {
     namespace fs = std::filesystem;
@@ -283,6 +285,15 @@ namespace AnyFSE
             ShowProgressPage();
             Sleep(1);
 
+#ifdef OFFLINE_INSTALLER
+            // Extract resource file
+            SetCurrentProgress(L"Unpack files");
+            CheckSuccess(ExtractEmbeddedZip(path));
+#else
+            SetCurrentProgress(L"Download files");
+            CheckSuccess(DownloadFiles(path));
+#endif
+
             std::wstring oldPath = Registry::ReadString(registryPath, L"InstallLocation");
             if (!oldPath.empty())
             {
@@ -290,9 +301,6 @@ namespace AnyFSE
                 CheckSuccess(DeleteOldVersion() && DeleteOldFiles(oldPath));
             }
 
-            // Extract resource file
-            SetCurrentProgress(L"Unpack files");
-            CheckSuccess(ExtractEmbeddedZip(path));
 
 
             m_isDevModeEnabled = IsDeveloperModeEnabled();
@@ -306,7 +314,7 @@ namespace AnyFSE
             if (!IsRootCertificateInstalled(Unicode::to_wstring(VER_PUBLISHER_CN)))
             {
                 SetCurrentProgress(L"Install publisher certificate");
-                m_isRootCertInstalled = InstallRootCertificate(path.wstring() + L"/" + Unicode::to_wstring(VER_COMPANY_NAME) + L".cer");
+                m_isRootCertInstalled = InstallRootCertificate(path.wstring() + L"/" + L"Artem.Shpynov.cer");
                 CheckSuccess(m_isRootCertInstalled);
             }
 
@@ -406,6 +414,7 @@ namespace AnyFSE
         return true;
     }
 
+#ifdef OFFLINE_INSTALLER
     bool AppInstaller::ExtractEmbeddedZip(const std::wstring &path)
     {
         if (FAILED(SHCreateDirectoryExW(NULL, path.c_str(), NULL)))
@@ -474,6 +483,35 @@ namespace AnyFSE
 
         return success;
     }
+#else
+    bool AppInstaller::DownloadFiles(const std::wstring &path)
+    {
+        if (FAILED(SHCreateDirectoryExW(NULL, path.c_str(), NULL)))
+        {
+            throw std::exception("Cannot create binary folder");
+        }
+        const std::wstring rootPath = L"https://github.com/ashpynov/AnyFSE/releases/download/v" + Unicode::to_wstring(APP_VERSION);
+        std::list<std::wstring> files;
+        files.push_back(L"/Artem.Shpynov.cer");
+        files.push_back(L"/AnyFSE-" + Unicode::to_wstring(APP_VERSION) + L".appx");
+
+        for (std::wstring file : files)
+        {
+            HRESULT hr = URLDownloadToFileW(
+                NULL,
+                (rootPath + file).c_str(),
+                (path + file).c_str(),
+                0, NULL);
+
+            if (FAILED(hr))
+            {
+                throw std::runtime_error("Download failed");
+            }
+        }
+
+        return true;
+    }
+#endif
 
     void AppInstaller::OnSettings()
     {

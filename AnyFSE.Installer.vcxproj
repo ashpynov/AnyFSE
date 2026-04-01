@@ -141,7 +141,8 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\AppInstaller\Installer.rc">
-        <PreprocessorDefinitions>
+        <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='ReleaseOffline|x64'">
+            OFFLINE_INSTALLER;
             BUILD_ARCHIVE=\"$(OutDir.Replace('\', '\\'))$(AssemblyProduct).$(AssemblyVersion).zip\";
             %(PreprocessorDefinitions)
         </PreprocessorDefinitions>
@@ -149,7 +150,7 @@
     </ResourceCompile>
   </ItemGroup>
 
-<ItemDefinitionGroup>
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseOffline|x64'">
     <CustomBuildStep>
         <Message>Archive $(InstallFiles) and $(PDBFiles) to $(AssemblyProduct).$(AssemblyVersion).zip and $(AssemblyProduct).$(AssemblyVersion).pdb.zip </Message>
         <Command>cd &quot;$(OutDir)&quot; &amp;&amp; tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion).zip&quot; $(InstallFiles) &amp;&amp; tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion).pdb.zip&quot; $(PDBFiles)</Command>
