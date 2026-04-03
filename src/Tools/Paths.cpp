@@ -80,7 +80,7 @@ namespace AnyFSE::Tools::Paths
 
     std::wstring GetTempPath()
     {
-        return Tools::Paths::GetAppTempPath() + L"\\tmp";
+        return Tools::Paths::GetAppTempPath();
     }
 
     std::wstring GetDumpsPath()

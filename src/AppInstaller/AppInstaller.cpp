@@ -209,10 +209,8 @@ namespace AnyFSE
         {
             ShowErrorPage(
                 L"Insufficient permissions",
-                L"Escalated privileges is required to install AnyFSE "
-                L"for schedulle autorun task.\n\n"
-                L"Please run installer as Administrator "
-                L"and allow it in User Account Control (UAC) prompt.",
+                L"Escalated privileges is required to install AnyFSE.\n\n"
+                L"Please allow it in User Account Control (UAC) prompt.",
                 Icon_Permission);
         }
         else

@@ -25,9 +25,10 @@ using json = nlohmann::json;
 
 namespace AnyFSE::Updater
 {
-    const wchar_t *GITHUB_API_HOST = L"api.github.com";
-    const std::wstring REPO_PATH = L"/repos/ashpynov/AnyFSE"; // adjust if repository differs
-    const std::wstring RELEASE_PAGE = L"https://github.com/ashpynov/AnyFSE/releases/tag/";
+    //https://codeberg.org/api/v1/repos/{owner}/{repo}/releases/latest
+    const wchar_t *API_HOST = L"codeberg.org";
+    const std::wstring REPO_PATH = L"/api/v1/repos/ashpynov/AnyFSE"; // adjust if repository differs
+    const std::wstring RELEASE_PAGE = L"https://codeberg.org/ashpynov/AnyFSE/releases/tag/";
 
     static UINT WM_UPDATER_COMMAND = RegisterWindowMessage(L"AnyFSE.Updater.Command");
     static bool m_bThreadExecuted = false;
@@ -73,7 +74,7 @@ namespace AnyFSE::Updater
             throw std::runtime_error("WinHttpOpen failed");
         }
 
-        HINTERNET hConnect = WinHttpConnect(hSession, GITHUB_API_HOST, INTERNET_DEFAULT_HTTPS_PORT, 0);
+        HINTERNET hConnect = WinHttpConnect(hSession, API_HOST, INTERNET_DEFAULT_HTTPS_PORT, 0);
         if (!hConnect)
         {
             WinHttpCloseHandle(hSession);
@@ -95,7 +96,7 @@ namespace AnyFSE::Updater
         }
 
         // GitHub requires User-Agent
-        LPCWSTR headers = L"User-Agent: AnyFSE-Updater\r\nAccept: application/vnd.github.v3+json\r\n";
+        LPCWSTR headers = L"User-Agent: AnyFSE-Updater\r\n";
 
         BOOL bSend = WinHttpSendRequest(hRequest, headers, (DWORD)wcslen(headers),
                                         WINHTTP_NO_REQUEST_DATA, 0, 0, 0);
@@ -261,7 +262,7 @@ namespace AnyFSE::Updater
             return info;
         }
 
-        std::string resp = WinHttpGet(REPO_PATH + L"/releases");
+        std::string resp = WinHttpGet(REPO_PATH + L"/releases?pre_release=true&draft=false");
         auto j = json::parse(resp);
         if (!j.is_array())
         {

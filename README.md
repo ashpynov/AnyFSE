@@ -1,9 +1,8 @@
 # AnyFSE Home Application
-![DownloadCountTotal](https://img.shields.io/github/downloads/ashpynov/AnyFSE/total?label=total%20downloads&style=plastic) ![DownloadCountLatest](https://img.shields.io/github/downloads/ashpynov/AnyFSE/latest/total?style=plastic) ![LatestVersion](https://img.shields.io/github/v/tag/ashpynov/AnyFSE?label=Latest%20version&style=plastic) ![License](https://img.shields.io/github/license/ashpynov/AnyFSE?style=plastic)
 
 The AnyFSE Home application aims to give users the ability to use their favorite launchers as Home applications for Gaming Full Screen Experience mode on modern Windows.
 
-[Latest Release](https://github.com/ashpynov/AnyFSE/releases/latest)
+[Latest Release](https://codeberg.org/ashpynov/AnyFSE/releases/latest)
 
 [Help and Discussions](https://discord.gg/AfkERzTEut)
 
@@ -72,7 +71,7 @@ In case if your antivirus still blames on AnyFSE.Installer.exe file - you may in
 
 1. Uninstall AnyFSE pre-0.90 version to avoid conflicting.
 2. Install Artem Shpynov Root certificate:
-- Download certificate: https://github.com/ashpynov/AnyFSE/releases/download/v0.90.1/Artem.Shpynov.cer and open it.
+- Download certificate: https://codeberg.org/ashpynov/AnyFSE/releases/download/v0.90.9/Artem.Shpynov.cer and open it.
 - Press 'Install certificate',
 - Select store location 'Local Machine',
 - Press 'Next'
@@ -83,7 +82,7 @@ In case if your antivirus still blames on AnyFSE.Installer.exe file - you may in
 3. Allow installation of packages in developer mode:
 - Open Settings -> System -> Advanced and turn on 'Developer Mode'
 - You can disable it after installation
-4. Now you can dowload and install appx package https://github.com/ashpynov/AnyFSE/releases/download/v*version*/AnyFSE-*version*.appx
+4. Now you can dowload and install appx package https://codeberg.org/ashpynov/AnyFSE/releases/download/v*version*/AnyFSE-*version*.appx
 5. After installing you may turn off developer mode and uninstall certificate "DDCC7751-898D-4BC9-B80C-4AA73E5D5762"
 
 
