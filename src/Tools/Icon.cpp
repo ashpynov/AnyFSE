@@ -33,10 +33,55 @@
 #include "Icon.hpp"
 #include "Packages.hpp"
 
-
 namespace AnyFSE::Tools::Icon
 {
     static Logger log = LogManager::GetLogger("Tools/Icon");
+
+    HICON LoadIconFromRaw(std::vector<uint8_t> imageData, int size)
+    {
+        if (imageData.empty()) return nullptr;
+
+        // Create IStream from memory
+        HICON hIcon = nullptr;
+        IStream * pStream = nullptr;
+        Gdiplus::Bitmap *bitmap = nullptr;
+
+        HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, imageData.size());
+
+        try
+        {
+            if (!hGlobal)
+            {
+                throw;
+            };
+
+            void* pData = GlobalLock(hGlobal);
+            memcpy(pData, imageData.data(), imageData.size());
+            GlobalUnlock(hGlobal);
+
+            HRESULT hr = CreateStreamOnHGlobal(hGlobal, TRUE, &pStream);
+            if (FAILED(hr) || !pStream)
+            {
+                throw;
+            }
+
+            bitmap = new Gdiplus::Bitmap(pStream);
+            if (bitmap->GetLastStatus() != Gdiplus::Ok)
+            {
+                throw;
+            }
+            int w = bitmap->GetHeight();
+            int h = bitmap->GetWidth();
+
+            bitmap->GetHICON(&hIcon);
+        } catch (...) {};
+
+        if (hGlobal) GlobalFree(hGlobal);
+        if (bitmap)  delete bitmap;
+        if (pStream) pStream->Release();
+
+        return hIcon;
+    }
 
     HICON LoadIconFromPNG(const std::wstring &pngPath, int size)
     {
@@ -68,20 +113,9 @@ namespace AnyFSE::Tools::Icon
 
         if (icon[0]==L'@')
         {
-            size_t slashPos = iconPath.find(L'\\');
-            slashPos = slashPos != std::wstring::npos ? slashPos : iconPath.find(L'/');
-
-            if (slashPos == std::wstring::npos)
-            {
-                return 0;
-            }
-            std::wstring appPath = Packages::GetAppxInstallLocation(iconPath.substr(1, slashPos - 1));
-            if (appPath.empty())
-            {
-                return 0;
-            }
-            iconPath = appPath + iconPath.substr(slashPos);
+            return LoadIconFromRaw(Packages::GetAppDisplayLogoRawBytes(iconPath.c_str() + 1, 32), 32);
         }
+
         std::filesystem::path path(iconPath);
 
         size_t commaPos = iconPath.find(L',');
@@ -130,6 +164,7 @@ namespace AnyFSE::Tools::Icon
 
         return hIcon;
     }
+
     Gdiplus::Bitmap * LoadBitmapFromIcon(const std::wstring &icon, int iconSize)
     {
         HICON hIcon = Icon::LoadIcon(icon, iconSize);

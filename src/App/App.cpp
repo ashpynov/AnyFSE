@@ -152,7 +152,7 @@ namespace AnyFSE::App
 
         // or Launcher == None or Launcher == Xbox
         if (Config::Launcher.Type == LauncherType::None
-         || Config::Launcher.Type == LauncherType::Xbox)
+         || Config::Launcher.Type == LauncherType::Native)
         {
             return true;
         }

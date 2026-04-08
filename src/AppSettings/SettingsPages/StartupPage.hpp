@@ -38,7 +38,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         std::list<Toggle>           m_startupToggles;
         std::list<SettingsLine *>   m_pStartupAppLines;
 
-        void OpenStartupSettingsPage();
         void OpenMSSettingsStartupApps();
 
         void AddStartupAppLine(const std::wstring &path, const std::wstring &args, bool enabled);

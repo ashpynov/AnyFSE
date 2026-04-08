@@ -23,14 +23,14 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         launcher.SetFrame(Gdiplus::FrameFlags::SIDE_NO_BOTTOM | Gdiplus::FrameFlags::CORNER_TOP);
 
-        FluentDesign::SettingsLine &browse = m_dialog.AddSettingsLine(settingPageList, top,
+        m_pBrowseLine = &m_dialog.AddSettingsLine(settingPageList, top,
             L"",
             L"",
             m_browseButton,
             Layout::LauncherBrowseLineHeight, Layout::LinePadding, 0,
             Layout::BrowseWidth, Layout::BrowseHeight);
 
-        browse.SetFrame(Gdiplus::FrameFlags::SIDE_NO_TOP | Gdiplus::FrameFlags::CORNER_BOTTOM);
+        m_pBrowseLine->SetFrame(Gdiplus::FrameFlags::SIDE_NO_TOP | Gdiplus::FrameFlags::CORNER_BOTTOM);
 
         m_pFseOnStartupLine = &m_dialog.AddSettingsLine(settingPageList, top,
             L"Enter full screen experience on startup",
@@ -49,6 +49,27 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_pCustomSettingsLine->OnChanged += delegate(OpenCustomSettingsPage);
 
         AddCustomPage();
+
+        m_pSplashSettingsLine = &m_dialog.AddSettingsLine(settingPageList, top,
+            L"Splash screen settings",
+            L"Configure Look'n'Feel of splash screen during home app loading",
+            Layout::LineHeight, Layout::LinePadding, 0);
+
+        m_pSplashSettingsLine->SetState(SettingsLine::Next);
+        m_pSplashSettingsLine->SetIcon(L'\xEB9F');
+        m_pSplashSettingsLine->OnChanged += delegate(OpenSplashSettingsPage);
+
+        m_pStartupSettingsLine = &m_dialog.AddSettingsLine(settingPageList, top,
+            L"Startup",
+            L"Apps that start automatically when you sign in full screen experience",
+            Layout::LineHeight, Layout::LinePadding, 0);
+
+        m_pStartupSettingsLine->SetState(FluentDesign::SettingsLine::Next);
+        m_pStartupSettingsLine->SetIcon(L'\xE18C');
+        m_pStartupSettingsLine->OnChanged += delegate(OpenStartupSettingsPage);
+
+        m_dialog.AddPage(m_pSplashPage);
+        m_dialog.AddPage(m_pStartupPage);
 
         m_launcherCombo.OnChanged += delegate(OnLauncherChanged);
         m_launcherCombo.OnDropDown += delegate(OnLauncherDropDown);
@@ -150,7 +171,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
     void LauncherPage::LoadControls()
     {
-        m_currentLauncherPath = Config::Launcher.StartCommand;
+        m_currentLauncherPath = Config::GetNativePath(Config::Launcher.StartCommand);
         Config::FindLaunchers(m_launchersList);
         Config::FindNotInstalledLaunchers(m_notInstalledLaunchersList);
         UpdateCombo();
@@ -160,12 +181,10 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_customSettingsState = customSettings ? FluentDesign::SettingsLine::Next: FluentDesign::SettingsLine::Normal;
 
         m_isCustom = (customSettings || m_config.IsCustom) && (
-            m_config.Type != LauncherType::Xbox
-            && m_config.Type != LauncherType::ArmouryCrate
-            && m_config.Type != LauncherType::OneGameLauncher
+            m_config.AppUserModelID.empty()
         ) || m_config.Type == LauncherType::Custom;
 
-        m_isAggressive = Config::AggressiveMode && m_config.Type != LauncherType::Xbox;
+        m_isAggressive = Config::AggressiveMode && m_config.Type != LauncherType::Native;
 
         m_dialog.UpdateLayout();
         UpdateControls();
@@ -177,7 +196,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         const std::wstring gamingConfiguration = L"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration";
         const std::wstring startupToGamingHome = L"StartupToGamingHome";
         const std::wstring gamingHomeApp = L"GamingHomeApp";
-        const std::wstring xboxApp = L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";
+        //const std::wstring xboxApp = L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";
         const std::wstring anyFSEApp = L"ArtemShpynov.AnyFSE_by4wjhxmygwn4!App";
 
         if (m_config.Type == LauncherType::None)
@@ -185,15 +204,15 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             Registry::DeleteValue(gamingConfiguration, gamingHomeApp);
             Registry::WriteBool(gamingConfiguration, startupToGamingHome, false);
         }
-        else if (m_config.Type == LauncherType::Xbox)
+        else if (m_config.Type == LauncherType::Native)
         {
-            log.Debug("Saving xBox as launcher");
+            log.Debug("Saving %s as launcher", Unicode::to_string(m_config.Name).c_str());
             Registry::WriteBool(gamingConfiguration, startupToGamingHome, m_fseOnStartupToggle.GetCheck());
-            Registry::WriteString(gamingConfiguration, gamingHomeApp, xboxApp);
+            Registry::WriteString(gamingConfiguration, gamingHomeApp, m_config.AppUserModelID);
         }
         else
         {
-            log.Debug("Saving AnyFse as launcher");
+            log.Debug("Saving AnyFSE as launcher");
             Registry::WriteBool(gamingConfiguration, startupToGamingHome, m_fseOnStartupToggle.GetCheck());
             Registry::WriteString(gamingConfiguration, gamingHomeApp, anyFSEApp);
         }
@@ -280,6 +299,16 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_dialog.SwitchActivePage(L"Custom settings", &m_pageLinesList);
     }
 
+    void LauncherPage::OpenSplashSettingsPage()
+    {
+        m_dialog.SwitchActivePage(L"Splash settings", &m_pSplashPage->GetSettingsLines());
+    }
+
+    void LauncherPage::OpenStartupSettingsPage()
+    {
+        m_dialog.SwitchActivePage(L"Startup", &m_pStartupPage->GetSettingsLines());
+    }
+
     void LauncherPage::UpdateControls()
     {
         Config::GetLauncherDefaults(m_currentLauncherPath, m_defaultConfig);
@@ -296,10 +325,12 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         bool alwaysSettings = m_defaultConfig.Type==LauncherType::Custom;
         bool noSettings =
-                m_defaultConfig.Type == LauncherType::Xbox
-            ||  m_defaultConfig.Type == LauncherType::ArmouryCrate
-            || m_defaultConfig.Type == LauncherType::OneGameLauncher
+               !m_defaultConfig.AppUserModelID.empty()
             || m_defaultConfig.Type == LauncherType::None;
+
+        bool enabledAnyFSE =
+               m_defaultConfig.Type != LauncherType::None
+            && m_defaultConfig.Type != LauncherType::Native;
 
         bool haveSettings = m_isCustom && !noSettings || alwaysSettings;
         bool enableCheck = !alwaysSettings && !noSettings;
@@ -315,21 +346,29 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         if (haveSettings && !enableCheck)
         {
-            m_pCustomSettingsLine->Enable(haveSettings);
+            m_pCustomSettingsLine->Enable(enabledAnyFSE && haveSettings);
             EnableWindow(m_pCustomSettingsLine->GetChildControl(), enableCheck);
             m_pCustomSettingsLine->Invalidate();
         }
         else
         {
-            m_pCustomSettingsLine->Enable(enableCheck);
+            m_pCustomSettingsLine->Enable(enabledAnyFSE && enableCheck);
         }
 
+        m_pSplashSettingsLine->Enable(enabledAnyFSE);
+        m_pStartupSettingsLine->Enable(enabledAnyFSE);
 
         if (!haveSettings)
         {
             m_config = m_defaultConfig;
             UpdateCustomSettings();
         }
+
+        m_pBrowseLine->SetDescription(
+            m_defaultConfig.Type == LauncherType::Native
+                ? L"* Native launcher is selected, AnyFSE will not be executed"
+                : L""
+        );
     }
 
     void LauncherPage::OnLauncherDropDown()

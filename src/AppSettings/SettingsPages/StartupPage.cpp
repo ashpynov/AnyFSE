@@ -9,15 +9,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 {
     void StartupPage::AddPage(std::list<SettingsLine>& settingPageList, ULONG &top)
     {
-        SettingsLine &startupPageLine = m_dialog.AddSettingsLine(settingPageList, top,
-            L"Startup",
-            L"Apps that start automatically when you sign in full screen experience",
-            Layout::LineHeight, Layout::LinePadding, 0);
-
-        startupPageLine.SetState(FluentDesign::SettingsLine::Next);
-        startupPageLine.SetIcon(L'\xE18C');
-        startupPageLine.OnChanged += delegate(OpenStartupSettingsPage);
-
         ULONG pageTop = 0;
         SettingsLine &startupAppLinkLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
             L"Native startup settings",
@@ -73,12 +64,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
                 }
             );
         }
-    }
-
-
-    void StartupPage::OpenStartupSettingsPage()
-    {
-        m_dialog.SwitchActivePage(L"Startup", &m_pageLinesList);
     }
 
     void StartupPage::OpenMSSettingsStartupApps()

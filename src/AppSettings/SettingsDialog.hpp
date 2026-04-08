@@ -39,6 +39,7 @@
 #include "FluentDesign/ScrollView.hpp"
 
 #include "AppSettings/SettingsLayout.hpp"
+#include "AppSettings/SettingsPages/SettingsPage.hpp"
 #include "AppSettings/SettingsPages/LauncherPage.hpp"
 #include "AppSettings/SettingsPages/UpdatePage.hpp"
 #include "AppSettings/SettingsPages/TroubleshootPage.hpp"
@@ -91,6 +92,12 @@ namespace AnyFSE::App::AppSettings::Settings
         void CenterDialog(HWND hwnd);
         void StoreWindowPlacement();
         void RestoreWindowPlacement();
+
+        void AddPage(Page::SettingsPage * page)
+        {
+            m_pages.push_back(page);
+        }
+
         SettingsDialog()
             : m_theme()
             , m_captionStatic(m_theme)
@@ -110,8 +117,6 @@ namespace AnyFSE::App::AppSettings::Settings
 
         {
             m_pages.push_back(new Page::LauncherPage(m_theme, *this));
-            m_pages.push_back(new Page::SplashPage(m_theme, *this));
-            m_pages.push_back(new Page::StartupPage(m_theme, *this));
             m_pages.push_back(new Page::UpdatePage(m_theme, *this));
             m_pages.push_back(new Page::TroubleshootPage(m_theme, *this));
             m_pages.push_back(new Page::SupportPage(m_theme, *this));

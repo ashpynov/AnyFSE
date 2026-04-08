@@ -38,14 +38,14 @@ namespace AnyFSE::Configuration
     {
         None = 0,
         Custom,
+        Native,
         PlayniteFullscreen,
         PlayniteDesktop,
         ArmouryCrate,
         Steam,
         BigBox,
         OneGameLauncher,
-        RetroBat,
-        Xbox
+        RetroBat
     };
 
     struct LauncherConfig
@@ -72,6 +72,7 @@ namespace AnyFSE::Configuration
         std::wstring ActivationProtocol;
         bool IsCustom = false;
         bool IsPortable = false;
+        std::wstring AppUserModelID;
     };
 
     struct StartupApp
@@ -84,7 +85,7 @@ namespace AnyFSE::Configuration
     class Config
     {
             //static const wstring Root;
-            static const std::map<LauncherType, LauncherConfig> LauncherConfigsMap;
+            static std::list<LauncherConfig> LauncherConfigs;
 
             Config() {};
 
@@ -92,16 +93,16 @@ namespace AnyFSE::Configuration
         public:
             static void GetStartupConfigured();
             static bool IsFseOnStartupConfigured();
-            static bool IsXboxConfigured();
+            static bool IsNativeConfigured();
             static bool IsAnyFSEConfigured();
             static bool FindInstalledLaunchers(std::list<std::wstring> &found);
             static bool FindNotInstalledLaunchers(std::list<std::wstring> &found);
-            static std::wstring GetXboxPath(const std::wstring &launcher);
+            static std::wstring GetNativePath(const std::wstring &launcher);
             static void FindPlaynite(std::list<std::wstring>& found);
             static void FindSteam(std::list<std::wstring>& found);
             static void FindBigBox(std::list<std::wstring>& found);
             static void FindOneGameLauncher(std::list<std::wstring>& found);
-            static void FindXbox(std::list<std::wstring>& found);
+            static void FindNativeLaunchers(std::list<std::wstring> &found);
             static void FindArmoryCrate(std::list<std::wstring> &found);
             static void FindRetroBat(std::list<std::wstring>& found);
 

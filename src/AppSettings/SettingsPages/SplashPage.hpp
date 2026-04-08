@@ -53,7 +53,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         SettingsLine * m_pSplashVideoLine = nullptr;
 
         void OnGotoSplashFolder();
-        void OpenSplashSettingsPage();
         void OnShowTextChanged();
         void OnShowLogoChanged();
         void OnShowVideoChanged();

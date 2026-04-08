@@ -28,6 +28,7 @@
 #include "Tools/Registry.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/Packages.hpp"
+#include "Tools/List.hpp"
 #include "Configuration/Config.hpp"
 #include "Tools/Paths.hpp"
 
@@ -39,8 +40,8 @@ namespace AnyFSE::Configuration
     void Config::GetStartupConfigured()
     {
         FseOnStartup = IsFseOnStartupConfigured();
-        Launcher.StartCommand = IsXboxConfigured()
-            ? GetXboxPath(Launcher.StartCommand)
+        Launcher.StartCommand = IsNativeConfigured()
+            ? GetNativePath(Launcher.StartCommand)
             : IsAnyFSEConfigured()
             ? Launcher.StartCommand
             : L"";
@@ -49,11 +50,7 @@ namespace AnyFSE::Configuration
     void Config::UpdatePortableLauncher(LauncherConfig & out)
     {
 
-        if (out.Type == LauncherType::None
-            || out.Type == LauncherType::Xbox
-            || out.Type == LauncherType::ArmouryCrate
-            || out.Type == LauncherType::OneGameLauncher
-            || out.StartCommand.find(L'!') != std::wstring::npos)
+        if (out.Type == None || !out.AppUserModelID.empty())
         {
             return;
         }
@@ -82,11 +79,12 @@ namespace AnyFSE::Configuration
         );
     }
 
-    bool Config::IsXboxConfigured()
+    bool Config::IsNativeConfigured()
     {
-        return Registry::ReadString(
+        std::wstring appPackageId = Registry::ReadString(
             L"Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration",
-            L"GamingHomeApp") == L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";
+            L"GamingHomeApp");
+        return !IsAnyFSEConfigured() && !Packages::GetAppxInstallLocation(appPackageId).empty();
     }
 
     bool Config::IsAnyFSEConfigured()
@@ -96,18 +94,15 @@ namespace AnyFSE::Configuration
             L"GamingHomeApp") == L"ArtemShpynov.AnyFSE_by4wjhxmygwn4!App";
     }
 
-    std::wstring Config::GetXboxPath(const std::wstring& launcher)
+    std::wstring Config::GetNativePath(const std::wstring& launcher)
     {
-        if (IsXboxConfigured())
+        if (IsNativeConfigured())
         {
-            std::list<std::wstring> xbox;
-            FindXbox(xbox);
-            if (xbox.size())
-            {
-                return xbox.front();
-            }
+            return Registry::ReadString(
+                L"Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration",
+                L"GamingHomeApp");
         }
-        return L"";
+        return launcher;
     }
 
     void Config::FindArmoryCrate(std::list<std::wstring>& found)
@@ -138,7 +133,7 @@ namespace AnyFSE::Configuration
         FindOneGameLauncher(found);
         FindRetroBat(found);
         FindArmoryCrate(found);
-        FindXbox(found);
+        FindNativeLaunchers(found);
         return found.size() > existed;
     }
 
@@ -161,11 +156,11 @@ namespace AnyFSE::Configuration
             }
         }
 
-        for (auto it = Config::LauncherConfigsMap.begin(); it != Config::LauncherConfigsMap.end(); ++it)
+        for (auto it = Config::LauncherConfigs.begin(); it != Config::LauncherConfigs.end(); ++it)
         {
-            if (installed.find(Unicode::to_lower(it->second.StartCommand)) == installed.end())
+            if (installed.find(Unicode::to_lower(it->StartCommand)) == installed.end())
             {
-                found.push_back(Unicode::to_lower(it->second.StartCommand));
+                found.push_back(Unicode::to_lower(it->StartCommand));
             }
         }
         return found.size() > 0;
@@ -221,15 +216,33 @@ namespace AnyFSE::Configuration
         }
     }
 
-    void Config::FindXbox(std::list<std::wstring> &found)
+    void Config::FindNativeLaunchers(std::list<std::wstring> &found)
     {
-        namespace fs = std::filesystem;
-
-        std::wstring installPath = Packages::GetAppxInstallLocation(L"Microsoft.GamingApp_8wekyb3d8bbwe");
-        if (!installPath.empty())
+        auto launchers = Packages::GetNativeLaunchers();
+        for (auto appUserModelId : launchers)
         {
-            found.push_back(fs::path(installPath).append(L"XboxPcApp.exe").wstring());
+            if (appUserModelId == L"ArtemShpynov.AnyFSE_by4wjhxmygwn4!App" )
+                continue;
+
+            if (List::npos == List::index_of_if(
+                Config::LauncherConfigs,
+                [&appUserModelId](const LauncherConfig& l){return l.AppUserModelID == appUserModelId;}
+            ))
+            {
+                LauncherConfig Native;
+                Native.Type = LauncherType::Native;
+                Native.Name = Packages::GetAppDisplayName(appUserModelId);
+                Native.StartCommand = appUserModelId;
+                Native.AppUserModelID = appUserModelId;
+                Config::LauncherConfigs.push_back(Native);
+            }
+
+            if (List::npos == List::index_of(found, appUserModelId))
+            {
+                found.push_back(appUserModelId);
+            }
         }
+
     }
 
     std::wstring Config::GetPathFromCommand(const std::wstring &uninstallCommand)

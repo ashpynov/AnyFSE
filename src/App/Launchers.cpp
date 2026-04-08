@@ -29,6 +29,7 @@
 #include "Launchers.hpp"
 #include "Tools/Process.hpp"
 #include "Tools/Unicode.hpp"
+#include "Tools/Packages.hpp"
 
 
 namespace AnyFSE::App::Launchers
@@ -133,12 +134,24 @@ namespace AnyFSE::App::Launchers
 
     HWND GetLauncherWindow()
     {
+        HWND launcherHwnd = nullptr;
         const LauncherConfig& launcher = Config::Launcher;
-        HWND launcherHwnd = Process::GetWindow(
-            launcher.ProcessName, launcher.ExStyle,
-            launcher.ClassName, launcher.WindowTitle,
-            WS_VISIBLE, launcher.NoStyle
-        );
+
+        if (!launcher.AppUserModelID.empty())
+        {
+            std::vector<DWORD> pids = Tools::Packages::GetAppProcessIds(launcher.AppUserModelID);
+            std::set<DWORD> processIds(pids.begin(), pids.end());
+            launcherHwnd = Process::GetWindow(processIds, 0, L"", L"", WS_VISIBLE);
+        }
+
+        if (!launcherHwnd)
+        {
+            launcherHwnd = Process::GetWindow(
+                launcher.ProcessName, launcher.ExStyle,
+                launcher.ClassName, launcher.WindowTitle,
+                WS_VISIBLE, launcher.NoStyle
+            );
+        }
 
         if (!launcherHwnd)
         {
@@ -153,7 +166,8 @@ namespace AnyFSE::App::Launchers
 
     bool HasLauncherProcess()
     {
-        return 0 != Process::FindFirstByName(Config::Launcher.ProcessName)
+        return (!Config::Launcher.AppUserModelID.empty() && !Tools::Packages::GetAppProcessIds(Config::Launcher.AppUserModelID).empty())
+            || 0 != Process::FindFirstByName(Config::Launcher.ProcessName)
             || 0 != Process::FindFirstByName(Config::Launcher.ProcessNameAlt)
             || 0 != Process::FindFirstByExe(Config::Launcher.StartCommand)
             || IsLauncherActive();

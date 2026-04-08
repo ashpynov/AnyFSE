@@ -34,7 +34,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         links.AddLinkButton(L"Discord AnyFSE community channel", L"https://discord.gg/AfkERzTEut");
         links.AddLinkButton(L"Navigate to log files folder", Tools::Paths::GetLogsPath());
 
-        links.AddLinkButton(L"GitHub repository", L"https://codeberg.org/ashpynov/AnyFSE/");
+        links.AddLinkButton(L"Source code", L"https://codeberg.org/ashpynov/AnyFSE/");
         links.AddLinkButton(L"Navigate to config files folder", Tools::Paths::GetConfigPath());
 
         links.AddLinkButton(L"Report issue or feature request", L"https://codeberg.org/ashpynov/AnyFSE/issues");

@@ -22,12 +22,17 @@
 //
 
 #include <string>
+#include <vector>
 
 namespace AnyFSE::Tools
 {
     class Packages
     {
     public:
-        static std::wstring GetAppxInstallLocation(const std::wstring &packageName);
+        static std::wstring GetAppxInstallLocation(const std::wstring &appUserModelID);
+        static std::wstring GetAppDisplayName(const std::wstring &appUserModelID);
+        static std::vector<uint8_t> GetAppDisplayLogoRawBytes(const std::wstring &appUserModelID, int size);
+        static std::vector<DWORD> GetAppProcessIds(const std::wstring &appUserModelID);
+        static std::vector<std::wstring> GetNativeLaunchers();
     };
 }

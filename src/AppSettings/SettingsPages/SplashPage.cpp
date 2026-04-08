@@ -9,16 +9,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 {
     void SplashPage::AddPage(std::list<SettingsLine>& settingPageList, ULONG &top)
     {
-
-        SettingsLine & dialogLine = m_dialog.AddSettingsLine(settingPageList, top,
-            L"Splash screen settings",
-            L"Configure Look'n'Feel of splash screen during home app loading",
-            Layout::LineHeight, Layout::LinePadding, 0);
-
-        dialogLine.SetState(SettingsLine::Next);
-        dialogLine.SetIcon(L'\xEB9F');
-        dialogLine.OnChanged += delegate(OpenSplashSettingsPage);
-
         ULONG pageTop = 0;
         m_pSplashTextLine = &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
             L"Show Loading text",
@@ -115,11 +105,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         CreateDirectoryW(path.c_str(), NULL);
         Process::StartProtocol(L"\"" + path + L"\"");
-    }
-
-    void SplashPage::OpenSplashSettingsPage()
-    {
-        m_dialog.SwitchActivePage(L"Splash settings", &m_pageLinesList);
     }
 
     void SplashPage::OnShowTextChanged()

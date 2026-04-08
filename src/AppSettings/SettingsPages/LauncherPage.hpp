@@ -7,6 +7,8 @@
 #include "FluentDesign/TextBox.hpp"
 #include "FluentDesign/Toggle.hpp"
 #include "AppSettings/SettingsPages/SettingsPage.hpp"
+#include "AppSettings/SettingsPages/SplashPage.hpp"
+#include "AppSettings/SettingsPages/StartupPage.hpp"
 
 namespace AnyFSE::App::AppSettings::Settings::Page
 {
@@ -34,6 +36,9 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             , m_classAltEdit(m_theme)
             , m_customResetButton(m_theme)
             , m_customSettingsState(SettingsLine::Closed)
+            , m_pSplashPage(new Page::SplashPage(m_theme, m_dialog))
+            , m_pStartupPage(new Page::StartupPage(m_theme, m_dialog))
+
         {}
 
         std::list<SettingsLine> &GetSettingsLines() { return m_pageLinesList;  };
@@ -70,8 +75,14 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         TextBox m_titleAltEdit;
         TextBox m_classAltEdit;
 
+        SettingsLine * m_pBrowseLine = nullptr;
         SettingsLine * m_pFseOnStartupLine = nullptr;
         SettingsLine * m_pCustomSettingsLine = nullptr;
+        SettingsLine * m_pStartupSettingsLine = nullptr;
+        SettingsLine * m_pSplashSettingsLine = nullptr;
+
+        Page::SplashPage *m_pSplashPage = nullptr;
+        Page::StartupPage *m_pStartupPage = nullptr;
 
         SettingsLine::State m_customSettingsState;
 
@@ -81,8 +92,9 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         void OnCustomChanged();
         void OnCustomReset();
         void UpdateCustomResetEnabled();
-        void OpenSettingsPage();
         void OpenCustomSettingsPage();
+        void OpenSplashSettingsPage();
+        void OpenStartupSettingsPage();
         void UpdateControls();
         void OnLauncherDropDown();
         void OnLauncherChanged();
