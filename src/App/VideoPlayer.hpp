@@ -63,6 +63,8 @@ namespace AnyFSE::App::Window
         DWORD m_duration;
         bool m_mutedLoop;
 
+        int m_playCount;
+
         std::wstring m_loadedVideo;
 
         volatile long m_refCount;
@@ -80,6 +82,7 @@ namespace AnyFSE::App::Window
         SimpleVideoPlayer();
         ~SimpleVideoPlayer();
 
+
         // Combined load and play
         HRESULT Load(const WCHAR *videoFile, bool mute, bool loop, bool pause, HWND hwndParent);
         HRESULT Play();
@@ -87,11 +90,14 @@ namespace AnyFSE::App::Window
         HRESULT Stop();
         void Close();
         void Resize();
+        int GetPlayCount();
+
 
         ULONG AddRef();
         HRESULT QueryInterface(REFIID riid, void **ppv);
         ULONG Release();
 
         void OnMediaPlayerEvent(MFP_EVENT_HEADER *pEventHeader);
+
     };
 }

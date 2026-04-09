@@ -44,6 +44,12 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_pSplashVideoLine->OnLink = delegate(OnGotoSplashFolder);
 
         m_pSplashVideoLine->AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+            L"Play video at least once",
+            L"Force video to play at least once, even if launcher startup is detected",
+            m_videoTillEndToggle,
+            Layout::LineHeightSmall, 0, Layout::LineSmallMargin));
+
+        m_pSplashVideoLine->AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
             L"Loop video",
             L"",
             m_videoLoopToggle,
@@ -80,6 +86,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_showAnimationToggle.SetCheck(Config::SplashShowAnimation);
 
         m_showVideoToggle.SetCheck(Config::SplashShowVideo);
+        m_videoTillEndToggle.SetCheck(Config::SplashTillEnd);
         m_videoLoopToggle.SetCheck(Config::SplashVideoLoop);
         m_videoMuteToggle.SetCheck(Config::SplashVideoMute);
         m_videoPauseToggle.SetCheck(Config::SplashVideoPause);
@@ -94,6 +101,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         Config::SplashShowAnimation = m_showAnimationToggle.GetCheck();
 
         Config::SplashShowVideo = m_showVideoToggle.GetCheck();
+        Config::SplashTillEnd = m_videoTillEndToggle.GetCheck();
         Config::SplashVideoLoop = m_videoLoopToggle.GetCheck();
         Config::SplashVideoMute = m_videoMuteToggle.GetCheck();
         Config::SplashVideoPause = m_videoPauseToggle.GetCheck();
@@ -133,5 +141,4 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         m_dialog.UpdateLayout();
     }
-
 };

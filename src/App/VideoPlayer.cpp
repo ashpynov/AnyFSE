@@ -135,6 +135,7 @@ namespace AnyFSE::App::Window
             case MFP_EVENT_TYPE_PLAYBACK_ENDED:
             {
                 log.Debug("Video Completed");
+                m_playCount++;
                 if (m_loop)
                 {
                     log.Debug("Video Loop");
@@ -155,6 +156,7 @@ namespace AnyFSE::App::Window
             case MFP_EVENT_TYPE_STOP:
             {
                 log.Debug("Video Stopped");
+                m_playCount++;
                 if (m_desiredState == MFP_MEDIAPLAYER_STATE_EMPTY)
                 {
                     log.Debug("Clearing Media item");
@@ -214,9 +216,17 @@ namespace AnyFSE::App::Window
         CoUninitialize();
     }
 
+    int SimpleVideoPlayer::GetPlayCount()
+    {
+        CriticalSectionLock lock(&m_cs);
+        return m_playCount;
+    }
+
     HRESULT SimpleVideoPlayer::Load(const WCHAR *videoFile, bool mute, bool loop, bool pause, HWND hwndParent)
     {
         CriticalSectionLock lock(&m_cs);
+
+        m_playCount = 0;
 
         if (m_bInitialized && videoFile && videoFile[0] && m_loadedVideo == videoFile)
         {

@@ -154,6 +154,7 @@ namespace AnyFSE::Configuration
             static std::wstring SplashCustomText;
 
             static bool SplashShowVideo;
+            static bool SplashTillEnd;
             static std::wstring SplashVideoPath;
             static bool SplashVideoMute;
             static bool SplashVideoLoop;

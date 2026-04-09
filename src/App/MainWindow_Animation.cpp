@@ -131,7 +131,10 @@ namespace AnyFSE::App::Window
             // Force repaint
             InvalidateRect(m_hWnd, NULL, FALSE);
         }
-        else if (timerId == m_launcherCheckTimerId && Launchers::IsLauncherActive())
+        else if (
+            timerId == m_launcherCheckTimerId
+            && (!Config::SplashShowVideo || !Config::SplashTillEnd || m_videoPlayer.GetPlayCount() > 0)
+            && Launchers::IsLauncherActive())
         {
             KillTimer(m_hWnd, m_launcherCheckTimerId);
             m_hLauncherCheckTimer = NULL;

@@ -92,7 +92,7 @@ namespace AnyFSE::App::Window
         }
 
         m_hWnd = CreateWindowEx(
-            0 * WS_EX_TOPMOST,
+            WS_EX_TOPMOST,
             (LPCTSTR)m_aClass, windowName,
             WS_POPUP,
             CW_USEDEFAULT, CW_USEDEFAULT,
@@ -292,7 +292,7 @@ namespace AnyFSE::App::Window
     void MainWindow::SelectNextVideo()
     {
 
-        if (!Config::SplashShowVideo || Config::Launcher.Type == LauncherType::ArmouryCrate)
+        if (!Config::SplashShowVideo)
         {
             return;
         }

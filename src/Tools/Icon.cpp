@@ -48,11 +48,11 @@ namespace AnyFSE::Tools::Icon
 
         HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, imageData.size());
 
-        try
+        do
         {
             if (!hGlobal)
             {
-                throw;
+                break;
             };
 
             void* pData = GlobalLock(hGlobal);
@@ -62,19 +62,19 @@ namespace AnyFSE::Tools::Icon
             HRESULT hr = CreateStreamOnHGlobal(hGlobal, TRUE, &pStream);
             if (FAILED(hr) || !pStream)
             {
-                throw;
+                break;
             }
 
             bitmap = new Gdiplus::Bitmap(pStream);
-            if (bitmap->GetLastStatus() != Gdiplus::Ok)
+            if (!bitmap || bitmap->GetLastStatus() != Gdiplus::Ok)
             {
-                throw;
+                break;
             }
             int w = bitmap->GetHeight();
             int h = bitmap->GetWidth();
 
             bitmap->GetHICON(&hIcon);
-        } catch (...) {};
+        } while (false);
 
         if (hGlobal) GlobalFree(hGlobal);
         if (bitmap)  delete bitmap;

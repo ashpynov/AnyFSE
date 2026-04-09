@@ -64,6 +64,7 @@ namespace AnyFSE::Configuration
     bool            Config::SplashShowText = true;
     std::wstring    Config::SplashCustomText = L"";
     bool            Config::SplashShowVideo = true;
+    bool            Config::SplashTillEnd = false;
     std::wstring    Config::SplashVideoPath = L"";
     bool            Config::SplashVideoMute = false;
     bool            Config::SplashVideoLoop = false;
@@ -125,6 +126,7 @@ namespace AnyFSE::Configuration
         SplashCustomText        = config.value(jp("/Splash/CustomText"),     std::wstring());
 
         SplashShowVideo         = config.value(jp("/Splash/ShowVideo"),      true);
+        SplashTillEnd           = config.value(jp("/Splash/TillEnd"),        false);
         SplashVideoPath         = config.value(jp("/Splash/Video/Path"),     std::wstring());
         SplashVideoMute         = config.value(jp("/Splash/Video/Mute"),     false);
         SplashVideoLoop         = config.value(jp("/Splash/Video/Loop"),     false);
@@ -198,6 +200,8 @@ namespace AnyFSE::Configuration
         config["Splash"]["ShowLogo"]            = SplashShowLogo;
         config["Splash"]["ShowText"]            = SplashShowText;
         config["Splash"]["ShowVideo"]           = SplashShowVideo;
+        config["Splash"]["TillEnd"]             = SplashTillEnd;
+
         config["Splash"]["CustomText"]          = SplashCustomText;
 
         config["Splash"]["Video"]["Path"]       = SplashVideoPath;
