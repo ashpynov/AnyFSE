@@ -96,10 +96,10 @@ namespace AnyFSE::Tools
 
         for (auto const &pkg : packages)
         {
-            auto logoRef = pkg.GetLogoAsRandomAccessStreamReference(Windows::Foundation::Size(size, size));
+            auto logoRef = pkg.GetLogoAsRandomAccessStreamReference(Windows::Foundation::Size((float)size, (float)size));
             auto stream = logoRef.OpenReadAsync().get();
             auto buffer = Buffer(static_cast<uint32_t>(stream.Size()));
-            auto readBuffer = stream.ReadAsync(buffer, stream.Size(), InputStreamOptions::None).get();
+            auto readBuffer = stream.ReadAsync(buffer, (uint32_t)stream.Size(), InputStreamOptions::None).get();
 
             std::vector<uint8_t> bytes(readBuffer.Length());
             auto reader = DataReader::FromBuffer(readBuffer);

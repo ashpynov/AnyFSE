@@ -490,7 +490,8 @@ namespace AnyFSE
         {
             throw std::exception("Cannot create binary folder");
         }
-        const std::wstring rootPath = L"https://codeberg.org/ashpynov/AnyFSE/releases/download/v" + Unicode::to_wstring(APP_VERSION);
+        const std::wstring rootPath = L"https://github.org/ashpynov/AnyFSE/releases/download/v" + Unicode::to_wstring(APP_VERSION);
+        const std::wstring rootPathAlt = L"https://codeberg.org/ashpynov/AnyFSE/releases/download/v" + Unicode::to_wstring(APP_VERSION);
         std::list<std::wstring> files;
         files.push_back(L"/Artem.Shpynov.cer");
         files.push_back(L"/AnyFSE-" + Unicode::to_wstring(APP_VERSION) + L".appx");
@@ -502,6 +503,15 @@ namespace AnyFSE
                 (rootPath + file).c_str(),
                 (path + file).c_str(),
                 0, NULL);
+
+            if (FAILED(hr))
+            {
+                hr = URLDownloadToFileW(
+                NULL,
+                (rootPathAlt + file).c_str(),
+                (path + file).c_str(),
+                0, NULL);
+            }
 
             if (FAILED(hr))
             {

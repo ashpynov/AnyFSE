@@ -25,10 +25,55 @@ using json = nlohmann::json;
 
 namespace AnyFSE::Updater
 {
-    //https://codeberg.org/api/v1/repos/{owner}/{repo}/releases/latest
-    const wchar_t *API_HOST = L"codeberg.org";
-    const std::wstring REPO_PATH = L"/api/v1/repos/ashpynov/AnyFSE"; // adjust if repository differs
-    const std::wstring RELEASE_PAGE = L"https://codeberg.org/ashpynov/AnyFSE/releases/tag/";
+
+    const std::wstring CODEBERG_REPO_PATH = L"/api/v1/repos/ashpynov/AnyFSE/";
+    const std::wstring CODEBERG_RELEASE_PAGE = L"https://codeberg.org/ashpynov/AnyFSE/releases/tag/";
+
+    const std::wstring GITHUB_REPO_PATH = L"/repos/ashpynov/AnyFSE/";
+    const std::wstring GITHUB_RELEASE_PAGE = L"https://github.com/ashpynov/AnyFSE/releases/tag/";
+
+    const std::wstring GetHost(bool alt = true)
+    {
+        return alt
+            ? L"codeberg.org"
+            : L"api.github.com";
+    }
+
+    const std::wstring GetUserAgent(bool alt = true)
+    {
+        return alt
+            ? L"User-Agent: AnyFSE-Updater\r\n"
+            : L"User-Agent: AnyFSE-Updater\r\nAccept: application/vnd.github.v3+json\r\n";
+    }
+
+    const std::wstring GetReleasesLatest(bool alt = true)
+    {
+        return alt
+            ? CODEBERG_REPO_PATH + L"releases/latest"
+            : GITHUB_REPO_PATH + L"releases/latest";
+    }
+
+    const std::wstring GetPreReleases(bool alt = true)
+    {
+        return alt
+            ? CODEBERG_REPO_PATH + L"releases?pre_release=true&draft=false"
+            : GITHUB_REPO_PATH + L"releases";
+    }
+
+    const std::wstring GetRelease(const std::wstring& tag, bool alt = true)
+    {
+        return alt
+            ? CODEBERG_REPO_PATH + L"releases/tags/" + tag
+            : GITHUB_REPO_PATH + L"releases/tags/" + tag;
+    }
+
+    const std::wstring GetReleasePage(const std::wstring& tag, bool alt = true)
+    {
+        return alt
+            ? CODEBERG_RELEASE_PAGE + tag
+            : GITHUB_RELEASE_PAGE + tag;
+    }
+
 
     static UINT WM_UPDATER_COMMAND = RegisterWindowMessage(L"AnyFSE.Updater.Command");
     static bool m_bThreadExecuted = false;
@@ -46,8 +91,11 @@ namespace AnyFSE::Updater
     static void AddSubscribe(HWND hWnd, UINT uMsg);
     static void ClearSubscriptions();
     static void NotifySubscribers();
+    static UpdateInfo CheckUpdate(std::wstring minVersion, bool includePreRelease, bool alt);
     static UpdateInfo CheckUpdate(bool includePreRelease);
-    static std::string WinHttpGet(const std::wstring& path);
+    static bool Update(const std::wstring &tag, bool silentUpdate);
+    static bool Update(const std::wstring &tag, bool silentUpdate, bool alt);
+    static std::string WinHttpGet(const std::wstring& path, bool alt);
     static SemVer ParseSemVer(const std::string& tag);
     static bool SemVerGreater(const SemVer& a, const SemVer& b);
     static std::wstring GetModuleVersion();
@@ -57,10 +105,25 @@ namespace AnyFSE::Updater
 
     void ShowVersion(const std::wstring &tag)
     {
-        Process::StartProtocol(RELEASE_PAGE + tag);
+        std::string str;
+
+        try
+        {
+            std::string resp = WinHttpGet(GetRelease(tag, false), false);
+            auto j = json::parse(resp);
+            if (j.contains("assets") && j["assets"].is_array())
+            {
+                Process::StartProtocol(GetReleasePage(tag, false));
+                return;
+            }
+        }
+        catch (...)
+        {}
+
+        Process::StartProtocol(GetReleasePage(tag, true));
     }
 
-    std::string WinHttpGet(const std::wstring &path)
+    std::string WinHttpGet(const std::wstring &path, bool alt)
     {
         log.Debug("Getting url: %s", Unicode::to_string(path).c_str());
 
@@ -74,7 +137,7 @@ namespace AnyFSE::Updater
             throw std::runtime_error("WinHttpOpen failed");
         }
 
-        HINTERNET hConnect = WinHttpConnect(hSession, API_HOST, INTERNET_DEFAULT_HTTPS_PORT, 0);
+        HINTERNET hConnect = WinHttpConnect(hSession, GetHost(alt).c_str(), INTERNET_DEFAULT_HTTPS_PORT, 0);
         if (!hConnect)
         {
             WinHttpCloseHandle(hSession);
@@ -96,9 +159,9 @@ namespace AnyFSE::Updater
         }
 
         // GitHub requires User-Agent
-        LPCWSTR headers = L"User-Agent: AnyFSE-Updater\r\n";
+        std::wstring headers = GetUserAgent(alt);
 
-        BOOL bSend = WinHttpSendRequest(hRequest, headers, (DWORD)wcslen(headers),
+        BOOL bSend = WinHttpSendRequest(hRequest, headers.c_str(), (DWORD)headers.length(),
                                         WINHTTP_NO_REQUEST_DATA, 0, 0, 0);
         if (!bSend || !WinHttpReceiveResponse(hRequest, NULL))
         {
@@ -137,8 +200,6 @@ namespace AnyFSE::Updater
 
         return result;
     }
-
-    // Use Tools::Unicode::to_wstring / to_string for conversions
 
     SemVer ParseSemVer(const std::string &tag)
     {
@@ -230,18 +291,61 @@ namespace AnyFSE::Updater
         return downloadUrl;
     }
 
+
     UpdateInfo CheckUpdate(bool includePreRelease)
+    {
+        UpdateInfo ui;
+        UpdateInfo ui_alt;
+        try
+        {
+            ui = CheckUpdate(GetModuleVersion(), includePreRelease, false);
+        }
+        catch(...) {}
+
+        try
+        {
+            ui_alt = CheckUpdate(ui.newVersion, includePreRelease, true);
+        }
+        catch(...)
+        {
+            if (ui.newVersion.empty())
+            {
+                throw;
+            }
+        }
+
+        return ui_alt.newVersion.empty() ? ui : ui_alt;
+    }
+
+    bool Update(const std::wstring &tag, bool silentUpdate)
+    {
+        bool updated = false;
+
+        try
+        {
+            updated = Update(tag, silentUpdate, false);
+        }
+        catch(...) {}
+
+        if (!updated)
+        {
+            updated = Update(tag, silentUpdate, true);
+        }
+        return updated;
+    }
+
+    UpdateInfo CheckUpdate(std::wstring minVersion, bool includePreRelease, bool alt)
     {
         // New API: return UpdateInfo with newVersion and downloadPath (browser_download_url)
         UpdateInfo info;
 
-        std::string curVerUtf8 = Tools::Unicode::to_string(GetModuleVersion());
+        std::string curVerUtf8 = Tools::Unicode::to_string(minVersion.empty() ?  GetModuleVersion() : minVersion);
 
         SemVer current = ParseSemVer(curVerUtf8);
 
         if (!includePreRelease)
         {
-            std::string resp = WinHttpGet(REPO_PATH + L"/releases/latest");
+            std::string resp = WinHttpGet(GetReleasesLatest(alt), alt);
             auto j = json::parse(resp);
             std::string tag = j.value("tag_name", "");
             if (tag.empty())
@@ -262,7 +366,7 @@ namespace AnyFSE::Updater
             return info;
         }
 
-        std::string resp = WinHttpGet(REPO_PATH + L"/releases?pre_release=true&draft=false");
+        std::string resp = WinHttpGet(GetPreReleases(alt), alt);
         auto j = json::parse(resp);
         if (!j.is_array())
         {
@@ -322,14 +426,13 @@ namespace AnyFSE::Updater
         m_subscribes.clear();
     }
 
-    bool Update(const std::wstring &tag, bool silentUpdate)
+    bool Update(const std::wstring &tag, bool silentUpdate, bool alt)
     {
         if (tag.empty())
             throw std::invalid_argument("tag is empty");
 
         // Query release by tag
-        std::wstring path = REPO_PATH + L"/releases/tags/" + tag;
-        std::string resp = WinHttpGet(path);
+        std::string resp = WinHttpGet(GetRelease(tag, alt), alt);
         auto j = json::parse(resp);
 
         // find suitable asset
@@ -366,6 +469,7 @@ namespace AnyFSE::Updater
         HRESULT hr = URLDownloadToFileW(NULL, wurl.c_str(), localPath.c_str(), 0, NULL);
         if (FAILED(hr))
         {
+            log.Error(log.APIError(), "Download failed");
             throw std::runtime_error("Download failed");
         }
         Sleep(1000);
