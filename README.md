@@ -3,7 +3,7 @@
 
 The AnyFSE Home application aims to give users the ability to use their favorite launchers as Home applications for Gaming Full Screen Experience mode on modern Windows.
 
-[Latest Release](/ashpynov/AnyFSE/releases/latest)
+[Latest Release](https://github.com/ashpynov/AnyFSE/releases/latest)
 
 [Help and Discussions](https://discord.gg/AfkERzTEut)
 
@@ -63,7 +63,7 @@ In case if your antivirus still blames on AnyFSE.Installer.exe file - you may in
 
 1. Uninstall AnyFSE pre-0.90 version to avoid conflicting.
 2. Install Artem Shpynov Root certificate:
-- Download certificate: [here](/ashpynov/AnyFSE/releases/download/v0.90.9/Artem.Shpynov.cer) and open it.
+- Download certificate: [here](https://github.com/ashpynov/AnyFSE/releases/download/v0.90.9/Artem.Shpynov.cer) and open it.
 - Press 'Install certificate',
 - Select store location 'Local Machine',
 - Press 'Next'
