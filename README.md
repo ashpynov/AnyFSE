@@ -1,5 +1,5 @@
 # AnyFSE Home Application
-![DownloadCountTotal](https://img.shields.io/github/downloads/ashpynov/AnyFSE/total?label=total%20downloads&style=plastic) ![DownloadCountLatest](https://img.shields.io/github/downloads/ashpynov/AnyFSE/latest/total?style=plastic) ![LatestVersion](https://img.shields.io/github/v/tag/ashpynov/AnyFSE?label=Latest%20version&style=plastic) ![License](https://img.shields.io/github/license/ashpynov/AnyFSE?style=plastic)
+![DownloadCountTotal](https://img.shields.io/github/downloads/ashpynov/AnyFSE/AnyFSE.Installer.exe?displayAssetName=false&style=plastic) [![DownloadCountLatest](https://img.shields.io/github/downloads/ashpynov/AnyFSE/latest/AnyFSE.Installer.exe?displayAssetName=false&style=plastic)](https://github.com/ashpynov/AnyFSE/releases/latest) [![LatestVersion](https://img.shields.io/github/v/tag/ashpynov/AnyFSE?label=Latest%20version&style=plastic)](https://github.com/ashpynov/AnyFSE/releases/latest) [![License](https://img.shields.io/github/license/ashpynov/AnyFSE?style=plastic)](LICENCE)
 
 The AnyFSE Home application aims to give users the ability to use their favorite launchers as Home applications for Gaming Full Screen Experience mode on modern Windows.
 
