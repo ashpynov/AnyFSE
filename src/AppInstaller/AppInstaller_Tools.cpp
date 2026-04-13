@@ -134,7 +134,7 @@ namespace AnyFSE
         {
             // Duplicate the context before deletion since CertDeleteCertificateFromStore will free it
             PCCERT_CONTEXT pCertToDelete = CertDuplicateCertificateContext(pCertContext);
-        
+
             if (pCertToDelete)
             {
                 if (CertDeleteCertificateFromStore(pCertToDelete))
@@ -185,6 +185,8 @@ namespace AnyFSE
 
             d::AddPackageOptions options;
             options.ForceUpdateFromAnyVersion(true);
+            options.ForceTargetAppShutdown(true);
+            options.ForceAppShutdown(true);
 
             // Start the installation
             auto operation = packageManager.AddPackageByUriAsync(packageUri, options);
