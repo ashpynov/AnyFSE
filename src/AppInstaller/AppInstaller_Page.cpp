@@ -363,7 +363,7 @@ namespace AnyFSE
                 EnableDeveloperMode(false);
             }
 
-            log.Error(e, "Instalation fail:");
+            log.Error(e, "Installation fail:");
             ShowErrorPage(L"Installation Error", GetProgressText(4) + Unicode::to_wstring(e.what()));
         }
     }
