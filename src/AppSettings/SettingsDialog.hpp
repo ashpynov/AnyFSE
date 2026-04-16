@@ -46,6 +46,7 @@
 #include "AppSettings/SettingsPages/SplashPage.hpp"
 #include "AppSettings/SettingsPages/StartupPage.hpp"
 #include "AppSettings/SettingsPages/SupportPage.hpp"
+#include "AppSettings/SettingsPages/AllyHidPage.hpp"
 
 #include "Updater/Updater.hpp"
 
@@ -117,6 +118,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         {
             m_pages.push_back(new Page::LauncherPage(m_theme, *this));
+            m_pages.push_back(new Page::AllyHidPage(m_theme, *this));
             m_pages.push_back(new Page::UpdatePage(m_theme, *this));
             m_pages.push_back(new Page::TroubleshootPage(m_theme, *this));
             m_pages.push_back(new Page::SupportPage(m_theme, *this));

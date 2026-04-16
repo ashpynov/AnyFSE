@@ -11,6 +11,7 @@ namespace Handlers
     void ShowKeyboard();
     void ToggleMicrophone();
 
+    void OpenGameBarComandCenter();
     void OpenComandCenter();
     void OpenLibrary();
     void OpenTaskSwitcher();

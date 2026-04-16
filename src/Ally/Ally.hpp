@@ -25,5 +25,9 @@ namespace Ally
 
     inline std::map<Ally::EventCode,  std::function<void()>> ButtonBind;
     void Load();
-    void HIDListener();
+    DWORD WINAPI HIDListener(LPVOID lpParam);
+
+    bool CheckListener();
+    bool SetupListener();
+    bool WaitListener();
 }

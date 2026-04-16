@@ -354,7 +354,18 @@ namespace FluentDesign
 
         if (m_hIcon)
         {
-            ::DrawIconEx(hdc, rect.left, rect.top, m_hIcon, m_theme.GetSize_Icon(), m_theme.GetSize_Icon(), 0, nullptr, DI_NORMAL);
+            Gdiplus::Graphics graphics(hdc);
+            graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBilinear);
+            graphics.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+
+            Gdiplus::Bitmap* pImage = Gdiplus::Bitmap::FromHICON(m_hIcon);
+
+            if (pImage)
+            {
+                graphics.DrawImage(pImage, rect.left, rect.top, m_theme.GetSize_Icon(), m_theme.GetSize_Icon());
+                delete pImage;
+            }
+            //::DrawIconEx(hdc, rect.left, rect.top, m_hIcon, m_theme.GetSize_Icon(), m_theme.GetSize_Icon(), 0, nullptr, DI_NORMAL);
         }
         else
         {

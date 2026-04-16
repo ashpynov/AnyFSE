@@ -35,9 +35,11 @@ namespace AnyFSE::App
     class App
     {
         static int CallLibrary(const WCHAR *library, HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
+        static int MainApp(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
     public:
         static int ShowSettings();
         static void InitCustomControls();
+        static bool AsAllyHid(LPSTR lpCmdLine);
         static bool AsFSE(LPSTR lpCmdLine);
         static bool AsSettings(LPSTR lpCmdLine);
         static int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);

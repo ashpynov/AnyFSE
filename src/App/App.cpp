@@ -41,11 +41,13 @@
 #include "App/MainWindow.hpp"
 #include "App/Launchers.hpp"
 #include "App/JumpList.hpp"
+#include "Ally/Ally.hpp"
 
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #include "Tools/Minidump.hpp"
+#include "App.hpp"
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -116,6 +118,19 @@ namespace AnyFSE::App
         ::InitCommonControlsEx(&icex);
     }
 
+    bool App::AsAllyHid(LPSTR lpCmdLine)
+    {
+        for (char *a = lpCmdLine; *a; a++)
+        {
+            if (_strnicmp(a, "/AllyHid", 8) == 0)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     bool App::AsFSE(LPSTR lpCmdLine)
     {
         for (char *a = lpCmdLine; *a; a++)
@@ -179,6 +194,21 @@ namespace AnyFSE::App
                     int nCmdShow)
     {
         Config::Load();
+
+        if (true)
+        {
+            if (AsAllyHid(lpCmdLine))
+            {
+                AnyFSE::Logging::LogManager::Initialize("AnyFSE/AllyHID", Config::LogLevel, Config::LogPath);
+                return Ally::HIDListener(NULL);
+            }
+
+            if (Ally::CheckListener())
+            {
+                Process::StartProtocol(L"anyfse://AllyHid");
+            }
+        }
+
         AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
 
         if (FindWindow(L"AnyFSE", NULL))

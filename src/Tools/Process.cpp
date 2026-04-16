@@ -396,4 +396,27 @@ namespace AnyFSE::Tools::Process
 
         return (GetForegroundWindow() == hWnd);
     }
+
+    std::wstring GetWindowProcessName(HWND hWnd)
+    {
+        if (hWnd)
+        {
+            wchar_t processPath[MAX_PATH] = {0};
+            DWORD size = MAX_PATH;
+            HANDLE hProcess = NULL;
+
+            DWORD processId = 0;
+             // Get the process ID from the window handle
+            GetWindowThreadProcessId(hWnd, &processId);
+            hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
+            if (hProcess)
+            {
+                QueryFullProcessImageName(hProcess, NULL, processPath, &size);
+                CloseHandle(hProcess);
+                std::filesystem::path path(processPath);
+                return path.filename().wstring();
+            }
+        }
+        return std::wstring();
+    }
 }

@@ -3,7 +3,6 @@
 #include <windows.h>
 #include <appmodel.h>
 #include <iostream>
-#include <vector>
 #include "Packages.hpp"
 
 #include <winrt/windows.foundation.collections.h>
@@ -13,7 +12,6 @@
 #include <winrt/Windows.Storage.Streams.h>
 #include <winrt/Windows.System.Diagnostics.h>
 #include <winrt/Windows.ApplicationModel.AppExtensions.h>
-
 
 using namespace winrt;
 using namespace Windows::Management::Deployment;
@@ -89,23 +87,52 @@ namespace AnyFSE::Tools
         return L"";
     }
 
-    std::vector<uint8_t> Packages::GetAppDisplayLogoRawBytes(const std::wstring &appUserModelID, int size)
+    std::vector<uint8_t> Packages::GetAppDisplayLogoRawBytes(const std::wstring &path, int size)
     {
         PackageManager pm;
-        auto packages = pm.FindPackagesForUser(L"", GetPackageFamilyName(appUserModelID));
+
+        std::wstring familyName;
+        std::wstring resourcePath;
+        size_t pathPos = path.find(L'/');
+
+        familyName = pathPos ? GetPackageFamilyName(path.substr(0, pathPos)) : L"ArtemShpynov.AnyFSE_by4wjhxmygwn4";
+        resourcePath = pathPos != std::wstring::npos ? path.substr(pathPos) : L"";
+
+        auto packages = pm.FindPackagesForUser(L"", familyName);
 
         for (auto const &pkg : packages)
         {
-            auto logoRef = pkg.GetLogoAsRandomAccessStreamReference(Windows::Foundation::Size((float)size, (float)size));
-            auto stream = logoRef.OpenReadAsync().get();
-            auto buffer = Buffer(static_cast<uint32_t>(stream.Size()));
-            auto readBuffer = stream.ReadAsync(buffer, (uint32_t)stream.Size(), InputStreamOptions::None).get();
+            try
+            {
+                Windows::Storage::Streams::IRandomAccessStreamWithContentType stream;
+                if ( resourcePath.empty() )
+                {
+                    auto logoRef = pkg.GetLogoAsRandomAccessStreamReference(Windows::Foundation::Size((float)size, (float)size));
+                    stream = logoRef.OpenReadAsync().get();
+                }
+                else
+                {
+                    auto installFolder = pkg.InstalledLocation();
+                    std::replace(resourcePath.begin(), resourcePath.end(), L'/', L'\\');
+                    std::wstring fullPath = installFolder.Path().c_str() + resourcePath;
+                    auto file = Windows::Storage::StorageFile::GetFileFromPathAsync(fullPath).get();
+                    auto streamRef = RandomAccessStreamReference::CreateFromFile(file);
 
-            std::vector<uint8_t> bytes(readBuffer.Length());
-            auto reader = DataReader::FromBuffer(readBuffer);
-            reader.ReadBytes(bytes);
+                    stream = streamRef.OpenReadAsync().get();
+                }
 
-            return bytes;
+                auto buffer = Buffer(static_cast<uint32_t>(stream.Size()));
+                auto readBuffer = stream.ReadAsync(buffer, (uint32_t)stream.Size(), InputStreamOptions::None).get();
+
+                std::vector<uint8_t> bytes(readBuffer.Length());
+                auto reader = DataReader::FromBuffer(readBuffer);
+                reader.ReadBytes(bytes);
+
+                return bytes;
+            }
+            catch (winrt::hresult_error const&)
+            {
+            }
         }
         return std::vector<uint8_t>();
     }

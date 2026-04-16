@@ -3,15 +3,22 @@
 #include <objbase.h>
 #include <initguid.h>
 #include <vector>
+#include <psapi.h>
 #include "Ally/Handlers.hpp"
+#include "Tools/Process.hpp"
+#include "Tools/Unicode.hpp"
+#include "Logging/LogManager.hpp"
+
+#pragma comment(lib, "psapi.lib")
 
 namespace Handlers
 {
+    static Logger log = LogManager::GetLogger("Handlers");
     void SendKeyInput(const std::vector<WORD> &inputs)
     {
 
         std::vector<INPUT> input;
-        int len = inputs.size();
+        size_t len = inputs.size();
         input.resize(len * 2);
 
         for (size_t i = 0; i < inputs.size(); i++)
@@ -23,7 +30,7 @@ namespace Handlers
             input[i + len].ki.dwFlags = KEYEVENTF_KEYUP;
         }
 
-        SendInput(len * 2, input.data(), sizeof(INPUT));
+        SendInput((UINT)len * 2, input.data(), sizeof(INPUT));
     }
 
     void TakeScreenShoot()
@@ -40,26 +47,33 @@ namespace Handlers
         PostMessage(GetForegroundWindow(), WM_APPCOMMAND, 0, 0x180000);
     }
 
-    void OpenComandCenterAlt()
+    void OpenGameBarComandCenter()
     {
-        ShellExecute(NULL, L"open", L"ms-gamebar://launchForeground/activate/B9ECED6F.ASUSCommandCenter_qmba6cd70vzyy_App_Widget", NULL, NULL, SW_SHOWNORMAL);
+        std::wstring activeProcess = Unicode::to_lower(Process::GetWindowProcessName(WindowFromPoint(POINT{1, 1})));
+        log.Trace("ActiveWindow: %s %x", Unicode::to_string(activeProcess).c_str(), WindowFromPoint(POINT{1, 1}));
+        if (activeProcess == L"gamebar.exe" || activeProcess == L"classiccommandcenter.exe")
+        {
+            SendKeyInput({VK_ESCAPE});
+        }
+        else
+        {
+            Process::StartProtocol(L"ms-gamebar://launchForeground/activate/B9ECED6F.ASUSCommandCenter_qmba6cd70vzyy_App_Widget");
+        }
     }
 
     void OpenComandCenter()
     {
-        SendKeyInput({VK_CONTROL, VK_MENU, VK_SHIFT, VK_F23});
+        SendKeyInput({VK_CONTROL, VK_MENU, 'C'});
     }
 
     void OpenLibrary()
     {
-        ShellExecute(NULL, L"open", L"anyfse://", NULL, NULL, SW_SHOWNORMAL);
+        Process::StartProtocol(L"anyfse://launcher");
     }
 
     void OpenTaskSwitcher()
     {
-        ShellExecute(NULL, L"open",
-                     L"shell:::{3080F90E-D7AD-11D9-BD98-0000947B0257}",
-                     NULL, NULL, SW_SHOWDEFAULT);
+        Process::StartProtocol(L"shell:::{3080F90E-D7AD-11D9-BD98-0000947B0257}");
     }
 
     // {4CE576FA-83DC-4F88-951C-9D0782B4E376}
