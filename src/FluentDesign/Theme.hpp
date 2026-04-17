@@ -137,7 +137,8 @@ namespace FluentDesign
         static const int m_secondarySize = 11;
         static const int m_glyphSize = 10;
         static const int m_glyphNormalSize = 14;
-        static const int m_iconSize = 20;
+        static const int m_iconSize = 24;
+        static const int m_iconGlyphSize = 20;
         static const int m_titleSize = 28;
         static const int m_cornerSize = 16;
         static const int m_focusWidth = 2;
@@ -234,6 +235,7 @@ namespace FluentDesign
         const int GetSize_Glyph() { return DpiScale(m_glyphSize); }
         const int GetSize_GlyphNormal() { return DpiScale(m_glyphNormalSize); }
         const int GetSize_Icon() { return DpiScale(m_iconSize); }
+        const int GetSize_GlyphIcon() { return DpiScale(m_iconGlyphSize); }
         const int GetSize_Title() { return DpiScale(m_titleSize); }
         const int GetSize_Corner() { return DpiScale(m_cornerSize); }
 
