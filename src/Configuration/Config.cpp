@@ -81,6 +81,11 @@ namespace AnyFSE::Configuration
     bool            Config::UpdatePreRelease = false;
     bool            Config::UpdateNotifications = true;
 
+    bool            Config::AllyHidEnable = false;
+    std::wstring    Config::AllyHidACPress = L"GamebarCommandCenter";
+    std::wstring    Config::AllyHidACHold = L"TaskSwitcher";
+    std::wstring    Config::AllyHidCCPress = L"HomeApp";
+
     bool Config::IsConfigured()
     {
         return fs::exists(GetConfigFileA());
@@ -139,6 +144,11 @@ namespace AnyFSE::Configuration
         UpdateLastVersion       = config.value(jp("/Update/LastVersion"),    std::wstring());
         UpdateLastCheck         = config.value(jp("/Update/LastCheck"),      std::wstring());
         UpdateCheckInterval     = config.value(jp("/Update/CheckInterval"),  -2);
+
+        AllyHidEnable           = config.value(jp("/AllyHid/Enable"),       false);
+        AllyHidACPress          = config.value(jp("/AllyHid/ACPress"),      std::wstring(L"GamebarCommandCenter"));
+        AllyHidACHold           = config.value(jp("/AllyHid/ACHold"),       std::wstring(L"TaskSwitcher"));
+        AllyHidCCPress          = config.value(jp("/AllyHid/CCPress"),      std::wstring(L"HomeApp"));
 
         std::wstring launcher   = config.value(jp("/Launcher/Path"),         std::wstring());
 
@@ -218,13 +228,18 @@ namespace AnyFSE::Configuration
         config["AggressiveMode"]                = AggressiveMode;
         config["StartupApps"]                   = StartupApps;
 
-        config["Extra"]["ExitFSEOnHomeExit"]     = ExitFSEOnHomeExit;
+        config["Extra"]["ExitFSEOnHomeExit"]    = ExitFSEOnHomeExit;
 
-        config["Update"]["PreRelease"]           = UpdatePreRelease;
-        config["Update"]["Notifications"]        = UpdateNotifications;
-        config["Update"]["LastVersion"]          = UpdateLastVersion;
-        config["Update"]["LastCheck"]            = UpdateLastCheck;
-        config["Update"]["CheckInterval"]        = UpdateCheckInterval;
+        config["Update"]["PreRelease"]          = UpdatePreRelease;
+        config["Update"]["Notifications"]       = UpdateNotifications;
+        config["Update"]["LastVersion"]         = UpdateLastVersion;
+        config["Update"]["LastCheck"]           = UpdateLastCheck;
+        config["Update"]["CheckInterval"]       = UpdateCheckInterval;
+
+        config["AllyHid"]["Enable"]             = AllyHidEnable;
+        config["AllyHid"]["ACPress"]            = AllyHidACPress;
+        config["AllyHid"]["ACHold"]             = AllyHidACHold;
+        config["AllyHid"]["CCPress"]            = AllyHidCCPress;
 
         std::ofstream file(GetConfigFileA(false));
         file << config.dump(4);

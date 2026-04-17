@@ -14,13 +14,11 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     {
         Theme &m_theme;
         SettingsDialog &m_dialog;
-        bool m_isCreated;
 
     public:
         AllyHidPage(Theme& theme, SettingsDialog &dialog)
             : m_theme(theme)
             , m_dialog(dialog)
-            , m_isCreated(false)
             , m_enableAllyHidToggle(theme)
             , m_acPressCombo(theme)
             , m_acHoldCombo(theme)
@@ -40,6 +38,9 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         ComboBox m_acHoldCombo;
         ComboBox m_ccPressCombo;
 
+        SettingsLine * m_pAllyHidLine;
+
         void OpenAllyHidPage();
+        void EnableAllyHidChanged();
     };
 }

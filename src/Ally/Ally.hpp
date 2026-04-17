@@ -8,17 +8,19 @@ namespace Ally
     enum EventCode
     {
         Release = 0,
-        ROGShortPress = 56,
+        ACPress = 56,
         ToggleMicrophone = 124,
         ScreenShot = 160,
         ShowKeyboard = 162,
         ToggleRecord = 164,
         ModePress = 165,
-        CommandCenter = 166,
-        ROGHold = 167,
+        CCPress = 166,
+        ACHold = 167,
         ROGHoldRelease = 168,
         Unknown = 236
     };
+
+    bool IsSupported();
 
     HANDLE FindHIDDevice();
     bool GetRawInputDevice(HANDLE hDevice, HWND hWnd, RAWINPUTDEVICE *pRid);
@@ -27,6 +29,8 @@ namespace Ally
     void Load();
     DWORD WINAPI HIDListener(LPVOID lpParam);
 
+    void EnableNativeHandler(bool bEnable);
+    bool UpdateHidListener();
     bool CheckListener();
     bool SetupListener();
     bool WaitListener();

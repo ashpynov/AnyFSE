@@ -4,7 +4,9 @@
 #include "Ally/Ally.hpp"
 #include "Ally/Handlers.hpp"
 #include "Logging/LogManager.hpp"
+#include "Configuration/Config.hpp"
 #include "Ally.hpp"
+
 
 
 namespace Ally
@@ -13,6 +15,16 @@ namespace Ally
     static const wchar_t *HidListenerClass = L"HIDListener";
 
     static HANDLE hHidThread = nullptr;
+
+    bool IsSupported()
+    {
+        static int supported = -1;
+        if (supported == -1)
+        {
+            supported = FindHIDDevice() ? 1 : 0;
+        }
+        return supported;
+    }
 
     HANDLE FindHIDDevice()
     {
@@ -72,9 +84,10 @@ namespace Ally
 
     void Load()
     {
-        ButtonBind[Ally::EventCode::ROGShortPress] =    Handlers::OpenGameBarComandCenter;
-        ButtonBind[Ally::EventCode::ROGHold] =          Handlers::OpenTaskSwitcher;
-        ButtonBind[Ally::EventCode::CommandCenter] =    Handlers::OpenLibrary;
+        Config::Load();
+        ButtonBind[Ally::EventCode::ACPress] =          Handlers::GetByName(Config::AllyHidACPress);
+        ButtonBind[Ally::EventCode::ACHold] =           Handlers::GetByName(Config::AllyHidACHold);
+        ButtonBind[Ally::EventCode::CCPress] =          Handlers::GetByName(Config::AllyHidCCPress);
 
         ButtonBind[Ally::EventCode::ToggleMicrophone] = Handlers::ToggleMicrophone;
         ButtonBind[Ally::EventCode::ScreenShot] =       Handlers::TakeScreenShoot;
@@ -88,6 +101,11 @@ namespace Ally
 
     DWORD WINAPI HIDListener(LPVOID lpParam)
     {
+        if (!Config::AllyHidEnable)
+        {
+            return -1;
+        }
+
         HANDLE hDevice = Ally::FindHIDDevice();
 
         if (!hDevice)
@@ -153,11 +171,40 @@ namespace Ally
                     }
                 }
             }
+            else if (msg.message == WM_USER)
+            {
+                Config::Load();
+                if (!Config::AllyHidEnable)
+                {
+                    PostQuitMessage(0);
+                }
+                else
+                {
+                    Ally::Load();
+                }
+            }
+
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
         log.Trace("Exit HID sink thread");
         return 0;
+    }
+
+    void EnableNativeHandler(bool bEnable)
+    {
+
+    }
+
+    bool UpdateHidListener()
+    {
+        HWND hWnd = FindWindow(Ally::HidListenerClass, L"");
+        if (hWnd)
+        {
+            PostMessage(hWnd, WM_USER, 0, 0);
+            return true;
+        }
+        return false;
     }
 
     bool CheckListener()

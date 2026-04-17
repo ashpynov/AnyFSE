@@ -8,12 +8,38 @@
 #include "Tools/Process.hpp"
 #include "Tools/Unicode.hpp"
 #include "Logging/LogManager.hpp"
+#include "Handlers.hpp"
 
 #pragma comment(lib, "psapi.lib")
 
-namespace Handlers
+namespace Ally::Handlers
 {
     static Logger log = LogManager::GetLogger("Handlers");
+
+    std::vector<HandlersDefinition> KnownHandlers =
+    {
+        { L"None", L"None", NULL },
+        { L"HomeApp", L"Home", Handlers::OpenLibrary },
+        { L"TaskSwitcher", L"Task switcher", Handlers::OpenTaskSwitcher },
+        { L"GamebarCommandCenter", L"GameBar Command Center", Handlers::OpenGameBarComandCenter },
+        { L"CommandCenter", L"Command Center (Ctrl+Alt+C)", Handlers::OpenComandCenter },
+        { L"CommandCenterF24", L"Command Center (F24)", Handlers::OpenComandCenterF24 },
+        { L"Keyboard", L"On-Screen Keyboard", Handlers::ShowKeyboard }
+    };
+
+    std::function<void()> Handlers::GetByName(const std::wstring &handleName)
+    {
+        for (auto handle : KnownHandlers)
+        {
+            if (!_wcsicmp(handle.name.c_str(), handleName.c_str()))
+            {
+                return handle.handler;
+            }
+        }
+        return NULL;
+    }
+
+
     void SendKeyInput(const std::vector<WORD> &inputs)
     {
 
@@ -64,6 +90,11 @@ namespace Handlers
     void OpenComandCenter()
     {
         SendKeyInput({VK_CONTROL, VK_MENU, 'C'});
+    }
+
+    void OpenComandCenterF24()
+    {
+        SendKeyInput({VK_F24});
     }
 
     void OpenLibrary()

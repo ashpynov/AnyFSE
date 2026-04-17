@@ -161,6 +161,7 @@ namespace FluentDesign
         void AddGroupItem(SettingsLine *groupItem);
         void DeleteGroupItem(SettingsLine *groupItem);
         SettingsLine *GetGroupHeader() { return m_groupLine; }
+        std::list<SettingsLine *> &GetGroupItems() { return m_groupItemsList; }
         void EnsureChevron();
         void SetChevron(State state);
         bool HasChevron();

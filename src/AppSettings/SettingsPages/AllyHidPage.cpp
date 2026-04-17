@@ -1,4 +1,5 @@
 #include "Ally/Ally.hpp"
+#include "Ally/Handlers.hpp"
 #include "Tools/Event.hpp"
 #include "AppSettings/SettingsLayout.hpp"
 #include "AppSettings/SettingsDialog.hpp"
@@ -9,12 +10,11 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 {
     void AllyHidPage::AddPage(std::list<SettingsLine>& settingPageList, ULONG &top)
     {
-        if (!Ally::FindHIDDevice())
+        if (!Ally::IsSupported())
         {
             return;
         }
 
-        m_isCreated = true;
         SettingsLine & rogAllySupport = m_dialog.AddSettingsLine(settingPageList, top,
             L"ROG Ally features",
             L"ASUS ROG Ally and ROG AllyX customization experimental features",
@@ -25,66 +25,98 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         rogAllySupport.OnChanged += delegate(OpenAllyHidPage);
 
         ULONG pageTop = 0;
-        SettingsLine& allyHidLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Enable ASUS ROG Ally button handling",
-            L"Enable customization of Comand Center and Armoury Crate buttons",
+        m_pAllyHidLine = &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+            L"Enable alternative ASUS ROG Ally button handling",
+            L"Alternative handling of some ASUS Optimization service functions",
             m_enableAllyHidToggle,
             Layout::LineHeight, 0, 0);
-        allyHidLine.SetIcon(L"@B9ECED6F.ASUSCommandCenter_qmba6cd70vzyy");
+        m_pAllyHidLine->SetIcon(L"@B9ECED6F.ASUSCommandCenter_qmba6cd70vzyy");
+        m_enableAllyHidToggle.OnChanged = delegate(EnableAllyHidChanged);
 
         SettingsLine& acPressLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
             L"PRESS Armoury Crate button",
             L"Define Short press right button action",
             m_acPressCombo,
-            Layout::LineHeight, 0, 0);
+            Layout::LineHeight, 0, 0, 240);
 
         acPressLine.SetIcon(L"@/Assets/asus_cac_keymap_ac.png");
 
-        allyHidLine.AddGroupItem(&acPressLine);
+        m_pAllyHidLine->AddGroupItem(&acPressLine);
 
         SettingsLine& acHoldLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
             L"HOLD Armoury Crate button",
             L"Define Long press right button action",
             m_acHoldCombo,
-            Layout::LineHeight, 0, 0);
+            Layout::LineHeight, 0, 0, 240);
 
-        allyHidLine.AddGroupItem(&acHoldLine);
+        m_pAllyHidLine->AddGroupItem(&acHoldLine);
         acHoldLine.SetIcon(L"@/Assets/asus_cac_keymap_ac.png");
 
         SettingsLine& ccPressLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
             L"PRESS Command Center button",
             L"Define Short press left button action",
             m_ccPressCombo,
-            Layout::LineHeight, Layout::LinePadding, 0);
+            Layout::LineHeight, Layout::LinePadding, 0, 240);
 
         ccPressLine.SetIcon(L"@/Assets/asus_cac_keymap_cc.png");
-        allyHidLine.AddGroupItem(&ccPressLine);
+        m_pAllyHidLine->AddGroupItem(&ccPressLine);
 
-        allyHidLine.SetState(SettingsLine::State::Opened);
+        m_pAllyHidLine->SetState(SettingsLine::State::Opened);
     }
 
     void AllyHidPage::LoadControls()
     {
-        if (!m_isCreated)
+        if (!Ally::IsSupported())
         {
             return;
         }
 
-        m_acPressCombo.AddItem(L"GameBar Command Center", L"", L"GamebarCommandCenter");
-        m_acHoldCombo.AddItem(L"Task switcher", L"", L"TaskSwitcher");
-        m_ccPressCombo.AddItem(L"Home", L"", L"HomeApp");
+        for ( auto h : Ally::Handlers::KnownHandlers)
+        {
+            m_acPressCombo.AddItem(h.name, L"", h.code);
+            m_acHoldCombo.AddItem(h.name, L"", h.code);
+            m_ccPressCombo.AddItem(h.name, L"", h.code);
+        }
+
+        m_enableAllyHidToggle.SetCheck(Config::AllyHidEnable);
+        m_acPressCombo.SelectItem(Config::AllyHidACPress);
+        m_acHoldCombo.SelectItem(Config::AllyHidACHold);
+        m_ccPressCombo.SelectItem(Config::AllyHidCCPress);
+
+        EnableAllyHidChanged();
     }
 
     void AllyHidPage::SaveControls()
     {
-        if (!m_isCreated)
+        if (!Ally::IsSupported())
         {
             return;
+        }
+
+        bool allyHidEnableChanged = (Config::AllyHidEnable != m_enableAllyHidToggle.GetCheck());
+
+        Config::AllyHidEnable = m_enableAllyHidToggle.GetCheck();
+        Config::AllyHidACPress = m_acPressCombo.GetCurentValue();
+        Config::AllyHidACHold = m_acHoldCombo.GetCurentValue();
+        Config::AllyHidCCPress = m_ccPressCombo.GetCurentValue();
+
+        if (allyHidEnableChanged)
+        {
+            Ally::EnableNativeHandler(!Config::AllyHidEnable);
         }
     }
 
     void AllyHidPage::OpenAllyHidPage()
     {
         m_dialog.SwitchActivePage(L"ROG Ally", &m_pageLinesList);
+    }
+
+    void AllyHidPage::EnableAllyHidChanged()
+    {
+        bool enabled = m_enableAllyHidToggle.GetCheck();
+        for (SettingsLine * child : m_pAllyHidLine->GetGroupItems())
+        {
+            child->Enable(enabled);
+        }
     }
 };

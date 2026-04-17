@@ -37,6 +37,7 @@
 #include "Tools/Window.hpp"
 #include "Tools/Registry.hpp"
 #include "Tools/Process.hpp"
+#include "Ally/Ally.hpp"
 
 #define byte ::byte
 
@@ -780,6 +781,14 @@ namespace AnyFSE::App::AppSettings::Settings
         }
 
         Config::Save();
+
+        if (Ally::IsSupported())
+        {
+            if (!Ally::UpdateHidListener() && Config::AllyHidEnable)
+            {
+                Process::StartProtocol(L"anyfse://AllyHid");
+            }
+        }
     }
 
     void SettingsDialog::OpenSettingsPage()

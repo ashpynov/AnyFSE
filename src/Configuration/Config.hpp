@@ -172,6 +172,11 @@ namespace AnyFSE::Configuration
             static int          UpdateCheckInterval;
             static std::wstring UpdateLastCheck;
             static std::wstring UpdateLastVersion;
+
+            static bool         AllyHidEnable;
+            static std::wstring AllyHidACPress;
+            static std::wstring AllyHidACHold;
+            static std::wstring AllyHidCCPress;
     };
 }
 

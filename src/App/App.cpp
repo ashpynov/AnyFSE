@@ -195,7 +195,7 @@ namespace AnyFSE::App
     {
         Config::Load();
 
-        if (true)
+        if (Ally::IsSupported())
         {
             if (AsAllyHid(lpCmdLine))
             {
