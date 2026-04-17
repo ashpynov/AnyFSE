@@ -31,7 +31,7 @@ namespace Ally::Handlers
     {
         for (auto handle : KnownHandlers)
         {
-            if (!_wcsicmp(handle.name.c_str(), handleName.c_str()))
+            if (!_wcsicmp(handle.code.c_str(), handleName.c_str()))
             {
                 return handle.handler;
             }

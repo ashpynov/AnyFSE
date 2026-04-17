@@ -30,6 +30,7 @@ namespace Ally
     DWORD WINAPI HIDListener(LPVOID lpParam);
 
     void EnableNativeHandler(bool bEnable);
+    bool IsNativeHandlerEnabled();
     bool UpdateHidListener();
     bool CheckListener();
     bool SetupListener();

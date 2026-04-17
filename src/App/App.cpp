@@ -195,9 +195,9 @@ namespace AnyFSE::App
     {
         Config::Load();
 
-        if (Ally::IsSupported())
+        if (Ally::IsSupported() && Config::AllyHidEnable)
         {
-            if (AsAllyHid(lpCmdLine))
+            if ( AsAllyHid(lpCmdLine))
             {
                 AnyFSE::Logging::LogManager::Initialize("AnyFSE/AllyHID", Config::LogLevel, Config::LogPath);
                 return Ally::HIDListener(NULL);

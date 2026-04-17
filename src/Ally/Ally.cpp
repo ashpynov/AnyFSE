@@ -5,8 +5,8 @@
 #include "Ally/Handlers.hpp"
 #include "Logging/LogManager.hpp"
 #include "Configuration/Config.hpp"
+#include "Tools/Process.hpp"
 #include "Ally.hpp"
-
 
 
 namespace Ally
@@ -194,6 +194,32 @@ namespace Ally
     void EnableNativeHandler(bool bEnable)
     {
 
+        bool active = IsNativeHandlerEnabled();
+        if (active == bEnable)
+        {
+            return;
+        }
+
+        std::wstring serviceName = L"ASUSOptimization";
+        std::wstring commandLine = bEnable
+            ? L"sc config " + serviceName + L" start=auto & sc start " + serviceName
+            : L"sc stop " + serviceName + L" & sc config " + serviceName + L" start= disabled";
+
+
+        // Execute through cmd.exe with hidden window
+        ShellExecuteW(
+            NULL,                           // Parent window handle
+            L"runas",                       // Operation (runas for elevation)
+            L"cmd.exe",                     // Program to execute
+            (L"/c " + commandLine).c_str(), // Command line arguments
+            NULL,                           // Working directory
+            SW_HIDE                         // Window state (hidden)
+        );
+    }
+
+    bool IsNativeHandlerEnabled()
+    {
+        return 0 != Process::FindFirstByExe(L"AsusOptimization.exe");
     }
 
     bool UpdateHidListener()

@@ -82,8 +82,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_acPressCombo.SelectItem(Config::AllyHidACPress);
         m_acHoldCombo.SelectItem(Config::AllyHidACHold);
         m_ccPressCombo.SelectItem(Config::AllyHidCCPress);
-
-        EnableAllyHidChanged();
     }
 
     void AllyHidPage::SaveControls()
@@ -93,17 +91,12 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             return;
         }
 
-        bool allyHidEnableChanged = (Config::AllyHidEnable != m_enableAllyHidToggle.GetCheck());
-
         Config::AllyHidEnable = m_enableAllyHidToggle.GetCheck();
         Config::AllyHidACPress = m_acPressCombo.GetCurentValue();
         Config::AllyHidACHold = m_acHoldCombo.GetCurentValue();
         Config::AllyHidCCPress = m_ccPressCombo.GetCurentValue();
 
-        if (allyHidEnableChanged)
-        {
-            Ally::EnableNativeHandler(!Config::AllyHidEnable);
-        }
+        Ally::EnableNativeHandler(!Config::AllyHidEnable);
     }
 
     void AllyHidPage::OpenAllyHidPage()
