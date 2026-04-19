@@ -68,6 +68,10 @@ namespace FluentDesign
         int m_originalIndex = 0;
         int m_hoveredIndex;
 
+        int m_nPopupScrollPos = 0;
+        int m_nPopupViewHeight = 0;
+        int m_nPopupContentHeight = 0;
+
         static LRESULT CALLBACK ComboBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
             UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
@@ -108,5 +112,7 @@ namespace FluentDesign
 
         void ShowPopup();
         void HidePopup();
+        void ScrollTo(int newPos);
+        void EnsureVisible(int index);
     };
 }

@@ -367,18 +367,37 @@ namespace FluentDesign
         // Calculate popup position (below the button)
         RECT buttonRect;
         GetWindowRect(m_hWnd, &buttonRect);
+        InflateRect(&buttonRect, m_theme.DpiScale(Layout_LeftMargin) / 4, 0);
 
         int popupWidth = buttonRect.right - buttonRect.left;
-        int popupHeight = min(m_theme.DpiScale(400), (int)m_comboItems.size() * m_theme.DpiScale(Layout_ItemHeight)); // Calculate height based on items
+        int popupHeight = min(m_theme.DpiScale(Layout_ItemHeight) * 10, (int)m_comboItems.size() * m_theme.DpiScale(Layout_ItemHeight)); // Calculate height based on items
 
+        m_nPopupScrollPos = 0;
+        m_nPopupViewHeight = popupHeight;
+        m_nPopupContentHeight = (int)m_comboItems.size() * m_theme.DpiScale(Layout_ItemHeight);
+
+        MONITORINFO mi{sizeof(MONITORINFO)};
+        int monitorHeight = 2160;
+
+        if (GetMonitorInfo(MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST), &mi))
+        {
+            monitorHeight = mi.rcMonitor.bottom - mi.rcMonitor.top;
+        }
+
+        int top = buttonRect.bottom + 2;
+
+        if (top + popupHeight > monitorHeight)
+        {
+            top = monitorHeight - popupHeight - m_theme.DpiScale(Layout_ItemHeight);
+        }
         // Create popup listbox window
         m_hPopupList = CreateWindowEx(
             WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
             L"LISTBOX",
             L"",
-            WS_CHILD | WS_POPUP | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | CS_DROPSHADOW | WS_TABSTOP,
+            WS_CHILD | WS_POPUP | LBS_NOINTEGRALHEIGHT | CS_DROPSHADOW | WS_TABSTOP,
             buttonRect.left,
-            buttonRect.bottom + 2,
+            top,
             popupWidth,
             popupHeight,
             m_hWnd,//GetParent(hCombo),
@@ -407,6 +426,8 @@ namespace FluentDesign
         // Set item height
         SendMessage(m_hPopupList, LB_SETITEMHEIGHT, 0, (LPARAM)m_theme.DpiScale(Layout_ItemHeight)); // Match your DrawComboItem height
 
+        EnsureVisible(m_selectedIndex);
+
         ShowWindow(m_hPopupList, SW_SHOW);
         m_popupVisible = true;
 
@@ -429,6 +450,68 @@ namespace FluentDesign
         }
     }
 
+    void ComboBox::ScrollTo(int newPos)
+    {
+        int maxPos = m_nPopupContentHeight - m_nPopupViewHeight;
+        if (newPos < 0)
+            newPos = 0;
+        if (newPos > maxPos)
+            newPos = maxPos;
+
+        if (newPos != m_nPopupScrollPos)
+        {
+            int delta = m_nPopupScrollPos - newPos;
+            m_nPopupScrollPos = newPos;
+            // Scroll the window content
+            ScrollWindowEx(m_hPopupList, 0, delta, NULL, NULL, NULL, NULL, SW_INVALIDATE );
+            RedrawWindow(m_hPopupList, NULL, NULL, RDW_INVALIDATE);
+        }
+    }
+
+    void ComboBox::EnsureVisible(int index)
+    {
+        if ( m_nPopupContentHeight <= m_nPopupViewHeight)
+        {
+            return;
+        }
+
+        RECT rcItem;
+        SendMessage(m_hPopupList, LB_GETITEMRECT, index, (LPARAM)&rcItem);
+
+        int margin = m_theme.DpiScale(Layout_ItemHeight); // Optional margin around the item
+        int itemTop = rcItem.top - margin;
+        int itemBottom = rcItem.bottom + margin;
+        int visibleTop = m_nPopupScrollPos;
+        int visibleBottom = m_nPopupScrollPos + m_nPopupViewHeight;
+
+        // Check if item is already fully visible
+        if (itemTop >= visibleTop && itemBottom <= visibleBottom)
+        {
+            return; // Already fully visible
+        }
+
+        int newScrollPos = m_nPopupScrollPos;
+
+        // If item is above visible area, scroll to show it at top
+        if (itemTop < visibleTop)
+        {
+            newScrollPos = itemTop;
+        }
+        // If item is below visible area, scroll to show it at bottom
+        else if (itemBottom > visibleBottom)
+        {
+            newScrollPos = itemBottom - m_nPopupViewHeight;
+        }
+
+        // If item is taller than viewport, at least show the top
+        if (itemBottom - itemTop > m_nPopupViewHeight)
+        {
+            newScrollPos = itemTop;
+        }
+
+        ScrollTo(newScrollPos);
+    }
+
     // Single popup listbox window procedure
     LRESULT CALLBACK ComboBox::PopupListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
     {
@@ -449,7 +532,11 @@ namespace FluentDesign
             {
                 RECT itemRect;
                 SendMessage(hWnd, LB_GETITEMRECT, i, (LPARAM)&itemRect);
-
+                OffsetRect(&itemRect, 0, -This->m_nPopupScrollPos);
+                if (This->m_nPopupContentHeight > This->m_nPopupViewHeight)
+                {
+                    itemRect.right -= This->m_theme.DpiScale(6);
+                }
                 This->DrawPopupItem(hWnd, paint.MemDC(), itemRect, i);
             }
             if (This->m_theme.IsKeyboardFocused())
@@ -457,20 +544,41 @@ namespace FluentDesign
                 RECT itemRect;
                 SendMessage(hWnd, LB_GETITEMRECT, This->m_selectedIndex, (LPARAM)&itemRect);
                 InflateRect(&itemRect, This->m_theme.DpiScale(-Layout_LeftMargin/4), This->m_theme.DpiScale(-2));
+
+                OffsetRect(&itemRect, 0, -This->m_nPopupScrollPos);
+                if (This->m_nPopupContentHeight > This->m_nPopupViewHeight)
+                {
+                    itemRect.right -= This->m_theme.DpiScale(6);
+                }
                 This->m_theme.DrawFocusFrame(paint.MemDC(), itemRect, 0);
             }
         }
+        return 0;
+
+        case WM_MOUSEWHEEL:
+        {
+            // Typically, WHEEL_DELTA is 120, scroll 3 lines per wheel click
+            if (This->m_nPopupContentHeight <= This->m_nPopupViewHeight /*|| GetCapture()*/)
+            {
+                return 0; // No scrolling needed if content fits
+            }
+
+            int scrollAmount = -GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA * 16 * 3;
+            This->ScrollTo(This->m_nPopupScrollPos + scrollAmount);
+
             return 0;
+        }
+        return 0;
 
         case WM_NCPAINT:
-            // Suppress non-client area painting
             return 0;
 
         case WM_MOUSEMOVE:
         {
             // Handle item hover
             POINT pt = {LOWORD(lParam), HIWORD(lParam)};
-            int hoverIndex = (int)SendMessage(hWnd, LB_ITEMFROMPOINT, 0, MAKELPARAM(pt.x, pt.y));
+            pt.y += This->m_nPopupScrollPos;
+            int hoverIndex = pt.y / This->m_theme.DpiScale(Layout_ItemHeight);
             if (hoverIndex >= 0 && hoverIndex < (int)SendMessage(hWnd, LB_GETCOUNT, 0, 0))
             {
                 This->m_hoveredIndex = hoverIndex;
@@ -482,7 +590,8 @@ namespace FluentDesign
         case WM_LBUTTONDOWN:
         {
             POINT pt = {(short)LOWORD(lParam), (short)HIWORD(lParam)};
-            int clickIndex = (int)SendMessage(hWnd, LB_ITEMFROMPOINT, 0, MAKELPARAM(pt.x, pt.y));
+            pt.y += This->m_nPopupScrollPos;
+            int clickIndex = pt.y / This->m_theme.DpiScale(Layout_ItemHeight);
             if (clickIndex >= 0 && clickIndex < (int)SendMessage(hWnd, LB_GETCOUNT, 0, 0))
             {
                 // Get the actual ComboItem index from item data
@@ -529,6 +638,7 @@ namespace FluentDesign
                 if (This->m_selectedIndex >0 )
                 {
                     This->m_selectedIndex -= 1;
+                    This->EnsureVisible(This->m_selectedIndex);
                     InvalidateRect(This->m_hPopupList, NULL, TRUE);
                     InvalidateRect(This->m_hWnd, NULL, TRUE);
                 }
@@ -538,6 +648,7 @@ namespace FluentDesign
                 if (This->m_selectedIndex < This->m_comboItems.size() - 1 )
                 {
                     This->m_selectedIndex += 1;
+                    This->EnsureVisible(This->m_selectedIndex);
                     InvalidateRect(This->m_hPopupList, NULL, TRUE);
                     InvalidateRect(This->m_hWnd, NULL, TRUE);
                 }
@@ -556,6 +667,7 @@ namespace FluentDesign
     void ComboBox::DrawPopupBackground(HWND hWnd, HDC hdcMem, RECT rect)
     {
         // Draw popup background with rounded corners
+
         HBRUSH hNilBrush = CreateSolidBrush(RGB(0,0,0));
         FillRect(hdcMem, &rect, hNilBrush);
 
@@ -574,6 +686,27 @@ namespace FluentDesign
         DeleteObject(hBgBrush);
         DeleteObject(hNilBrush);
         DeleteObject(hBgPen);
+
+        if (m_nPopupContentHeight > m_nPopupViewHeight)
+        {
+            rect.right -= m_theme.DpiScale(4);
+            rect.left = rect.right - m_theme.DpiScale(2);
+            rect.top += m_theme.DpiScale(2);
+
+            int height = rect.bottom - rect.top;
+            int thumbHeight = max((m_nPopupViewHeight * height / m_nPopupContentHeight), m_theme.DpiScale(20));
+            rect.top = m_theme.DpiScale(2) + m_nPopupScrollPos * (height - thumbHeight) / (m_nPopupContentHeight - height);
+            rect.bottom = rect.top + thumbHeight;
+
+            Gdiplus::RectF rectF = Gdiplus::ToRectF(rect);
+            Gdiplus::Graphics graphics(hdcMem);
+            DWORD color = m_theme.GetColor(false ? Theme::Colors::ScrollThumb : Theme::Colors::ScrollThumbStroke);
+            Gdiplus::SolidBrush thumbBrush(color);
+            Gdiplus::Pen thumbPen(color, 0.5);
+
+            Gdiplus::RoundRect(graphics, rectF, rectF.Width, &thumbBrush, thumbPen);
+
+        }
 
     }
 
