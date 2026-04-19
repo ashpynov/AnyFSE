@@ -578,10 +578,17 @@ namespace FluentDesign
             // Handle item hover
             POINT pt = {LOWORD(lParam), HIWORD(lParam)};
             pt.y += This->m_nPopupScrollPos;
+            RECT rc;
+            GetClientRect(hWnd, &rc);
             int hoverIndex = pt.y / This->m_theme.DpiScale(Layout_ItemHeight);
-            if (hoverIndex >= 0 && hoverIndex < (int)SendMessage(hWnd, LB_GETCOUNT, 0, 0))
+            if (pt.x >= rc.left && pt.x <=rc.right && hoverIndex >= 0 && hoverIndex < (int)SendMessage(hWnd, LB_GETCOUNT, 0, 0))
             {
                 This->m_hoveredIndex = hoverIndex;
+                InvalidateRect(hWnd, NULL, TRUE);
+            }
+            else
+            {
+                This->m_hoveredIndex = -1;
                 InvalidateRect(hWnd, NULL, TRUE);
             }
         }
@@ -591,8 +598,10 @@ namespace FluentDesign
         {
             POINT pt = {(short)LOWORD(lParam), (short)HIWORD(lParam)};
             pt.y += This->m_nPopupScrollPos;
+            RECT rc;
+            GetClientRect(hWnd, &rc);
             int clickIndex = pt.y / This->m_theme.DpiScale(Layout_ItemHeight);
-            if (clickIndex >= 0 && clickIndex < (int)SendMessage(hWnd, LB_GETCOUNT, 0, 0))
+            if (pt.x >= rc.left && pt.x <=rc.right && clickIndex >= 0 && clickIndex < (int)SendMessage(hWnd, LB_GETCOUNT, 0, 0))
             {
                 // Get the actual ComboItem index from item data
                 int itemIndex = (int)SendMessage(hWnd, LB_GETITEMDATA, clickIndex, 0);
