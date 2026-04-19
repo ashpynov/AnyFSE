@@ -148,7 +148,6 @@ namespace FluentDesign
     Button& Button::SetTabStop(bool bTabStop)
     {
         SetWindowLong(m_hWnd, GWL_STYLE, GetWindowLong(m_hWnd, GWL_STYLE) & ~WS_TABSTOP );
-
         return *this;
     }
 
@@ -382,7 +381,8 @@ namespace FluentDesign
                 break;
 
             case WM_GETDLGCODE:
-                if ( wParam == VK_SPACE || wParam ==VK_RETURN || wParam ==VK_GAMEPAD_A)
+                if ( wParam == VK_SPACE || wParam ==VK_RETURN || wParam ==VK_GAMEPAD_A
+                    || wParam == VK_LEFT  || wParam == VK_UP || wParam == VK_RIGHT || wParam == VK_DOWN)
                 {
                     return DLGC_WANTALLKEYS;
                 }
@@ -403,8 +403,15 @@ namespace FluentDesign
                         This->OnButtonDown.Notify();
                         This->OnChanged.Notify();
                     }
+                    return 0;
                 }
-                return 0;
+                else if (wParam == VK_LEFT  || wParam == VK_UP
+                        || wParam == VK_RIGHT || wParam == VK_DOWN)
+                {
+                    This->m_theme.KeyboardNavigate(wParam);
+                    return 0;
+                }
+                break;
 
             case WM_PAINT:
                 {

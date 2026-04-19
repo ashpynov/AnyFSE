@@ -127,8 +127,9 @@ namespace FluentDesign
                 This->m_isChecked = !This->m_isChecked;
                 InvalidateRect(hWnd, NULL, TRUE);
                 This->OnChanged.Notify();
+                return 0;
             }
-            return 0;
+            break;
 
         case WM_PAINT:
             {

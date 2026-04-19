@@ -657,6 +657,10 @@ namespace FluentDesign
 
         b.Create(m_hWnd, name, [url]() {Process::StartProtocol(url);}, 0, 0, 0, 0);
         b.SetLinkStyle();
+        if (name.empty() || url.empty())
+        {
+            b.Enable(false);
+        }
         OnChanged.Notify();
     }
 

@@ -187,6 +187,21 @@ namespace FluentDesign
             RemoveWindowSubclass(hWnd, ControlSublassProc, uIdSubclass);
             break;
 
+        case WM_KEYDOWN:
+        {
+            if (wParam == VK_LEFT  || wParam == VK_UP
+                || wParam == VK_RIGHT || wParam == VK_DOWN)
+            {
+                LRESULT ret = DefSubclassProc(hWnd, msg, wParam, lParam);
+                if (!ret)
+                {
+                    This->KeyboardNavigate((WORD)wParam);
+                    return 0;
+                }
+            }
+            break;
+        }
+
         case WM_NOTIFY:
             {
                 if (((LPNMHDR)lParam)->code == NM_SETFOCUS)
@@ -553,47 +568,95 @@ namespace FluentDesign
         return POINT{(rc.right+rc.left) / 2, (rc.bottom+rc.top) / 2};
     }
 
-    double GetDistance(POINT from, POINT to, POINT direction )
+
+    RECT GetRECT(HWND hwnd)
     {
-        double rhs_x = from.x - from.x;
-        double rhs_y = from.y - from.y;
-
-        // Calculate squared magnitude of rhs
-        double rhsSqrMag = rhs_x * rhs_x + rhs_y * rhs_y;
-
-        // Normalize direction vector
-        double dirMag = sqrt((double)direction.x * direction.x + direction.y * direction.y);
-        if (dirMag == 0.0f) {
-            return -FLT_MAX;
-        }
-        double normDir_x = direction.x / dirMag;
-        double normDir_y = direction.y / dirMag;
-
-        // Normalize rhs vector
-        double rhsMag = sqrt(rhsSqrMag);
-        if (rhsMag == 0.0f) {
-            return -FLT_MAX;
-        }
-        double normRhs_x = rhs_x / rhsMag;
-        double normRhs_y = rhs_y / rhsMag;
-
-        // Calculate projection (dot product of normalized vectors)
-        double projectionNorm = normDir_x * normRhs_x + normDir_y * normRhs_y;
-
-        // Check if projection is valid
-        if (projectionNorm <= 0.001f) {
-            return -FLT_MAX;
-        }
-
-        // Calculate proximity
-        double angleFactor = 2.0f;
-        double angleScale = 1.0f / (1.0f + angleFactor - (angleFactor * projectionNorm * projectionNorm));
-        double prox = angleScale / (rhsSqrMag + 0.00001f);
-
-        return prox;
+        RECT rc;
+        GetWindowRect(hwnd, &rc);
+        return rc;
     }
 
-    void Theme::KewboardNavigate(WORD direction)
+    double Theme::GetDistance(RECT from, RECT to, POINT direction )
+    {
+        POINT fromPt = POINT{(from.right + from.left) / 2, (from.bottom + from.top) / 2};
+        POINT toPt = POINT{(to.right + to.left) / 2, (to.bottom + to.top) / 2};
+
+        if ( direction.x &&
+            (  (to.left >= from.left && to.left <= from.right)
+            || (to.right >= from.left && to.right <= from.right)
+            || (from.right >= to.left && from.right <= to.right)
+            || (from.left >= to.left && from.left <= to.right)
+        ))
+        {
+            fromPt.x = toPt.x;
+        }
+
+        if ( direction.x &&
+            (  (to.left >= from.left && to.left <= from.right)
+            || (to.right >= from.left && to.right <= from.right)
+            || (from.right >= to.left && from.right <= to.right)
+            || (from.left >= to.left && from.left <= to.right)
+        ))
+        {
+            fromPt.x = toPt.x;
+        }
+
+        if ( direction.y &&
+            (  (to.top >= from.top && to.top <= from.bottom)
+            || (to.bottom >= from.top && to.bottom <= from.bottom)
+            || (from.bottom >= to.top && from.bottom <= to.bottom)
+            || (from.top >= to.top && from.top <= to.bottom)
+        ))
+        {
+            fromPt.y = toPt.y;
+        }
+
+        return GetDistance(fromPt, toPt, direction);
+    }
+
+    double Theme::GetDistance(POINT from, POINT to, POINT direction )
+    {
+        // Calculate the vector from 'from' to 'to'
+        POINT delta;
+        delta.x = to.x - from.x;
+        delta.y = to.y - from.y;
+
+        // Calculate Euclidean distance (actual distance)
+        double distance = sqrt((double)(delta.x * delta.x + delta.y * delta.y));
+
+        // If same point, return 0
+        if (distance == 0) return 0;
+
+        // Calculate dot product to measure alignment with direction
+        // This gives positive values for vectors in same direction,
+        // negative for opposite directions
+        double dot = (delta.x * direction.x + delta.y * direction.y);
+
+        // Normalize dot product to get cosine of angle
+        double directionLength = sqrt((double)(direction.x * direction.x +
+                                            direction.y * direction.y));
+        double cosAngle = dot / (distance * directionLength);
+
+        // Proximity factor - lower is better (closer and more aligned)
+        // Option 1: Weighted by alignment (recommended)
+        // Points exactly in direction get full distance value
+        // Points at 90 degrees get INFINITY (not considered)
+        if (cosAngle <= 0) {
+            // Behind or perpendicular - not in direction at all
+            return INFINITY;
+        }
+
+        // Proximity = distance / alignment
+        // This makes aligned points have lower proximity values
+        double proximity = distance / cosAngle;
+
+        // Option 2: Alternative formula if you want pure distance for exact direction
+        // proximity = distance + (1 - cosAngle) * SCALE_FACTOR;
+
+        return proximity;
+    }
+
+    void Theme::KeyboardNavigate(WORD direction)
     {
         HWND focused = GetFocus();
             std::list<HWND> focusable = {};
@@ -603,7 +666,9 @@ namespace FluentDesign
         {
             if (IsWindowEnabled(hChild) && IsWindowVisible(hChild))
             {
-                if ((GetWindowLongW(hChild, GWL_STYLE) & WS_TABSTOP) != 0 || focused == hChild)
+                if ((GetWindowLongW(hChild, GWL_EXSTYLE) & WS_EX_CONTROLPARENT) == 0
+                    && (GetWindowLongW(hChild, GWL_STYLE) & WS_TABSTOP) != 0
+                    || focused == hChild)
                 {
                     focusable.push_back(hChild);
                 }
@@ -628,12 +693,12 @@ namespace FluentDesign
 
         HWND next = 0;
         auto pCurrent = std::find(focusable.begin(), focusable.end(), focused);
-        if ( direction == VK_PRIOR)
+        if ( direction == VK_PRIOR || direction == VK_LEFT || direction == VK_UP )
         {
             next = pCurrent == focusable.end() || pCurrent == focusable.begin()
                 ? focusable.back() : *(--pCurrent);
         }
-        else if ( direction == VK_NEXT)
+        else if ( direction == VK_NEXT || direction == VK_RIGHT || direction == VK_DOWN )
         {
             next = pCurrent == focusable.end() || *pCurrent == focusable.back()
                 ? focusable.front() : *(++pCurrent);
@@ -650,15 +715,21 @@ namespace FluentDesign
                 :   direction == VK_LEFT ? POINT{-1,0}
                 :   POINT{1,0};
 
-            POINT from = GetCenterPoint(focused);
+            RECT from = GetRECT(focused);
 
             next = focused;
             double min_distance = FLT_MAX;
 
+            log.Trace("From %x: (%d, %d) dir (%d, %d) ", focused, from.left, from.top, dir.x, dir.y);
+
             for (auto & hwnd : focusable)
             {
                 if (hwnd == focused) continue;
-                double distance = GetDistance(from, GetCenterPoint(hwnd), dir);
+                RECT to = GetRECT(hwnd);
+                double distance = GetDistance(from, to, dir);
+
+                log.Trace("Candidate %x: (%d, %d) distance %f ", hwnd, to.left, to.top, distance);
+
                 if (distance > 0 && distance < min_distance )
                 {
                     next = hwnd;
@@ -668,6 +739,7 @@ namespace FluentDesign
         }
         m_isKeyboardFocus = true;
         m_lastFocused = next;
+        log.Trace("Set focus to  %x", next);
         SetFocus(next);
     }
 }

@@ -22,6 +22,8 @@ namespace Ally
         if (supported == -1)
         {
             supported = FindHIDDevice() ? 1 : 0;
+
+            log.Trace("Ally HID is %d", supported);
         }
         return supported;
     }
@@ -51,10 +53,11 @@ namespace Ally
 
                 std::transform(devicePath.begin(), devicePath.end(), devicePath.begin(), ::toupper);
 
-                if (devicePath.find(L"VID_0B05") != std::string::npos &&
-                    devicePath.find(L"PID_1ABE") != std::string::npos &&
-                    devicePath.find(L"MI_02") != std::string::npos &&
-                    devicePath.find(L"COL01") != std::string::npos)
+                if (devicePath.find(L"VID_0B05") != std::string::npos
+                    && ( devicePath.find(L"PID_1ABE") != std::string::npos
+                        || devicePath.find(L"PID_1B4C") != std::string::npos )
+                    && devicePath.find(L"MI_02") != std::string::npos
+                    && devicePath.find(L"COL01") != std::string::npos)
                 {
                     return deviceList[i].hDevice;
                 }
@@ -88,6 +91,10 @@ namespace Ally
         ButtonBind[Ally::EventCode::ACPress] =          Handlers::GetByName(Config::AllyHidACPress);
         ButtonBind[Ally::EventCode::ACHold] =           Handlers::GetByName(Config::AllyHidACHold);
         ButtonBind[Ally::EventCode::CCPress] =          Handlers::GetByName(Config::AllyHidCCPress);
+
+        ButtonBind[Ally::EventCode::MACPress] =         Handlers::GetByName(Config::AllyHidModeACPress);
+        ButtonBind[Ally::EventCode::MACHold] =          Handlers::GetByName(Config::AllyHidModeACHold);
+        ButtonBind[Ally::EventCode::MCCPress] =         Handlers::GetByName(Config::AllyHidModeCCPress);
 
         ButtonBind[Ally::EventCode::ToggleMicrophone] = Handlers::ToggleMicrophone;
         ButtonBind[Ally::EventCode::ScreenShot] =       Handlers::TakeScreenShoot;
@@ -139,6 +146,9 @@ namespace Ally
         log.Trace("Starting Ally HID sink window");
 
         MSG msg;
+
+        bool bModePressed = false;
+
         while (GetMessage(&msg, NULL, 0, 0))
         {
             if (msg.message == WM_INPUT)
@@ -153,8 +163,12 @@ namespace Ally
                 }
 
                 RAWINPUT *raw = (RAWINPUT *)lpb.data();
-                if (raw->header.dwType == RIM_TYPEHID && raw->header.hDevice == hDevice)
+                if (raw->header.dwType == RIM_TYPEHID
+                    && (raw->header.hDevice == hDevice
+                     || raw->header.hDevice == Ally::FindHIDDevice()))
                 {
+                    hDevice = raw->header.hDevice;
+
                     std::stringstream seq;
                     for (size_t i = 0; i < raw->data.hid.dwCount * raw->data.hid.dwSizeHid; i++)
                     {
@@ -164,6 +178,24 @@ namespace Ally
                     log.Trace("Recieved sequence: %s", seq.str().c_str());
 
                     Ally::EventCode buttonCode = (Ally::EventCode) raw->data.hid.bRawData[1];
+
+                    if (buttonCode == Ally::EventCode::ModePress)
+                    {
+                        bModePressed = true;
+                    }
+                    else if (buttonCode == Ally::EventCode::Release)
+                    {
+                        bModePressed = false;
+                    }
+                    else if (bModePressed &&
+                                (  buttonCode == Ally::ACHold
+                                || buttonCode == Ally::ACPress
+                                || buttonCode == Ally::CCPress )
+                    )
+                    {
+                        buttonCode = (Ally::EventCode)(buttonCode + Ally::EventCode::ModePress);
+                    }
+
                     if (Ally::ButtonBind.find(buttonCode) != Ally::ButtonBind.end() &&
                         Ally::ButtonBind[buttonCode])
                     {
@@ -235,7 +267,7 @@ namespace Ally
 
     bool CheckListener()
     {
-        return Ally::FindHIDDevice() != NULL && FindWindow(HidListenerClass, NULL) != NULL;
+        return Ally::IsSupported() && FindWindow(HidListenerClass, NULL) == NULL;
     }
 
     bool SetupListener()

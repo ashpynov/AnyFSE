@@ -243,7 +243,9 @@ namespace FluentDesign
         const int GetSize_FocusCornerSize() { return DpiScale(m_focusCornerSize); }
         const int GetSize_FocusMargins() { return DpiScale(m_focusMargins); }
 
-        void KewboardNavigate(WORD direction);
+        void KeyboardNavigate(WORD direction);
+        static double GetDistance(RECT from, RECT to, POINT direction);
+        static double GetDistance(POINT from, POINT to, POINT direction);
     };
 
 }

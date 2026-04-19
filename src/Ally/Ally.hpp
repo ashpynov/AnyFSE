@@ -17,7 +17,10 @@ namespace Ally
         CCPress = 166,
         ACHold = 167,
         ROGHoldRelease = 168,
-        Unknown = 236
+        Unknown = 236,
+        MACPress = ACPress + ModePress,
+        MCCPress = CCPress + ModePress,
+        MACHold = ACHold + ModePress,
     };
 
     bool IsSupported();

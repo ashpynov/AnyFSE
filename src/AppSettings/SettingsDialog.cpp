@@ -188,6 +188,11 @@ namespace AnyFSE::App::AppSettings::Settings
             return TRUE;
 
         case WM_DESTROY:
+            if (m_gamepadListener)
+            {
+                m_gamepadListener->Stop();
+                m_gamepadListener.reset();
+            }
             StoreWindowPlacement();
             return FALSE;
 
@@ -202,15 +207,15 @@ namespace AnyFSE::App::AppSettings::Settings
                 //This->m_isKeyboardFocus = true;
                 if (wParam == VK_TAB && (GetKeyState(VK_SHIFT) & 0x8000))
                 {
-                    m_theme.KewboardNavigate(VK_PRIOR);
+                    m_theme.KeyboardNavigate(VK_PRIOR);
                 }
                 else if (wParam == VK_TAB)
                 {
-                    m_theme.KewboardNavigate(VK_NEXT);
+                    m_theme.KeyboardNavigate(VK_NEXT);
                 }
                 else
                 {
-                    m_theme.KewboardNavigate((WORD)wParam);
+                    m_theme.KeyboardNavigate((WORD)wParam);
                 }
                 return FALSE;
             }
@@ -415,7 +420,7 @@ namespace AnyFSE::App::AppSettings::Settings
                 EndDialog(hwnd, IDOK);
                 return TRUE;
             case IDCANCEL:
-                EndDialog(hwnd, IDCANCEL);
+                OnEsc();
                 return TRUE;
             case IDABORT:
                 EndDialog(hwnd, IDABORT);
@@ -706,7 +711,7 @@ namespace AnyFSE::App::AppSettings::Settings
     void SettingsDialog::AddFooterButtons()
     {
         AddUpdateControls();
-
+#if 0
         m_okButton
             .SetAnchor(Align::BottomRight(), GetDialogCenteredRect)
             .Create(m_hDialog,
@@ -726,6 +731,7 @@ namespace AnyFSE::App::AppSettings::Settings
                 Layout::ButtonHeight)
             .SetText(L"Discard and Close")
             .OnChanged += delegate(OnClose);
+#endif
     }
 
     void SettingsDialog::OnInitDialog(HWND hwnd)
@@ -743,6 +749,10 @@ namespace AnyFSE::App::AppSettings::Settings
 
         m_pActivePageList = &m_settingPageList;
         UpdateLayout();
+
+        // Initialize gamepad input listener
+        m_gamepadListener = std::make_unique<GamepadInputListener>(hwnd);
+        m_gamepadListener->Start();
     }
 
     void SettingsDialog::OnOk()
@@ -750,6 +760,19 @@ namespace AnyFSE::App::AppSettings::Settings
         SaveSettings();
         EndDialog(m_hDialog, IDOK);
     }
+
+    void SettingsDialog::OnEsc()
+    {
+        if (IsWindowEnabled(m_captionBackButton.GetHwnd()))
+        {
+            m_captionBackButton.OnChanged.Notify();
+        }
+        else
+        {
+            m_captionCloseButton.OnChanged.Notify();
+        }
+    }
+
 
     void SettingsDialog::OnMinimize()
     {
@@ -770,7 +793,9 @@ namespace AnyFSE::App::AppSettings::Settings
 
     void SettingsDialog::OnClose()
     {
-        EndDialog(m_hDialog, IDCANCEL);
+        SaveSettings();
+        EndDialog(m_hDialog, IDOK);
+        //EndDialog(m_hDialog, IDCANCEL);
     }
 
     void SettingsDialog::SaveSettings()

@@ -103,7 +103,7 @@ namespace AnyFSE::Configuration
             static void FindBigBox(std::list<std::wstring>& found);
             static void FindOneGameLauncher(std::list<std::wstring>& found);
             static void FindNativeLaunchers(std::list<std::wstring> &found);
-            static void FindArmoryCrate(std::list<std::wstring> &found);
+            static void FindArmouryCrate(std::list<std::wstring> &found);
             static void FindRetroBat(std::list<std::wstring>& found);
 
             static std::wstring GetPathFromCommand(const std::wstring &uninstallCommand);
@@ -177,6 +177,9 @@ namespace AnyFSE::Configuration
             static std::wstring AllyHidACPress;
             static std::wstring AllyHidACHold;
             static std::wstring AllyHidCCPress;
+            static std::wstring AllyHidModeACPress;
+            static std::wstring AllyHidModeACHold;
+            static std::wstring AllyHidModeCCPress;
     };
 }
 

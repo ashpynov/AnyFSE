@@ -23,6 +23,9 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             , m_acPressCombo(theme)
             , m_acHoldCombo(theme)
             , m_ccPressCombo(theme)
+            , m_modeACPressCombo(theme)
+            , m_modeACHoldCombo(theme)
+            , m_modeCCPressCombo(theme)
         {}
         std::list<SettingsLine> &GetSettingsLines() { return m_pageLinesList;  };
 
@@ -37,6 +40,9 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         ComboBox m_acPressCombo;
         ComboBox m_acHoldCombo;
         ComboBox m_ccPressCombo;
+        ComboBox m_modeACPressCombo;
+        ComboBox m_modeACHoldCombo;
+        ComboBox m_modeCCPressCombo;
 
         SettingsLine * m_pAllyHidLine;
 

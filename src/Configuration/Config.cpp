@@ -85,6 +85,9 @@ namespace AnyFSE::Configuration
     std::wstring    Config::AllyHidACPress = L"GamebarCommandCenter";
     std::wstring    Config::AllyHidACHold = L"TaskSwitcher";
     std::wstring    Config::AllyHidCCPress = L"HomeApp";
+    std::wstring    Config::AllyHidModeACPress = L"";
+    std::wstring    Config::AllyHidModeACHold = L"";
+    std::wstring    Config::AllyHidModeCCPress = L"";
 
     bool Config::IsConfigured()
     {
@@ -149,6 +152,9 @@ namespace AnyFSE::Configuration
         AllyHidACPress          = config.value(jp("/AllyHid/ACPress"),      std::wstring(L"GamebarCommandCenter"));
         AllyHidACHold           = config.value(jp("/AllyHid/ACHold"),       std::wstring(L"TaskSwitcher"));
         AllyHidCCPress          = config.value(jp("/AllyHid/CCPress"),      std::wstring(L"HomeApp"));
+        AllyHidModeACPress      = config.value(jp("/AllyHid/ModeACPress"),  std::wstring(L"ArmouryCrate"));
+        AllyHidModeACHold       = config.value(jp("/AllyHid/ModeACHold"),   std::wstring(L"AnyFSESettings"));
+        AllyHidModeCCPress      = config.value(jp("/AllyHid/ModeCCPress"),  std::wstring(L""));
 
         std::wstring launcher   = config.value(jp("/Launcher/Path"),         std::wstring());
 
@@ -240,6 +246,9 @@ namespace AnyFSE::Configuration
         config["AllyHid"]["ACPress"]            = AllyHidACPress;
         config["AllyHid"]["ACHold"]             = AllyHidACHold;
         config["AllyHid"]["CCPress"]            = AllyHidCCPress;
+        config["AllyHid"]["ModeACPress"]        = AllyHidModeACPress;
+        config["AllyHid"]["ModeACHold"]         = AllyHidModeACHold;
+        config["AllyHid"]["ModeCCPress"]        = AllyHidModeCCPress;
 
         std::ofstream file(GetConfigFileA(false));
         file << config.dump(4);

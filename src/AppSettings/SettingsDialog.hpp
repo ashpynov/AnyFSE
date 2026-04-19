@@ -27,6 +27,7 @@
 #include <commctrl.h>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "Configuration/Config.hpp"
 #include "FluentDesign/Theme.hpp"
@@ -47,6 +48,7 @@
 #include "AppSettings/SettingsPages/StartupPage.hpp"
 #include "AppSettings/SettingsPages/SupportPage.hpp"
 #include "AppSettings/SettingsPages/AllyHidPage.hpp"
+#include "AppSettings/GamepadInput.hpp"
 
 #include "Updater/Updater.hpp"
 
@@ -144,6 +146,7 @@ namespace AnyFSE::App::AppSettings::Settings
         void OnInitDialog(HWND hwnd);
 
         void OnOk();
+        void OnEsc();
         void OnMinimize();
         void OnMaximize();
         void UpdateMaximizeButtonIcon();
@@ -199,6 +202,7 @@ namespace AnyFSE::App::AppSettings::Settings
         void OnUpdate();
 
         std::list<Page::SettingsPage *> m_pages;
+        std::unique_ptr<GamepadInputListener> m_gamepadListener;
     };
 }
 

@@ -195,16 +195,22 @@ namespace AnyFSE::App
     {
         Config::Load();
 
+        AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
+        log.Debug("\nApplication is started (hInstance=%08x) args: [%s]", hInstance, lpCmdLine);
+
         if (Ally::IsSupported() && Config::AllyHidEnable)
         {
+            log.Debug("Ally::IsSupported and enabled\n");
             if ( AsAllyHid(lpCmdLine))
             {
+                log.Debug("Ally start as HIDListener\n");
                 AnyFSE::Logging::LogManager::Initialize("AnyFSE/AllyHID", Config::LogLevel, Config::LogPath);
                 return Ally::HIDListener(NULL);
             }
 
             if (Ally::CheckListener())
             {
+                log.Debug("Ally not started and enabled\n");
                 Process::StartProtocol(L"anyfse://AllyHid");
             }
         }
@@ -305,7 +311,7 @@ namespace AnyFSE::App
             return (int)GetLastError();
         }
 
-        mainWindow.Show(restartDetected);
+        mainWindow.Show();
 
         exitCode = Window::MainWindow::RunLoop();
 

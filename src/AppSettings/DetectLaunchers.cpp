@@ -105,7 +105,7 @@ namespace AnyFSE::Configuration
         return launcher;
     }
 
-    void Config::FindArmoryCrate(std::list<std::wstring>& found)
+    void Config::FindArmouryCrate(std::list<std::wstring>& found)
     {
         std::wstring installPath =
             Packages::GetAppxInstallLocation(L"B9ECED6F.ArmouryCrateSE_qmba6cd70vzyy");
@@ -132,7 +132,7 @@ namespace AnyFSE::Configuration
         FindBigBox(found);
         FindOneGameLauncher(found);
         FindRetroBat(found);
-        FindArmoryCrate(found);
+        FindArmouryCrate(found);
         FindNativeLaunchers(found);
         return found.size() > existed;
     }
