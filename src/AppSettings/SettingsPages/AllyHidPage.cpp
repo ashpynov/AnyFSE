@@ -132,7 +132,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         Config::AllyHidModeACHold = m_modeACHoldCombo.GetCurentValue();
         Config::AllyHidModeCCPress = m_modeCCPressCombo.GetCurentValue();
 
-        if (changed)
+        if (changed || Config::AllyHidEnable)
         {
             Ally::EnableNativeHandler(!Config::AllyHidEnable);
         }
