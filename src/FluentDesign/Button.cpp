@@ -408,7 +408,7 @@ namespace FluentDesign
                 else if (wParam == VK_LEFT  || wParam == VK_UP
                         || wParam == VK_RIGHT || wParam == VK_DOWN)
                 {
-                    This->m_theme.KeyboardNavigate(wParam);
+                    This->m_theme.KeyboardNavigate((WORD)wParam);
                     return 0;
                 }
                 break;

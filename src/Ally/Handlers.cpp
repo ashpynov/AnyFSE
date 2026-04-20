@@ -49,7 +49,7 @@ namespace Ally::Handlers
     {
         std::wstring activeProcess = Unicode::to_lower(Process::GetWindowProcessName(WindowFromPoint(POINT{1, 1})));
         log.Trace("ActiveWindow: %s %x", Unicode::to_string(activeProcess).c_str(), WindowFromPoint(POINT{1, 1}));
-        return false;
+        return activeProcess == L"steamwebhelper.exe";
     }
 
     void SendKeyInput(const std::vector<WORD> &inputs, int delay)
@@ -63,6 +63,8 @@ namespace Ally::Handlers
         {
             input[i].type = INPUT_KEYBOARD;
             input[i].ki.wVk = inputs[i];
+            input[i].ki.wScan = MapVirtualKey(inputs[i], MAPVK_VK_TO_VSC);
+            input[i].ki.dwFlags = 0;
         }
         SendInput((UINT)len, input.data(), sizeof(INPUT));
         if (delay)
@@ -73,6 +75,7 @@ namespace Ally::Handlers
         {
             input[i].type = INPUT_KEYBOARD;
             input[i].ki.wVk = inputs[i];
+            input[i].ki.wScan = MapVirtualKey(inputs[i], MAPVK_VK_TO_VSC);
             input[i].ki.dwFlags = KEYEVENTF_KEYUP;
         }
         SendInput((UINT)len, input.data(), sizeof(INPUT));
@@ -111,11 +114,11 @@ namespace Ally::Handlers
     {
         if (SteamIsActive())
         {
-            SendKeyInput({VK_CONTROL, '1'}, 200);
+            SendKeyInput({VK_CONTROL, '1'}, 300);
         }
         else
         {
-            SendKeyInput({VK_SHIFT, VK_TAB}, 200);
+            SendKeyInput({VK_SHIFT, VK_TAB}, 300);
         }
     }
 
@@ -125,7 +128,7 @@ namespace Ally::Handlers
         {
             SendKeyInput({VK_SHIFT, VK_TAB}, 100);
         }
-        SendKeyInput({VK_CONTROL, '2'}, 200);
+        SendKeyInput({VK_CONTROL, '2'}, 300);
     }
 
 
