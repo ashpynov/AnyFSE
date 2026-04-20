@@ -225,6 +225,7 @@ namespace FluentDesign
                 if (lParam != NULL && wcscmp(L"ImmersiveColorSet", (LPCWSTR)lParam) == 0)
                 {
                     This->LoadColors();
+                    This->OnThemeChanged.Notify();
                     RedrawWindow(hWnd, NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE | RDW_UPDATENOW);
                 }
             }
@@ -232,6 +233,7 @@ namespace FluentDesign
             case WM_DWMCOLORIZATIONCOLORCHANGED:
             {
                 This->LoadColors();
+                This->OnThemeChanged.Notify();
                 RedrawWindow(hWnd, NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE | RDW_UPDATENOW);
                 break;
             }

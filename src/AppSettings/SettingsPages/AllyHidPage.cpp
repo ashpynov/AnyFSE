@@ -15,6 +15,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             return;
         }
 
+        m_theme.OnThemeChanged += delegate(ReloadIcons);
+
         SettingsLine & rogAllySupport = m_dialog.AddSettingsLine(settingPageList, top,
             L"ROG Ally features",
             L"ASUS ROG Ally and ROG AllyX customization experimental features",
@@ -33,65 +35,55 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_pAllyHidLine->SetIcon(L"@B9ECED6F.ASUSCommandCenter_qmba6cd70vzyy");
         m_enableAllyHidToggle.OnChanged = delegate(EnableAllyHidChanged);
 
-        SettingsLine& acPressLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"PRESS Armoury Crate button",
-            L"Define Short press right button action",
-            m_acPressCombo,
-            Layout::LineHeight, 0, 0, 240);
+        m_pACPressLine = &m_pAllyHidLine->AddGroupItem(
+            &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                L"PRESS Armoury Crate button",
+                L"Define Short press right button action",
+                m_acPressCombo,
+                Layout::LineHeight, 0, 0, 240));
 
-        acPressLine.SetIcon(L"@/Assets/asus_cac_keymap_ac.png");
+         m_pACHoldLine = &m_pAllyHidLine->AddGroupItem(
+            &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                L"HOLD Armoury Crate button",
+                L"Define Long press right button action",
+                m_acHoldCombo,
+                Layout::LineHeight, 0, 0, 240));
 
-        m_pAllyHidLine->AddGroupItem(&acPressLine);
+        m_pCCPressLine = &m_pAllyHidLine->AddGroupItem(
+            &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                L"PRESS Command Center button",
+                L"Define Short press left button action",
+                m_ccPressCombo,
+                Layout::LineHeight, 0, 0, 240));
 
-        SettingsLine& acHoldLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"HOLD Armoury Crate button",
-            L"Define Long press right button action",
-            m_acHoldCombo,
-            Layout::LineHeight, 0, 0, 240);
+        m_pAllyHidLine->AddGroupItem(
+            &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                L"Secondary buttons actions (Mode+)",
+                L"",
+                Layout::LinePadding * 4, 0, 0));
 
-        m_pAllyHidLine->AddGroupItem(&acHoldLine);
-        acHoldLine.SetIcon(L"@/Assets/asus_cac_keymap_ac.png");
+        m_pModeACPressLine = &m_pAllyHidLine->AddGroupItem(
+            &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                L"Mode+PRESS Armoury Crate button",
+                L"Define Short press right button action with Mode key",
+                m_modeACPressCombo,
+                Layout::LineHeight, 0, 0, 240));
 
-        SettingsLine& ccPressLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"PRESS Command Center button",
-            L"Define Short press left button action",
-            m_ccPressCombo,
-            Layout::LineHeight, 0, 0, 240);
+        m_pModeACHoldLine = &m_pAllyHidLine->AddGroupItem(
+            &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                L"Mode+HOLD Armoury Crate button",
+                L"Define Long press right button action with Mode key",
+                m_modeACHoldCombo,
+                Layout::LineHeight, 0, 0, 240));
 
-        ccPressLine.SetIcon(L"@/Assets/asus_cac_keymap_cc.png");
-        m_pAllyHidLine->AddGroupItem(&ccPressLine);
+        m_pModeCCPressLine = &m_pAllyHidLine->AddGroupItem(
+            &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                L"Mode+PRESS Command Center button",
+                L"Define Short press left button action with Mode key",
+                m_modeCCPressCombo,
+                Layout::LineHeight, Layout::LinePadding, 0, 240));
 
-        m_pAllyHidLine->AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Secondary buttons actions (Mode+)",
-            L"",
-            Layout::LinePadding * 4, 0, 0));
-
-        SettingsLine& modeACPressLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Mode+PRESS Armoury Crate button",
-            L"Define Short press right button action with Mode key",
-            m_modeACPressCombo,
-            Layout::LineHeight, 0, 0, 240);
-
-        modeACPressLine.SetIcon(L"@/Assets/asus_cac_keymap_ac.png");
-        m_pAllyHidLine->AddGroupItem(&modeACPressLine);
-
-        SettingsLine& modeACHoldLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Mode+HOLD Armoury Crate button",
-            L"Define Long press right button action with Mode key",
-            m_modeACHoldCombo,
-            Layout::LineHeight, 0, 0, 240);
-
-        modeACHoldLine.SetIcon(L"@/Assets/asus_cac_keymap_ac.png");
-        m_pAllyHidLine->AddGroupItem(&modeACHoldLine);
-
-        SettingsLine& modeCCPressLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Mode+PRESS Command Center button",
-            L"Define Short press left button action with Mode key",
-            m_modeCCPressCombo,
-            Layout::LineHeight, Layout::LinePadding, 0, 240);
-
-        modeCCPressLine.SetIcon(L"@/Assets/asus_cac_keymap_cc.png");
-        m_pAllyHidLine->AddGroupItem(&modeCCPressLine);
+        ReloadIcons();
 
         m_pAllyHidLine->SetState(SettingsLine::State::Opened);
     }
@@ -103,7 +95,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             return;
         }
 
-        for ( auto h : Ally::Handlers::KnownHandlers)
+        for (auto h : Ally::Handlers::KnownHandlers)
         {
             m_acPressCombo.AddItem(h.name, L"", h.code);
             m_acHoldCombo.AddItem(h.name, L"", h.code);
@@ -120,6 +112,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_modeACPressCombo.SelectItem(Config::AllyHidModeACPress);
         m_modeACHoldCombo.SelectItem(Config::AllyHidModeACHold);
         m_modeCCPressCombo.SelectItem(Config::AllyHidModeCCPress);
+
+        EnableAllyHidChanged();
     }
 
     void AllyHidPage::SaveControls()
@@ -129,6 +123,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             return;
         }
 
+        bool changed = Config::AllyHidEnable != m_enableAllyHidToggle.GetCheck();
         Config::AllyHidEnable = m_enableAllyHidToggle.GetCheck();
         Config::AllyHidACPress = m_acPressCombo.GetCurentValue();
         Config::AllyHidACHold = m_acHoldCombo.GetCurentValue();
@@ -137,7 +132,10 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         Config::AllyHidModeACHold = m_modeACHoldCombo.GetCurentValue();
         Config::AllyHidModeCCPress = m_modeCCPressCombo.GetCurentValue();
 
-        Ally::EnableNativeHandler(!Config::AllyHidEnable);
+        if (changed)
+        {
+            Ally::EnableNativeHandler(!Config::AllyHidEnable);
+        }
     }
 
     void AllyHidPage::OpenAllyHidPage()
@@ -152,5 +150,17 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         {
             child->Enable(enabled);
         }
+    }
+
+    void AllyHidPage::ReloadIcons()
+    {
+        std::wstring path = L"@/Assets/asus_cac_keymap_";
+        std::wstring suffix = m_theme.IsDarkThemeEnabled() ? L".png" : L".theme-light.png";
+        m_pACHoldLine->SetIcon(path + L"ac" + suffix);
+        m_pCCPressLine->SetIcon(path + L"cc" + suffix);
+        m_pACPressLine->SetIcon(path + L"ac" + suffix);
+        m_pModeACPressLine->SetIcon(path + L"ac" + suffix);
+        m_pModeACHoldLine->SetIcon(path + L"cc" + suffix);
+        m_pModeCCPressLine->SetIcon(path + L"ac" + suffix);
     }
 };

@@ -189,6 +189,7 @@ namespace FluentDesign
         void DrawChildFocus(HDC hdc, HWND parent, HWND child);
 
         Event OnDPIChanged;
+        Event OnThemeChanged;
 
         const bool IsDark() { return m_isDark; }
 

@@ -158,7 +158,7 @@ namespace FluentDesign
         void SetState(State state);
         State GetState() { return m_state; }
 
-        void AddGroupItem(SettingsLine *groupItem);
+        SettingsLine& AddGroupItem(SettingsLine *groupItem);
         void DeleteGroupItem(SettingsLine *groupItem);
         SettingsLine *GetGroupHeader() { return m_groupLine; }
         std::list<SettingsLine *> &GetGroupItems() { return m_groupItemsList; }

@@ -45,8 +45,16 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         ComboBox m_modeCCPressCombo;
 
         SettingsLine * m_pAllyHidLine;
+        SettingsLine * m_pACPressLine;
+        SettingsLine * m_pACHoldLine;
+        SettingsLine * m_pCCPressLine;
+        SettingsLine * m_pModeACPressLine;
+        SettingsLine * m_pModeACHoldLine;
+        SettingsLine * m_pModeCCPressLine;
 
         void OpenAllyHidPage();
         void EnableAllyHidChanged();
+
+        void ReloadIcons();
     };
 }

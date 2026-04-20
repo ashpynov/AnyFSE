@@ -27,12 +27,10 @@ namespace Ally::Handlers
         { L"CommandCenter", L"Command Center (Ctrl+Alt+C)", Handlers::OpenComandCenter },
         { L"CommandCenterF24", L"Command Center (F24)", Handlers::OpenComandCenterF24 },
         { L"ArmouryCrate", L"Armoury Crate SE", Handlers::OpenArmouryCrate },
-        { L"SteamOverlay", L"Steam Overlay", Handlers::OpenSteamOverlay },
-        { L"SteamQAM", L"Steam Quick Menu", Handlers::OpenSteamQuickMenu },
+        { L"SteamOverlay", L"Steam Overlay (Shift+Tab)", Handlers::OpenSteamOverlay },
+        { L"SteamQAM", L"Steam Quick Menu (Ctrl+2)", Handlers::OpenSteamQuickMenu },
         { L"AnyFSESettings", L"AnyFSE Settings", Handlers::OpenAnyFSESettings },
         { L"Keyboard", L"On-Screen Keyboard", Handlers::ShowKeyboard },
-        { L"Keyboard", L"Alt", Handlers::ShowKeyboard },
-        { L"Keyboard", L"Second", Handlers::ShowKeyboard }
     };
 
     std::function<void()> Handlers::GetByName(const std::wstring &handleName)
@@ -47,6 +45,12 @@ namespace Ally::Handlers
         return NULL;
     }
 
+    bool SteamIsActive()
+    {
+        std::wstring activeProcess = Unicode::to_lower(Process::GetWindowProcessName(WindowFromPoint(POINT{1, 1})));
+        log.Trace("ActiveWindow: %s %x", Unicode::to_string(activeProcess).c_str(), WindowFromPoint(POINT{1, 1}));
+        return false;
+    }
 
     void SendKeyInput(const std::vector<WORD> &inputs, int delay)
     {
@@ -105,14 +109,25 @@ namespace Ally::Handlers
 
     void Handlers::OpenSteamOverlay()
     {
-        SendKeyInput({VK_SHIFT, VK_TAB}, 200);
+        if (SteamIsActive())
+        {
+            SendKeyInput({VK_CONTROL, '1'}, 200);
+        }
+        else
+        {
+            SendKeyInput({VK_SHIFT, VK_TAB}, 200);
+        }
     }
 
     void Handlers::OpenSteamQuickMenu()
     {
-        SendKeyInput({VK_SHIFT, VK_TAB}, 100);
+        if (!SteamIsActive())
+        {
+            SendKeyInput({VK_SHIFT, VK_TAB}, 100);
+        }
         SendKeyInput({VK_CONTROL, '2'}, 200);
     }
+
 
     void OpenGameBarComandCenter()
     {

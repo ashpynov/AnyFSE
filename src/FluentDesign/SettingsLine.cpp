@@ -362,7 +362,24 @@ namespace FluentDesign
 
             if (pImage)
             {
-                graphics.DrawImage(pImage, rect.left, rect.top, m_theme.GetSize_Icon(), m_theme.GetSize_Icon());
+                Gdiplus::ImageAttributes imageAttributes;
+                Gdiplus::ColorMatrix colorMatrix = {
+                    1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+                    0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+                    0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+                    0.0f, 0.0f, 0.0f, 0.5f, 0.0f,
+                    0.0f, 0.0f, 0.0f, 0.0f, 1.0f
+                };
+                if (!m_enabled)
+                {
+                    imageAttributes.SetColorMatrix(&colorMatrix, Gdiplus::ColorMatrixFlagsDefault, Gdiplus::ColorAdjustTypeBitmap);
+                }
+
+                graphics.DrawImage(pImage,
+                    Gdiplus::Rect(rect.left, rect.top, m_theme.GetSize_Icon(), m_theme.GetSize_Icon()),
+                    0, 0, pImage->GetWidth(), pImage->GetHeight(),
+                    Gdiplus::UnitPixel, &imageAttributes);
+
                 delete pImage;
             }
             //::DrawIconEx(hdc, rect.left, rect.top, m_hIcon, m_theme.GetSize_Icon(), m_theme.GetSize_Icon(), 0, nullptr, DI_NORMAL);
@@ -592,6 +609,11 @@ namespace FluentDesign
 
     void SettingsLine::SetIcon(const std::wstring &path)
     {
+        if (m_hIcon)
+        {
+            DestroyIcon(m_hIcon);
+            m_hIcon = NULL;
+        }
         m_hIcon = Icon::LoadIcon(path);
         UpdateLayout();
     }
@@ -840,10 +862,11 @@ namespace FluentDesign
         UpdateLayout();
     }
 
-    void SettingsLine::AddGroupItem(SettingsLine *groupItem)
+    SettingsLine& SettingsLine::AddGroupItem(SettingsLine *groupItem)
     {
         m_groupItemsList.push_back(groupItem);
         groupItem->m_groupLine = this;
+        return *groupItem;
     }
 
     void SettingsLine::DeleteGroupItem(SettingsLine *groupItem)
