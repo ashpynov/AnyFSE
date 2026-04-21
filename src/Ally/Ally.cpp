@@ -68,14 +68,12 @@ namespace Ally
 
     bool GetRawInputDevice(HANDLE hDevice, HWND hWnd, RAWINPUTDEVICE *pRid)
     {
-        // --- Now you have the Device Path. Next, get its Usage Page and Usage ---
         RID_DEVICE_INFO deviceInfo;
         deviceInfo.cbSize = sizeof(RID_DEVICE_INFO);
         UINT infoSize = sizeof(RID_DEVICE_INFO);
 
         if (GetRawInputDeviceInfo(hDevice, RIDI_DEVICEINFO, &deviceInfo, &infoSize) > 0)
         {
-            // This is the mapping you are looking for!
             pRid->dwFlags = RIDEV_INPUTSINK;
             pRid->hwndTarget = hWnd;
             pRid->usUsagePage = deviceInfo.hid.usUsagePage;
