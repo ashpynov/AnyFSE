@@ -7,39 +7,51 @@ The AnyFSE Home application aims to give users the ability to use their favorite
 
 [Help and Discussions](https://discord.gg/AfkERzTEut)
 
-AnyFSE can be selected as Home application for full screen experience and will execute users favourite launchers like Playnite, Steam Big Picture mode, LaunchBox, etc. in full screen experience mode.
-
-Now AnyFSE able to support (alpabetical):
-
-- LaunchBox BigBox
-- One Game Launcher
-- Playnite Fullscreen
-- RetroBat
-- Steam Big Picture Mode
+AnyFSE can be selected as Home application for full screen experience and will execute users favourite launchers like Playnite, Steam Big Picture mode, LaunchBox, etc. in full screen experience mode (Xbox mode).
 
 Some other launchers potentially can be supported too with minor customizations
 
 ## Kudos
 
-Way how to create home app was inspired by @driver1998 work https://github.com/driver1998/FullScreenExperienceShell. Also thanks to discord user 'silicon' who show me that project.
+- Way how to create home app was inspired by @driver1998 work https://github.com/driver1998/FullScreenExperienceShell. Also thanks to discord user 'silicon' who show me that project.
+- Handling of ASUS Rog Ally buttons inspired by such projects like Handheld Companion and g-helper.
+
+## Features
+
+- Ability to select one of supported launchers:
+    - [LaunchBox BigBox](https://www.launchbox-app.com/download)
+    - [One Game Launcher](https://ogl.app/)
+    - [Playnite Fullscreen and Desktop](https://playnite.link)
+    - [RetroBat](https://www.retrobat.org/download/)
+    - [Steam Big Picture Mode](https://store.steampowered.com/about/)
+    - [Armoury Crate SE](https://armoury-crate.com/#download)
+- Maximized performance during minimal runtime memory and perfomance footprint due to C++ sorce code.
+- Ability to navigate to download pages of supported launchers.
+- User defined video splash during launchers start.
+- Custom startup application launch in Fullscreen Experience mode.
+- Proper handling of Playnite restart in Fullscreen / Desktop modes.
+- ASUS ROG Ally buttons "ArmouryCrate" and "Command Center" re-mapping including "Mode+" combos.
+- Gamepad friendly navigation in application Settings dialog
 
 ## How it is works
 
 If AnyFSE is selected as home application:
 
-1. Windows starts AnyFSE as full screen home application.
+1. Windows starts AnyFSE as fullscreen home application (Fullscreen experience or Xbox mode).
 2. AnyFSE read configuration and start launcher selected by user.
 3. Show splash screen (text or video).
 4. Wait till launcher executed (try to detect it main window).
 5. Close splash screen and exit
 
-So no background services and processes. No Xbox app intersection etc etc.
-
 Same for cases when AnyFSE executed from gamebar.
+
+In case if ASUS ROG Ally buttons remaping is configured it will start second instance as background app that listen such buttons and execute handlers on keypress.
 
 
 ## Install, Configure and Uninstall
 
+> [!NOTE]
+> AnyFSE is not implement enabling FSE mode support in windows. It is require either supported Handheld device like ASUS ROG Ally or enabling this mode on other devices using "Enabler" tool e.g. [XboxFullscreenExperienceTool](https://github.com/8bit2qubit/XboxFullscreenExperienceTool).
 
 ### How to install
 
