@@ -13,8 +13,8 @@ Some other launchers potentially can be supported too with minor customizations
 
 ## Kudos
 
-- Way how to create home app was inspired by @driver1998 work https://github.com/driver1998/FullScreenExperienceShell. Also thanks to discord user 'silicon' who show me that project.
-- Handling of ASUS Rog Ally buttons inspired by such projects like Handheld Companion and g-helper.
+- Way how to create home app was inspired by @driver1998 work [FullScreenExperienceShell](https://github.com/driver1998/FullScreenExperienceShell). Also thanks to discord user 'silicon' who show me that project.
+- Handling of ASUS Rog Ally buttons inspired by such projects like [Handheld Companion](https://github.com/Valkirie/HandheldCompanion) and [g-helper](https://github.com/seerge/g-helper).
 
 ## Features
 
