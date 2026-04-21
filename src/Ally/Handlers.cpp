@@ -9,6 +9,7 @@
 #include "Tools/Unicode.hpp"
 #include "Logging/LogManager.hpp"
 #include "Handlers.hpp"
+#include "Tools/Steam.hpp"
 
 #pragma comment(lib, "psapi.lib")
 
@@ -22,12 +23,12 @@ namespace Ally::Handlers
         { L"HomeApp", L"Home", Handlers::OpenLibrary },
         { L"TaskSwitcher", L"Task switcher", Handlers::OpenTaskSwitcher },
         { L"TaskSwitcherAlt", L"Task switcher (Win+Tab)", Handlers::OpenTaskSwitcherAlt },
-        { L"GamebarCommandCenter", L"GameBar Command Center", Handlers::OpenGameBarComandCenter },
         { L"Gamebar", L"GameBar", Handlers::OpenGameBar },
+        { L"GamebarCommandCenter", L"GameBar Command Center", Handlers::OpenGameBarComandCenter },
         { L"CommandCenter", L"Command Center (Ctrl+Alt+C)", Handlers::OpenComandCenter },
         { L"CommandCenterF24", L"Command Center (F24)", Handlers::OpenComandCenterF24 },
         { L"ArmouryCrate", L"Armoury Crate SE", Handlers::OpenArmouryCrate },
-        { L"SteamOverlay", L"Steam Overlay (Shift+Tab)", Handlers::OpenSteamOverlay },
+        { L"SteamOverlay", L"Steam Overlay", Handlers::OpenSteamOverlay },
         { L"SteamQAM", L"Steam Quick Menu (Ctrl+2)", Handlers::OpenSteamQuickMenu },
         { L"AnyFSESettings", L"AnyFSE Settings", Handlers::OpenAnyFSESettings },
         { L"Keyboard", L"On-Screen Keyboard", Handlers::ShowKeyboard },
@@ -118,7 +119,11 @@ namespace Ally::Handlers
         }
         else
         {
-            SendKeyInput({VK_SHIFT, VK_TAB}, 300);
+            std::vector<WORD> keys = AnyFSE::Tools::Steam::GetOverlaySequence();
+            if (!keys.empty())
+            {
+                SendKeyInput(keys, 300);
+            }
         }
     }
 
@@ -126,7 +131,11 @@ namespace Ally::Handlers
     {
         if (!SteamIsActive())
         {
-            SendKeyInput({VK_SHIFT, VK_TAB}, 100);
+            std::vector<WORD> keys = AnyFSE::Tools::Steam::GetOverlaySequence();
+            if (!keys.empty())
+            {
+                SendKeyInput(keys, 100);
+            }
         }
         SendKeyInput({VK_CONTROL, '2'}, 300);
     }

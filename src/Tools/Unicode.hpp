@@ -32,6 +32,9 @@ namespace AnyFSE::Tools::Unicode
     std::wstring to_wstring(const std::string& str);
     std::string to_string(const std::wstring& wstr);
     std::wstring to_lower(const std::wstring &str);
+    std::string to_lower(const std::string &str);
+    std::wstring to_upper(const std::wstring &str);
+    std::string to_upper(const std::string &str);
 }
 
 namespace Unicode = AnyFSE::Tools::Unicode;

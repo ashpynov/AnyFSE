@@ -60,4 +60,24 @@ namespace AnyFSE::Tools::Unicode
         std::transform(wstr.begin(), wstr.end(), wstr.begin(), ::towlower);
         return wstr;
     }
+    std::string to_lower(const std::string &str)
+    {
+        std::string sstr = str;
+        std::transform(sstr.begin(), sstr.end(), sstr.begin(), ::tolower);
+        return sstr;
+    }
+
+    std::wstring to_upper(const std::wstring &str)
+    {
+        std::wstring wstr = str;
+        std::transform(wstr.begin(), wstr.end(), wstr.begin(), ::towupper);
+        return wstr;
+    }
+
+    std::string to_upper(const std::string &str)
+    {
+        std::string sstr = str;
+        std::transform(sstr.begin(), sstr.end(), sstr.begin(), ::toupper);
+        return sstr;
+    }
 }
