@@ -124,7 +124,7 @@ namespace Ally
         Config::Load();
         ButtonBind[Ally::EventCode::ACPress] =          Handlers::GetByName(Config::AllyHidACPress);
         ButtonBind[Ally::EventCode::ACHold] =           Handlers::GetByName(Config::AllyHidACHold);
-        ButtonBind[Ally::EventCode::CCPress] =          IsXBoxRogAlly() ? Handlers::GetByName(Config::AllyHidCCPress) : Handlers::GetByName(Config::AllyHidCCPress);
+        ButtonBind[Ally::EventCode::CCPress] =          IsXBoxRogAlly() ? Handlers::GetByName(Config::AllyHidACPress) : Handlers::GetByName(Config::AllyHidCCPress);
         ButtonBind[Ally::EventCode::LibraryPress] =     Handlers::GetByName(Config::AllyHidLibraryPress);
 
         ButtonBind[Ally::EventCode::MACPress] =         Handlers::GetByName(Config::AllyHidModeACPress);
@@ -226,7 +226,8 @@ namespace Ally
                     else if (bModePressed &&
                                 (  buttonCode == Ally::ACHold
                                 || buttonCode == Ally::ACPress
-                                || buttonCode == Ally::CCPress )
+                                || buttonCode == Ally::CCPress
+                                || buttonCode == Ally::LibraryPress )
                     )
                     {
                         buttonCode = (Ally::EventCode)(buttonCode + Ally::EventCode::ModePress);

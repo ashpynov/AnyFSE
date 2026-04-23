@@ -46,8 +46,19 @@ namespace FluentDesign
         int popupWidth = width;
         int popupHeight = min(m_theme.DpiScale(400), (int)items.size() * m_theme.DpiScale(Layout_ItemHeight));
 
-        int dx = (flags & TPM_RIGHTALIGN) ? -popupWidth : (flags & TPM_CENTERALIGN) ? -popupWidth / 2 : 0;
-        int dy = (flags & TPM_BOTTOMALIGN) ? -popupHeight : 0;
+        MONITORINFO mi{sizeof(MONITORINFO)};
+        int monitorHeight = 2160;
+        int monitorWidth = 3840;
+
+        if (GetMonitorInfo(MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST), &mi))
+        {
+            monitorHeight = mi.rcMonitor.bottom - mi.rcMonitor.top;
+            monitorWidth = mi.rcMonitor.right - mi.rcMonitor.left;
+        }
+
+        int dx = (flags & TPM_RIGHTALIGN || x + popupWidth > monitorWidth ) ? -popupWidth : (flags & TPM_CENTERALIGN) ? -popupWidth / 2 : 0;
+        int dy = (flags & TPM_BOTTOMALIGN || y + popupHeight + m_theme.DpiScale(Layout_ItemHeight)  > monitorHeight ) ? -popupHeight : 0;
+
 
         // Create popup listbox window
         m_hWnd = CreateWindowEx(
