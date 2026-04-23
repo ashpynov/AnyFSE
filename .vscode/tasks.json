@@ -22,7 +22,7 @@
                 "AnyFSE.sln",
                 "-property:Configuration=Release",
                 "-property:Platform=x64",
-                "-target:Clean;AnyFSE;AnyFSE_Settings"
+                "-target:AnyFSE;AnyFSE_Settings"
             ],
             "problemMatcher": [
                 "$msCompile"

@@ -10,17 +10,29 @@ namespace Ally
         Release = 0,
         ACPress = 56,
         ToggleMicrophone = 124,
+        LibraryPress = 147, // Xbox Ally
         ScreenShot = 160,
         ShowKeyboard = 162,
         ToggleRecord = 164,
         ModePress = 165,
-        CCPress = 166,
+        CCPress = 166, // It is AC (left on XBox Ally versions)
         ACHold = 167,
         ROGHoldRelease = 168,
         Unknown = 236,
         MACPress = ACPress + ModePress,
         MCCPress = CCPress + ModePress,
         MACHold = ACHold + ModePress,
+        MLibraryPress = LibraryPress + ModePress
+    };
+
+    enum RogAllyVersion
+    {
+        NotDefined,
+        NotSupported,
+        ROGAlly,
+        ROGAllyX,
+        XboxROGAlly,
+        XboxROGAllyX
     };
 
     bool IsSupported();
@@ -38,4 +50,7 @@ namespace Ally
     bool CheckListener();
     bool SetupListener();
     bool WaitListener();
+
+    RogAllyVersion GetRogAllyVersion();
+    bool IsXBoxRogAlly();
 }

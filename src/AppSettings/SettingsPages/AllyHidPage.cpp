@@ -18,8 +18,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_theme.OnThemeChanged += delegate(ReloadIcons);
 
         SettingsLine & rogAllySupport = m_dialog.AddSettingsLine(settingPageList, top,
-            L"ROG Ally features",
-            L"ASUS ROG Ally and ROG AllyX customization experimental features",
+            L"ASUS ROG Ally features",
+            L"ASUS handhelds customization experimental features",
             Layout::LineHeight, Layout::LinePadding, 0
         );
         rogAllySupport.SetState(FluentDesign::SettingsLine::Next);
@@ -35,26 +35,41 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_pAllyHidLine->SetIcon(L"@B9ECED6F.ASUSCommandCenter_qmba6cd70vzyy");
         m_enableAllyHidToggle.OnChanged = delegate(EnableAllyHidChanged);
 
+
         m_pACPressLine = &m_pAllyHidLine->AddGroupItem(
             &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
                 L"PRESS Armoury Crate button",
-                L"Define Short press right button action",
+                !Ally::IsXBoxRogAlly()
+                    ? L"Define Short press right button action"
+                    : L"Define Short press left button action",
                 m_acPressCombo,
                 Layout::LineHeight, 0, 0, 240));
 
-         m_pACHoldLine = &m_pAllyHidLine->AddGroupItem(
-            &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-                L"HOLD Armoury Crate button",
-                L"Define Long press right button action",
-                m_acHoldCombo,
-                Layout::LineHeight, 0, 0, 240));
+        if (!Ally::IsXBoxRogAlly())
+        {
+            m_pACHoldLine = &m_pAllyHidLine->AddGroupItem(
+                &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                    L"HOLD Armoury Crate button",
+                    L"Define Long press right button action",
+                    m_acHoldCombo,
+                    Layout::LineHeight, 0, 0, 240));
 
-        m_pCCPressLine = &m_pAllyHidLine->AddGroupItem(
-            &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-                L"PRESS Command Center button",
-                L"Define Short press left button action",
-                m_ccPressCombo,
-                Layout::LineHeight, 0, 0, 240));
+            m_pCCPressLine = &m_pAllyHidLine->AddGroupItem(
+                &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                    L"PRESS Command Center button",
+                    L"Define Short press left button action",
+                    m_ccPressCombo,
+                    Layout::LineHeight, 0, 0, 240));
+        }
+        else
+        {
+            m_pLibraryPressLine = &m_pAllyHidLine->AddGroupItem(
+                &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                    L"PRESS Library button",
+                    L"Define Short press right button action",
+                    m_libraryPressCombo,
+                    Layout::LineHeight, 0, 0, 240));
+        }
 
         m_pAllyHidLine->AddGroupItem(
             &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
@@ -62,26 +77,41 @@ namespace AnyFSE::App::AppSettings::Settings::Page
                 L"",
                 Layout::LinePadding * 4, 0, 0));
 
+
         m_pModeACPressLine = &m_pAllyHidLine->AddGroupItem(
             &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
                 L"Mode+PRESS Armoury Crate button",
-                L"Define Short press right button action with Mode key",
+                !Ally::IsXBoxRogAlly()
+                    ? L"Define Short press right button action with Mode key"
+                    : L"Define Short press left button action with Mode key",
                 m_modeACPressCombo,
                 Layout::LineHeight, 0, 0, 240));
 
-        m_pModeACHoldLine = &m_pAllyHidLine->AddGroupItem(
-            &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-                L"Mode+HOLD Armoury Crate button",
-                L"Define Long press right button action with Mode key",
-                m_modeACHoldCombo,
-                Layout::LineHeight, 0, 0, 240));
+        if (!Ally::IsXBoxRogAlly())
+        {
+            m_pModeACHoldLine = &m_pAllyHidLine->AddGroupItem(
+                &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                    L"Mode+HOLD Armoury Crate button",
+                    L"Define Long press right button action with Mode key",
+                    m_modeACHoldCombo,
+                    Layout::LineHeight, 0, 0, 240));
 
-        m_pModeCCPressLine = &m_pAllyHidLine->AddGroupItem(
-            &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-                L"Mode+PRESS Command Center button",
-                L"Define Short press left button action with Mode key",
-                m_modeCCPressCombo,
-                Layout::LineHeight, Layout::LinePadding, 0, 240));
+            m_pModeCCPressLine = &m_pAllyHidLine->AddGroupItem(
+                &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                    L"Mode+PRESS Command Center button",
+                    L"Define Short press left button action with Mode key",
+                    m_modeCCPressCombo,
+                    Layout::LineHeight, 0, 0, 240));
+        }
+        else
+        {
+            m_pModeLibraryPressLine = &m_pAllyHidLine->AddGroupItem(
+                &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                    L"Mode+PRESS Library button",
+                    L"Define Short press right button action with Mode key",
+                    m_modeLibraryPressCombo,
+                    Layout::LineHeight, Layout::LinePadding, 0, 240));
+        }
 
         ReloadIcons();
 
@@ -98,20 +128,39 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         for (auto h : Ally::Handlers::KnownHandlers)
         {
             m_acPressCombo.AddItem(h.name, L"", h.code);
-            m_acHoldCombo.AddItem(h.name, L"", h.code);
-            m_ccPressCombo.AddItem(h.name, L"", h.code);
             m_modeACPressCombo.AddItem(h.name, L"", h.code);
-            m_modeACHoldCombo.AddItem(h.name, L"", h.code);
-            m_modeCCPressCombo.AddItem(h.name, L"", h.code);
+
+            if (!Ally::IsXBoxRogAlly())
+            {
+                m_acHoldCombo.AddItem(h.name, L"", h.code);
+                m_modeACHoldCombo.AddItem(h.name, L"", h.code);
+                m_ccPressCombo.AddItem(h.name, L"", h.code);
+                m_modeCCPressCombo.AddItem(h.name, L"", h.code);
+            }
+            else
+            {
+                m_libraryPressCombo.AddItem(h.name, L"", h.code);
+                m_modeLibraryPressCombo.AddItem(h.name, L"", h.code);
+            }
         }
 
         m_enableAllyHidToggle.SetCheck(Config::AllyHidEnable);
+
         m_acPressCombo.SelectItem(Config::AllyHidACPress);
-        m_acHoldCombo.SelectItem(Config::AllyHidACHold);
-        m_ccPressCombo.SelectItem(Config::AllyHidCCPress);
         m_modeACPressCombo.SelectItem(Config::AllyHidModeACPress);
-        m_modeACHoldCombo.SelectItem(Config::AllyHidModeACHold);
-        m_modeCCPressCombo.SelectItem(Config::AllyHidModeCCPress);
+
+        if (!Ally::IsXBoxRogAlly())
+        {
+            m_acHoldCombo.SelectItem(Config::AllyHidACHold);
+            m_modeACHoldCombo.SelectItem(Config::AllyHidModeACHold);
+            m_ccPressCombo.SelectItem(Config::AllyHidCCPress);
+            m_modeCCPressCombo.SelectItem(Config::AllyHidModeCCPress);
+        }
+        else
+        {
+            m_libraryPressCombo.SelectItem(Config::AllyHidLibraryPress);
+            m_modeLibraryPressCombo.SelectItem(Config::AllyHidModeLibraryPress);
+        }
 
         EnableAllyHidChanged();
     }
@@ -124,13 +173,24 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         }
 
         bool changed = Config::AllyHidEnable != m_enableAllyHidToggle.GetCheck();
+
         Config::AllyHidEnable = m_enableAllyHidToggle.GetCheck();
+
         Config::AllyHidACPress = m_acPressCombo.GetCurentValue();
-        Config::AllyHidACHold = m_acHoldCombo.GetCurentValue();
-        Config::AllyHidCCPress = m_ccPressCombo.GetCurentValue();
         Config::AllyHidModeACPress = m_modeACPressCombo.GetCurentValue();
-        Config::AllyHidModeACHold = m_modeACHoldCombo.GetCurentValue();
-        Config::AllyHidModeCCPress = m_modeCCPressCombo.GetCurentValue();
+
+        if (!Ally::IsXBoxRogAlly())
+        {
+            Config::AllyHidACHold = m_acHoldCombo.GetCurentValue();
+            Config::AllyHidModeACHold = m_modeACHoldCombo.GetCurentValue();
+            Config::AllyHidCCPress = m_ccPressCombo.GetCurentValue();
+            Config::AllyHidModeCCPress = m_modeCCPressCombo.GetCurentValue();
+        }
+        else
+        {
+            Config::AllyHidLibraryPress = m_libraryPressCombo.GetCurentValue();
+            Config::AllyHidModeLibraryPress = m_modeLibraryPressCombo.GetCurentValue();
+        }
 
         if (changed || Config::AllyHidEnable)
         {
@@ -156,11 +216,20 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     {
         std::wstring path = L"@/Assets/asus_cac_keymap_";
         std::wstring suffix = m_theme.IsDarkThemeEnabled() ? L".png" : L".theme-light.png";
-        m_pACHoldLine->SetIcon(path + L"ac" + suffix);
-        m_pCCPressLine->SetIcon(path + L"cc" + suffix);
-        m_pACPressLine->SetIcon(path + L"ac" + suffix);
-        m_pModeACPressLine->SetIcon(path + L"ac" + suffix);
-        m_pModeACHoldLine->SetIcon(path + L"cc" + suffix);
-        m_pModeCCPressLine->SetIcon(path + L"ac" + suffix);
+
+        if (!Ally::IsXBoxRogAlly())
+        {
+            m_pACPressLine->SetIcon(path + L"ac" + suffix);
+            m_pModeACPressLine->SetIcon(path + L"ac" + suffix);
+            m_pACHoldLine->SetIcon(path + L"ac" + suffix);
+            m_pCCPressLine->SetIcon(path + L"cc" + suffix);
+            m_pModeACHoldLine->SetIcon(path + L"cc" + suffix);
+            m_pModeCCPressLine->SetIcon(path + L"ac" + suffix);
+        } else {
+            m_pACPressLine->SetIcon(path + L"ac_left" + suffix);
+            m_pModeACPressLine->SetIcon(path + L"ac_left" + suffix);
+            m_pLibraryPressLine->SetIcon(path + L"library" + suffix);
+            m_pModeLibraryPressLine->SetIcon(path + L"library" + suffix);
+        }
     }
 };

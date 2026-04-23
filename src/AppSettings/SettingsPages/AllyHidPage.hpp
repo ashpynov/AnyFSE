@@ -23,9 +23,11 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             , m_acPressCombo(theme)
             , m_acHoldCombo(theme)
             , m_ccPressCombo(theme)
+            , m_libraryPressCombo(theme)
             , m_modeACPressCombo(theme)
             , m_modeACHoldCombo(theme)
             , m_modeCCPressCombo(theme)
+            , m_modeLibraryPressCombo(theme)
         {}
         std::list<SettingsLine> &GetSettingsLines() { return m_pageLinesList;  };
 
@@ -40,17 +42,21 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         ComboBox m_acPressCombo;
         ComboBox m_acHoldCombo;
         ComboBox m_ccPressCombo;
+        ComboBox m_libraryPressCombo;
         ComboBox m_modeACPressCombo;
         ComboBox m_modeACHoldCombo;
         ComboBox m_modeCCPressCombo;
+        ComboBox m_modeLibraryPressCombo;
 
         SettingsLine * m_pAllyHidLine;
-        SettingsLine * m_pACPressLine;
-        SettingsLine * m_pACHoldLine;
-        SettingsLine * m_pCCPressLine;
-        SettingsLine * m_pModeACPressLine;
-        SettingsLine * m_pModeACHoldLine;
-        SettingsLine * m_pModeCCPressLine;
+        SettingsLine * m_pACPressLine = nullptr;
+        SettingsLine * m_pACHoldLine = nullptr;
+        SettingsLine * m_pCCPressLine = nullptr;
+        SettingsLine * m_pLibraryPressLine = nullptr;
+        SettingsLine * m_pModeACPressLine = nullptr;
+        SettingsLine * m_pModeACHoldLine = nullptr;
+        SettingsLine * m_pModeCCPressLine = nullptr;
+        SettingsLine * m_pModeLibraryPressLine = nullptr;
 
         void OpenAllyHidPage();
         void EnableAllyHidChanged();

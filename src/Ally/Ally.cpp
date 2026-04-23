@@ -6,6 +6,8 @@
 #include "Logging/LogManager.hpp"
 #include "Configuration/Config.hpp"
 #include "Tools/Process.hpp"
+#include "Tools/Registry.hpp"
+#include "Tools/Unicode.hpp"
 #include "Ally.hpp"
 
 
@@ -26,6 +28,34 @@ namespace Ally
             log.Trace("Ally HID is %d", supported);
         }
         return supported;
+    }
+
+    RogAllyVersion GetRogAllyVersion()
+    {
+        static RogAllyVersion version = RogAllyVersion::NotDefined;
+
+        if (version == RogAllyVersion::NotDefined)
+        {
+            std::wstring product = Registry::ReadString(
+                L"HKLM\\SYSTEM\\HardwareConfig\\Current",
+                L"BaseBoardProduct",
+                L"");
+
+            log.Debug("Detected ASUS device: '%s'", Unicode::to_string(product).c_str());
+
+            version =   (product == L"RC73XA") ? RogAllyVersion::XboxROGAllyX
+                      : (product == L"RC73YA") ? RogAllyVersion::XboxROGAlly
+                      : (product == L"RC72LA") ? RogAllyVersion::ROGAllyX
+                      : (product == L"RC71L")  ? RogAllyVersion::ROGAlly
+                                               : RogAllyVersion::NotSupported;
+        }
+        return version;
+    }
+
+    bool IsXBoxRogAlly()
+    {
+        return GetRogAllyVersion() == RogAllyVersion::XboxROGAllyX
+            || GetRogAllyVersion() == RogAllyVersion::XboxROGAlly;
     }
 
     HANDLE FindHIDDevice()
@@ -53,12 +83,18 @@ namespace Ally
 
                 std::transform(devicePath.begin(), devicePath.end(), devicePath.begin(), ::toupper);
 
+                if (devicePath.find(L"VID_0B05") != std::string::npos)
+                {
+                    log.Debug("Detected ASUS HID device at: '%s'", devicePath.c_str());
+                }
+
                 if (devicePath.find(L"VID_0B05") != std::string::npos
                     && ( devicePath.find(L"PID_1ABE") != std::string::npos
                         || devicePath.find(L"PID_1B4C") != std::string::npos )
                     && devicePath.find(L"MI_02") != std::string::npos
                     && devicePath.find(L"COL01") != std::string::npos)
                 {
+                    log.Debug("Selected ASUS HID device: '%s'", devicePath.c_str());
                     return deviceList[i].hDevice;
                 }
             }
@@ -88,11 +124,13 @@ namespace Ally
         Config::Load();
         ButtonBind[Ally::EventCode::ACPress] =          Handlers::GetByName(Config::AllyHidACPress);
         ButtonBind[Ally::EventCode::ACHold] =           Handlers::GetByName(Config::AllyHidACHold);
-        ButtonBind[Ally::EventCode::CCPress] =          Handlers::GetByName(Config::AllyHidCCPress);
+        ButtonBind[Ally::EventCode::CCPress] =          IsXBoxRogAlly() ? Handlers::GetByName(Config::AllyHidCCPress) : Handlers::GetByName(Config::AllyHidCCPress);
+        ButtonBind[Ally::EventCode::LibraryPress] =     Handlers::GetByName(Config::AllyHidLibraryPress);
 
         ButtonBind[Ally::EventCode::MACPress] =         Handlers::GetByName(Config::AllyHidModeACPress);
         ButtonBind[Ally::EventCode::MACHold] =          Handlers::GetByName(Config::AllyHidModeACHold);
-        ButtonBind[Ally::EventCode::MCCPress] =         Handlers::GetByName(Config::AllyHidModeCCPress);
+        ButtonBind[Ally::EventCode::MCCPress] =         IsXBoxRogAlly() ? Handlers::GetByName(Config::AllyHidModeACPress) : Handlers::GetByName(Config::AllyHidModeCCPress);
+        ButtonBind[Ally::EventCode::MLibraryPress] =    Handlers::GetByName(Config::AllyHidModeLibraryPress);
 
         ButtonBind[Ally::EventCode::ToggleMicrophone] = Handlers::ToggleMicrophone;
         ButtonBind[Ally::EventCode::ScreenShot] =       Handlers::TakeScreenShoot;

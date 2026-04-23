@@ -200,7 +200,7 @@ namespace AnyFSE::App
         if (Ally::IsSupported() && Config::AllyHidEnable)
         {
             log.Debug("Ally::IsSupported and enabled\n");
-            if ( AsAllyHid(lpCmdLine))
+            if (AsAllyHid(lpCmdLine))
             {
                 log.Debug("Ally start as HIDListener\n");
                 AnyFSE::Logging::LogManager::Initialize("AnyFSE/AllyHID", Config::LogLevel, Config::LogPath);
@@ -212,6 +212,10 @@ namespace AnyFSE::App
                 log.Debug("Ally not started and enabled\n");
                 Process::StartProtocol(L"anyfse://AllyHid");
             }
+        }
+        else if (AsAllyHid(lpCmdLine))
+        {
+            return 0;
         }
 
         AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);

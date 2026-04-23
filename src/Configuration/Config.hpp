@@ -177,9 +177,11 @@ namespace AnyFSE::Configuration
             static std::wstring AllyHidACPress;
             static std::wstring AllyHidACHold;
             static std::wstring AllyHidCCPress;
+            static std::wstring AllyHidLibraryPress;
             static std::wstring AllyHidModeACPress;
             static std::wstring AllyHidModeACHold;
             static std::wstring AllyHidModeCCPress;
+            static std::wstring AllyHidModeLibraryPress;
     };
 }
 
