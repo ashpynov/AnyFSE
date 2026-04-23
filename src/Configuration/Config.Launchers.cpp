@@ -66,7 +66,7 @@ namespace AnyFSE::Configuration
             Steam.ExStyle = WS_EX_APPWINDOW;
             Steam.NoStyle = WS_THICKFRAME;
             Steam.ProcessName = L"steamwebhelper.exe";
-            Steam.WindowTitle = L"SDL_app";
+            Steam.ClassName = L"SDL_app";
             Steam.IsTrayAggressive = true;
             result.push_back(Steam);
         }

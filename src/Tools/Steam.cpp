@@ -318,8 +318,12 @@ namespace AnyFSE::Tools::Steam
             for (auto p: path)
             {
                 node = node->children[p];
+                if (!node)
+                {
+                    break;
+                }
             }
-            return Unicode::to_wstring(node->value);
+            return node ? Unicode::to_wstring(node->value) : defValue;
         }
         catch(...) {}
 
