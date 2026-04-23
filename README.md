@@ -15,6 +15,7 @@ Some other launchers potentially can be supported too with minor customizations
 
 - Way how to create home app was inspired by @driver1998 work [FullScreenExperienceShell](https://github.com/driver1998/FullScreenExperienceShell). Also thanks to discord user 'silicon' who show me that project.
 - Handling of ASUS Rog Ally buttons inspired by such projects like [Handheld Companion](https://github.com/Valkirie/HandheldCompanion) and [g-helper](https://github.com/seerge/g-helper).
+- Discord users 'Marecki' and 'TwoTracks' who helped me to design and test such features like Xbox Ally support and Steam buttons mapping.
 
 ## Features
 
@@ -30,7 +31,7 @@ Some other launchers potentially can be supported too with minor customizations
 - User defined video splash during launchers start.
 - Custom startup application launch in Fullscreen Experience mode.
 - Proper handling of Playnite restart in Fullscreen / Desktop modes.
-- ASUS ROG Ally buttons "ArmouryCrate" and "Command Center" re-mapping including "Mode+" combos.
+- ASUS ROG Ally buttons "ArmouryCrate", "Command Center", and "Library" re-mapping including "Mode+" combos.
 - Gamepad friendly navigation in application Settings dialog
 
 ## How it is works
@@ -75,7 +76,7 @@ In case if your antivirus still blames on AnyFSE.Installer.exe file - you may in
 
 1. Uninstall AnyFSE pre-0.90 version to avoid conflicting.
 2. Install Artem Shpynov Root certificate:
-- Download certificate: [here](https://github.com/ashpynov/AnyFSE/releases/download/v0.90.9/Artem.Shpynov.cer) and open it.
+- Download certificate: [here](https://github.com/ashpynov/AnyFSE/releases/download/v0.90.12/Artem.Shpynov.cer) and open it.
 - Press 'Install certificate',
 - Select store location 'Local Machine',
 - Press 'Next'
