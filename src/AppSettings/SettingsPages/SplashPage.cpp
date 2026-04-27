@@ -3,6 +3,7 @@
 #include "AppSettings/SettingsDialog.hpp"
 #include "SplashPage.hpp"
 #include "Tools/Paths.hpp"
+#include <filesystem>
 
 
 namespace AnyFSE::App::AppSettings::Settings::Page
@@ -111,7 +112,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     {
         std::wstring path = Tools::Paths::GetSplashDefaultPath();
 
-        CreateDirectoryW(path.c_str(), NULL);
+        std::filesystem::create_directories(path);
         Process::StartProtocol(L"\"" + path + L"\"");
     }
 

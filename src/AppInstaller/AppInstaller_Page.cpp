@@ -417,8 +417,9 @@ namespace AnyFSE
 #ifdef OFFLINE_INSTALLER
     bool AppInstaller::ExtractEmbeddedZip(const std::wstring &path)
     {
-        if (FAILED(SHCreateDirectoryExW(NULL, path.c_str(), NULL)))
-        {
+        try {
+            std::filesystem::create_directories(path);
+        } catch (const std::filesystem::filesystem_error&) {
             throw std::exception("Cannot create binary folder");
         }
 
@@ -486,8 +487,9 @@ namespace AnyFSE
 #else
     bool AppInstaller::DownloadFiles(const std::wstring &path)
     {
-        if (FAILED(SHCreateDirectoryExW(NULL, path.c_str(), NULL)))
-        {
+        try {
+            std::filesystem::create_directories(path);
+        } catch (const std::filesystem::filesystem_error&) {
             throw std::exception("Cannot create binary folder");
         }
         const std::wstring rootPath = L"https://github.org/ashpynov/AnyFSE/releases/download/v" + Unicode::to_wstring(APP_VERSION);

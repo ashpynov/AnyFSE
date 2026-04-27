@@ -5,6 +5,7 @@
 #include "AppSettings/SettingsDialog.hpp"
 #include "TroubleshootPage.hpp"
 #include "Tools/Paths.hpp"
+#include <filesystem>
 
 
 namespace AnyFSE::App::AppSettings::Settings::Page
@@ -81,7 +82,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     {
         std::wstring path = Tools::Paths::GetLogsPath();
 
-        CreateDirectoryW(path.c_str(), NULL);
+        std::filesystem::create_directories(path);
         Process::StartProtocol(L"\"" + path + L"\"");
     }
 

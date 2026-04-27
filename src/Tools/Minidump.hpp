@@ -27,13 +27,10 @@ namespace AnyFSE::Tools
 
         // ensure dumps directory exists: <exeDir>\dumps
         std::wstring dumpsDir = Tools::Paths::GetDumpsPath();
-        if (!CreateDirectoryW(dumpsDir.c_str(), NULL))
-        {
-            DWORD err = GetLastError();
-            if (err != ERROR_ALREADY_EXISTS)
-            {
-                return false;
-            }
+        try {
+            std::filesystem::create_directories(dumpsDir);
+        } catch (const std::filesystem::filesystem_error&) {
+            return false;
         }
 
         // timestamp

@@ -32,6 +32,7 @@
 #include <iomanip>
 #include <cstdarg>
 #include <vector>
+#include <filesystem>
 #include "Tools/Unicode.hpp"
 
 using namespace std;
@@ -73,7 +74,7 @@ namespace AnyFSE::Logging
 
         if (!LogToConsole && !filePath.empty() && Level != LogLevels::Disabled)
         {
-            CreateDirectory(filePath.c_str(), NULL);
+            std::filesystem::create_directories(filePath);
             std::wstring logName = Unicode::to_wstring(appName);
             std::replace(logName.begin(), logName.end(), L'/', L'.');
             FilePath = filePath + L"\\" + logName + L".log";
