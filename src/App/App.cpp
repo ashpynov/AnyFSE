@@ -194,8 +194,7 @@ namespace AnyFSE::App
     {
         Config::Load();
 
-        AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
-        log.Debug("\nApplication is started (hInstance=%08x) args: [%s]", hInstance, lpCmdLine);
+        AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);        log.Debug("\nApplication is started (hInstance=%08x) args: [%s]", hInstance, lpCmdLine);
 
         if (Ally::IsSupported() && Config::AllyHidEnable)
         {
@@ -267,12 +266,14 @@ namespace AnyFSE::App
 
         if (AsSettings(lpCmdLine))
         {
-            return ShowSettings();
+            ShowSettings();
+            return 0;
         }
 
         if (Launchers::IsLauncherActive())
         {
             Launchers::FocusLauncher();
+            ProcessExitFSEOnHomeExit();
             return 0;
         }
 
@@ -307,16 +308,27 @@ namespace AnyFSE::App
             log.Debug("Restart Playnite is detected");
         }
 
-        Window::MainWindow mainWindow;
-
-        if (!mainWindow.Create(L"AnyFSE", hInstance, (Config::Launcher.Name + L" is launching").c_str()))
         {
-            return (int)GetLastError();
+            Window::MainWindow mainWindow;
+
+            if (!mainWindow.Create(L"AnyFSE", hInstance, (Config::Launcher.Name + L" is launching").c_str()))
+            {
+                return (int)GetLastError();
+            }
+
+            mainWindow.Show();
+
+            exitCode = Window::MainWindow::RunLoop();
         }
 
-        mainWindow.Show();
+        log.Debug("Splash window loop finished.");
 
-        exitCode = Window::MainWindow::RunLoop();
+        if (Launchers::IsLauncherActive())
+        {
+            Launchers::LauncherOnStarted();
+        }
+
+        ProcessExitFSEOnHomeExit();
 
         log.Debug("Loop finished. Time to exit");
 
@@ -329,19 +341,44 @@ namespace AnyFSE::App
             log.Debug("Job is done!");
         }
 
-        // while (HANDLE hProcess = Launchers::GetLauncherProcess())
-        // {
-        //     log.Debug("Start waiting %x", hProcess);
-
-        //     DWORD waitResult = WAIT_TIMEOUT;
-        //     do
-        //     {
-        //         waitResult = WaitForSingleObject(hProcess, 1000);
-        //         log.Debug("Wait Result %u", waitResult);
-        //     } while (waitResult == WAIT_TIMEOUT);
-
-        //     CloseHandle(hProcess);
-        // };
         return (int)exitCode;
+    }
+
+    bool App::IsAlreadyWaitingLauncher()
+    {
+        static HANDLE hMutex = CreateMutex(NULL, TRUE, L"ArtemShpynov.AnyFSE_WaitingLauncherSingleInstance");
+
+        if (GetLastError() == ERROR_ALREADY_EXISTS)
+        {
+            log.Debug("Another instance of AnyFSE is already wait launcher exiting, exiting\n");
+            if (hMutex)
+            {
+                CloseHandle(hMutex);
+                hMutex = NULL;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    bool App::ProcessExitFSEOnHomeExit()
+    {
+        if (!GamingExperience::IsFullscreenMode()
+            || !Config::ExitFSEOnHomeExit
+            || !Launchers::IsLauncherActive()
+            || IsAlreadyWaitingLauncher()
+        )
+        {
+            return false;
+        }
+
+        log.Debug("Option to monitor home app finish");
+        Launchers::WaitLauncherExit();
+        if (Config::ExitFSEOnHomeExit)
+        {
+            GamingExperience::ExitFSEMode();
+        }
+
+        return true;
     }
 };

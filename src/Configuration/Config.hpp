@@ -121,6 +121,7 @@ namespace AnyFSE::Configuration
             static bool LoadLauncherSettings(const nlohmann::json &config, const std::wstring &path, LauncherConfig &out);
             static bool LoadLauncherSettings(const std::wstring &path, LauncherConfig &out);
             static json GetConfig();
+            static void LoadExitFSEOnHomeExit();
             static void Save();
 
             static void SaveWindowPlacement(int cmdShow, const RECT & rcNormalPosition);

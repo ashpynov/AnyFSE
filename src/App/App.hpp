@@ -43,5 +43,7 @@ namespace AnyFSE::App
         static bool AsFSE(LPSTR lpCmdLine);
         static bool AsSettings(LPSTR lpCmdLine);
         static int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
+        static bool IsAlreadyWaitingLauncher();
+        static bool ProcessExitFSEOnHomeExit();
     };
 }

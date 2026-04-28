@@ -116,6 +116,12 @@ namespace AnyFSE::Configuration
         return config;
     }
 
+    void Config::LoadExitFSEOnHomeExit()
+    {
+        json config = GetConfig();
+        ExitFSEOnHomeExit       = config.value(jp("/Extra/ExitFSEOnHomeExit"), false);
+    }
+
     void Config::Load()
     {
         LogPath = Tools::Paths::GetLogsPath();

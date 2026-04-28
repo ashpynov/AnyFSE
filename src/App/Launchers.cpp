@@ -30,6 +30,7 @@
 #include "Tools/Process.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/Packages.hpp"
+#include "App/GamingExperience.hpp"
 
 
 namespace AnyFSE::App::Launchers
@@ -44,6 +45,42 @@ namespace AnyFSE::App::Launchers
             case LauncherType::PlayniteFullscreen:
                 return PlayniteOnBoot();
         };
+    }
+
+    void LauncherOnStarted()
+    {
+        switch (Config::Launcher.Type)
+        {
+            case LauncherType::PlayniteDesktop:
+            case LauncherType::PlayniteFullscreen:
+                return PlayniteOnStarted();
+        };
+    }
+
+    bool WaitLauncherExit()
+    {
+        while (HANDLE hProcess = Launchers::GetLauncherProcess())
+        {
+            log.Debug("Start waiting %x for %s", hProcess, Unicode::to_string(Config::Launcher.Name).c_str());
+
+            DWORD waitResult = WAIT_TIMEOUT;
+            do
+            {
+                waitResult = WaitForSingleObject(hProcess, 10000);
+                log.Debug("Wait Result %u", waitResult);
+
+                Config::LoadExitFSEOnHomeExit();
+
+                if (!Config::ExitFSEOnHomeExit
+                    || !App::GamingExperience::IsFullscreenMode())
+                {
+                    return true;
+                }
+            } while (waitResult == WAIT_TIMEOUT);
+
+            CloseHandle(hProcess);
+        };
+        return !Launchers::GetLauncherProcess();
     }
 
     void PlayniteOnBoot()
@@ -76,6 +113,26 @@ namespace AnyFSE::App::Launchers
                 log.Debug("Safestart flag is exist at %s, deleting", flagFile.string().c_str());
                 fs::remove(flagFile);
             }
+        }
+    }
+
+    void PlayniteOnStarted()
+    {
+        HWND hWnd = GetLauncherWindow();
+        if (!hWnd || !GamingExperience::IsFullscreenMode())
+        {
+            return;
+        }
+        // send WM_DISPLAYCHANGED
+        HMONITOR hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+        MONITORINFO monitorInfo = {sizeof(MONITORINFO)};
+        if (GetMonitorInfo(hMonitor, &monitorInfo))
+        {
+            PostMessage(hWnd, WM_DISPLAYCHANGE, 32,
+                MAKELPARAM(
+                    monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
+                    monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top
+            ));
         }
     }
 

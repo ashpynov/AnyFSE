@@ -22,6 +22,15 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         // dialogLine.OnChanged += delegate(OpenTroubleshootSettingsPage);
 
         ULONG topPage = 0;
+
+        m_dialog.AddSettingsLine(settingPageList,
+            top,
+            L"Leave full screen mode on Home app exit",
+            L"Exit to desktop mode after Home app was exited",
+            m_troubleExitOnExitToggle,
+            Layout::LineHeight, Layout::LinePadding, 0)
+            .SetIcon(L'\xEE47');
+
         FluentDesign::SettingsLine &logLevel = m_dialog.AddSettingsLine(settingPageList,
             top,
             L"Set logs for troubleshoot",
@@ -48,13 +57,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             L"Aggressive Mode",
             L"More simple and robust logic on XboxApp start, but you will lose any manual access to the XboxApp",
             m_troubleAggressiveToggle,
-            Layout::LineHeight, Layout::LinePadding, 0);
-
-        m_dialog.AddSettingsLine(m_pageLinesList,
-            topPage,
-            L"Leave full screen on Home app exit",
-            L"Exit to desktop mode after Home app was exited",
-            m_troubleExitOnExitToggle,
             Layout::LineHeight, Layout::LinePadding, 0);
 */
     }

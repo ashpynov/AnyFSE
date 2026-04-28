@@ -28,6 +28,11 @@ namespace AnyFSE::App::Launchers
     void LauncherOnBoot();
     void PlayniteOnBoot();
 
+    void LauncherOnStarted();
+    void PlayniteOnStarted();
+
+    bool WaitLauncherExit();
+
     void StartLauncher();
     bool IsLauncherActive();
 
