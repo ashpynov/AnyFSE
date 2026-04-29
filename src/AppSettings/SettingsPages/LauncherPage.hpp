@@ -26,6 +26,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             , m_launcherCombo(m_theme)
             , m_browseButton(m_theme)
             , m_fseOnStartupToggle(m_theme)
+            , m_fseExitOnHomeExitToggle(m_theme)
             , m_customSettingsToggle(m_theme)
             , m_additionalArgumentsEdit(m_theme)
             , m_processNameEdit(m_theme)
@@ -64,6 +65,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         ComboBox m_launcherCombo;
         Button m_browseButton;
         Toggle m_fseOnStartupToggle;
+        Toggle m_fseExitOnHomeExitToggle;
         Toggle m_customSettingsToggle;
         Button m_customResetButton;
 
@@ -77,6 +79,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         SettingsLine * m_pBrowseLine = nullptr;
         SettingsLine * m_pFseOnStartupLine = nullptr;
+        SettingsLine * m_pExitOnHomeExitLine = nullptr;
         SettingsLine * m_pCustomSettingsLine = nullptr;
         SettingsLine * m_pStartupSettingsLine = nullptr;
         SettingsLine * m_pSplashSettingsLine = nullptr;

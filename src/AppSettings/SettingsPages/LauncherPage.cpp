@@ -37,6 +37,14 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             L"",
             m_fseOnStartupToggle,
             Layout::LineHeight, Layout::LinePadding, 0);
+        m_pFseOnStartupLine->SetIcon(L'\xE93A');
+
+        m_pExitOnHomeExitLine = &m_dialog.AddSettingsLine(settingPageList, top,
+            L"Leave full screen experience on home app exit",
+            L"Exit full screen experience mode after Home app was exited",
+            m_fseExitOnHomeExitToggle,
+            Layout::LineHeight, Layout::LinePadding, 0);
+        m_pExitOnHomeExitLine->SetIcon(L'\xEE47');
 
         m_pCustomSettingsLine = &m_dialog.AddSettingsLine(settingPageList, top,
             L"Use custom settings",
@@ -220,6 +228,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         log.Debug("Saved launcher: %s", Unicode::to_string(Registry::ReadString(gamingConfiguration, gamingHomeApp)).c_str());
 
         Config::Launcher.StartCommand = m_config.StartCommand;
+        Config::ExitFSEOnHomeExit = m_fseExitOnHomeExitToggle.GetCheck();
         Config::CustomSettings = m_customSettingsToggle.GetCheck();
         Config::CustomSettings = m_customSettingsToggle.GetCheck();
         Config::Launcher.StartArg = m_additionalArgumentsEdit.GetText();
@@ -320,8 +329,10 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         else
         {
             m_pFseOnStartupLine->Enable();
+            m_pExitOnHomeExitLine->Enable();
         }
         m_fseOnStartupToggle.SetCheck(Config::FseOnStartup);
+        m_fseExitOnHomeExitToggle.SetCheck(Config::ExitFSEOnHomeExit);
 
         bool alwaysSettings = m_defaultConfig.Type==LauncherType::Custom;
         bool noSettings =
@@ -355,6 +366,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             m_pCustomSettingsLine->Enable(enabledAnyFSE && enableCheck);
         }
 
+        m_pExitOnHomeExitLine->Enable(enabledAnyFSE);
         m_pSplashSettingsLine->Enable(enabledAnyFSE);
         m_pStartupSettingsLine->Enable(enabledAnyFSE);
 
