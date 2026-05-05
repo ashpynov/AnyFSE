@@ -120,7 +120,7 @@ namespace AnyFSE::App::Launchers
     {
         log.Debug("Sending WM_DISPLAYCHANGE");
 
-        HWND hWnd = GetLauncherWindow();
+        HWND hWnd = GetLauncherWindow(true);
         if (!hWnd || !GamingExperience::IsFullscreenMode())
         {
             return;
@@ -153,7 +153,20 @@ namespace AnyFSE::App::Launchers
     bool IsLauncherActive()
     {
         const LauncherConfig& launcher = Config::Launcher;
-        return GetLauncherWindow();
+        return GetLauncherWindow(true);
+    }
+
+    bool IsLauncherActiveOrMinimized()
+    {
+        const LauncherConfig& launcher = Config::Launcher;
+        return GetLauncherWindow(true);
+    }
+
+    bool IsLauncherMinimized()
+    {
+        const LauncherConfig& launcher = Config::Launcher;
+        HWND hWnd = GetLauncherWindow(true);
+        return GetWindowLong(hWnd, GWL_STYLE) | WS_MINIMIZE;
     }
 
     void FocusLauncher()
@@ -171,7 +184,7 @@ namespace AnyFSE::App::Launchers
             return;
         }
 
-        HWND launcherHwnd = GetLauncherWindow();
+        HWND launcherHwnd = GetLauncherWindow(true);
         if (launcherHwnd)
         {
             Process::BringWindowToForeground(launcherHwnd, SW_SHOWMAXIMIZED);
@@ -191,7 +204,7 @@ namespace AnyFSE::App::Launchers
         }
     }
 
-    HWND GetLauncherWindow()
+    HWND GetLauncherWindow(bool includeMinimized)
     {
         HWND launcherHwnd = nullptr;
         const LauncherConfig& launcher = Config::Launcher;
@@ -212,12 +225,30 @@ namespace AnyFSE::App::Launchers
             );
         }
 
+        if (!launcherHwnd && includeMinimized)
+        {
+            launcherHwnd = Process::GetWindow(
+                launcher.ProcessName, launcher.ExStyle,
+                launcher.ClassName, launcher.WindowTitle,
+                WS_MINIMIZE, launcher.NoStyle
+            );
+        }
+
         if (!launcherHwnd)
         {
             launcherHwnd = Process::GetWindow(
                 launcher.ProcessNameAlt, launcher.ExStyleAlt,
                 launcher.ClassNameAlt, launcher.WindowTitleAlt,
                 WS_VISIBLE, launcher.NoStyle
+            );
+        }
+
+        if (!launcherHwnd && includeMinimized)
+        {
+            launcherHwnd = Process::GetWindow(
+                launcher.ProcessNameAlt, launcher.ExStyleAlt,
+                launcher.ClassNameAlt, launcher.WindowTitleAlt,
+                WS_MINIMIZE, launcher.NoStyle
             );
         }
         return launcherHwnd;
@@ -229,12 +260,12 @@ namespace AnyFSE::App::Launchers
             || 0 != Process::FindFirstByName(Config::Launcher.ProcessName)
             || 0 != Process::FindFirstByName(Config::Launcher.ProcessNameAlt)
             || 0 != Process::FindFirstByExe(Config::Launcher.StartCommand)
-            || IsLauncherActive();
+            || IsLauncherActiveOrMinimized();
     }
 
     HANDLE GetLauncherProcess()
     {
-        HWND hWnd = GetLauncherWindow();
+        HWND hWnd = GetLauncherWindow(true);
         if (!hWnd)
         {
             return NULL;

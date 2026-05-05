@@ -85,7 +85,7 @@ namespace Ally
 
                 if (devicePath.find(L"VID_0B05") != std::string::npos)
                 {
-                    log.Debug("Detected ASUS HID device at: '%s'", devicePath.c_str());
+                    log.Debug("Detected ASUS HID device at: '%s'", Unicode::to_string(devicePath).c_str());
                 }
 
                 if (devicePath.find(L"VID_0B05") != std::string::npos
@@ -94,7 +94,7 @@ namespace Ally
                     && devicePath.find(L"MI_02") != std::string::npos
                     && devicePath.find(L"COL01") != std::string::npos)
                 {
-                    log.Debug("Selected ASUS HID device: '%s'", devicePath.c_str());
+                    log.Debug("Selected ASUS HID device: '%s'", Unicode::to_string(devicePath).c_str());
                     return deviceList[i].hDevice;
                 }
             }

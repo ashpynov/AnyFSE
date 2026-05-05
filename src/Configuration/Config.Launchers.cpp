@@ -41,6 +41,7 @@ namespace AnyFSE::Configuration
             PlayniteFullscreen.ProcessName = L"Playnite.FullscreenApp.exe"; // ProcessName
             PlayniteFullscreen.ExStyleAlt = WS_EX_APPWINDOW;
             PlayniteFullscreen.ProcessNameAlt = L"Playnite.DesktopApp.exe"; // ProcessNameAlt
+            PlayniteFullscreen.ActivationProtocol = L"@";
             result.push_back(PlayniteFullscreen);
         }
         {
@@ -54,6 +55,7 @@ namespace AnyFSE::Configuration
             PlayniteDesktop.ProcessName = L"Playnite.DesktopApp.exe";       // ProcessName
             PlayniteDesktop.ExStyleAlt = WS_EX_APPWINDOW;
             PlayniteDesktop.ProcessNameAlt = L"Playnite.FullscreenApp.exe"; // ProcessNameAlt
+            PlayniteDesktop.ActivationProtocol = L"@";
             result.push_back(PlayniteDesktop);
         }
         {

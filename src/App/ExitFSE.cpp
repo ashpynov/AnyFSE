@@ -53,7 +53,7 @@ namespace AnyFSE::App::ExitFSE
 
     bool WaitHomeAppExit()
     {
-        if (!IsEnabled() || IsMutexExists() || !Launchers::IsLauncherActive() )
+        if (!IsEnabled() || IsMutexExists() || !Launchers::IsLauncherActiveOrMinimized() )
         {
             log.Trace("Skip WaitHomeAppExit");
             return false;
@@ -71,17 +71,25 @@ namespace AnyFSE::App::ExitFSE
         Launchers::WaitLauncherExit();
         if (Config::ExitFSEOnHomeExit)
         {
+            DWORD start = GetTickCount();
             GamingExperience::ExitFSEMode();
-            bool wasGamebar = false;
-            bool isGamebar = false;
-            do
+
+            if (GetTickCount() - start < 50)
             {
-                Sleep(500);
-                std::wstring activeProcess = Unicode::to_lower(Process::GetWindowProcessName(WindowFromPoint(POINT{1, 1})));
-                log.Trace("Waiting ExitFSE: Active process: %s", Unicode::to_string(activeProcess).c_str());
-                isGamebar = activeProcess == L"gamebar.exe";
-                wasGamebar |= isGamebar;
-            } while (GamingExperience::IsFullscreenMode() && (isGamebar || !wasGamebar));
+                log.Trace("GamingExperience::ExitFSEMode() Completed in: %d msec", GetTickCount() - start);
+
+                bool wasGamebar = false;
+                bool isGamebar = false;
+                log.Debug("Waiting ExitFSE loop");
+                while(GamingExperience::IsFullscreenMode() && (isGamebar || !wasGamebar))
+                {
+                    Sleep(500);
+                    std::wstring activeProcess = Unicode::to_lower(Process::GetWindowProcessName(WindowFromPoint(POINT{1, 1})));
+                    log.Trace("Waiting ExitFSE: Active process: %s", Unicode::to_string(activeProcess).c_str());
+                    isGamebar = activeProcess == L"gamebar.exe";
+                    wasGamebar |= isGamebar;
+                }
+            }
 
             log.Trace("Waiting ExitFSE: Complete, mode is %s", GamingExperience::IsFullscreenMode() ? "FSE" : "Desktop");
         }
@@ -91,7 +99,7 @@ namespace AnyFSE::App::ExitFSE
 
     bool WaitExitFSEMode()
     {
-        if (!IsEnabled() || !IsMutexExists() || Launchers::IsLauncherActive())
+        if (!IsEnabled() || !IsMutexExists() || Launchers::IsLauncherActiveOrMinimized())
         {
             return false;
         }

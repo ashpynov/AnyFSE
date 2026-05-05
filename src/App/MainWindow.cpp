@@ -101,7 +101,7 @@ namespace AnyFSE::App::Window
             0, 0,
             NULL, NULL, hInstance, this);
 
-        m_bLauncherWasActive = Launchers::IsLauncherActive();
+        m_bLauncherWasActive = Launchers::IsLauncherActiveOrMinimized();
         m_hLauncherCheckTimer = SetTimer(m_hWnd, m_launcherCheckTimerId, CHECK_INTERVAL_MS, NULL);
 
         if (!IsWindow(m_hWnd))

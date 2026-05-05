@@ -272,7 +272,7 @@ namespace AnyFSE::App
             return 0;
         }
 
-        if (Launchers::IsLauncherActive())
+        if (Launchers::IsLauncherActiveOrMinimized())
         {
             Launchers::FocusLauncher();
             ExitFSE::WaitHomeAppExit();

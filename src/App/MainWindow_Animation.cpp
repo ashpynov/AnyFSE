@@ -133,13 +133,17 @@ namespace AnyFSE::App::Window
         }
         else if (timerId == m_launcherCheckTimerId)
         {
-            bool isActive = Launchers::IsLauncherActive();
+            bool isActive = Launchers::IsLauncherActiveOrMinimized();
             if (isActive || m_bLauncherWasActive)
             {
                 if ((!isActive && m_bLauncherWasActive) || !Config::SplashShowVideo || !Config::SplashTillEnd || m_videoPlayer.GetPlayCount() > 0)
                 {
                     KillTimer(m_hWnd, m_launcherCheckTimerId);
                     m_hLauncherCheckTimer = NULL;
+                    if (Launchers::IsLauncherMinimized())
+                    {
+                        Launchers::FocusLauncher();
+                    }
                     DestroyWindow(m_hWnd);
                 }
                 if (!m_bLauncherWasActive && isActive)

@@ -35,9 +35,11 @@ namespace AnyFSE::App::Launchers
 
     void StartLauncher();
     bool IsLauncherActive();
+    bool IsLauncherActiveOrMinimized();
+    bool IsLauncherMinimized();
 
     void FocusLauncher();
-    HWND GetLauncherWindow();
+    HWND GetLauncherWindow(bool includeMinimized);
     bool HasLauncherProcess();
     HANDLE GetLauncherProcess();
     void LaunchStartupApps();
