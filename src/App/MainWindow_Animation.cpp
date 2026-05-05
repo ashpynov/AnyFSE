@@ -131,14 +131,19 @@ namespace AnyFSE::App::Window
             // Force repaint
             InvalidateRect(m_hWnd, NULL, FALSE);
         }
-        else if (
-            timerId == m_launcherCheckTimerId
-            && (!Config::SplashShowVideo || !Config::SplashTillEnd || m_videoPlayer.GetPlayCount() > 0)
-            && Launchers::IsLauncherActive())
+        else if (timerId == m_launcherCheckTimerId)
         {
-            KillTimer(m_hWnd, m_launcherCheckTimerId);
-            m_hLauncherCheckTimer = NULL;
-            DestroyWindow(m_hWnd);
+            bool isActive = Launchers::IsLauncherActive();
+            if (isActive || m_bLauncherWasActive)
+            {
+                if ((!isActive && m_bLauncherWasActive) || !Config::SplashShowVideo || !Config::SplashTillEnd || m_videoPlayer.GetPlayCount() > 0)
+                {
+                    KillTimer(m_hWnd, m_launcherCheckTimerId);
+                    m_hLauncherCheckTimer = NULL;
+                    DestroyWindow(m_hWnd);
+                }
+                m_bLauncherWasActive = true;
+            }
         }
     }
 

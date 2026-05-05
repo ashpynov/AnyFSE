@@ -35,9 +35,11 @@
 #include "FluentDesign/Popup.hpp"
 #include "App/App.hpp"
 #include "App/MainWindow.hpp"
+#include "App/Launchers.hpp"
 #include "MainWindow.hpp"
 #include "Tools/Notification.hpp"
 #include "Tools/Paths.hpp"
+#include "Tools/Process.hpp"
 #include "GamingExperience.hpp"
 
 #pragma comment(lib, "mpr.lib")
@@ -99,6 +101,7 @@ namespace AnyFSE::App::Window
             0, 0,
             NULL, NULL, hInstance, this);
 
+        m_bLauncherWasActive = Launchers::IsLauncherActive();
         m_hLauncherCheckTimer = SetTimer(m_hWnd, m_launcherCheckTimerId, CHECK_INTERVAL_MS, NULL);
 
         if (!IsWindow(m_hWnd))
@@ -243,13 +246,16 @@ namespace AnyFSE::App::Window
         case WM_SIZE:
             m_videoPlayer.Resize();
             break;
-        case WM_QUERYENDSESSION:
-            log.Info("QueryEndSession recieved");
-            OnQueryEndSession.Notify();
-            break;
-        case WM_ENDSESSION:
-            log.Info("EndSession recieved");
-            OnEndSession.Notify();
+        case WM_ACTIVATE:
+            if (wParam == 0
+                && GamingExperience::IsFullscreenMode()
+                && Config::SplashShowVideo
+                && Config::SplashTillEnd
+                && !m_videoPlayer.GetPlayCount())
+            {
+                Process::BringWindowToForeground(m_hWnd, SW_SHOWMAXIMIZED);
+                return 0;
+            }
             break;
         }
         return DefWindowProc(m_hWnd, uMsg, wParam, lParam);

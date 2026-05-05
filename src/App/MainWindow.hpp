@@ -81,8 +81,6 @@ namespace AnyFSE::App::Window
 
         void StartUpdateCheck();
         Event OnStartWindow;
-        Event OnQueryEndSession;
-        Event OnEndSession;
         Event OnReconfigure;
 
     private: // Animation
@@ -93,6 +91,7 @@ namespace AnyFSE::App::Window
         UINT_PTR m_hAnimationTimer = NULL;
         UINT_PTR m_hUpdateTimer = NULL;
         UINT_PTR m_hLauncherCheckTimer = NULL;
+        bool m_bLauncherWasActive = false;
 
         const int CHECK_INTERVAL_MS = 500;
         const int ZOOM_INTERVAL_MS = 20;

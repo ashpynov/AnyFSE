@@ -25,23 +25,8 @@
 
 #include <windows.h>
 
-namespace AnyFSE::App
+namespace AnyFSE::App::ExitFSE
 {
-    namespace Window { class MainWindow; }
-    namespace StateLoop { class AppControlStateLoop; }
-
-    typedef INT_PTR (*MainFunc)(HINSTANCE, HINSTANCE, LPSTR, int);
-
-    class App
-    {
-        static int CallLibrary(const WCHAR *library, HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
-        static int MainApp(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
-    public:
-        static int ShowSettings();
-        static void InitCustomControls();
-        static bool AsAllyHid(LPSTR lpCmdLine);
-        static bool AsFSE(LPSTR lpCmdLine);
-        static bool AsSettings(LPSTR lpCmdLine);
-        static int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
-    };
+    bool WaitHomeAppExit();
+    bool WaitExitFSEMode();
 }

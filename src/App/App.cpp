@@ -38,6 +38,7 @@
 
 #include "App/App.hpp"
 #include "App/GamingExperience.hpp"
+#include "App/ExitFSE.hpp"
 #include "App/MainWindow.hpp"
 #include "App/Launchers.hpp"
 #include "App/JumpList.hpp"
@@ -194,7 +195,8 @@ namespace AnyFSE::App
     {
         Config::Load();
 
-        AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);        log.Debug("\nApplication is started (hInstance=%08x) args: [%s]", hInstance, lpCmdLine);
+        AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
+        log.Debug("\nApplication is started (hInstance=%08x) args: [%s]", hInstance, lpCmdLine);
 
         if (Ally::IsSupported() && Config::AllyHidEnable)
         {
@@ -273,7 +275,12 @@ namespace AnyFSE::App
         if (Launchers::IsLauncherActive())
         {
             Launchers::FocusLauncher();
-            ProcessExitFSEOnHomeExit();
+            ExitFSE::WaitHomeAppExit();
+            return 0;
+        }
+
+        if (ExitFSE::WaitExitFSEMode())
+        {
             return 0;
         }
 
@@ -328,7 +335,7 @@ namespace AnyFSE::App
             Launchers::LauncherOnStarted();
         }
 
-        ProcessExitFSEOnHomeExit();
+        ExitFSE::WaitHomeAppExit();
 
         log.Debug("Loop finished. Time to exit");
 
@@ -342,43 +349,5 @@ namespace AnyFSE::App
         }
 
         return (int)exitCode;
-    }
-
-    bool App::IsAlreadyWaitingLauncher()
-    {
-        static HANDLE hMutex = CreateMutex(NULL, TRUE, L"ArtemShpynov.AnyFSE_WaitingLauncherSingleInstance");
-
-        if (GetLastError() == ERROR_ALREADY_EXISTS)
-        {
-            log.Debug("Another instance of AnyFSE is already wait launcher exiting, exiting\n");
-            if (hMutex)
-            {
-                CloseHandle(hMutex);
-                hMutex = NULL;
-            }
-            return true;
-        }
-        return false;
-    }
-
-    bool App::ProcessExitFSEOnHomeExit()
-    {
-        if (!GamingExperience::IsFullscreenMode()
-            || !Config::ExitFSEOnHomeExit
-            || !Launchers::IsLauncherActive()
-            || IsAlreadyWaitingLauncher()
-        )
-        {
-            return false;
-        }
-
-        log.Debug("Option to monitor home app finish");
-        Launchers::WaitLauncherExit();
-        if (Config::ExitFSEOnHomeExit)
-        {
-            GamingExperience::ExitFSEMode();
-        }
-
-        return true;
     }
 };
