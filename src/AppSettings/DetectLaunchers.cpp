@@ -132,6 +132,7 @@ namespace AnyFSE::Configuration
         FindBigBox(found);
         FindOneGameLauncher(found);
         FindRetroBat(found);
+        FindKodi(found);
         FindArmouryCrate(found);
         FindNativeLaunchers(found);
         return found.size() > existed;
@@ -213,6 +214,15 @@ namespace AnyFSE::Configuration
         if (!installPath.empty())
         {
             found.push_back(fs::path(installPath).append(L"RetroBat.exe").wstring());
+        }
+    }
+
+    void Config::FindKodi(std::list<std::wstring> &found)
+    {
+        std::wstring installPath = GetInstallPath(L"Kodi");
+        if (!installPath.empty())
+        {
+            found.push_back(fs::path(installPath).append(L"Kodi.exe").wstring());
         }
     }
 

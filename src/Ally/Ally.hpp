@@ -10,6 +10,8 @@ namespace Ally
         Release = 0,
         ACPress = 56,
         ToggleMicrophone = 124,
+        GyroButtonDown = 144,
+        GyroButtonUp = 145,
         LibraryPress = 147, // Xbox Ally
         ScreenShot = 160,
         ShowKeyboard = 162,

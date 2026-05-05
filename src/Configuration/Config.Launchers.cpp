@@ -117,6 +117,16 @@ namespace AnyFSE::Configuration
             ArmouryCrate.AppUserModelID = L"B9ECED6F.ArmouryCrateSE_qmba6cd70vzyy!App";
             result.push_back(ArmouryCrate);
         }
+        {
+            LauncherConfig Kodi = {};
+            Kodi.Type = LauncherType::Kodi;
+            Kodi.Name = L"Kodi";
+            Kodi.URL = L"https://kodi.tv/download/windows/";
+            Kodi.StartCommand = L"kodi.exe";
+            Kodi.ProcessName = L"kodi.exe";
+            Kodi.ClassName = L"Kodi";
+            result.push_back(Kodi);
+        }
         // {
         //     LauncherConfig Xbox = {};
         //     Xbox.Type = LauncherType::Native;
