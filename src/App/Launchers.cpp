@@ -118,6 +118,7 @@ namespace AnyFSE::App::Launchers
 
     void PlayniteOnStarted()
     {
+        return;
         HWND hWnd = GetLauncherWindow();
         if (!hWnd || !GamingExperience::IsFullscreenMode())
         {
