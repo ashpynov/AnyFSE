@@ -330,11 +330,6 @@ namespace AnyFSE::App
 
         log.Debug("Splash window loop finished.");
 
-        if (Launchers::IsLauncherActive())
-        {
-            Launchers::LauncherOnStarted();
-        }
-
         ExitFSE::WaitHomeAppExit();
 
         log.Debug("Loop finished. Time to exit");

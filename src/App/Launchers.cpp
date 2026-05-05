@@ -118,7 +118,8 @@ namespace AnyFSE::App::Launchers
 
     void PlayniteOnStarted()
     {
-        return;
+        log.Debug("Sending WM_DISPLAYCHANGE");
+
         HWND hWnd = GetLauncherWindow();
         if (!hWnd || !GamingExperience::IsFullscreenMode())
         {
@@ -129,7 +130,7 @@ namespace AnyFSE::App::Launchers
         MONITORINFO monitorInfo = {sizeof(MONITORINFO)};
         if (GetMonitorInfo(hMonitor, &monitorInfo))
         {
-            PostMessage(hWnd, WM_DISPLAYCHANGE, 32,
+            PostMessage(HWND_BROADCAST, WM_DISPLAYCHANGE, 32,
                 MAKELPARAM(
                     monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
                     monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top

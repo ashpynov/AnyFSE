@@ -142,6 +142,10 @@ namespace AnyFSE::App::Window
                     m_hLauncherCheckTimer = NULL;
                     DestroyWindow(m_hWnd);
                 }
+                if (!m_bLauncherWasActive && isActive)
+                {
+                    Launchers::LauncherOnStarted();
+                }
                 m_bLauncherWasActive = true;
             }
         }
