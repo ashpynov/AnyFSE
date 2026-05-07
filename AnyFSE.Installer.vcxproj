@@ -50,8 +50,13 @@
     <PackageDir>$(SolutionDir)build\Package\</PackageDir>
     <IntDir>$(SolutionDir)build\objs\$(ProjectName)\$(Configuration)\</IntDir>
     <TargetName>AnyFSE.Installer</TargetName>
-    <OutExe>$(OutDir)\$(TargetName).exe</OutExe>
+    <OutExe>$(OutDir)$(TargetName).exe</OutExe>
     <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)|$(Offline)'=='Release|x64|Offline'">
+  <TargetName>AnyFSE.Installer.Offline.$(AssemblyVersion)-$(VersionRevision)</TargetName>
+    <OutExe>$(OutDir)$(TargetName).exe</OutExe>
   </PropertyGroup>
 
   <ItemGroup>
@@ -118,6 +123,16 @@
       <!-- <AdditionalDependencies>delayimp.lib;Shell32.lib;Ole32.lib;User32.lib;ComCtl32.lib;Advapi32.lib</AdditionalDependencies> -->
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)|$(Offline)'=='Release|x64|Offline'">
+    <ClCompile>
+      <PreprocessorDefinitions>
+        OFFLINE_INSTALLER;
+        APP_VERSION="$(AssemblyVersion)-$(VersionRevision)";
+        %(PreprocessorDefinitions)
+      </PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
   <ItemGroup>
     <ClCompile Include="src\AppInstaller\AppInstaller.cpp" />
     <ClCompile Include="src\AppInstaller\AppInstaller_Page.cpp" />
@@ -144,7 +159,7 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\AppInstaller\Installer.rc">
-        <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='ReleaseOffline|x64'">
+        <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)|$(Offline)'=='Release|x64|Offline'">
             OFFLINE_INSTALLER;
             BUILD_ARCHIVE=\"$(OutDir.Replace('\', '\\'))$(AssemblyProduct).$(AssemblyVersion).zip\";
             %(PreprocessorDefinitions)
@@ -153,7 +168,7 @@
     </ResourceCompile>
   </ItemGroup>
 
-<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseOffline|x64'">
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)|$(Offline)'=='Release|x64|Offline'">
     <CustomBuildStep>
         <Message>Archive $(InstallFiles) and $(PDBFiles) to $(AssemblyProduct).$(AssemblyVersion).zip and $(AssemblyProduct).$(AssemblyVersion).pdb.zip </Message>
         <Command>cd &quot;$(OutDir)&quot; &amp;&amp; tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion).zip&quot; $(InstallFiles) &amp;&amp; tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion).pdb.zip&quot; $(PDBFiles)</Command>
@@ -177,9 +192,9 @@
         <Message Text="Signing EXE with certificate: $(CertificateThumbprint)" Importance="high" />
 
         <!-- Run SignTool with the found certificate thumbprint -->
-        <Exec Command="&quot;$(SignToolExe)&quot; sign /sha1 &quot;$(CertificateThumbprint)&quot; /fd SHA256 /a &quot;$(OutDir)$(TargetName).exe&quot;" WorkingDirectory="$(MSBuildProjectDirectory)" />
+        <Exec Command="&quot;$(SignToolExe)&quot; sign /sha1 &quot;$(CertificateThumbprint)&quot; /fd SHA256 /a &quot;$(OutExe)&quot;" WorkingDirectory="$(MSBuildProjectDirectory)" />
 
-        <Message Text="EXE signed successfully: $(OutDir)$(TargetName).exe" Importance="high" />
+        <Message Text="EXE signed successfully: $(OutExe)" Importance="high" />
     </Target>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
