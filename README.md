@@ -26,6 +26,7 @@ Some other launchers potentially can be supported too with minor customizations
     - [RetroBat](https://www.retrobat.org/download/)
     - [Steam Big Picture Mode](https://store.steampowered.com/about/)
     - [Armoury Crate SE](https://armoury-crate.com/#download)
+    - [Kodi](https://kodi.tv/)
 - Maximized performance during minimal runtime memory and perfomance footprint due to C++ sorce code.
 - Ability to navigate to download pages of supported launchers.
 - User defined video splash during launchers start.
@@ -119,6 +120,4 @@ You can specify custom position of loop via filename. To do this - name should c
 
 # Limitations
 
-As soon as new version do not monitor any application execution and even do not run in background it is not possible to implement some features like 'Exit full screen experience on launcher exit' it is disabled for now.
-
-Also application is require singned msix package. Currently I use self signed certifacate to be installed into trusted root authorities certificate storage.
+Also application is require singned msix package. Currently I use self signed certifacate to be installed into trusted root authorities certificate storage during installation phase.

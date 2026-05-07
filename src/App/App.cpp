@@ -303,12 +303,12 @@ namespace AnyFSE::App
 
         if (!restartDetected)
         {
-            Launchers::LauncherOnBoot();
-            Launchers::StartLauncher();
             if (GamingExperience::IsFullscreenMode() && bFirstLaunch)
             {
                 Launchers::LaunchStartupApps();
             };
+            Launchers::LauncherOnBoot();
+            Launchers::StartLauncher();
         }
         else
         {

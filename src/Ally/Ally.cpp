@@ -25,7 +25,7 @@ namespace Ally
         {
             supported = FindHIDDevice() ? 1 : 0;
 
-            log.Trace("Ally HID is %d", supported);
+            log.Trace("Ally HID is %ssupported", supported ? "" : "not ");
         }
         return supported;
     }

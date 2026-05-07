@@ -196,7 +196,7 @@ namespace AnyFSE::Tools::Process
             &si,            // Pointer to STARTUPINFO structure
             &pi))           // Pointer to PROCESS_INFORMATION structure
         {
-            log.Error(log.APIError(), "Can't CreateProcess:", Unicode::to_string(cmdLine.data()) );
+            log.Error(log.APIError(), "Can't CreateProcess:", Unicode::to_string(cmdLine.data()).c_str());
             return 0;
         }
 
