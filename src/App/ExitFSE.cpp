@@ -11,16 +11,11 @@
 namespace AnyFSE::App::ExitFSE
 {
 
-    bool IsEnabled();
     HANDLE RegisterWaitingMutex();
     bool IsMutexExists();
 
     static Logger log = LogManager::GetLogger("ExitFSE");
 
-    bool IsEnabled()
-    {
-        return Config::ExitFSEOnHomeExit && GamingExperience::IsFullscreenMode();
-    }
 
     HANDLE RegisterWaitingMutex()
     {
@@ -53,7 +48,7 @@ namespace AnyFSE::App::ExitFSE
 
     bool WaitHomeAppExit()
     {
-        if (!IsEnabled() || IsMutexExists() || !Launchers::IsLauncherActiveOrMinimized() )
+        if (!Config::ExitFSEOnHomeExit || !GamingExperience::IsFullscreenMode() || IsMutexExists() || !Launchers::IsLauncherActiveOrMinimized() )
         {
             log.Trace("Skip WaitHomeAppExit");
             return false;
@@ -90,7 +85,10 @@ namespace AnyFSE::App::ExitFSE
                     wasGamebar |= isGamebar;
                 }
             }
-
+            if (!GamingExperience::IsFullscreenMode())
+            {
+                Sleep(2000);
+            }
             log.Trace("Waiting ExitFSE: Complete, mode is %s", GamingExperience::IsFullscreenMode() ? "FSE" : "Desktop");
         }
         CloseHandle(hMutex);
@@ -99,7 +97,7 @@ namespace AnyFSE::App::ExitFSE
 
     bool WaitExitFSEMode()
     {
-        if (!IsEnabled() || !IsMutexExists() || Launchers::IsLauncherActiveOrMinimized())
+        if (!Config::ExitFSEOnHomeExit || !IsMutexExists() || Launchers::IsLauncherActiveOrMinimized())
         {
             return false;
         }

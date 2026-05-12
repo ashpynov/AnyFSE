@@ -46,6 +46,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             Layout::LineHeight, Layout::LinePadding, 0);
         m_pExitOnHomeExitLine->SetIcon(L'\xEE47');
 
+        m_dialog.AddPage((new ConfirmationsPage(m_theme, m_dialog))->AddLine(settingPageList, top));
+
         m_pCustomSettingsLine = &m_dialog.AddSettingsLine(settingPageList, top,
             L"Use custom settings",
             L"Change monitoring and startups settings for selected home application",

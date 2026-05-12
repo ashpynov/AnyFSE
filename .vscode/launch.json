@@ -4,7 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-                {
+        {
             "name": "Debug AnyFSE Launcher",
             "type": "cppvsdbg",
             "request": "launch",
@@ -32,6 +32,17 @@
             "request": "launch",
             "program": "AnyFSE.exe",
             "args": ["/allyhid"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/Debug",
+            "environment": [],
+            "preLaunchTask": "Build AnyFSE Debug"
+        },
+        {
+            "name": "Debug AnyFSE FSE Now",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "AnyFSE.exe",
+            "args": ["/fse-now"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build/Debug",
             "environment": [],

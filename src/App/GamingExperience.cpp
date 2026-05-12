@@ -73,7 +73,7 @@ namespace AnyFSE::App
     bool GamingExperience::EnterFSEMode()
     {
         HRESULT hres = SetGamingFullScreenExperience(TRUE);
-        log.Debug("Entering FSE mode ... %u", hres);
+        log.Debug("Entering FSE mode return %u", hres);
         return false;
     }
 

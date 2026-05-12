@@ -196,7 +196,7 @@ namespace AnyFSE::App
         Config::Load();
 
         AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
-        log.Debug("\nApplication is started (hInstance=%08x) args: [%s]", hInstance, lpCmdLine);
+        log.Debug("Application is started (hInstance=%08x) args: [%s]", hInstance, lpCmdLine);
 
         if (Ally::IsSupported() && Config::AllyHidEnable)
         {
@@ -246,7 +246,7 @@ namespace AnyFSE::App
             return -1;
         }
 
-        log.Debug("\n\nApplication control is started (hInstance=%08x) args: [%s]", hInstance, lpCmdLine);
+        log.Debug("Compatibility checks passed");
 
         bool bFirstLaunch = false;
 
@@ -258,11 +258,16 @@ namespace AnyFSE::App
         }
         else
         {
-            log.Debug("Subsequence launch at fullscreen experience mode");
+            log.Debug("Subsequence launch at %s experience mode", GamingExperience::IsFullscreenMode() ? "Fullscreen" : "Desktop");
         }
 
         if (AsFSE(lpCmdLine))
         {
+            if (GamingExperience::IsFullscreenMode())
+            {
+                return 0;
+            }
+
             return GamingExperience::EnterFSEMode();
         }
 

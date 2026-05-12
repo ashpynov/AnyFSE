@@ -17,6 +17,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
                 virtual std::list<FluentDesign::SettingsLine> &GetSettingsLines() = 0;
 
+                virtual class SettingsPage *AddLine(std::list<FluentDesign::SettingsLine> &settingPageList, ULONG &top) { return this; };
                 virtual void AddPage(std::list<FluentDesign::SettingsLine>& settingPageList, ULONG &top) = 0;
                 virtual void LoadControls() = 0;
                 virtual void SaveControls() = 0;
