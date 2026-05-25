@@ -31,7 +31,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         support.AddGroupItem(&links);
 
         // links.SetMaxColumns(1);
-        links.AddLinkButton(L"Discord AnyFSE community channel", L"https://discord.gg/AfkERzTEut");
+        links.AddLinkButton(L"Discord AnyFSE community channel", L"https://discord.gg/hnVwuTzDmk");
         links.AddLinkButton(L"Navigate to log files folder", Tools::Paths::GetLogsPath());
 
         links.AddLinkButton(L"Source code (Github)", L"https://github.com/ashpynov/AnyFSE/");

@@ -5,7 +5,7 @@ The AnyFSE Home application aims to give users the ability to use their favorite
 
 [Latest Release](https://github.com/ashpynov/AnyFSE/releases/latest)
 
-[Help and Discussions](https://discord.gg/AfkERzTEut)
+[Help and Discussions](https://discord.gg/hnVwuTzDmk)
 
 AnyFSE can be selected as Home application for full screen experience and will execute users favourite launchers like Playnite, Steam Big Picture mode, LaunchBox, etc. in full screen experience mode (Xbox mode).
 
