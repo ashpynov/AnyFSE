@@ -3,6 +3,7 @@
 #include "resource.h"
 #include <shellapi.h>
 #include "Notification.hpp"
+#include "App/AppConstants.hpp"
 
 #ifndef VER_VERSION_STR
 #define VER_VERSION_STR "0.0.0"
@@ -22,7 +23,7 @@ namespace AnyFSE::Tools
             createdWindow = true;
             wc.lpfnWndProc = DefWindowProcW;
             wc.hInstance = GetModuleHandleW(NULL);
-            wc.lpszClassName = L"AnyFSE_Updater_NotifyWnd";
+            wc.lpszClassName = AppConstants::UpdaterNotifyWindowClass;
             RegisterClassW(&wc);
 
             hWnd = CreateWindowExW(0, wc.lpszClassName, L"", 0, 0,0,0,0, HWND_MESSAGE, NULL, wc.hInstance, NULL);
@@ -37,7 +38,7 @@ namespace AnyFSE::Tools
             notifyData.uID = 1;
             notifyData.uFlags = NIF_ICON | NIF_TIP | NIF_INFO;
             notifyData.hIcon = LoadIconW(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON));
-            wcscpy_s(notifyData.szTip, _countof(notifyData.szTip), L"AnyFSE");
+            wcscpy_s(notifyData.szTip, _countof(notifyData.szTip), VER_PRODUCT_NAME);
             Shell_NotifyIconW(NIM_ADD, &notifyData);
         }
 

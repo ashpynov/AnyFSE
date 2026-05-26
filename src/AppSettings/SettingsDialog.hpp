@@ -29,6 +29,7 @@
 #include <vector>
 #include <memory>
 
+#include "App/AppConstants.hpp"
 #include "Configuration/Config.hpp"
 #include "FluentDesign/Theme.hpp"
 #include "FluentDesign/ComboBox.hpp"
@@ -67,7 +68,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         // SettingsDialog_Update
         static const UINT WM_UPDATE_NOTIFICATION = WM_USER + 2;
-        inline static const wchar_t* DialogClassName = L"AnyFSESettingsDialogClass";
+        inline static const wchar_t* DialogClassName = AppConstants::SettingsDialogClass;
 
         HWND GetHwnd() { return m_hDialog; }
 

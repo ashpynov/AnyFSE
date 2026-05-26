@@ -1,10 +1,12 @@
 #include <filesystem>
 #include "Tools/Registry.hpp"
+#include "App/AppConstants.hpp"
 #include "Tools/Event.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/List.hpp"
 #include "AppSettings/SettingsLayout.hpp"
 #include "AppSettings/SettingsDialog.hpp"
+#include "AppSettings/SettingsPages/ConfirmationsPage.hpp"
 #include "LauncherPage.hpp"
 #include "Logging/LogManager.hpp"
 
@@ -205,9 +207,9 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     {
         const std::wstring gamingConfiguration = L"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration";
         const std::wstring startupToGamingHome = L"StartupToGamingHome";
-        const std::wstring gamingHomeApp = L"GamingHomeApp";
+        const std::wstring gamingHomeApp = AppConstants::GamingHomeAppRegValue;
         //const std::wstring xboxApp = L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";
-        const std::wstring anyFSEApp = L"ArtemShpynov.AnyFSE_by4wjhxmygwn4!App";
+        const std::wstring anyFSEApp = AppConstants::AppUserModelId;
 
         if (m_config.Type == LauncherType::None)
         {

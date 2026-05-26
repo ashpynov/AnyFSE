@@ -31,6 +31,7 @@
 #include "Tools/List.hpp"
 #include "Configuration/Config.hpp"
 #include "Tools/Paths.hpp"
+#include "App/AppConstants.hpp"
 
 
 namespace AnyFSE::Configuration
@@ -83,7 +84,7 @@ namespace AnyFSE::Configuration
     {
         std::wstring appPackageId = Registry::ReadString(
             L"Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration",
-            L"GamingHomeApp");
+            AppConstants::GamingHomeAppRegValue);
         return !IsAnyFSEConfigured() && !Packages::GetAppxInstallLocation(appPackageId).empty();
     }
 
@@ -91,7 +92,7 @@ namespace AnyFSE::Configuration
     {
         return Registry::ReadString(
             L"Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration",
-            L"GamingHomeApp") == L"ArtemShpynov.AnyFSE_by4wjhxmygwn4!App";
+            AppConstants::GamingHomeAppRegValue) == AppConstants::AppUserModelId;
     }
 
     std::wstring Config::GetNativePath(const std::wstring& launcher)
@@ -100,7 +101,7 @@ namespace AnyFSE::Configuration
         {
             return Registry::ReadString(
                 L"Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration",
-                L"GamingHomeApp");
+                AppConstants::GamingHomeAppRegValue);
         }
         return launcher;
     }
@@ -231,7 +232,7 @@ namespace AnyFSE::Configuration
         auto launchers = Packages::GetNativeLaunchers();
         for (auto appUserModelId : launchers)
         {
-            if (appUserModelId == L"ArtemShpynov.AnyFSE_by4wjhxmygwn4!App" )
+            if (appUserModelId == AppConstants::AppUserModelId)
                 continue;
 
             if (List::npos == List::index_of_if(

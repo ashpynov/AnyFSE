@@ -22,7 +22,7 @@
                 "AnyFSE.sln",
                 "-property:Configuration=Release",
                 "-property:Platform=x64",
-                "-target:AnyFSE;AnyFSE_Settings"
+                "-target:AnyFSE;AnyFSE_Settings;AnyFSE_ACSEFilterHook;AnyFSE_ACSEFilterInjector"
             ],
             "problemMatcher": [
                 "$msCompile"
@@ -58,7 +58,7 @@
                 "AnyFSE.sln",
                 "-property:Configuration=Debug",
                 "-property:Platform=x64",
-                "-target:AnyFSE;AnyFSE_Settings"
+                "-target:AnyFSE;AnyFSE_Settings;AnyFSE_ACSEFilterHook;AnyFSE_ACSEFilterInjector"
             ],
             "problemMatcher": [
                 "$msCompile"
@@ -91,11 +91,12 @@
             "args": [
                 "${workspaceFolder}/AnyFSE.sln",
                 "/p:Configuration=Release",
-                "/p:Platform=x64"
+                "/p:Platform=x64",
+                "-target:AnyFSE_Package"
             ],
             "group": "build"
         },
-                {
+        {
             "label": "Package Debug",
             "type": "shell",
             "command": "msbuild",

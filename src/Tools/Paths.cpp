@@ -7,6 +7,7 @@
 
 #include <winrt/Windows.Storage.h>
 #pragma comment(lib, "windowsapp.lib")      // WinRT runtime
+#include "App/AppConstants.hpp"
 
 namespace AnyFSE::Tools::Paths
 {
@@ -105,18 +106,28 @@ namespace AnyFSE::Tools::Paths
         return _path;
     }
 
+    std::wstring GetExePath()
+    {
+        static std::wstring _dir;
+        if (_dir.empty())
+        {
+            _dir = std::filesystem::path(GetExeFileName()).parent_path().wstring();
+        }
+        return _dir;
+    }
+
     std::wstring GetDataPath()
     {
         wchar_t appData[MAX_PATH]={0};
         ExpandEnvironmentStringsW(L"%PROGRAMDATA%\\AnyFSE", appData, MAX_PATH);
-        //Local\Packages\ArtemShpynov.AnyFSE_by4wjhxmygwn4\LocalState
+        //Local\Packages\<PackageFamilyName>\LocalState
         return appData;
     }
 
     std::wstring GetAppPath()
     {
         wchar_t appData[MAX_PATH]={0};
-        ExpandEnvironmentStringsW(L"%LOCALAPPDATA%\\Packages\\ArtemShpynov.AnyFSE_by4wjhxmygwn4", appData, MAX_PATH);
+        ExpandEnvironmentStringsW((std::wstring(L"%LOCALAPPDATA%\\Packages\\") + AppConstants::PackageFamilyName).c_str(), appData, MAX_PATH);
         return appData;
     }
 }

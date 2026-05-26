@@ -1,13 +1,16 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <filesystem>
 #include "Ally/Ally.hpp"
 #include "Ally/Handlers.hpp"
 #include "Logging/LogManager.hpp"
 #include "Configuration/Config.hpp"
 #include "Tools/Process.hpp"
+#include "Tools/Paths.hpp"
 #include "Tools/Registry.hpp"
 #include "Tools/Unicode.hpp"
+#include "App/AppConstants.hpp"
 #include "Ally.hpp"
 
 
@@ -122,24 +125,28 @@ namespace Ally
     void Load()
     {
         Config::Load();
-        ButtonBind[Ally::EventCode::ACPress] =          Handlers::GetByName(Config::AllyHidACPress);
+        ButtonBind[Ally::EventCode::ACPress] =          IsXBoxRogAlly() ? Handlers::GetByName(Config::AllyHidLibraryPress) : Handlers::GetByName(Config::AllyHidACPress);
         ButtonBind[Ally::EventCode::ACHold] =           Handlers::GetByName(Config::AllyHidACHold);
         ButtonBind[Ally::EventCode::CCPress] =          IsXBoxRogAlly() ? Handlers::GetByName(Config::AllyHidACPress) : Handlers::GetByName(Config::AllyHidCCPress);
         ButtonBind[Ally::EventCode::LibraryPress] =     Handlers::GetByName(Config::AllyHidLibraryPress);
 
-        ButtonBind[Ally::EventCode::MACPress] =         Handlers::GetByName(Config::AllyHidModeACPress);
+        ButtonBind[Ally::EventCode::MACPress] =         IsXBoxRogAlly() ? Handlers::GetByName(Config::AllyHidModeLibraryPress) : Handlers::GetByName(Config::AllyHidModeACPress);
         ButtonBind[Ally::EventCode::MACHold] =          Handlers::GetByName(Config::AllyHidModeACHold);
         ButtonBind[Ally::EventCode::MCCPress] =         IsXBoxRogAlly() ? Handlers::GetByName(Config::AllyHidModeACPress) : Handlers::GetByName(Config::AllyHidModeCCPress);
         ButtonBind[Ally::EventCode::MLibraryPress] =    Handlers::GetByName(Config::AllyHidModeLibraryPress);
 
-        ButtonBind[Ally::EventCode::ToggleMicrophone] = Handlers::ToggleMicrophone;
-        ButtonBind[Ally::EventCode::ScreenShot] =       Handlers::TakeScreenShoot;
-        ButtonBind[Ally::EventCode::ShowKeyboard] =     Handlers::ShowKeyboard;
-        ButtonBind[Ally::EventCode::ToggleRecord] =     Handlers::ToggleRecord;
-        ButtonBind[Ally::EventCode::ModePress] =        NULL;
         ButtonBind[Ally::EventCode::ROGHoldRelease] =   NULL;
-        ButtonBind[Ally::EventCode::Unknown] =          NULL;
+        ButtonBind[Ally::EventCode::ModePress] =        NULL;
         ButtonBind[Ally::EventCode::Release] =          NULL;
+        ButtonBind[Ally::EventCode::Unknown] =          NULL;
+
+        if (Config::AllyHidExtraCommandsEnable)
+        {
+            ButtonBind[Ally::EventCode::ToggleMicrophone] = Handlers::ToggleMicrophone;
+            ButtonBind[Ally::EventCode::ScreenShot] =       Handlers::TakeScreenShoot;
+            ButtonBind[Ally::EventCode::ShowKeyboard] =     Handlers::ShowKeyboard;
+            ButtonBind[Ally::EventCode::ToggleRecord] =     Handlers::ToggleRecord;
+        }
     }
 
     DWORD WINAPI HIDListener(LPVOID lpParam)
@@ -262,17 +269,13 @@ namespace Ally
 
     void EnableNativeHandler(bool bEnable)
     {
-
-        bool active = IsNativeHandlerEnabled();
-        if (active == bEnable)
+        if (0 == Process::FindFirstByExe(AppConstants::AsusOptimizationProcess))
         {
             return;
         }
 
-        std::wstring serviceName = L"ASUSOptimization";
-        std::wstring commandLine = bEnable
-            ? L"sc config " + serviceName + L" start=auto & sc start " + serviceName
-            : L"sc stop " + serviceName + L" & sc config " + serviceName + L" start= disabled";
+        std::wstring injectorExe = L"\"" + std::filesystem::path(Paths::GetExePath()).append(AppConstants::InjectorExe).wstring() + L"\"";
+        std::wstring commandLine = injectorExe + (bEnable ? L" --enable" : L" --disable");
 
 
         // Execute through cmd.exe with hidden window
@@ -288,7 +291,7 @@ namespace Ally
 
     bool IsNativeHandlerEnabled()
     {
-        return 0 != Process::FindFirstByExe(L"AsusOptimization.exe");
+        return 0 != Process::FindFirstByExe(AppConstants::AsusOptimizationProcess);
     }
 
     bool UpdateHidListener()

@@ -33,6 +33,7 @@
 #include "FluentDesign/Align.hpp"
 #include "Tools/List.hpp"
 #include "Tools/Unicode.hpp"
+#include "App/AppConstants.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/Window.hpp"
 #include "Tools/Registry.hpp"
@@ -644,7 +645,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
     HWND SettingsDialog::GetMainWindow()
     {
-        return FindWindow(L"AnyFSE", NULL);
+        return FindWindow(AppConstants::MainWindowClass, NULL);
     }
 
     void SettingsDialog::AddCaptionButtons()
@@ -811,7 +812,7 @@ namespace AnyFSE::App::AppSettings::Settings
         {
             if (!Ally::UpdateHidListener() && Config::AllyHidEnable)
             {
-                Process::StartProtocol(L"anyfse://AllyHid");
+                Process::StartProtocol(AppConstants::AnyFseProtocolAllyHid);
             }
         }
     }

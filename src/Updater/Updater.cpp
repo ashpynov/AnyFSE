@@ -9,6 +9,7 @@
 #include <string>
 
 #include "Updater.hpp"
+#include "App/AppConstants.hpp"
 #include "Updater/Updater.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/Paths.hpp"
@@ -42,8 +43,8 @@ namespace AnyFSE::Updater
     const std::wstring GetUserAgent(bool alt = true)
     {
         return alt
-            ? L"User-Agent: AnyFSE-Updater\r\n"
-            : L"User-Agent: AnyFSE-Updater\r\nAccept: application/vnd.github.v3+json\r\n";
+            ? AppConstants::UpdaterUserAgentHeader
+            : std::wstring(AppConstants::UpdaterUserAgentHeader) + AppConstants::UpdaterGitHubAcceptHeader;
     }
 
     const std::wstring GetReleasesLatest(bool alt = true)
@@ -75,7 +76,7 @@ namespace AnyFSE::Updater
     }
 
 
-    static UINT WM_UPDATER_COMMAND = RegisterWindowMessage(L"AnyFSE.Updater.Command");
+    static UINT WM_UPDATER_COMMAND = RegisterWindowMessage(AppConstants::UpdaterCommandMessage);
     static bool m_bThreadExecuted = false;
     static std::mutex m_readMutex;
     static UpdateInfo m_lastUpdateInfo{UpdaterState::Idle};
@@ -127,7 +128,7 @@ namespace AnyFSE::Updater
     {
         log.Debug("Getting url: %s", Unicode::to_string(path).c_str());
 
-        HINTERNET hSession = WinHttpOpen(L"AnyFSE-Updater/1.0",
+        HINTERNET hSession = WinHttpOpen(AppConstants::UpdaterSessionUserAgent,
                                          WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
                                          WINHTTP_NO_PROXY_NAME,
                                          WINHTTP_NO_PROXY_BYPASS, 0);
@@ -282,7 +283,7 @@ namespace AnyFSE::Updater
             if (name.empty() || url.empty())
                 continue;
             // Prefer exact installer filename AnyFSE.Installer.exe
-            if (!_stricmp(name.c_str(), "AnyFSE.Installer.exe"))
+            if (!_stricmp(name.c_str(), Unicode::to_string(AppConstants::InstallerExe).c_str()))
             {
                 log.Debug("Installer at %s", url.c_str());
                 return url;
@@ -447,7 +448,7 @@ namespace AnyFSE::Updater
                 if (name.empty() || url.empty())
                     continue;
                 // prefer exact AnyFSE.Installer.exe
-                if (!_stricmp(name.c_str(), "AnyFSE.Installer.exe"))
+                if (!_stricmp(name.c_str(), Unicode::to_string(AppConstants::InstallerExe).c_str()))
                 {
                     downloadUrl = url;
                     assetName = name;
@@ -462,7 +463,7 @@ namespace AnyFSE::Updater
 
         // convert assetName to wstring
         std::wstring wname = Tools::Unicode::to_wstring(assetName);
-        std::wstring localPath = Tools::Paths::GetTempPath() + L"\\AnyFSE." + tag + L".Update.exe";
+        std::wstring localPath = Tools::Paths::GetTempPath() + L"\\" + AppConstants::UpdaterTempExePrefix + tag + AppConstants::UpdaterTempExeSuffix;
 
         // download
         std::wstring wurl = Tools::Unicode::to_wstring(downloadUrl);

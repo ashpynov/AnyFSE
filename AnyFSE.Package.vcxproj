@@ -41,7 +41,7 @@
     <MakeDir Directories="$(AppPackageContentsDir)\Assets" />
 
     <ItemGroup>
-      <ExeFiles Include="$(OutDir)/$(TargetName).exe" />
+      <ExeFiles Include="$(OutDir)/$(TargetName)*.exe" Exclude="$(OutDir)/$(TargetName).Installer.exe" />
       <DllFiles Include="$(OutDir)/$(TargetName)*.dll" />
     </ItemGroup>
 

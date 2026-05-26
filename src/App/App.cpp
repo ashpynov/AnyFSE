@@ -37,6 +37,7 @@
 #include "Tools/Unicode.hpp"
 
 #include "App/App.hpp"
+#include "App/AppConstants.hpp"
 #include "App/GamingExperience.hpp"
 #include "App/ExitFSE.hpp"
 #include "App/MainWindow.hpp"
@@ -107,7 +108,7 @@ namespace AnyFSE::App
 
     int App::ShowSettings()
     {
-        return CallLibrary(L"AnyFSE.Settings.dll", GetModuleHandle(NULL), NULL, NULL, 0);;
+        return CallLibrary(AppConstants::AnyFseSettingsDll, GetModuleHandle(NULL), NULL, NULL, 0);;
     }
 
     void App::InitCustomControls()
@@ -173,10 +174,10 @@ namespace AnyFSE::App
         }
 
         // Registry != AnyFSE
-        const std::wstring AnyFSEApp = L"ArtemShpynov.AnyFSE_by4wjhxmygwn4!App";
+        const std::wstring AnyFSEApp = AppConstants::AppUserModelId;
         const std::wstring selectedApp = Registry::ReadString(
-            L"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration",
-            L"GamingHomeApp");
+            AppConstants::GamingHomeAppRegKey,
+            AppConstants::GamingHomeAppRegValue);
 
         if (_wcsicmp(selectedApp.c_str(), AnyFSEApp.c_str() ) != 0)
         {
@@ -211,7 +212,7 @@ namespace AnyFSE::App
             if (Ally::CheckListener())
             {
                 log.Debug("Ally not started and enabled\n");
-                Process::StartProtocol(L"anyfse://AllyHid");
+                Process::StartProtocol(AppConstants::AnyFseProtocolAllyHid);
             }
         }
         else if (AsAllyHid(lpCmdLine))
@@ -221,7 +222,7 @@ namespace AnyFSE::App
 
         AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
 
-        if (FindWindow(L"AnyFSE", NULL))
+        if (FindWindow(AppConstants::MainWindowClass, NULL))
         {
             log.Debug("Application control is executed already, exiting\n");
             return 0;
@@ -250,9 +251,9 @@ namespace AnyFSE::App
 
         bool bFirstLaunch = false;
 
-        if (!GlobalFindAtom(L"ArtemShpynov.AnyFSE_by4wjhxmygwn4"))
+        if (!GlobalFindAtom(AppConstants::PackageAtomName))
         {
-            GlobalAddAtom(L"ArtemShpynov.AnyFSE_by4wjhxmygwn4");
+            GlobalAddAtom(AppConstants::PackageAtomName);
             log.Debug("First launch at fullscreen experience mode");
             bFirstLaunch = true;
         }
@@ -323,7 +324,7 @@ namespace AnyFSE::App
         {
             Window::MainWindow mainWindow;
 
-            if (!mainWindow.Create(L"AnyFSE", hInstance, (Config::Launcher.Name + L" is launching").c_str()))
+            if (!mainWindow.Create(AppConstants::MainWindowClass, hInstance, (Config::Launcher.Name + L" is launching").c_str()))
             {
                 return (int)GetLastError();
             }

@@ -28,6 +28,7 @@
 #include "Tools/GdiPlus.hpp"
 #include "Tools/List.hpp"
 #include "Tools/Window.hpp"
+#include "App/AppConstants.hpp"
 #include "Tools/Icon.hpp"
 #include <commctrl.h>
 #include <uxtheme.h>
@@ -39,7 +40,7 @@ namespace FluentDesign
     static Logger log = LogManager::GetLogger("SettingsLine");
 
     // Window class registration
-    static const wchar_t *SETTINGS_LINE_CLASS = L"AnyFSE_SettingsLineClass";
+    static const wchar_t *SETTINGS_LINE_CLASS = AppConstants::SettingsLineClass;
 
     SettingsLine::SettingsLine(FluentDesign::Theme& theme)
         : FluentControl(theme)

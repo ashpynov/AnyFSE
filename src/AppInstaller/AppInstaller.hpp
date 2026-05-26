@@ -23,6 +23,7 @@
 
 #include <list>
 #include <map>
+#include "App/AppConstants.hpp"
 #include "FluentDesign/Theme.hpp"
 #include "FluentDesign/Button.hpp"
 #include "FluentDesign/TextBox.hpp"
@@ -99,7 +100,7 @@ namespace AnyFSE
             const int Layout_EditHeight = 36;
             const int Layout_ButtonPadding = 16;
 
-            const wchar_t * registryPath = L"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AnyFSE";
+            const wchar_t * registryPath = AppConstants::UninstallAnyFseRegKey;
 
             const wchar_t * Icon_EULA = L"C:\\Windows\\system32\\imageres.dll,-81";
             const wchar_t * Icon_Browse = L"C:\\Windows\\system32\\imageres.dll,-1025";
@@ -182,5 +183,9 @@ namespace AnyFSE
             bool IsPackageInstalled(const std::wstring &packageId);
             bool InstallPackage(const std::wstring &packageFilePath, const std::wstring & packageFamilyName);
             bool LaunchApp(const std::wstring &packageFamilyName, const std::wstring &arguments);
+            bool IsInjectorServiceRun();
+            bool DisableInjectorService();
+            bool EnableInjectorService();
+            bool EnableAsusOptimization();
     };
 }

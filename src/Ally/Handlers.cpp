@@ -8,6 +8,7 @@
 #include "Tools/Process.hpp"
 #include "Tools/Unicode.hpp"
 #include "Logging/LogManager.hpp"
+#include "App/AppConstants.hpp"
 #include "Handlers.hpp"
 #include "Tools/Steam.hpp"
 
@@ -103,7 +104,7 @@ namespace Ally::Handlers
 
     void Handlers::OpenAnyFSESettings()
     {
-        Process::StartProtocol(L"anyfse://settings");
+        Process::StartProtocol(AnyFSE::AppConstants::AnyFseProtocolSettings);
     }
 
     void Handlers::OpenGameBar()

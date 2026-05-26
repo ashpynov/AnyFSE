@@ -177,6 +177,7 @@ namespace AnyFSE::Configuration
             static std::wstring UpdateLastVersion;
 
             static bool         AllyHidEnable;
+            static bool         AllyHidExtraCommandsEnable;
             static std::wstring AllyHidACPress;
             static std::wstring AllyHidACHold;
             static std::wstring AllyHidCCPress;

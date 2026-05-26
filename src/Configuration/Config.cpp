@@ -82,6 +82,7 @@ namespace AnyFSE::Configuration
     bool            Config::UpdateNotifications = true;
 
     bool            Config::AllyHidEnable = false;
+    bool            Config::AllyHidExtraCommandsEnable = false;
     std::wstring    Config::AllyHidACPress = L"GamebarCommandCenter";
     std::wstring    Config::AllyHidACHold = L"TaskSwitcher";
     std::wstring    Config::AllyHidCCPress = L"HomeApp";

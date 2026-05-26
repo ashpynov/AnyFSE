@@ -37,6 +37,7 @@
 #include "Tools/Unicode.hpp"
 #include "Tools/Registry.hpp"
 #include "Tools/Paths.hpp"
+#include "App/AppConstants.hpp"
 #include "AppInstaller.hpp"
 #include "Logging/LogManager.hpp"
 
@@ -269,7 +270,7 @@ namespace AnyFSE
 
     void AppInstaller::OnInstall()
     {
-        fs::path path(fs::temp_directory_path().append(L"AnyFSE_install"));
+        fs::path path(fs::temp_directory_path().append(AppConstants::TempInstallDirName));
         if (fs::exists(path))
         {
             fs::remove_all(path);
@@ -280,6 +281,7 @@ namespace AnyFSE
         LogManager::Initialize("AnyFSE.Installer", LogLevels::Debug, path.wstring() + L"\\logs");
         log.Info("Starting Installation AnyFSE v%s to %s", APP_VERSION, path.string().c_str());
 
+        bool acseServiceWasRunning = false;
         try
         {
             ShowProgressPage();
@@ -301,8 +303,6 @@ namespace AnyFSE
                 CheckSuccess(DeleteOldVersion() && DeleteOldFiles(oldPath));
             }
 
-
-
             m_isDevModeEnabled = IsDeveloperModeEnabled();
             if (!m_isDevModeEnabled)
             {
@@ -314,15 +314,25 @@ namespace AnyFSE
             if (!IsRootCertificateInstalled(Unicode::to_wstring(VER_PUBLISHER_CN)))
             {
                 SetCurrentProgress(L"Install publisher certificate");
-                m_isRootCertInstalled = InstallRootCertificate(path.wstring() + L"/" + L"Artem.Shpynov.cer");
+                m_isRootCertInstalled = InstallRootCertificate(path.wstring() + L"/" + AppConstants::PublisherCertFile);
                 CheckSuccess(m_isRootCertInstalled);
             }
 
+            SetCurrentProgress(L"Restore ASUS Optimization service");
+            CheckSuccess(EnableAsusOptimization());
+
+            SetCurrentProgress(L"Stop ACSE injector service");
+            acseServiceWasRunning = IsInjectorServiceRun();
+            CheckSuccess(DisableInjectorService());
+
             SetCurrentProgress(L"Install package");
             CheckSuccess(InstallPackage(
-                path.wstring() + L"/AnyFSE-" + Unicode::to_wstring(VER_VERSION_STR) + L".appx",
-                L"ArtemShpynov.AnyFSE_by4wjhxmygwn4"
+                path.wstring() + L"/" + AppConstants::AppxFilePrefix + Unicode::to_wstring(VER_VERSION_STR) + L".appx",
+                AppConstants::PackageFamilyName
             ));
+
+            SetCurrentProgress(L"Start ACSE injector service");
+            CheckSuccess(!acseServiceWasRunning || EnableInjectorService());
 
             SetCurrentProgress(L"Cleanup files");
             CheckSuccess(true);
@@ -353,6 +363,12 @@ namespace AnyFSE
         }
         catch(const std::exception& e)
         {
+            // Best-effort service recovery after failed update.
+            if (acseServiceWasRunning)
+            {
+                EnableInjectorService();
+            }
+
             if (m_isRootCertInstalled)
             {
                 RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
@@ -387,6 +403,7 @@ namespace AnyFSE
             WaitForSingleObject(sei.hProcess, 30000);
             CloseHandle(sei.hProcess);
         }
+        EnableAsusOptimization();
         return true;
     }
 
@@ -492,11 +509,11 @@ namespace AnyFSE
         } catch (const std::filesystem::filesystem_error&) {
             throw std::exception("Cannot create binary folder");
         }
-        const std::wstring rootPath = L"https://github.org/ashpynov/AnyFSE/releases/download/v" + Unicode::to_wstring(APP_VERSION);
-        const std::wstring rootPathAlt = L"https://codeberg.org/ashpynov/AnyFSE/releases/download/v" + Unicode::to_wstring(APP_VERSION);
+        const std::wstring rootPath = std::wstring(AppConstants::GitHubReleaseRoot) + Unicode::to_wstring(APP_VERSION);
+        const std::wstring rootPathAlt = std::wstring(AppConstants::CodebergReleaseRoot) + Unicode::to_wstring(APP_VERSION);
         std::list<std::wstring> files;
-        files.push_back(L"/Artem.Shpynov.cer");
-        files.push_back(L"/AnyFSE-" + Unicode::to_wstring(APP_VERSION) + L".appx");
+        files.push_back(std::wstring(L"/") + AppConstants::PublisherCertFile);
+        files.push_back(std::wstring(L"/") + AppConstants::AppxFilePrefix + Unicode::to_wstring(APP_VERSION) + L".appx");
 
         for (std::wstring file : files)
         {
@@ -527,7 +544,7 @@ namespace AnyFSE
 
     void AppInstaller::OnSettings()
     {
-        Process::StartProtocol(L"anyfse://settings");
+        Process::StartProtocol(AppConstants::AnyFseProtocolSettings);
         EndDialog(m_hDialog, IDOK);
     }
 

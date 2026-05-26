@@ -6,6 +6,7 @@
 #include "App/Launchers.hpp"
 #include "App/GamingExperience.hpp"
 #include "App/ExitFSE.hpp"
+#include "App/AppConstants.hpp"
 
 
 namespace AnyFSE::App::ExitFSE
@@ -19,7 +20,7 @@ namespace AnyFSE::App::ExitFSE
 
     HANDLE RegisterWaitingMutex()
     {
-        HANDLE hMutex = CreateMutex(NULL, TRUE, L"ArtemShpynov.AnyFSE_WaitingExitFSE");
+        HANDLE hMutex = CreateMutex(NULL, TRUE, AppConstants::WaitingExitMutex);
 
         if (GetLastError() == ERROR_ALREADY_EXISTS)
         {
@@ -35,7 +36,7 @@ namespace AnyFSE::App::ExitFSE
 
     bool IsMutexExists()
     {
-        HANDLE hMutex = OpenMutex(SYNCHRONIZE, FALSE, L"ArtemShpynov.AnyFSE_WaitingExitFSE");
+        HANDLE hMutex = OpenMutex(SYNCHRONIZE, FALSE, AppConstants::WaitingExitMutex);
 
         if (hMutex)
         {
@@ -103,7 +104,7 @@ namespace AnyFSE::App::ExitFSE
         }
 
         log.Trace("Check wait mutex");
-        HANDLE hMutex = OpenMutex(SYNCHRONIZE, FALSE, L"ArtemShpynov.AnyFSE_WaitingExitFSE");
+        HANDLE hMutex = OpenMutex(SYNCHRONIZE, FALSE, AppConstants::WaitingExitMutex);
         if (hMutex)
         {
             log.Trace("Waiting ExitFSE");

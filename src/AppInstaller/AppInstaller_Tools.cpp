@@ -9,14 +9,51 @@
 #include <winrt/Windows.Management.Deployment.h>
 
 #include "AppInstaller.hpp"
+#include "App/AppConstants.hpp"
 #include "Logging/LogManager.hpp"
+#include "Tools/Paths.hpp"
 #include "Tools/Registry.hpp"
 #include "Tools/Unicode.hpp"
+#include "Tools/Process.hpp"
 
 
 namespace AnyFSE
 {
     static Logger log = LogManager::GetLogger("Installer");
+    namespace
+    {
+        bool WaitForServiceState(SC_HANDLE service, DWORD desiredState, DWORD timeoutMs)
+        {
+            const ULONGLONG deadline = GetTickCount64() + timeoutMs;
+
+            for (;;)
+            {
+                SERVICE_STATUS_PROCESS status = {};
+                DWORD bytesNeeded = 0;
+                if (!QueryServiceStatusEx(
+                        service,
+                        SC_STATUS_PROCESS_INFO,
+                        reinterpret_cast<LPBYTE>(&status),
+                        sizeof(status),
+                        &bytesNeeded))
+                {
+                    return false;
+                }
+
+                if (status.dwCurrentState == desiredState)
+                {
+                    return true;
+                }
+
+                if (GetTickCount64() >= deadline)
+                {
+                    return false;
+                }
+
+                Sleep(250);
+            }
+        }
+    }
 
     bool AppInstaller::IsDeveloperModeEnabled()
     {
@@ -209,5 +246,46 @@ namespace AnyFSE
         {
             throw std::exception(Unicode::to_string(e.message().c_str()).c_str());
         }
+    }
+
+    bool AppInstaller::IsInjectorServiceRun()
+    {
+        return Process::FindFirstByExe(AppConstants::InjectorExe) != 0;
+    }
+
+    bool AppInstaller::DisableInjectorService()
+    {
+        if (!IsInjectorServiceRun())
+        {
+            return true;
+        }
+
+        const std::wstring injectorExe = std::filesystem::path(Paths::GetExePath()).append(AppConstants::InjectorExe).wstring();
+        return Process::StartProcess(injectorExe, L"--disable") != 0;
+    }
+
+    bool AppInstaller::EnableInjectorService()
+    {
+        const std::wstring injectorExe = std::filesystem::path(Paths::GetExePath()).append(AppConstants::InjectorExe).wstring();
+        return Process::StartProcess(injectorExe, L"--enable") != 0;
+    }
+
+    bool AppInstaller::EnableAsusOptimization()
+    {
+        if (!Process::FindFirstByExe(AppConstants::ArmouryCrateServiceProcess) || Process::FindFirstByExe(AppConstants::AsusOptimizationProcess))
+        {
+            return true;
+        }
+        const std::wstring commandLine = std::wstring(L"/c sc config ") + AppConstants::AsusOptimizationService +
+            L" start=auto & sc start " + AppConstants::AsusOptimizationService;
+        HINSTANCE result = ShellExecuteW(
+            nullptr,
+            L"open",
+            L"cmd.exe",
+            commandLine.c_str(),
+            nullptr,
+            SW_HIDE);
+
+        return reinterpret_cast<INT_PTR>(result) > 32;
     }
 };
