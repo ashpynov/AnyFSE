@@ -4,6 +4,7 @@
 #include "AppSettings/SettingsLayout.hpp"
 #include "AppSettings/SettingsDialog.hpp"
 #include "AllyHidPage.hpp"
+#include "Tools/Localization.hpp"
 
 
 namespace AnyFSE::App::AppSettings::Settings::Page
@@ -18,8 +19,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_theme.OnThemeChanged += delegate(ReloadIcons);
 
         SettingsLine & rogAllySupport = m_dialog.AddSettingsLine(settingPageList, top,
-            L"ASUS ROG Ally features",
-            L"ASUS handhelds customization experimental features",
+            Translate(L"settingsAllyFeatures"),
+            Translate(L"settingsAllyFeaturesDescription"),
             Layout::LineHeight, Layout::LinePadding, 0
         );
         rogAllySupport.SetState(FluentDesign::SettingsLine::Next);
@@ -28,8 +29,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         ULONG pageTop = 0;
         m_pAllyHidLine = &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Enable alternative ASUS ROG Ally button handling",
-            L"Alternative handling of some ASUS Optimization service functions",
+            Translate(L"settingsAllyEnableAlternativeButtons"),
+            Translate(L"settingsAllyEnableAlternativeButtonsDescription"),
             m_enableAllyHidToggle,
             Layout::LineHeight, 0, 0);
         m_pAllyHidLine->SetIcon(L"@B9ECED6F.ASUSCommandCenter_qmba6cd70vzyy");
@@ -38,10 +39,10 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         m_pACPressLine = &m_pAllyHidLine->AddGroupItem(
             &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-                L"PRESS Armoury Crate button",
+                Translate(L"settingsAllyPressArmouryCrate"),
                 !Ally::IsXBoxRogAlly()
-                    ? L"Define Short press right button action"
-                    : L"Define Short press left button action",
+                    ? Translate(L"settingsAllyShortPressRightAction")
+                    : Translate(L"settingsAllyShortPressLeftAction"),
                 m_acPressCombo,
                 Layout::LineHeight, 0, 0, 240));
 
@@ -49,15 +50,15 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         {
             m_pACHoldLine = &m_pAllyHidLine->AddGroupItem(
                 &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-                    L"HOLD Armoury Crate button",
-                    L"Define Long press right button action",
+                    Translate(L"settingsAllyHoldArmouryCrate"),
+                    Translate(L"settingsAllyLongPressRightAction"),
                     m_acHoldCombo,
                     Layout::LineHeight, 0, 0, 240));
 
             m_pCCPressLine = &m_pAllyHidLine->AddGroupItem(
                 &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-                    L"PRESS Command Center button",
-                    L"Define Short press left button action",
+                    Translate(L"settingsAllyPressCommandCenter"),
+                    Translate(L"settingsAllyShortPressLeftAction"),
                     m_ccPressCombo,
                     Layout::LineHeight, 0, 0, 240));
         }
@@ -65,25 +66,25 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         {
             m_pLibraryPressLine = &m_pAllyHidLine->AddGroupItem(
                 &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-                    L"PRESS Library button",
-                    L"Define Short press right button action",
+                    Translate(L"settingsAllyPressLibrary"),
+                    Translate(L"settingsAllyShortPressRightAction"),
                     m_libraryPressCombo,
                     Layout::LineHeight, 0, 0, 240));
         }
 
         m_pAllyHidLine->AddGroupItem(
             &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-                L"Secondary buttons actions (Mode+)",
+                Translate(L"settingsAllySecondaryButtonsActions"),
                 L"",
                 Layout::LinePadding * 4, 0, 0));
 
 
         m_pModeACPressLine = &m_pAllyHidLine->AddGroupItem(
             &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-                L"Mode+PRESS Armoury Crate button",
+                Translate(L"settingsAllyModePressArmouryCrate"),
                 !Ally::IsXBoxRogAlly()
-                    ? L"Define Short press right button action with Mode key"
-                    : L"Define Short press left button action with Mode key",
+                    ? Translate(L"settingsAllyShortPressRightActionMode")
+                    : Translate(L"settingsAllyShortPressLeftActionMode"),
                 m_modeACPressCombo,
                 Layout::LineHeight, 0, 0, 240));
 
@@ -91,15 +92,15 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         {
             m_pModeACHoldLine = &m_pAllyHidLine->AddGroupItem(
                 &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-                    L"Mode+HOLD Armoury Crate button",
-                    L"Define Long press right button action with Mode key",
+                    Translate(L"settingsAllyModeHoldArmouryCrate"),
+                    Translate(L"settingsAllyLongPressRightActionMode"),
                     m_modeACHoldCombo,
                     Layout::LineHeight, 0, 0, 240));
 
             m_pModeCCPressLine = &m_pAllyHidLine->AddGroupItem(
                 &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-                    L"Mode+PRESS Command Center button",
-                    L"Define Short press left button action with Mode key",
+                    Translate(L"settingsAllyModePressCommandCenter"),
+                    Translate(L"settingsAllyShortPressLeftActionMode"),
                     m_modeCCPressCombo,
                     Layout::LineHeight, 0, 0, 240));
         }
@@ -107,8 +108,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         {
             m_pModeLibraryPressLine = &m_pAllyHidLine->AddGroupItem(
                 &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-                    L"Mode+PRESS Library button",
-                    L"Define Short press right button action with Mode key",
+                    Translate(L"settingsAllyModePressLibrary"),
+                    Translate(L"settingsAllyShortPressRightActionMode"),
                     m_modeLibraryPressCombo,
                     Layout::LineHeight, Layout::LinePadding, 0, 240));
         }
@@ -200,7 +201,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
     void AllyHidPage::OpenAllyHidPage()
     {
-        m_dialog.SwitchActivePage(L"ROG Ally", &m_pageLinesList);
+        m_dialog.SwitchActivePage(Translate(L"settingsAllyPageTitle"), &m_pageLinesList);
     }
 
     void AllyHidPage::EnableAllyHidChanged()

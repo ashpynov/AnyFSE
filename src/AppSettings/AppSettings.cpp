@@ -26,6 +26,8 @@
 #include "Logging/LogManager.hpp"
 #include "Configuration/Config.hpp"
 #include "Tools/Process.hpp"
+#include "Tools/Localization.hpp"
+#include "Tools/Paths.hpp"
 
 #include "AppSettings/SettingsDialog.hpp"
 
@@ -52,11 +54,17 @@ int WINAPI Main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
 
     Config::Load();
     Config::GetStartupConfigured();
-
     AnyFSE::Logging::LogManager::Initialize("AnyFSE.Settings", Config::LogLevel, Config::LogPath);
+    AnyFSE::Tools::Localization::SetPreferredLocale(Config::Locale);
+    AnyFSE::Tools::Localization::Initialize(AnyFSE::Tools::Paths::GetExePath() + L"\\Assets\\localization");
+
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
-    int result = (int)AnyFSE::App::AppSettings::Settings::SettingsDialog().Show(hInstance);
+    int result = 0;
+    do
+    {
+        result = (int)AnyFSE::App::AppSettings::Settings::SettingsDialog().Show(hInstance);
+    } while (result == IDRETRY);
     return result;
 };
 

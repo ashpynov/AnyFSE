@@ -37,6 +37,8 @@
 #include "Tools/Unicode.hpp"
 #include "Tools/Window.hpp"
 #include "Tools/Process.hpp"
+#include "Tools/Paths.hpp"
+#include "Tools/Localization.hpp"
 #include "AppInstaller/Admin.hpp"
 #include "App/GamingExperience.hpp"
 
@@ -71,6 +73,7 @@ namespace AnyFSE
     INT_PTR AppInstaller::Show(HINSTANCE hInstance, bool bAutoUpdate)
     {
         m_isUpdate = bAutoUpdate;
+        Tools::Localization::Initialize(Tools::Paths::GetExePath() + L"\\Assets\\localization");
 
         if (bAutoUpdate)
         {
@@ -186,21 +189,15 @@ namespace AnyFSE
 
     void AppInstaller::OnInitDialog(HWND hwnd)
     {
-        std::wstring title = std::wstring(L"AnyFSE ")
-            + (m_isUpdate ? L"Updater v" : L"Installer v")
-            + Unicode::to_wstring(APP_VERSION);
-        SetWindowText(hwnd, title.c_str());
+        UpdateDialogTitle();
 
         CreatePage();
 
         if (!GamingExperience::ApiIsAvailable)
         {
             ShowErrorPage(
-                L"Not supported",
-                L"Installation is interrupted as soon as "
-                L"Fullscreen Experiense API "
-                L"was not detected on your system.\n\n"
-                L"It is supported since Windows 25H2 version for Handheld Devices.",
+                Translate(L"notSupportedCaption"),
+                Translate(L"notSupportedDescription"),
                 Icon_Error
             );
         }
@@ -208,15 +205,22 @@ namespace AnyFSE
         )
         {
             ShowErrorPage(
-                L"Insufficient permissions",
-                L"Escalated privileges is required to install AnyFSE.\n\n"
-                L"Please allow it in User Account Control (UAC) prompt.",
+                Translate(L"insufficientPermissionsCaption"),
+                Translate(L"insufficientPermissionsDescription"),
                 Icon_Permission);
         }
         else
         {
             ShowWelcomePage();
         }
+    }
+
+    void AppInstaller::UpdateDialogTitle()
+    {
+        std::wstring title = TranslateF(
+            m_isUpdate ? L"updaterWindowTitle" : L"installerWindowTitle",
+            Unicode::to_wstring(APP_VERSION).c_str());
+        SetWindowText(m_hDialog, title.c_str());
     }
 
     void AppInstaller::OnPaint(HWND hwnd)

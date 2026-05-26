@@ -3,6 +3,7 @@
 #include "AppSettings/SettingsDialog.hpp"
 #include "AppSettings/SettingsPages/StartupEditDlg.hpp"
 #include "StartupPage.hpp"
+#include "Tools/Localization.hpp"
 
 
 namespace AnyFSE::App::AppSettings::Settings::Page
@@ -11,8 +12,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     {
         ULONG pageTop = 0;
         SettingsLine &startupAppLinkLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Native startup settings",
-            L"Configure startup apps using native windows settings",
+            Translate(L"settingsNativeStartupSettings"),
+            Translate(L"settingsNativeStartupSettingsDescription"),
             Layout::LineHeight, Layout::LinePadding, 0);
 
         startupAppLinkLine.SetState(FluentDesign::SettingsLine::Link);
@@ -20,8 +21,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         startupAppLinkLine.OnChanged += delegate(OpenMSSettingsStartupApps);
 
         m_pStartupPageAppsHeader = &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Additional startup applications",
-            L"Configure specific applications to be executed by AnyFSE on fullscreen experience enter",
+            Translate(L"settingsAdditionalStartupApplications"),
+            Translate(L"settingsAdditionalStartupApplicationsDescription"),
             Layout::LineHeight, 0, 0
         );
 
@@ -35,7 +36,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             Layout::StartupAddWidth, Layout::StartupAddHeight
         );
 
-        m_startupAddButton.SetText(L"Add");
+        m_startupAddButton.SetText(Translate(L"addBtn"));
         m_startupAddButton.OnChanged = delegate(OnStartupAdd);
         line.SetState(FluentDesign::SettingsLine::Caption);
     }
@@ -90,8 +91,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         line.SetMenu(
             std::vector<FluentDesign::Popup::PopupItem>
             {
-                FluentDesign::Popup::PopupItem(L"\xE13E", L"Modify",[This = this, pLine = &line](){This->OnStartupModify(pLine);}),
-                FluentDesign::Popup::PopupItem(L"\xE107", L"Delete",[This = this, pLine = &line](){This->OnStartupDelete(pLine);})
+                FluentDesign::Popup::PopupItem(L"\xE13E", Translate(L"modifyBtn"),[This = this, pLine = &line](){This->OnStartupModify(pLine);}),
+                FluentDesign::Popup::PopupItem(L"\xE107", Translate(L"deleteBtn"),[This = this, pLine = &line](){This->OnStartupDelete(pLine);})
             }
         );
         startToggle.SetCheck(enabled);

@@ -269,12 +269,12 @@ namespace Ally
 
     void EnableNativeHandler(bool bEnable)
     {
-        if (0 == Process::FindFirstByExe(AppConstants::AsusOptimizationProcess))
+        if (0 == Process::FindFirstByExe(AnyFSE::AppConstants::AsusOptimizationProcess))
         {
             return;
         }
 
-        std::wstring injectorExe = L"\"" + std::filesystem::path(Paths::GetExePath()).append(AppConstants::InjectorExe).wstring() + L"\"";
+        std::wstring injectorExe = L"\"" + std::filesystem::path(Paths::GetExePath()).append(AnyFSE::AppConstants::InjectorExe).wstring() + L"\"";
         std::wstring commandLine = injectorExe + (bEnable ? L" --enable" : L" --disable");
 
 
@@ -291,7 +291,7 @@ namespace Ally
 
     bool IsNativeHandlerEnabled()
     {
-        return 0 != Process::FindFirstByExe(AppConstants::AsusOptimizationProcess);
+        return 0 != Process::FindFirstByExe(AnyFSE::AppConstants::AsusOptimizationProcess);
     }
 
     bool UpdateHidListener()

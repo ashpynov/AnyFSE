@@ -37,6 +37,7 @@
 #include "Tools/Unicode.hpp"
 #include "Tools/Registry.hpp"
 #include "Tools/Paths.hpp"
+#include "Tools/Localization.hpp"
 #include "App/AppConstants.hpp"
 #include "AppInstaller.hpp"
 #include "Logging/LogManager.hpp"
@@ -94,6 +95,21 @@ namespace AnyFSE
             m_theme.DpiScale(Layout_ButtonHeight)
         ).GetHwnd());
 
+        page.push_back(m_languageButton
+            .Create(m_hDialog,
+                rc.left - m_theme.DpiScale(Layout_ImageWidth + Layout_Margins * 2),
+                rc.bottom - m_theme.DpiScale(Layout_ButtonHeight),
+                m_theme.DpiScale(Layout_ButtonHeight),
+                m_theme.DpiScale(Layout_ButtonHeight))
+            //.SetText(Translate(L"language"))
+            .SetIcon(L"\xE164")
+            .SetFlat(true)
+            .GetHwnd()
+        );
+
+        PopulateLanguageMenu();
+        m_languageButton.Show(false);
+
         m_captionStatic.SetLarge(true);
         m_captionStatic.SetColor(Theme::Colors::TextAccented);
 
@@ -144,70 +160,68 @@ namespace AnyFSE
 
     void AppInstaller::ShowWelcomePage()
     {
+        //m_languageButton.SetText(Translate(L"language"));
+        m_languageButton.Show(true);
         if (m_isUpdate)
         {
             ShowPage(L"",
-                L"Welcome to AnyFSE Updater",
-                std::wstring(L"This will update AnyFSE to version ") +
-                Unicode::to_wstring(APP_VERSION) +
-                std::wstring(L" on your system.\n\nClick Update to proceed or Cancel to exit."),
-                L"Cancel", delegate(OnCancel),
-                L"Update", delegate(OnInstall)
+                Translate(L"updaterWelcomeCaption"),
+                TranslateF(L"updaterWelcomeDescription", Unicode::to_wstring(APP_VERSION).c_str()),
+                Translate(L"cancelBtn"), delegate(OnCancel),
+                Translate(L"updateBtn"), delegate(OnInstall)
             );
         }
         else
         {
             ShowPage(L"",
-                L"Welcome to AnyFSE Installer",
-                std::wstring(L"This will install AnyFSE version ") +
-                Unicode::to_wstring(APP_VERSION) +
-                std::wstring(L" to your system.\n\nClick Next to proceed or Cancel to exit."),
-                L"Cancel", delegate(OnCancel),
-                L"Next", delegate(ShowLicensePage)
+                Translate(L"installerWelcomeCaption"),
+                TranslateF(L"installerWelcomeDescription", Unicode::to_wstring(APP_VERSION).c_str()),
+                Translate(L"cancelBtn"), delegate(OnCancel),
+                Translate(L"nextBtn"), delegate(ShowLicensePage)
             );
         }
     }
 
     void AppInstaller::ShowLicensePage()
     {
+        m_languageButton.Show(false);
         ShowPage(Icon_EULA,
-            L"End User License Agreements",
+            Translate(L"licenseCaption"),
 
-            L"AnyFSE is free software, distributed under terms of MIT License "
-            L"in the hope that it will be useful, "
-            L"but WITHOUT ANY WARRANTY; without even the implied warranty of "
-            L"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+            Translate(L"licenseDescription"),
 
-            L"Cancel", delegate(OnCancel),
-            L"Accept", delegate(OnInstall)
+            Translate(L"cancelBtn"), delegate(OnCancel),
+            Translate(L"acceptBtn"), delegate(OnInstall)
         );
     }
 
     void AppInstaller::ShowProgressPage()
     {
+        m_languageButton.Show(false);
         ShowPage(Icon_Progress,
-            m_isUpdate ? L"Updating AnyFSE" : L"Installing AnyFSE",
-            L"Preparation",
+            m_isUpdate ? Translate(L"updaterProgressCaption") : Translate(L"installerProgressCaption"),
+            Translate(L"progressPreparation"),
             L"", delegate(OnCancel));
     }
 
     void AppInstaller::ShowCompletePage()
     {
+        m_languageButton.Show(false);
         if (m_isUpdate)
         {
             ShowPage(Icon_Done,
-                L"Done",
-                L"AnyFSE update has been completed.",
-                L"Done", delegate(OnDone)
+                Translate(L"doneBtn"),
+                Translate(L"updaterDoneDescription"),
+                Translate(L"doneBtn"), delegate(OnDone)
             );
         }
         else
         {
             ShowPage(Icon_Done,
-                L"Done",
-                L"AnyFSE installation has been completed.\n\nPress Configure change settings.\n",
-                L"Configure", delegate(OnSettings),
-                IsConfigured() ? L"Done" : L"", delegate(OnDone)
+                Translate(L"doneBtn"),
+                Translate(L"installerDoneDescription"),
+                Translate(L"configureBtn"), delegate(OnSettings),
+                IsConfigured() ? Translate(L"doneBtn") : L"", delegate(OnDone)
             );
         }
     }
@@ -221,10 +235,47 @@ namespace AnyFSE
 
     void AppInstaller::ShowErrorPage(const std::wstring &caption, const std::wstring &text, const std::wstring &icon)
     {
+        m_languageButton.Show(false);
         ShowPage(icon.empty() ? Icon_Error : icon,
                  caption,
                  text,
-                 L"Close", delegate(OnCancel));
+                 Translate(L"closeBtn"), delegate(OnCancel));
+    }
+
+    void AppInstaller::PopulateLanguageMenu()
+    {
+        std::vector<Tools::Localization::LocaleInfo> locales =
+            Tools::Localization::EnumerateLocales(Tools::Paths::GetExePath() + L"\\Assets\\localization");
+
+#ifdef _DEBUG
+        if (locales.empty())
+        {
+            locales = Tools::Localization::EnumerateLocales(
+                (fs::path(Tools::Paths::GetExePath()) / L".." / L".." / L"Assets" / L"localization").lexically_normal().wstring()
+            );
+        }
+#endif
+
+        std::vector<Popup::PopupItem> items;
+        for (const auto &locale : locales)
+        {
+            items.emplace_back(locale.code == Tools::Localization::GetCurrentLocale() ? L"\xE1D2" : L"\xEA3F", locale.language, [this, code = locale.code]() { OnSelectLanguage(code); });
+        }
+
+        if (!items.empty())
+        {
+            m_languageButton.SetMenu(items, 220, TPM_LEFTALIGN);
+            m_languageButton.OnChanged = [this]() { m_languageButton.ShowMenu(); };
+        }
+    }
+
+    void AppInstaller::OnSelectLanguage(const std::wstring &localeCode)
+    {
+        Tools::Localization::SetPreferredLocale(localeCode);
+        Tools::Localization::Initialize(Tools::Paths::GetExePath() + L"\\Assets\\localization");
+        PopulateLanguageMenu();
+        UpdateDialogTitle();
+        ShowWelcomePage();
     }
 
 
@@ -289,64 +340,64 @@ namespace AnyFSE
 
 #ifdef OFFLINE_INSTALLER
             // Extract resource file
-            SetCurrentProgress(L"Unpack files");
+            SetCurrentProgress(Translate(L"progressUnpackFiles"));
             CheckSuccess(ExtractEmbeddedZip(path));
 #else
-            SetCurrentProgress(L"Download files");
+            SetCurrentProgress(Translate(L"progressDownloadFiles"));
             CheckSuccess(DownloadFiles(path));
 #endif
 
             std::wstring oldPath = Registry::ReadString(registryPath, L"InstallLocation");
             if (!oldPath.empty())
             {
-                SetCurrentProgress(L"Remove old version");
+                SetCurrentProgress(Translate(L"progressRemoveOldVersion"));
                 CheckSuccess(DeleteOldVersion() && DeleteOldFiles(oldPath));
             }
 
             m_isDevModeEnabled = IsDeveloperModeEnabled();
             if (!m_isDevModeEnabled)
             {
-                SetCurrentProgress(L"Enable developer mode");
+                SetCurrentProgress(Translate(L"progressEnableDeveloperMode"));
                 EnableDeveloperMode(true);
                 CheckSuccess(true);
             }
 
             if (!IsRootCertificateInstalled(Unicode::to_wstring(VER_PUBLISHER_CN)))
             {
-                SetCurrentProgress(L"Install publisher certificate");
+                SetCurrentProgress(Translate(L"progressInstallPublisherCertificate"));
                 m_isRootCertInstalled = InstallRootCertificate(path.wstring() + L"/" + AppConstants::PublisherCertFile);
                 CheckSuccess(m_isRootCertInstalled);
             }
 
-            SetCurrentProgress(L"Restore ASUS Optimization service");
+            SetCurrentProgress(Translate(L"progressRestoreAsusOptimizationService"));
             CheckSuccess(EnableAsusOptimization());
 
-            SetCurrentProgress(L"Stop ACSE injector service");
+            SetCurrentProgress(Translate(L"progressStopAcseInjectorService"));
             acseServiceWasRunning = IsInjectorServiceRun();
             CheckSuccess(DisableInjectorService());
 
-            SetCurrentProgress(L"Install package");
+            SetCurrentProgress(Translate(L"progressInstallPackage"));
             CheckSuccess(InstallPackage(
                 path.wstring() + L"/" + AppConstants::AppxFilePrefix + Unicode::to_wstring(VER_VERSION_STR) + L".appx",
                 AppConstants::PackageFamilyName
             ));
 
-            SetCurrentProgress(L"Start ACSE injector service");
+            SetCurrentProgress(Translate(L"progressStartAcseInjectorService"));
             CheckSuccess(!acseServiceWasRunning || EnableInjectorService());
 
-            SetCurrentProgress(L"Cleanup files");
+            SetCurrentProgress(Translate(L"progressCleanupFiles"));
             CheckSuccess(true);
 
             if (!m_isDevModeEnabled)
             {
-                SetCurrentProgress(L"Disable developer mode");
+                SetCurrentProgress(Translate(L"progressDisableDeveloperMode"));
                 EnableDeveloperMode(false);
                 CheckSuccess(true);
             }
 
             if (m_isRootCertInstalled)
             {
-                SetCurrentProgress(L"Removing certificate");
+                SetCurrentProgress(Translate(L"progressRemovingCertificate"));
                 RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
                 m_isRootCertInstalled = false;
                 CheckSuccess(true);
@@ -380,7 +431,7 @@ namespace AnyFSE
             }
 
             log.Error(e, "Installation fail:");
-            ShowErrorPage(L"Installation Error", GetProgressText(4) + Unicode::to_wstring(e.what()));
+            ShowErrorPage(Translate(L"installationErrorCaption"), GetProgressText(4) + Unicode::to_wstring(e.what()));
         }
     }
 

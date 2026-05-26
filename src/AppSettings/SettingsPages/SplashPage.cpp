@@ -3,6 +3,7 @@
 #include "AppSettings/SettingsDialog.hpp"
 #include "SplashPage.hpp"
 #include "Tools/Paths.hpp"
+#include "Tools/Localization.hpp"
 #include <filesystem>
 
 
@@ -12,59 +13,59 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     {
         ULONG pageTop = 0;
         m_pSplashTextLine = &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Show Loading text",
+            Translate(L"settingsSplashShowLoadingText"),
             L"",
             m_showTextToggle,
             Layout::LineHeight, 0, 0);
 
         m_pSplashTextLine->AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Use Custom Text",
+            Translate(L"settingsSplashUseCustomText"),
             L"",
             m_customTextEdit,
             Layout::LineHeightSmall, Layout::LinePadding, Layout::LineSmallMargin));
 
         m_pSplashLogoLine = &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Show Home application Logo",
+            Translate(L"settingsSplashShowHomeLogo"),
             L"",
             m_showLogoToggle,
             Layout::LineHeight, 0, 0);
 
         m_pSplashLogoLine->AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Animate Logo",
+            Translate(L"settingsSplashAnimateLogo"),
             L"",
             m_showAnimationToggle,
             Layout::LineHeightSmall, Layout::LinePadding, Layout::LineSmallMargin));
 
 
         m_pSplashVideoLine = &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Show Video",
-            L"Show random video from \"splash\" folder",
+            Translate(L"settingsSplashShowVideo"),
+            Translate(L"settingsSplashShowVideoDescription"),
             m_showVideoToggle,
             Layout::LineHeight, 0, 0);
 
         m_pSplashVideoLine->OnLink = delegate(OnGotoSplashFolder);
 
         m_pSplashVideoLine->AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Play video at least once",
-            L"Force video to play at least once, even if launcher startup is detected",
+            Translate(L"settingsSplashPlayVideoAtLeastOnce"),
+            Translate(L"settingsSplashPlayVideoAtLeastOnceDescription"),
             m_videoTillEndToggle,
             Layout::LineHeightSmall, 0, Layout::LineSmallMargin));
 
         m_pSplashVideoLine->AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Loop video",
+            Translate(L"settingsSplashLoopVideo"),
             L"",
             m_videoLoopToggle,
             Layout::LineHeightSmall, 0, Layout::LineSmallMargin));
 
         m_pSplashVideoLine->AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Mute video",
+            Translate(L"settingsSplashMuteVideo"),
             L"",
             m_videoMuteToggle,
             Layout::LineHeightSmall, 0, Layout::LineSmallMargin));
 
         m_pSplashVideoLine->AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Pause completed",
-            L"Show last frame when video completed earlier than home app start",
+            Translate(L"settingsSplashPauseCompleted"),
+            Translate(L"settingsSplashPauseCompletedDescription"),
             m_videoPauseToggle,
             Layout::LineHeightSmall, Layout::LinePadding, Layout::LineSmallMargin));
 

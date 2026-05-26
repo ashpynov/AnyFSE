@@ -80,6 +80,7 @@ namespace AnyFSE::Configuration
     std::wstring    Config::UpdateLastVersion;
     bool            Config::UpdatePreRelease = false;
     bool            Config::UpdateNotifications = true;
+    std::wstring    Config::Locale = L"en_US";
 
     bool            Config::AllyHidEnable = false;
     bool            Config::AllyHidExtraCommandsEnable = false;
@@ -156,6 +157,7 @@ namespace AnyFSE::Configuration
         UpdateLastVersion       = config.value(jp("/Update/LastVersion"),    std::wstring());
         UpdateLastCheck         = config.value(jp("/Update/LastCheck"),      std::wstring());
         UpdateCheckInterval     = config.value(jp("/Update/CheckInterval"),  -2);
+        Locale                  = config.value(jp("/Locale"),                std::wstring(L"en_US"));
 
         AllyHidEnable           = config.value(jp("/AllyHid/Enable"),       false);
         AllyHidACPress          = config.value(jp("/AllyHid/ACPress"),      std::wstring(L"GamebarCommandCenter"));
@@ -252,6 +254,7 @@ namespace AnyFSE::Configuration
         config["Update"]["LastVersion"]         = UpdateLastVersion;
         config["Update"]["LastCheck"]           = UpdateLastCheck;
         config["Update"]["CheckInterval"]       = UpdateCheckInterval;
+        config["Locale"]                        = Locale;
 
         config["AllyHid"]["Enable"]             = AllyHidEnable;
         config["AllyHid"]["ACPress"]            = AllyHidACPress;

@@ -175,6 +175,7 @@ namespace AnyFSE::Configuration
             static int          UpdateCheckInterval;
             static std::wstring UpdateLastCheck;
             static std::wstring UpdateLastVersion;
+            static std::wstring Locale;
 
             static bool         AllyHidEnable;
             static bool         AllyHidExtraCommandsEnable;

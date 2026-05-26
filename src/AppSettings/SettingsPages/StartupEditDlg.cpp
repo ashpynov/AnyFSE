@@ -1,5 +1,6 @@
 #include <filesystem>
 #include "StartupEditDlg.hpp"
+#include "Tools/Localization.hpp"
 
 namespace AnyFSE::App::AppSettings::Settings
 {
@@ -57,13 +58,13 @@ namespace AnyFSE::App::AppSettings::Settings
         int width = rc.right - rc.left;
         int top = rc.top;
 
-        m_captionStatic.Create(m_hDialog, m_refPath.empty() ? L"Add application" : L"Edit application",
+        m_captionStatic.Create(m_hDialog, m_refPath.empty() ? Translate(L"settingsAddApplicationCaption") : Translate(L"settingsEditApplicationCaption"),
             rc.left, top, width, m_theme.DpiScale(Layout_CaptionHeight)
         );
         m_captionStatic.SetLarge(true);
         top += m_theme.DpiScale(Layout_CaptionHeight);
 
-        m_pathStatic.Create(m_hDialog, L"Select app to execute", rc.left, top, width, m_theme.DpiScale(Layout_TextHeight));
+        m_pathStatic.Create(m_hDialog, Translate(L"settingsSelectAppToExecute"), rc.left, top, width, m_theme.DpiScale(Layout_TextHeight));
         m_pathStatic.Format().SetLineAlignment(Gdiplus::StringAlignment::StringAlignmentFar);
 
         top += m_theme.DpiScale(Layout_TextHeight);
@@ -73,7 +74,7 @@ namespace AnyFSE::App::AppSettings::Settings
             m_theme.DpiScale(Layout_EditHeight)
         );
 
-        m_browseButton.Create(m_hDialog, L"Browse", delegate(OnBrowse),
+        m_browseButton.Create(m_hDialog, Translate(L"browseBtn"), delegate(OnBrowse),
             rc.right - m_theme.DpiScale(Layout_BrowseButtonWidth),
             top + (Layout_EditHeight - Layout_ButtonHeight) / 2,
             m_theme.DpiScale(Layout_BrowseButtonWidth),
@@ -81,7 +82,7 @@ namespace AnyFSE::App::AppSettings::Settings
         );
         top += m_theme.DpiScale(Layout_EditHeight);
 
-        m_argsStatic.Create(m_hDialog, L"Additional startup arguments",
+        m_argsStatic.Create(m_hDialog, Translate(L"settingsAdditionalStartupArguments"),
             rc.left, top, width, m_theme.DpiScale(Layout_TextHeight)
         );
         m_argsStatic.Format().SetLineAlignment(Gdiplus::StringAlignment::StringAlignmentFar);
@@ -89,12 +90,12 @@ namespace AnyFSE::App::AppSettings::Settings
         top += m_theme.DpiScale(Layout_TextHeight);
         m_argsEdit.Create(m_hDialog, rc.left, top, width, m_theme.DpiScale(Layout_EditHeight));
 
-        m_okButton.Create(m_hDialog, L"OK", delegate(OnOk),
+        m_okButton.Create(m_hDialog, Translate(L"okBtn"), delegate(OnOk),
             rc.right - m_theme.DpiScale(Layout_ButtonWidth *2 + Layout_ButtonPadding),
             rc.bottom - m_theme.DpiScale(Layout_ButtonHeight),
             m_theme.DpiScale(Layout_ButtonWidth), m_theme.DpiScale(Layout_ButtonHeight)
         );
-        m_cancelButton.Create(m_hDialog, L"Cancel", delegate(OnCancel),
+        m_cancelButton.Create(m_hDialog, Translate(L"cancelBtn"), delegate(OnCancel),
             rc.right - m_theme.DpiScale(Layout_ButtonWidth),
             rc.bottom - m_theme.DpiScale(Layout_ButtonHeight),
             m_theme.DpiScale(Layout_ButtonWidth), m_theme.DpiScale(Layout_ButtonHeight)

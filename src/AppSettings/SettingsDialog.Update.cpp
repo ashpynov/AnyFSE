@@ -18,6 +18,7 @@
 #include "SettingsDialog.hpp"
 #include "SettingsLayout.hpp"
 #include "Tools/Notification.hpp"
+#include "Tools/Localization.hpp"
 
 namespace AnyFSE::App::AppSettings::Settings
 {
@@ -53,8 +54,8 @@ namespace AnyFSE::App::AppSettings::Settings
             .SetMenu(
                 std::vector<Popup::PopupItem>
                 {
-                    Popup::PopupItem(L"\xE2B4", L"View release", delegate(OnShowVersion)),
-                    Popup::PopupItem(L"\xEDAB", L"Download & update", delegate(OnUpdate))
+                    Popup::PopupItem(L"\xE2B4", Translate(L"settingsUpdateViewRelease"), delegate(OnShowVersion)),
+                    Popup::PopupItem(L"\xEDAB", Translate(L"settingsUpdateDownloadAndUpdate"), delegate(OnUpdate))
                 }, 400, TPM_LEFTALIGN
             );
 
@@ -74,8 +75,10 @@ namespace AnyFSE::App::AppSettings::Settings
         std::wstring version = uiInfo.newVersion.empty() ? Config::UpdateLastVersion : uiInfo.newVersion;
 
         bool hasVersion = !version.empty();
-        std::wstring cVersion = (hasVersion ? L"Current version v" : L"Version v") + Unicode::to_wstring(VER_VERSION_STR);
-        std::wstring aVersion = hasVersion ? L"Available version " + version : L"";
+        std::wstring cVersion = TranslateF(
+            hasVersion ? L"settingsCurrentVersionFmt" : L"settingsVersionFmt",
+            Unicode::to_wstring(VER_VERSION_STR).c_str());
+        std::wstring aVersion = hasVersion ? TranslateF(L"settingsAvailableVersionFmt", version.c_str()) : L"";
 
         bool delayed = (LONGLONG)GetTickCount64() > uiInfo.lCommandAge + 1000;
         UpdaterState command = delayed ? uiInfo.uiState : uiInfo.uiCommand;
@@ -88,13 +91,13 @@ namespace AnyFSE::App::AppSettings::Settings
                 || uiInfo.uiState == UpdaterState::CheckingUpdate)
         {
             icon = L"\xE895";
-            cVersion = L"Current version v" + Unicode::to_wstring(VER_VERSION_STR);
-            aVersion =   (uiInfo.uiState == UpdaterState::CheckingUpdate)   ? L"Checking for new version"
-                       : (command == UpdaterState::NetworkFailed)           ? L"Network failed"
-                       : (uiInfo.uiState == UpdaterState::NetworkFailed)    ? L"Network failed"
+            cVersion = TranslateF(L"settingsCurrentVersionFmt", Unicode::to_wstring(VER_VERSION_STR).c_str());
+            aVersion =   (uiInfo.uiState == UpdaterState::CheckingUpdate)   ? Translate(L"settingsCheckingNewVersion")
+                       : (command == UpdaterState::NetworkFailed)           ? Translate(L"settingsNetworkFailed")
+                       : (uiInfo.uiState == UpdaterState::NetworkFailed)    ? Translate(L"settingsNetworkFailed")
                        : (uiInfo.uiState == UpdaterState::Done
-                          && !uiInfo.newVersion.empty())                    ? L"New version " + uiInfo.newVersion + L" available"
-                                                                            : L"No new version available";
+                          && !uiInfo.newVersion.empty())                    ? TranslateF(L"settingsNewVersionAvailableFmt", uiInfo.newVersion.c_str())
+                                                                            : Translate(L"settingsNoNewVersionAvailable");
         }
         else if (command == UpdaterState::NetworkFailed && !enableAnimation)
         {
@@ -103,8 +106,10 @@ namespace AnyFSE::App::AppSettings::Settings
         else if (uiInfo.uiState == UpdaterState::Downloading || command == UpdaterState::Downloading || command == UpdaterState::ReadyForUpdate)
         {
             icon = L"\xF16A";
-            aVersion = (uiInfo.uiState == UpdaterState::NetworkFailed)  ? L"Failed to download" : L"";
-            cVersion = ((uiInfo.uiState == UpdaterState::Downloading) ? L"Downloading version " : L"Updating to version ") + uiInfo.newVersion;
+            aVersion = (uiInfo.uiState == UpdaterState::NetworkFailed)  ? Translate(L"settingsFailedToDownload") : L"";
+            cVersion = (uiInfo.uiState == UpdaterState::Downloading)
+                ? TranslateF(L"settingsDownloadingVersionFmt", uiInfo.newVersion.c_str())
+                : TranslateF(L"settingsUpdatingToVersionFmt", uiInfo.newVersion.c_str());
             enableAnimation = true;
             enableCheck = false;
             enableStatus = false;

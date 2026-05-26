@@ -41,7 +41,6 @@ namespace FluentDesign
         : FluentControl(theme, align, getParentRect)
         , m_buttonMouseOver(false)
         , m_buttonPressed(false)
-        , m_isIconButton(false)
         , m_bFlat(false)
         , m_bSquare(false)
         , m_isSmallIcon(false)
@@ -82,7 +81,7 @@ namespace FluentDesign
         m_hWnd = CreateWindow(
             L"BUTTON",
             L"",
-            WS_VISIBLE | WS_CHILD | BS_DEFCOMMANDLINK | WS_TABSTOP,
+            WS_VISIBLE | WS_CHILD | BS_DEFCOMMANDLINK | WS_TABSTOP | BS_CENTER,
             x, y, width, height,
             hParent, NULL, GetModuleHandle(NULL), NULL);
 
@@ -108,11 +107,9 @@ namespace FluentDesign
     Button& Button::SetText(const std::wstring &text)
     {
         if (m_text == text)
-            *this;
+            return *this;
 
         m_text = text;
-        m_isIconButton = false;
-       // SetWindowText(m_hButton, text.c_str());
         InvalidateRect(m_hWnd, NULL, FALSE);
         return *this;
     }
@@ -124,11 +121,10 @@ namespace FluentDesign
 
     Button& Button::SetIcon(const std::wstring &glyph, bool bSmall)
     {
-        if (m_text == glyph)
+        if (m_icon == glyph && m_isSmallIcon == bSmall)
             return *this;
 
-        m_text = glyph;
-        m_isIconButton = true;
+        m_icon = glyph;
         m_isSmallIcon = bSmall;
 
         InvalidateRect(m_hWnd, NULL, FALSE);
@@ -273,22 +269,30 @@ namespace FluentDesign
         format.SetTrimming(StringTrimmingNone);
         format.SetFormatFlags(StringFormatFlagsNoWrap);
 
-        Font font(hdc, m_isIconButton
-            ? (m_isSmallIcon
-                ? m_theme.GetFont_Glyph()
-                : m_theme.GetFont_GlyphNormal())
-            : m_theme.GetFont_Text());
+        Font textFont(hdc, m_theme.GetFont_Text());
+        Font iconFont(hdc, m_isSmallIcon ? m_theme.GetFont_Glyph() : m_theme.GetFont_GlyphNormal());
 
-        RectF br;
-        br.Width = 100000;
-        br.Height = 100000;
+        RectF bounds;
+        bounds.Width = 100000;
+        bounds.Height = 100000;
 
-        RectF mr;
+        RectF textRect{};
+        RectF iconRect{};
+        if (!m_text.empty())
+        {
+            graphics.MeasureString(m_text.c_str(), -1, &textFont, bounds, &format, &textRect);
+        }
+        if (!m_icon.empty())
+        {
+            graphics.MeasureString(m_icon.c_str(), -1, &iconFont, bounds, &format, &iconRect);
+        }
 
-        graphics.MeasureString(m_text.c_str(), m_isIconButton ? 1 : -1, &font, br, &format, &mr);
+        float spacing = (!m_text.empty() && !m_icon.empty()) ? m_theme.DpiScaleF(6.0f) : 0.0f;
+        float width = textRect.Width + iconRect.Width + spacing;
+        float height = max(textRect.Height, iconRect.Height);
         ReleaseDC(m_hWnd, hdc);
 
-        return SIZE{(long)mr.Width, (long)mr.Height};
+        return SIZE{(long)width, (long)height};
     }
 
     Button::~Button()
@@ -562,12 +566,8 @@ namespace FluentDesign
             }
         }
 
-        // Create the font and brush
-        Font font(hdc, m_isIconButton
-            ? (m_isSmallIcon
-                ? m_theme.GetFont_Glyph()
-                : m_theme.GetFont_GlyphNormal())
-            : m_theme.GetFont_Text());
+        Font textFont(hdc, m_theme.GetFont_Text());
+        Font iconFont(hdc, m_isSmallIcon ? m_theme.GetFont_Glyph() : m_theme.GetFont_GlyphNormal());
 
         Color textColor(m_theme.GetColor(
             ! enabled           ? Theme::Colors::TextDisabled
@@ -586,23 +586,59 @@ namespace FluentDesign
         format.SetTrimming(StringTrimmingNone);
         format.SetFormatFlags(StringFormatFlagsNoWrap);
 
-        if (m_isIconButton && m_iconAngle)
+        RectF measureBounds;
+        measureBounds.Width = 100000;
+        measureBounds.Height = 100000;
+
+        RectF textRect{};
+        RectF iconRect{};
+        if (!m_text.empty())
         {
-            graphics.TranslateTransform(br.X + br.Width/2 - 1, br.Y + br.Height/2 - 1);
-            graphics.RotateTransform((REAL)m_iconAngle);
-            br.X -= (br.Width / 2);
-            br.Y -= (br.Height / 2);
+            graphics.MeasureString(m_text.c_str(), -1, &textFont, measureBounds, &format, &textRect);
         }
-        if (m_isIconButton)
+        if (!m_icon.empty())
         {
-            for (int i = 0; i < m_text.length(); i++)
+            graphics.MeasureString(m_icon.c_str(), -1, &iconFont, measureBounds, &format, &iconRect);
+        }
+
+        const float spacing = (!m_text.empty() && !m_icon.empty()) ? m_theme.DpiScaleF(6.0f) : 0.0f;
+        const float contentWidth = iconRect.Width + spacing + textRect.Width;
+        float x = br.X;
+        if (align == BS_CENTER)
+        {
+            x = br.X + (br.Width - contentWidth) / 2.0f;
+        }
+        else if (align == BS_RIGHT)
+        {
+            x = br.GetRight() - contentWidth;
+        }
+
+        if (!m_icon.empty())
+        {
+            RectF iconDraw = br;
+            iconDraw.X = x;
+            iconDraw.Width = iconRect.Width;
+
+            if (m_iconAngle)
             {
-                graphics.DrawString(m_text.c_str() + i, 1, &font, br, &format, &textBrush);
+                const float cx = iconDraw.X + iconDraw.Width / 2.0f;
+                const float cy = iconDraw.Y + iconDraw.Height / 2.0f;
+                graphics.TranslateTransform(cx, cy);
+                graphics.RotateTransform((REAL)m_iconAngle);
+                iconDraw.X -= cx;
+                iconDraw.Y -= cy;
             }
+            graphics.DrawString(m_icon.c_str(), -1, &iconFont, iconDraw, &format, &textBrush);
+            graphics.ResetTransform();
+            x += iconRect.Width + spacing;
         }
-        else
+
+        if (!m_text.empty())
         {
-            graphics.DrawString(m_text.c_str(), -1, &font, br, &format, &textBrush);
+            RectF textDraw = br;
+            textDraw.X = x;
+            textDraw.Width = textRect.Width;
+            graphics.DrawString(m_text.c_str(), -1, &textFont, textDraw, &format, &textBrush);
         }
         graphics.ResetTransform();
 

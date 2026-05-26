@@ -38,6 +38,8 @@
 #include "Tools/Window.hpp"
 #include "Tools/Registry.hpp"
 #include "Tools/Process.hpp"
+#include "Tools/Localization.hpp"
+#include "Tools/Paths.hpp"
 #include "Ally/Ally.hpp"
 
 #define byte ::byte
@@ -181,7 +183,7 @@ namespace AnyFSE::App::AppSettings::Settings
             {   // To enable immersive dark mode (for a dark title bar)
 
                 m_theme.AttachDlg(hwnd);
-                SetWindowText(hwnd, L"AnyFSE Settings");
+                SetWindowText(hwnd, Translate(L"settingsMainWindowTitle").c_str());
                 OnInitDialog(hwnd);
                 RestoreWindowPlacement();
                 Process::BringWindowToForeground(m_hDialog);
@@ -361,11 +363,11 @@ namespace AnyFSE::App::AppSettings::Settings
                 r.left += m_theme.DpiScale(Layout::MarginLeft);
                 r.top += m_theme.DpiScale(Layout::CaptionHeight);
 
-                WCHAR *text1 = L"Any Full Screen Experience";
+                std::wstring text1 = Translate(L"settingsAppTitle");
 
                 SetBkMode(paint.MemDC(), TRANSPARENT);
                 HGDIOBJ oldFont = SelectFont(paint.MemDC(), m_theme.GetFont_Title());
-                ::DrawText(paint.MemDC(), text1, -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP | DT_CALCRECT);
+                ::DrawText(paint.MemDC(), text1.c_str(), -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP | DT_CALCRECT);
 
                 m_breadCrumbRect = r;
 
@@ -376,7 +378,7 @@ namespace AnyFSE::App::AppSettings::Settings
                     : FluentDesign::Theme::Colors::BreadcrumbLink
                 ));
 
-                ::DrawText(paint.MemDC(), text1, -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
+                ::DrawText(paint.MemDC(), text1.c_str(), -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
 
                 if (!m_pageName.empty())
                 {
@@ -654,7 +656,7 @@ namespace AnyFSE::App::AppSettings::Settings
             .SetAnchor(Align::TopLeft(), GetDialogClientRect)
             .Create(m_hDialog, Layout::BackButtonMargin * 2 + Layout::BackButtonSize, Layout::BackButtonMargin, 200, Layout::BackButtonSize - 4);
         m_captionStatic.Format().SetLineAlignment(Gdiplus::StringAlignment::StringAlignmentCenter);
-        m_captionStatic.SetText(L"Settings");
+        m_captionStatic.SetText(Translate(L"settingsCaption"));
 
         m_captionBackButton
             .SetAnchor(Align::TopLeft(), GetDialogClientRect)
@@ -712,6 +714,7 @@ namespace AnyFSE::App::AppSettings::Settings
     void SettingsDialog::AddFooterButtons()
     {
         AddUpdateControls();
+        AddLanguageButton();
 #if 0
         m_okButton
             .SetAnchor(Align::BottomRight(), GetDialogCenteredRect)
@@ -737,6 +740,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
     void SettingsDialog::OnInitDialog(HWND hwnd)
     {
+        RefreshLocalizedCaption();
         AddCaptionButtons();
         AddScrollPanel();
         AddFooterButtons();
@@ -821,5 +825,64 @@ namespace AnyFSE::App::AppSettings::Settings
     {
         SwitchActivePage(L"", &m_settingPageList, true);
         m_theme.SwapFocus(m_settingPageList.front().GetHWnd());
+    }
+
+    std::wstring SettingsDialog::GetLocalizationDirectory() const
+    {
+        return Tools::Paths::GetExePath() + L"\\Assets\\localization";
+    }
+
+    std::wstring SettingsDialog::GetDebugLocalizationDirectory() const
+    {
+        namespace fs = std::filesystem;
+        return (fs::path(Tools::Paths::GetExePath()) / L".." / L".." / L"Assets" / L"localization").lexically_normal().wstring();
+    }
+
+    void SettingsDialog::RefreshLocalizedCaption()
+    {
+        SetWindowText(m_hDialog, Translate(L"settingsMainWindowTitle").c_str());
+    }
+
+    void SettingsDialog::AddLanguageButton()
+    {
+        m_languageButton
+            .SetAnchor(Align::BottomRight(), GetDialogCenteredRect)
+            .Create(m_hDialog,
+                -Layout::MarginRight - Layout::UpdateHeight,
+                -Layout::MarginBottom - Layout::UpdateHeight,
+                Layout::UpdateHeight,
+                Layout::UpdateHeight)
+            .SetIcon(L"\xE164")
+            .SetFlat(true);
+
+        std::vector<Tools::Localization::LocaleInfo> locales = Tools::Localization::EnumerateLocales(GetLocalizationDirectory());
+#ifdef _DEBUG
+        if (locales.empty())
+        {
+            locales = Tools::Localization::EnumerateLocales(GetDebugLocalizationDirectory());
+        }
+#endif
+
+        std::vector<Popup::PopupItem> items;
+        items.reserve(locales.size());
+        for (const auto &locale : locales)
+        {
+            items.emplace_back(locale.code == Tools::Localization::GetCurrentLocale() ? L"\xE1D2" : L"\xEA3F", locale.language, [this, code = locale.code]() { OnSelectLanguage(code); });
+        }
+
+        if (!items.empty())
+        {
+            m_languageButton.SetMenu(items, 200, TPM_LEFTALIGN);
+            m_languageButton.OnChanged += [this]() { m_languageButton.ShowMenu(); };
+        }
+    }
+
+    void SettingsDialog::OnSelectLanguage(const std::wstring &localeCode)
+    {
+        Config::Locale = localeCode;
+        Tools::Localization::SetPreferredLocale(localeCode);
+        Tools::Localization::Initialize(GetLocalizationDirectory());
+        SaveSettings();
+        EndDialog(m_hDialog, IDRETRY);
     }
 }

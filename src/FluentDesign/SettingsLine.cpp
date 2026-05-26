@@ -40,7 +40,7 @@ namespace FluentDesign
     static Logger log = LogManager::GetLogger("SettingsLine");
 
     // Window class registration
-    static const wchar_t *SETTINGS_LINE_CLASS = AppConstants::SettingsLineClass;
+    static const wchar_t *SETTINGS_LINE_CLASS = AnyFSE::AppConstants::SettingsLineClass;
 
     SettingsLine::SettingsLine(FluentDesign::Theme& theme)
         : FluentControl(theme)

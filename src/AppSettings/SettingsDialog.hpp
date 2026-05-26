@@ -28,6 +28,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <filesystem>
 
 #include "App/AppConstants.hpp"
 #include "Configuration/Config.hpp"
@@ -118,6 +119,7 @@ namespace AnyFSE::App::AppSettings::Settings
             , m_updateCheckButton(m_theme, Align::BottomLeft(), GetDialogCenteredRect)
             , m_updateCurrentText(m_theme, Align::BottomLeft(), GetDialogCenteredRect)
             , m_updateButton(m_theme, Align::BottomLeft(), GetDialogCenteredRect)
+            , m_languageButton(m_theme, Align::BottomRight(), GetDialogCenteredRect)
 
         {
             m_pages.push_back(new Page::LauncherPage(m_theme, *this));
@@ -191,6 +193,13 @@ namespace AnyFSE::App::AppSettings::Settings
         Button m_updateCheckButton;
         Static m_updateCurrentText;
         Button m_updateButton;
+        Button m_languageButton;
+
+        std::wstring GetLocalizationDirectory() const;
+        std::wstring GetDebugLocalizationDirectory() const;
+        void RefreshLocalizedCaption();
+        void AddLanguageButton();
+        void OnSelectLanguage(const std::wstring &localeCode);
 
         void AddUpdateControls();
         void MoveUpdateControls();

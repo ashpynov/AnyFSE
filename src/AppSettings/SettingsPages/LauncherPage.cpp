@@ -9,6 +9,7 @@
 #include "AppSettings/SettingsPages/ConfirmationsPage.hpp"
 #include "LauncherPage.hpp"
 #include "Logging/LogManager.hpp"
+#include "Tools/Localization.hpp"
 
 namespace AnyFSE::App::AppSettings::Settings::Page
 {
@@ -17,8 +18,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     void LauncherPage::AddPage(std::list<SettingsLine>& settingPageList, ULONG &top)
     {
         FluentDesign::SettingsLine &launcher = m_dialog.AddSettingsLine(settingPageList, top,
-            L"Choose home app",
-            L"Choose home application for full screen experience",
+            Translate(L"settingsChooseHomeApp"),
+            Translate(L"settingsChooseHomeAppDescription"),
             m_launcherCombo,
             Layout::LineHeight, Layout::LauncherBrowsePadding, 0,
             Layout::LauncherComboWidth );
@@ -35,15 +36,15 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_pBrowseLine->SetFrame(Gdiplus::FrameFlags::SIDE_NO_TOP | Gdiplus::FrameFlags::CORNER_BOTTOM);
 
         m_pFseOnStartupLine = &m_dialog.AddSettingsLine(settingPageList, top,
-            L"Enter full screen experience on startup",
+            Translate(L"settingsEnterFseOnStartup"),
             L"",
             m_fseOnStartupToggle,
             Layout::LineHeight, Layout::LinePadding, 0);
         m_pFseOnStartupLine->SetIcon(L'\xE93A');
 
         m_pExitOnHomeExitLine = &m_dialog.AddSettingsLine(settingPageList, top,
-            L"Leave full screen experience on home app exit",
-            L"Exit full screen experience mode after Home app was exited",
+            Translate(L"settingsLeaveFseOnHomeExit"),
+            Translate(L"settingsLeaveFseOnHomeExitDescription"),
             m_fseExitOnHomeExitToggle,
             Layout::LineHeight, Layout::LinePadding, 0);
         m_pExitOnHomeExitLine->SetIcon(L'\xEE47');
@@ -51,8 +52,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_dialog.AddPage((new ConfirmationsPage(m_theme, m_dialog))->AddLine(settingPageList, top));
 
         m_pCustomSettingsLine = &m_dialog.AddSettingsLine(settingPageList, top,
-            L"Use custom settings",
-            L"Change monitoring and startups settings for selected home application",
+            Translate(L"settingsUseCustomSettings"),
+            Translate(L"settingsUseCustomSettingsDescription"),
             m_customSettingsToggle,
             Layout::LineHeight, Layout::LinePadding, 0);
 
@@ -63,8 +64,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         AddCustomPage();
 
         m_pSplashSettingsLine = &m_dialog.AddSettingsLine(settingPageList, top,
-            L"Splash screen settings",
-            L"Configure Look'n'Feel of splash screen during home app loading",
+            Translate(L"settingsSplashScreenSettings"),
+            Translate(L"settingsSplashScreenSettingsDescription"),
             Layout::LineHeight, Layout::LinePadding, 0);
 
         m_pSplashSettingsLine->SetState(SettingsLine::Next);
@@ -72,8 +73,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_pSplashSettingsLine->OnChanged += delegate(OpenSplashSettingsPage);
 
         m_pStartupSettingsLine = &m_dialog.AddSettingsLine(settingPageList, top,
-            L"Startup",
-            L"Apps that start automatically when you sign in full screen experience",
+            Translate(L"settingsStartup"),
+            Translate(L"settingsStartupDescription"),
             Layout::LineHeight, Layout::LinePadding, 0);
 
         m_pStartupSettingsLine->SetState(FluentDesign::SettingsLine::Next);
@@ -88,7 +89,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         m_customSettingsToggle.OnChanged += delegate(OnCustomChanged);
 
-        m_browseButton.SetText(L"Browse");
+        m_browseButton.SetText(Translate(L"browseBtn"));
         m_browseButton.OnChanged += delegate(OnBrowseLauncher);
     }
 
@@ -99,16 +100,16 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         ULONG pageTop = 0;
 
         SettingsLine & parametersSettingsLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Additional arguments",
-            L"Command line arguments passed to application",
+            Translate(L"settingsAdditionalArguments"),
+            Translate(L"settingsAdditionalArgumentsDescription"),
             m_additionalArgumentsEdit,
             Layout::LineHeight, Layout::LinePadding, 0);
 
         parametersSettingsLine.SetIcon(L'\xE62F');
 
         SettingsLine & primarySettingsLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Home application detection",
-            L"Parameters to detect home application is started",
+            Translate(L"settingsHomeApplicationDetection"),
+            Translate(L"settingsHomeApplicationDetectionDescription"),
             Layout::LineHeightSmall, 0, 0);
 
 
@@ -117,26 +118,26 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         primarySettingsLine.SetIcon(L'\xF8A5');
 
         primarySettingsLine.AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Process name",
-            L"Name of home application process",
+            Translate(L"settingsProcessName"),
+            Translate(L"settingsProcessNameDescription"),
             m_processNameEdit,
             Layout::LineHeightSmall, 0, Layout::LineSmallMargin));
 
         primarySettingsLine.AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Window class name",
-            L"Class of application main window",
+            Translate(L"settingsWindowClassName"),
+            Translate(L"settingsWindowClassNameDescription"),
             m_classEdit,
             Layout::LineHeightSmall, 0, Layout::LineSmallMargin));
 
         primarySettingsLine.AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Window title",
-            L"Title of app window when it have been activated",
+            Translate(L"settingsFieldWindowTitle"),
+            Translate(L"settingsWindowTitleDescription"),
             m_titleEdit,
             Layout::LineHeightSmall, Layout::LinePadding, Layout::LineSmallMargin));
 
         SettingsLine & secondarySettingsLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Alternative mode detection",
-            L"Parameters to detect home application is started in alternative mode",
+            Translate(L"settingsAlternativeModeDetection"),
+            Translate(L"settingsAlternativeModeDetectionDescription"),
             Layout::LineHeightSmall, 0, 0);
 
         secondarySettingsLine.SetState(SettingsLine::State::Closed);
@@ -144,20 +145,20 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         secondarySettingsLine.SetIcon(L'\xE737');
 
         secondarySettingsLine.AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Secondary process name",
-            L"Name of app process for alternative mode",
+            Translate(L"settingsSecondaryProcessName"),
+            Translate(L"settingsSecondaryProcessNameDescription"),
             m_processNameAltEdit,
             Layout::LineHeightSmall, 0, Layout::LineSmallMargin));
 
         secondarySettingsLine.AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Secondary window class name",
-            L"Alternative Class name of app window",
+            Translate(L"settingsSecondaryWindowClassName"),
+            Translate(L"settingsSecondaryWindowClassNameDescription"),
             m_classAltEdit,
             Layout::LineHeightSmall, 0, Layout::LineSmallMargin));
 
         secondarySettingsLine.AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Secondary window title",
-            L"Alternative Title of app window",
+            Translate(L"settingsSecondaryWindowTitle"),
+            Translate(L"settingsSecondaryWindowTitleDescription"),
             m_titleAltEdit,
             Layout::LineHeightSmall, 0, Layout::LineSmallMargin));
 
@@ -169,7 +170,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             Layout::StartupAddWidth, Layout::StartupAddHeight
         ).SetState(FluentDesign::SettingsLine::Caption);
 
-        m_customResetButton.SetText(L"Reset");
+        m_customResetButton.SetText(Translate(L"resetBtn"));
         m_customResetButton.OnChanged = delegate(OnCustomReset);
 
         m_additionalArgumentsEdit.OnChanged += delegate(UpdateCustomResetEnabled);
@@ -309,17 +310,17 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
     void LauncherPage::OpenCustomSettingsPage()
     {
-        m_dialog.SwitchActivePage(L"Custom settings", &m_pageLinesList);
+        m_dialog.SwitchActivePage(Translate(L"settingsCustomSettings"), &m_pageLinesList);
     }
 
     void LauncherPage::OpenSplashSettingsPage()
     {
-        m_dialog.SwitchActivePage(L"Splash settings", &m_pSplashPage->GetSettingsLines());
+        m_dialog.SwitchActivePage(Translate(L"settingsSplashSettings"), &m_pSplashPage->GetSettingsLines());
     }
 
     void LauncherPage::OpenStartupSettingsPage()
     {
-        m_dialog.SwitchActivePage(L"Startup", &m_pStartupPage->GetSettingsLines());
+        m_dialog.SwitchActivePage(Translate(L"settingsStartup"), &m_pStartupPage->GetSettingsLines());
     }
 
     void LauncherPage::UpdateControls()
@@ -382,7 +383,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         m_pBrowseLine->SetDescription(
             m_defaultConfig.Type == LauncherType::Native
-                ? L"* Native launcher is selected, AnyFSE will not be executed"
+                ? Translate(L"settingsNativeLauncherSelected")
                 : L""
         );
     }

@@ -7,12 +7,12 @@
 #include <iostream>
 #include <string>
 #include <shellapi.h>
-#include "App/AppConstants.hpp"
+#include "../../App/AppConstants.hpp"
 
 namespace
 {
 
-    constexpr const wchar_t *kServiceName = AppConstants::InjectorServiceName;
+    constexpr const wchar_t *kServiceName = AnyFSE::AppConstants::InjectorServiceName;
     constexpr const wchar_t *kServiceDisplayName = L"AnyFSE ACSE Filter Injector";
     constexpr const wchar_t *kServiceDescription = L"Injects ACSEFilterHook into ASUS Optimization process and blocks it from ASUS-specific keys processing.";
     constexpr const wchar_t *kTargetProcessName = L"AsusOptimization.exe";

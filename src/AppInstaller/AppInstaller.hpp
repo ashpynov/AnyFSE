@@ -23,6 +23,7 @@
 
 #include <list>
 #include <map>
+#include <vector>
 #include "App/AppConstants.hpp"
 #include "FluentDesign/Theme.hpp"
 #include "FluentDesign/Button.hpp"
@@ -81,13 +82,14 @@ namespace AnyFSE
                 , m_imageStatic(m_theme)
                 , m_leftButton(m_theme)
                 , m_rightButton(m_theme)
+                , m_languageButton(m_theme)
             {}
 
         private:
             HINSTANCE m_hInstance;
             HWND m_hDialog;
 
-            const int Layout_DialogWidth = 480;
+            const int Layout_DialogWidth = 540;
             const int Layout_DialogHeight = 280;
             const int Layout_Margins = 16;
             const int Layout_ImageWidth = 48;
@@ -118,6 +120,7 @@ namespace AnyFSE
             Static m_textStatic;
             Button m_leftButton;
             Button m_rightButton;
+            Button m_languageButton;
 
         private:
             bool m_isUpdate = false;
@@ -145,6 +148,9 @@ namespace AnyFSE
             void ShowLicensePage();
             void ShowProgressPage();
             void ShowCompletePage();
+            void PopulateLanguageMenu();
+            void OnSelectLanguage(const std::wstring &localeCode);
+            void UpdateDialogTitle();
 
             bool IsConfigured();
             void CollectPostMortemInfo(const std::wstring &path);

@@ -51,7 +51,6 @@ namespace FluentDesign
 
         bool m_buttonPressed;
         bool m_buttonMouseOver;
-        bool m_isIconButton;
         bool m_bFlat;
         bool m_bSquare;
         bool m_isSmallIcon;
@@ -68,6 +67,7 @@ namespace FluentDesign
         Theme::Colors m_textPressedColor;
         Theme::Colors m_backgroundPressedColor;
 
+        std::wstring m_icon;
         std::wstring m_text;
 
         LRESULT OnTimer(UINT timerId);

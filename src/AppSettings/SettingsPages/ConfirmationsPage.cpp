@@ -5,6 +5,7 @@
 #include "AppSettings/SettingsDialog.hpp"
 #include "ConfirmationsPage.hpp"
 #include "Tools/Registry.hpp"
+#include "Tools/Localization.hpp"
 
 
 
@@ -14,8 +15,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     {
         FluentDesign::SettingsLine &confirmationsLine = m_dialog.AddSettingsLine(settingPageList,
             top,
-            L"Setup confirmations",
-            L"Set confirmation dialogs on entering and leaving fullscreen mode",
+            Translate(L"settingsConfirmationsSetup"),
+            Translate(L"settingsConfirmationsSetupDescription"),
             Layout::LineHeight, Layout::LinePadding, 0,
             Layout::LauncherComboWidth);
 
@@ -29,21 +30,28 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     {
         ULONG pageTop = 0;
         m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Enter fullscreen mode",
-            L"Restart windows to optimize or start fullscreen mode now",
+            Translate(L"settingsConfirmationsEnterMode"),
+            Translate(L"settingsConfirmationsEnterModeDescription"),
             m_confirmEnterCombo,
             Layout::LineHeight, Layout::LinePadding, 0, 240)
             .SetIcon(L'\xE93A');
 
         m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"Exit fullscreen mode",
+            Translate(L"settingsConfirmationsExitMode"),
             L"",
             m_confirmExitCombo,
             Layout::LineHeight, Layout::LinePadding, 0, 240)
             .SetIcon(L'\xEE47');
 
-        std::vector<std::wstring> enterOptions{ L"Ask", L"Restart windows to optimize", L"Start now (no optimizations)" };
-        std::vector<std::wstring> exitOptions{ L"Ask", L"Exit without confirmation" };
+        std::vector<std::wstring> enterOptions{
+            Translate(L"settingsConfirmationsAsk"),
+            Translate(L"settingsConfirmationsRestartToOptimize"),
+            Translate(L"settingsConfirmationsStartNowNoOptimizations")
+        };
+        std::vector<std::wstring> exitOptions{
+            Translate(L"settingsConfirmationsAsk"),
+            Translate(L"settingsConfirmationsExitWithoutConfirmation")
+        };
 
         for (auto option: enterOptions)
         {
@@ -75,6 +83,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
     void ConfirmationsPage::OpenConfirmationsSettingsPage()
     {
-        m_dialog.SwitchActivePage(L"Confirmations", &m_pageLinesList);
+        m_dialog.SwitchActivePage(Translate(L"settingsConfirmationsPageTitle"), &m_pageLinesList);
     }
 };

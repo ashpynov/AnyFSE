@@ -40,7 +40,7 @@ namespace FluentDesign
     private:
         static const int Layout_ItemHeight = 20;
         static const int Layout_ItemWidth = 40;
-        static const int Layout_TextWidth = 32;
+        static const int Layout_TextWidth = 48;
 
 
         bool m_buttonPressed;

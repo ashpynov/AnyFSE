@@ -3,6 +3,7 @@
 #include "AppSettings/SettingsLayout.hpp"
 #include "AppSettings/SettingsDialog.hpp"
 #include "UpdatePage.hpp"
+#include "Tools/Localization.hpp"
 
 
 namespace AnyFSE::App::AppSettings::Settings::Page
@@ -13,8 +14,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         GetClientRect(m_dialog.GetHwnd(), &rect);
 
         SettingsLine & dialogLine = m_dialog.AddSettingsLine(settingPageList, top,
-            L"Update settings",
-            L"Change period and settings of new version check",
+            Translate(L"settingsUpdateSettings"),
+            Translate(L"settingsUpdateSettingsDescription"),
             Layout::LineHeight, Layout::LinePadding, 0);
 
         dialogLine.SetState(FluentDesign::SettingsLine::Next);
@@ -24,13 +25,13 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         ULONG topPage = 0;
 
         m_dialog.AddSettingsLine(m_pageLinesList, topPage,
-            L"Check period",
-            L"New version check period",
+            Translate(L"settingsCheckPeriod"),
+            Translate(L"settingsCheckPeriodDescription"),
             m_checkIntervalCombo,
             Layout::LineHeight, Layout::LinePadding, 0);
 
-        m_checkIntervalCombo.AddItem(L"Manual", L"", {(wchar_t)-2, 0});
-        m_checkIntervalCombo.AddItem(L"On settings open", L"", {(wchar_t)-1, 0});
+        m_checkIntervalCombo.AddItem(Translate(L"settingsCheckPeriodManual"), L"", {(wchar_t)-2, 0});
+        m_checkIntervalCombo.AddItem(Translate(L"settingsCheckPeriodOnSettingsOpen"), L"", {(wchar_t)-1, 0});
         // m_checkIntervalCombo.AddItem(L"On windows boot", L"", {(wchar_t)0, 0});
 
         // m_checkIntervalCombo.AddItem(L"Hourly", L"", {(wchar_t)1, 0});
@@ -40,14 +41,14 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
 
         m_dialog.AddSettingsLine(m_pageLinesList, topPage,
-            L"Include pre-release versions",
-            L"Pre-release versions are less stable",
+            Translate(L"settingsIncludePrerelease"),
+            Translate(L"settingsIncludePrereleaseDescription"),
             m_preReleaseToggle,
             Layout::LineHeight, Layout::LinePadding, 0);
 
         m_dialog.AddSettingsLine(m_pageLinesList, topPage,
-            L"Show notifications",
-            L"Show popup notifications if new version available",
+            Translate(L"settingsShowNotifications"),
+            Translate(L"settingsShowNotificationsDescription"),
             m_notificationsToggle,
             Layout::LineHeight, Layout::LinePadding, 0);
 
@@ -75,7 +76,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
     void UpdatePage::OpenUpdateSettingsPage()
     {
-        m_dialog.SwitchActivePage(L"Update settings", &m_pageLinesList);
+        m_dialog.SwitchActivePage(Translate(L"settingsUpdateSettings"), &m_pageLinesList);
     }
 
     void UpdatePage::UpdateSettingsChangedCheck()

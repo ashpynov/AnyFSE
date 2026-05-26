@@ -156,8 +156,12 @@
     <ClCompile Include="src\Tools\Process.cpp" />
     <ClCompile Include="src\Tools\Icon.cpp" />
     <ClCompile Include="src\Tools\Paths.cpp" />
+    <ClCompile Include="src\Tools\Localization.cpp" />
     <ClCompile Include="src\Logging\*.cpp" />
     <ClCompile Include="src\App\GamingExperience.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Assets\localization\*.json" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\AppInstaller\Installer.rc">
@@ -200,4 +204,8 @@
     </Target>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Target Name="CopyLocalizationFiles" AfterTargets="Build">
+    <MakeDir Directories="$(OutDir)Assets\localization" />
+    <Copy SourceFiles="@(None)" DestinationFolder="$(OutDir)Assets\localization" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

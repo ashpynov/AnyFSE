@@ -38,7 +38,7 @@ namespace AnyFSE::Tools
             notifyData.uID = 1;
             notifyData.uFlags = NIF_ICON | NIF_TIP | NIF_INFO;
             notifyData.hIcon = LoadIconW(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON));
-            wcscpy_s(notifyData.szTip, _countof(notifyData.szTip), VER_PRODUCT_NAME);
+            wcscpy_s(notifyData.szTip, _countof(notifyData.szTip), L"AnyFSE");
             Shell_NotifyIconW(NIM_ADD, &notifyData);
         }
 

@@ -29,7 +29,7 @@
 #include "Tools/Unicode.hpp"
 #include "Toggle.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
-
+#include "Tools/Localization.hpp"
 #include "Tools/GdiPlus.hpp"
 #pragma comment(lib, "Gdiplus.lib")
 
@@ -295,18 +295,18 @@ namespace FluentDesign
 
         // Define the rectangle (X, Y, Width, Height)
         RectF textRect = gdiRect;
-        textRect.Width = m_theme.DpiScaleF(Layout_ItemWidth);
+        textRect.Width = m_theme.DpiScaleF(Layout_TextWidth - 4);
 
         // Create the font and brush
         Font font(hdc, m_theme.GetFont_Text());
         SolidBrush textBrush(Color(m_theme.GetColor(enabled ? Theme::Colors::Text : Theme::Colors::TextDisabled)));
 
-        WCHAR *text = m_isChecked ? L"On" : L"Off";
+        std::wstring text = Translate(m_isChecked ? L"toggleOn" : L"toggleOff").c_str();
         StringFormat format;
-        format.SetAlignment(StringAlignmentNear);       // Left
+        format.SetAlignment(StringAlignmentFar);       // Left
         format.SetLineAlignment(StringAlignmentCenter); // Vertical center
 
-        graphics.DrawString(text, -1, &font, textRect, &format, &textBrush);
+        graphics.DrawString(text.c_str(), -1, &font, textRect, &format, &textBrush);
 
         return;
     }
