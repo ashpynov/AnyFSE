@@ -30,6 +30,7 @@
 #include "Tools/Window.hpp"
 #include "App/AppConstants.hpp"
 #include "Tools/Icon.hpp"
+#include <filesystem>
 #include <commctrl.h>
 #include <uxtheme.h>
 #include <dwmapi.h>
@@ -673,12 +674,27 @@ namespace FluentDesign
         return d != m_data.end() ? d->second : L"";
     }
 
+    void SettingsLine::NavigateTo(const std::wstring &url)
+    {
+        if (url.empty())
+        {
+            return;
+        }
+        if (url.find(L'\\') != std::wstring::npos && url.back() == L'\\')
+        {
+            std::filesystem::create_directories(url);
+            Process::StartProtocol(L"\"" + url + L"\"");
+            return;
+        }
+        Process::StartProtocol(url);
+    }
+
     void SettingsLine::AddLinkButton(const std::wstring &name, const std::wstring &url)
     {
         m_linkButtons.emplace_back(m_theme);
         Button &b = m_linkButtons.back();
 
-        b.Create(m_hWnd, name, [url]() {Process::StartProtocol(url);}, 0, 0, 0, 0);
+        b.Create(m_hWnd, name, delegateparam(NavigateTo, url), 0, 0, 0, 0);
         b.SetLinkStyle();
         if (name.empty() || url.empty())
         {

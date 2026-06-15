@@ -176,6 +176,8 @@ namespace FluentDesign
         void SetData(int index, const std::wstring &data) { m_data[index] = data; }
         std::wstring GetData(int index);
 
+        void NavigateTo(const std::wstring &url);
+
         void AddLinkButton(const std::wstring &name, const std::wstring &url);
         int SetMaxColumns(int nColumns);
 

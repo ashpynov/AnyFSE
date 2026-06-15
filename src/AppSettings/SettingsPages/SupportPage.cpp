@@ -33,13 +33,13 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         // links.SetMaxColumns(1);
         links.AddLinkButton(Translate(L"settingsDiscordCommunity"), L"https://discord.gg/hnVwuTzDmk");
-        links.AddLinkButton(Translate(L"settingsNavigateLogsFolder"), Tools::Paths::GetLogsPath());
+        links.AddLinkButton(Translate(L"settingsNavigateLogsFolder"), Tools::Paths::GetLogsPath() + L"\\");
 
         links.AddLinkButton(Translate(L"settingsSourceCodeGithub"), L"https://github.com/ashpynov/AnyFSE/");
-        links.AddLinkButton(Translate(L"settingsNavigateConfigFolder"), Tools::Paths::GetConfigPath());
+        links.AddLinkButton(Translate(L"settingsNavigateConfigFolder"), Tools::Paths::GetConfigPath() + L"\\");
 
         links.AddLinkButton(Translate(L"settingsSourceCodeCodeberg"), L"https://codeberg.org/ashpynov/AnyFSE/");
-        links.AddLinkButton(Translate(L"settingsNavigateSplashFolder"), Tools::Paths::GetSplashDefaultPath());
+        links.AddLinkButton(Translate(L"settingsNavigateSplashFolder"), Tools::Paths::GetSplashDefaultPath() + L"\\");
 
         links.AddLinkButton(Translate(L"settingsReportIssueGithub"), L"https://github.com/ashpynov/AnyFSE/issues");
         links.AddLinkButton(L"", L"");
