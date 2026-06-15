@@ -134,6 +134,7 @@ namespace AnyFSE::Configuration
         FindOneGameLauncher(found);
         FindRetroBat(found);
         FindKodi(found);
+        FindCortex(found);
         FindArmouryCrate(found);
         FindNativeLaunchers(found);
         return found.size() > existed;
@@ -226,6 +227,16 @@ namespace AnyFSE::Configuration
             found.push_back(fs::path(installPath).append(L"Kodi.exe").wstring());
         }
     }
+
+    void Config::FindCortex(std::list<std::wstring> &found)
+    {
+        std::wstring installPath = GetInstallPath(L"Razer Cortex");
+        if (!installPath.empty())
+        {
+            found.push_back(fs::path(installPath).append(L"RazerCortex.Shell.exe").wstring());
+        }
+    }
+
 
     void Config::FindNativeLaunchers(std::list<std::wstring> &found)
     {
@@ -370,6 +381,7 @@ namespace AnyFSE::Configuration
                 {
                     WCHAR displayName[1024];
                     WCHAR uninstallString[1024];
+                    WCHAR installLocationString[1024];
                     DWORD dataSize = sizeof(displayName);
                     DWORD type;
 
@@ -378,6 +390,21 @@ namespace AnyFSE::Configuration
                         && type == REG_SZ
                         && exactDisplayName == Unicode::to_lower(displayName))
                     {
+
+                        dataSize = sizeof(installLocationString);
+                        if (RegQueryValueExW(hSubKey, L"InstallLocation", NULL, &type,
+                                            (LPBYTE)installLocationString, &dataSize) == ERROR_SUCCESS
+                            && type == REG_SZ
+                        )
+                        {
+                            if ( !fs::exists(installLocationString))
+                            {
+                                continue;
+                            }
+                            RegCloseKey(hSubKey);
+                            RegCloseKey(hKey);
+                            return installLocationString;
+                        }
 
                         dataSize = sizeof(uninstallString);
                         if (RegQueryValueExW(hSubKey, L"UninstallString", NULL, &type,

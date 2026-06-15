@@ -129,6 +129,16 @@ namespace AnyFSE::Configuration
             Kodi.ClassName = L"Kodi";
             result.push_back(Kodi);
         }
+        {
+            LauncherConfig Cortex = {};
+            Cortex.Type = LauncherType::Cortex;
+            Cortex.Name = L"Razer Cortex";
+            Cortex.URL = L"https://www.razer.com/cortex";
+            Cortex.StartCommand = L"RazerCortex.Shell.exe";
+            Cortex.ProcessName = L"RazerCortex.Shell.exe";
+            Cortex.ClassName = L"RazerCortexMainWnd";
+            result.push_back(Cortex);
+        }
         // {
         //     LauncherConfig Xbox = {};
         //     Xbox.Type = LauncherType::Native;

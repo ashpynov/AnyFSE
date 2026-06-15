@@ -153,8 +153,12 @@ namespace AnyFSE::Tools::Localization
         const fs::path exeAssetsPath = fs::path(Paths::GetExePath()) / L"Localization";
 
         // Base language: first existing source wins (ProgramData has priority).
+        #ifdef _DEBUG
+            LoadLanguageFile((fs::path(Paths::GetExePath()) / L".." / L".." / L"Localization" / L"en_US.json").wstring());
+        #else
         LoadLanguageFile((programDataPath / L"en_US.json").wstring()) ||
             LoadLanguageFile((exeAssetsPath / L"en_US.json").wstring());
+        #endif
 
         std::wstring localeFileName;
         if (!g_forcedLocale.empty())
@@ -305,7 +309,11 @@ namespace AnyFSE::Tools::Localization
 
         // ProgramData has priority for duplicates.
         scan(fs::path(Paths::GetDataPath()) / L"Localization");
-        scan(fs::path(Paths::GetExePath()) / L"Assets" / L"localization");
+        scan(fs::path(Paths::GetExePath()) / L"localization");
+
+        #ifdef _DEBUG
+            scan(fs::path(Paths::GetExePath()) / L".." / L".." / L"localization");
+        #endif
 
         std::sort(result.begin(), result.end(), [](const LocaleInfo &a, const LocaleInfo &b)
         {

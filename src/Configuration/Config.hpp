@@ -46,7 +46,8 @@ namespace AnyFSE::Configuration
         BigBox,
         OneGameLauncher,
         RetroBat,
-        Kodi
+        Kodi,
+        Cortex
     };
 
     struct LauncherConfig
@@ -107,6 +108,7 @@ namespace AnyFSE::Configuration
             static void FindArmouryCrate(std::list<std::wstring> &found);
             static void FindRetroBat(std::list<std::wstring>& found);
             static void FindKodi(std::list<std::wstring> &found);
+            static void FindCortex(std::list<std::wstring> &found);
 
             static std::wstring GetPathFromCommand(const std::wstring &uninstallCommand);
             static std::wstring SearchAppUserModel(const std::wstring &displayName);
