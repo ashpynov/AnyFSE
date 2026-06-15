@@ -11,9 +11,11 @@
 #include <string>
 #include <filesystem>
 #include <vector>
+#include <set>
 
 #include "Tools/Unicode.hpp"
 #include "Tools/Paths.hpp"
+#include "Tools/nlohmann/json.hpp"
 
 namespace AnyFSE::Tools::Localization
 {
@@ -35,164 +37,24 @@ namespace AnyFSE::Tools::Localization
             return true;
         }
 
-        void SkipSpaces(const std::wstring &text, size_t &i)
+        bool LoadLanguageJsonToMap(const nlohmann::json &parsed, std::map<std::wstring, std::wstring> &out)
         {
-            while (i < text.size() && std::iswspace(text[i]))
-            {
-                ++i;
-            }
-        }
-
-        bool ParseHex4(const std::wstring &text, size_t &i, wchar_t &ch)
-        {
-            if (i + 4 > text.size())
+            if (!parsed.is_object())
             {
                 return false;
             }
 
-            unsigned int value = 0;
-            for (size_t n = 0; n < 4; ++n)
+            for (const auto &[key, value] : parsed.items())
             {
-                value <<= 4;
-                const wchar_t c = text[i + n];
-                if (c >= L'0' && c <= L'9')
+                if (!value.is_string())
                 {
-                    value |= static_cast<unsigned int>(c - L'0');
-                }
-                else if (c >= L'A' && c <= L'F')
-                {
-                    value |= static_cast<unsigned int>(10 + c - L'A');
-                }
-                else if (c >= L'a' && c <= L'f')
-                {
-                    value |= static_cast<unsigned int>(10 + c - L'a');
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            i += 4;
-            ch = static_cast<wchar_t>(value);
-            return true;
-        }
-
-        bool ParseJsonString(const std::wstring &text, size_t &i, std::wstring &result)
-        {
-            if (i >= text.size() || text[i] != L'"')
-            {
-                return false;
-            }
-            ++i;
-
-            std::wstring out;
-            while (i < text.size())
-            {
-                const wchar_t c = text[i++];
-                if (c == L'"')
-                {
-                    result = out;
-                    return true;
-                }
-                if (c == L'\\')
-                {
-                    if (i >= text.size())
-                    {
-                        return false;
-                    }
-                    const wchar_t esc = text[i++];
-                    switch (esc)
-                    {
-                    case L'"': out.push_back(L'"'); break;
-                    case L'\\': out.push_back(L'\\'); break;
-                    case L'/': out.push_back(L'/'); break;
-                    case L'b': out.push_back(L'\b'); break;
-                    case L'f': out.push_back(L'\f'); break;
-                    case L'n': out.push_back(L'\n'); break;
-                    case L'r': out.push_back(L'\r'); break;
-                    case L't': out.push_back(L'\t'); break;
-                    case L'u':
-                    {
-                        wchar_t u = 0;
-                        if (!ParseHex4(text, i, u))
-                        {
-                            return false;
-                        }
-                        out.push_back(u);
-                        break;
-                    }
-                    default:
-                        return false;
-                    }
-                }
-                else
-                {
-                    out.push_back(c);
-                }
-            }
-            return false;
-        }
-
-        bool ParseFlatJsonObject(const std::wstring &content, std::map<std::wstring, std::wstring> &out)
-        {
-            size_t i = 0;
-            SkipSpaces(content, i);
-            if (i >= content.size() || content[i] != L'{')
-            {
-                return false;
-            }
-            ++i;
-
-            SkipSpaces(content, i);
-            if (i < content.size() && content[i] == L'}')
-            {
-                return true;
-            }
-
-            while (i < content.size())
-            {
-                SkipSpaces(content, i);
-                std::wstring key;
-                if (!ParseJsonString(content, i, key))
-                {
-                    return false;
-                }
-
-                SkipSpaces(content, i);
-                if (i >= content.size() || content[i] != L':')
-                {
-                    return false;
-                }
-                ++i;
-
-                SkipSpaces(content, i);
-                std::wstring value;
-                if (!ParseJsonString(content, i, value))
-                {
-                    return false;
-                }
-
-                out[key] = value;
-                SkipSpaces(content, i);
-
-                if (i >= content.size())
-                {
-                    return false;
-                }
-                if (content[i] == L',')
-                {
-                    ++i;
                     continue;
                 }
-                if (content[i] == L'}')
-                {
-                    return true;
-                }
-                return false;
+
+                out[Unicode::to_wstring(key)] = Unicode::to_wstring(value.get<std::string>());
             }
 
-            return false;
+            return true;
         }
 
         bool LoadLanguageFileToMap(const std::wstring &filePath, std::map<std::wstring, std::wstring> &out)
@@ -202,12 +64,38 @@ namespace AnyFSE::Tools::Localization
             {
                 return false;
             }
-            std::wstring wideContent = Unicode::to_wstring(content);
 
-            if (!ParseFlatJsonObject(wideContent, out))
+            try
+            {
+                const auto parsed = nlohmann::json::parse(content);
+                if (!LoadLanguageJsonToMap(parsed, out))
+                {
+                    return false;
+                }
+            }
+            catch (...)
             {
                 return false;
             }
+
+            return true;
+        }
+
+        bool LoadLanguageContentToMap(const std::string &content, std::map<std::wstring, std::wstring> &out)
+        {
+            try
+            {
+                const auto parsed = nlohmann::json::parse(content);
+                if (!LoadLanguageJsonToMap(parsed, out))
+                {
+                    return false;
+                }
+            }
+            catch (...)
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -224,9 +112,36 @@ namespace AnyFSE::Tools::Localization
             }
             return true;
         }
+
+        bool MergeLocaleFromMap(
+            const ResourceLocales &resourceLocales,
+            const std::wstring &code)
+        {
+            std::wstring upperCode = code;
+            std::transform(upperCode.begin(), upperCode.end(), upperCode.begin(), towupper);
+
+            const auto it = resourceLocales.find(upperCode);
+            if (it == resourceLocales.end())
+            {
+                return false;
+            }
+
+            std::map<std::wstring, std::wstring> parsed;
+            if (!LoadLanguageContentToMap(it->second, parsed))
+            {
+                return false;
+            }
+
+            for (const auto &[k, v] : parsed)
+            {
+                g_dictionary[k] = v;
+            }
+            return true;
+        }
+
     }
 
-    bool Initialize(const std::wstring &directoryPath)
+    bool Initialize()
     {
         namespace fs = std::filesystem;
 
@@ -234,16 +149,12 @@ namespace AnyFSE::Tools::Localization
         g_dictionary.clear();
         g_currentLocale = L"en_US";
 
-        bool baseLoaded = LoadLanguageFile(directoryPath + L"\\en_US.json");
+        const fs::path programDataPath = fs::path(Paths::GetDataPath()) / L"Localization";
+        const fs::path exeAssetsPath = fs::path(Paths::GetExePath()) / L"Localization";
 
-#ifdef _DEBUG
-        if (!baseLoaded)
-        {
-            const fs::path debugPath = fs::path(Paths::GetExePath()) / L".." / L".." / L"Assets" / L"localization";
-            baseLoaded = LoadLanguageFile(debugPath.lexically_normal().wstring() + L"\\en_US.json");
-        }
-#endif
-        (void)baseLoaded;
+        // Base language: first existing source wins (ProgramData has priority).
+        LoadLanguageFile((programDataPath / L"en_US.json").wstring()) ||
+            LoadLanguageFile((exeAssetsPath / L"en_US.json").wstring());
 
         std::wstring localeFileName;
         if (!g_forcedLocale.empty())
@@ -272,15 +183,58 @@ namespace AnyFSE::Tools::Localization
 
             if (_wcsicmp(localeFileName.c_str(), L"en_US") != 0)
             {
-                bool loaded = LoadLanguageFile(directoryPath + L"\\" + localeFileName + L".json");
-#ifdef _DEBUG
-                const fs::path debugPath = fs::path(Paths::GetExePath()) / L".." / L".." / L"Assets" / L"localization";
-                loaded = loaded || LoadLanguageFile(debugPath.lexically_normal().wstring() + L"\\" + localeFileName + L".json");
-#endif
+                const bool loaded =
+                    LoadLanguageFile((programDataPath / (localeFileName + L".json")).wstring()) ||
+                    LoadLanguageFile((exeAssetsPath / (localeFileName + L".json")).wstring());
                 if (loaded)
                 {
                     g_currentLocale = localeFileName;
                 }
+            }
+        }
+
+        return true;
+    }
+
+    bool InitializeFromLocales(const ResourceLocales &resourceLocales)
+    {
+        if (resourceLocales.empty())
+        {
+            return Initialize();
+        }
+        std::lock_guard<std::mutex> guard(g_lock);
+        g_dictionary.clear();
+        g_currentLocale = L"en_US";
+
+        MergeLocaleFromMap(resourceLocales, L"en_US");
+
+        std::wstring localeFileName;
+        if (!g_forcedLocale.empty())
+        {
+            localeFileName = g_forcedLocale;
+        }
+        else
+        {
+            wchar_t localeName[LOCALE_NAME_MAX_LENGTH] = {0};
+            if (GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH) <= 0)
+            {
+                return true;
+            }
+            localeFileName = localeName;
+            for (wchar_t &ch : localeFileName)
+            {
+                if (ch == L'-')
+                {
+                    ch = L'_';
+                }
+            }
+        }
+
+        if (!localeFileName.empty() && _wcsicmp(localeFileName.c_str(), L"en_US") != 0)
+        {
+            if (MergeLocaleFromMap(resourceLocales, localeFileName))
+            {
+                g_currentLocale = localeFileName;
             }
         }
 
@@ -305,34 +259,88 @@ namespace AnyFSE::Tools::Localization
         return g_currentLocale;
     }
 
-    std::vector<LocaleInfo> EnumerateLocales(const std::wstring &directoryPath)
+    std::vector<LocaleInfo> EnumerateLocales()
     {
         namespace fs = std::filesystem;
         std::vector<LocaleInfo> result;
+        std::set<std::wstring> seen;
 
-        std::error_code ec;
-        if (!fs::exists(directoryPath, ec))
+        auto scan = [&](const fs::path &path)
         {
-            return result;
+            std::error_code ec;
+            if (!fs::exists(path, ec))
+            {
+                return;
+            }
+
+            for (const auto &entry : fs::directory_iterator(path, ec))
+            {
+                if (ec || !entry.is_regular_file() || entry.path().extension() != L".json")
+                {
+                    continue;
+                }
+
+                LocaleInfo info;
+                info.code = entry.path().stem().wstring();
+                if (seen.find(info.code) != seen.end())
+                {
+                    continue;
+                }
+
+                info.language = info.code;
+                std::map<std::wstring, std::wstring> parsed;
+                if (LoadLanguageFileToMap(entry.path().wstring(), parsed))
+                {
+                    const auto it = parsed.find(L"language");
+                    if (it != parsed.end() && !it->second.empty())
+                    {
+                        info.language = it->second;
+                    }
+                }
+
+                seen.insert(info.code);
+                result.push_back(info);
+            }
+        };
+
+        // ProgramData has priority for duplicates.
+        scan(fs::path(Paths::GetDataPath()) / L"Localization");
+        scan(fs::path(Paths::GetExePath()) / L"Assets" / L"localization");
+
+        std::sort(result.begin(), result.end(), [](const LocaleInfo &a, const LocaleInfo &b)
+        {
+            return _wcsicmp(a.language.c_str(), b.language.c_str()) < 0;
+        });
+
+        return result;
+    }
+
+    std::vector<LocaleInfo> EnumerateLocales(const ResourceLocales &resourceLocales)
+    {
+        if (resourceLocales.empty())
+        {
+            return EnumerateLocales();
         }
 
-        for (const auto &entry : fs::directory_iterator(directoryPath, ec))
+        std::vector<LocaleInfo> result;
+        std::set<std::wstring> seen;
+
+        for (const auto &[code, content] : resourceLocales)
         {
-            if (ec || !entry.is_regular_file())
-            {
-                continue;
-            }
-            if (entry.path().extension() != L".json")
+            std::wstring upperCode = code;
+            std::transform(upperCode.begin(), upperCode.end(), upperCode.begin(), towupper);
+
+            if (seen.find(upperCode) != seen.end())
             {
                 continue;
             }
 
             LocaleInfo info;
-            info.code = entry.path().stem().wstring();
-            info.language = info.code;
+            info.code = code;
+            info.language = code;
 
             std::map<std::wstring, std::wstring> parsed;
-            if (LoadLanguageFileToMap(entry.path().wstring(), parsed))
+            if (LoadLanguageContentToMap(content, parsed))
             {
                 const auto it = parsed.find(L"language");
                 if (it != parsed.end() && !it->second.empty())
@@ -341,6 +349,7 @@ namespace AnyFSE::Tools::Localization
                 }
             }
 
+            seen.insert(upperCode);
             result.push_back(info);
         }
 

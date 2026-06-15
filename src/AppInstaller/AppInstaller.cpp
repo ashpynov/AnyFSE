@@ -30,6 +30,7 @@
 #include <vector>
 #include <fstream>
 #include <thread>
+#include <map>
 
 #include "AppInstaller.hpp"
 #include "Logging/LogManager.hpp"
@@ -73,7 +74,15 @@ namespace AnyFSE
     INT_PTR AppInstaller::Show(HINSTANCE hInstance, bool bAutoUpdate)
     {
         m_isUpdate = bAutoUpdate;
-        Tools::Localization::Initialize(Tools::Paths::GetExePath() + L"\\Assets\\localization");
+        LoadResourceLocales();
+        if (!m_resourceLocales.empty())
+        {
+            Tools::Localization::InitializeFromLocales(m_resourceLocales);
+        }
+        else
+        {
+            Tools::Localization::Initialize();
+        }
 
         if (bAutoUpdate)
         {
@@ -213,6 +222,50 @@ namespace AnyFSE
         {
             ShowWelcomePage();
         }
+    }
+
+    namespace
+    {
+        BOOL CALLBACK EnumLocalizationResNameProc(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam)
+        {
+            auto *locales = reinterpret_cast<Tools::Localization::ResourceLocales *>(lParam);
+            if (!locales || IS_INTRESOURCE(lpszName))
+            {
+                return TRUE;
+            }
+
+            HRSRC hRes = FindResourceW(hModule, lpszName, lpszType);
+            if (!hRes)
+            {
+                return TRUE;
+            }
+            HGLOBAL hData = LoadResource(hModule, hRes);
+            DWORD size = SizeofResource(hModule, hRes);
+            if (!hData || size == 0)
+            {
+                return TRUE;
+            }
+
+            const void *ptr = LockResource(hData);
+            if (!ptr)
+            {
+                return TRUE;
+            }
+
+            std::wstring code(lpszName);
+            if (code.size() >= 2 && code.front() == L'"' && code.back() == L'"')
+            {
+                code = code.substr(1, code.size() - 2);
+            }
+            (*locales)[code] = std::string(static_cast<const char *>(ptr), static_cast<size_t>(size));
+            return TRUE;
+        }
+    }
+
+    void AppInstaller::LoadResourceLocales()
+    {
+        m_resourceLocales.clear();
+        EnumResourceNamesW(GetModuleHandleW(NULL), L"LOCALIZATION", EnumLocalizationResNameProc, reinterpret_cast<LONG_PTR>(&m_resourceLocales));
     }
 
     void AppInstaller::UpdateDialogTitle()

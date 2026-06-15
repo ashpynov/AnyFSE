@@ -27,24 +27,12 @@
 #include "Config.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/Paths.hpp"
-#include "nlohmann/json.hpp"
+#include "Tools/nlohmann/json.hpp"
+#include "Tools/nlohmann/adl_serializer_wstring.hpp"
 
 #pragma comment(lib, "version.lib")
 
-namespace nlohmann
-{
-    template<>
-    struct adl_serializer<std::wstring> {
-        static void to_json(json& j, const std::wstring& value) {
-            j = Unicode::to_string(value);
-        }
 
-        static void from_json(const json& j, std::wstring& value) {
-            std::string narrow_str = j.get<std::string>();
-            value = Unicode::to_wstring(narrow_str);
-        }
-    };
-}
 
 namespace AnyFSE::Configuration
 {

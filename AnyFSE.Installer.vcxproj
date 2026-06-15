@@ -204,8 +204,4 @@
     </Target>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <Target Name="CopyLocalizationFiles" AfterTargets="Build">
-    <MakeDir Directories="$(OutDir)Assets\localization" />
-    <Copy SourceFiles="@(None)" DestinationFolder="$(OutDir)Assets\localization" SkipUnchangedFiles="true" />
-  </Target>
 </Project>

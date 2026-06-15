@@ -827,17 +827,6 @@ namespace AnyFSE::App::AppSettings::Settings
         m_theme.SwapFocus(m_settingPageList.front().GetHWnd());
     }
 
-    std::wstring SettingsDialog::GetLocalizationDirectory() const
-    {
-        return Tools::Paths::GetExePath() + L"\\Assets\\localization";
-    }
-
-    std::wstring SettingsDialog::GetDebugLocalizationDirectory() const
-    {
-        namespace fs = std::filesystem;
-        return (fs::path(Tools::Paths::GetExePath()) / L".." / L".." / L"Assets" / L"localization").lexically_normal().wstring();
-    }
-
     void SettingsDialog::RefreshLocalizedCaption()
     {
         SetWindowText(m_hDialog, Translate(L"settingsMainWindowTitle").c_str());
@@ -855,13 +844,7 @@ namespace AnyFSE::App::AppSettings::Settings
             .SetIcon(L"\xE164")
             .SetFlat(true);
 
-        std::vector<Tools::Localization::LocaleInfo> locales = Tools::Localization::EnumerateLocales(GetLocalizationDirectory());
-#ifdef _DEBUG
-        if (locales.empty())
-        {
-            locales = Tools::Localization::EnumerateLocales(GetDebugLocalizationDirectory());
-        }
-#endif
+        std::vector<Tools::Localization::LocaleInfo> locales = Tools::Localization::EnumerateLocales();
 
         std::vector<Popup::PopupItem> items;
         items.reserve(locales.size());
@@ -881,7 +864,7 @@ namespace AnyFSE::App::AppSettings::Settings
     {
         Config::Locale = localeCode;
         Tools::Localization::SetPreferredLocale(localeCode);
-        Tools::Localization::Initialize(GetLocalizationDirectory());
+        Tools::Localization::Initialize();
         SaveSettings();
         EndDialog(m_hDialog, IDRETRY);
     }

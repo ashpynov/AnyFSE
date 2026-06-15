@@ -39,6 +39,7 @@
     <RemoveDir Directories="$(AppPackageContentsDir)" />
     <MakeDir Directories="$(AppPackageContentsDir)" />
     <MakeDir Directories="$(AppPackageContentsDir)\Assets" />
+    <MakeDir Directories="$(AppPackageContentsDir)\Localization" />
 
     <ItemGroup>
       <ExeFiles Include="$(OutDir)/$(TargetName)*.exe" Exclude="$(OutDir)/$(TargetName).Installer.exe" />
@@ -105,10 +106,14 @@
 
     <ItemGroup>
       <AssetFiles Include="$(MSBuildProjectDirectory)\Assets\*" />
+      <LocalizationFiles Include="$(MSBuildProjectDirectory)\Localization\*" />
     </ItemGroup>
     <Copy
       SourceFiles="@(AssetFiles)"
       DestinationFolder="$(AppPackageContentsDir)\Assets" />
+    <Copy
+      SourceFiles="@(LocalizationFiles)"
+      DestinationFolder="$(AppPackageContentsDir)\Localization" />
 
     <!-- Copy custom capability if exists -->
     <ItemGroup>

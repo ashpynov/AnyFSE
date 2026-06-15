@@ -244,22 +244,16 @@ namespace AnyFSE
 
     void AppInstaller::PopulateLanguageMenu()
     {
-        std::vector<Tools::Localization::LocaleInfo> locales =
-            Tools::Localization::EnumerateLocales(Tools::Paths::GetExePath() + L"\\Assets\\localization");
-
-#ifdef _DEBUG
-        if (locales.empty())
-        {
-            locales = Tools::Localization::EnumerateLocales(
-                (fs::path(Tools::Paths::GetExePath()) / L".." / L".." / L"Assets" / L"localization").lexically_normal().wstring()
-            );
-        }
-#endif
-
         std::vector<Popup::PopupItem> items;
-        for (const auto &locale : locales)
+        for (const auto &locale : Tools::Localization::EnumerateLocales(m_resourceLocales))
         {
-            items.emplace_back(locale.code == Tools::Localization::GetCurrentLocale() ? L"\xE1D2" : L"\xEA3F", locale.language, [this, code = locale.code]() { OnSelectLanguage(code); });
+            items.emplace_back(
+                Unicode::to_upper(locale.code) == Unicode::to_upper(Tools::Localization::GetCurrentLocale())
+                    ? L"\xE1D2"
+                    : L"\xEA3F",
+                 locale.language,
+                 [this, code = locale.code]() { OnSelectLanguage(code); }
+            );
         }
 
         if (!items.empty())
@@ -272,7 +266,9 @@ namespace AnyFSE
     void AppInstaller::OnSelectLanguage(const std::wstring &localeCode)
     {
         Tools::Localization::SetPreferredLocale(localeCode);
-        Tools::Localization::Initialize(Tools::Paths::GetExePath() + L"\\Assets\\localization");
+
+        Tools::Localization::InitializeFromLocales(m_resourceLocales);
+
         PopulateLanguageMenu();
         UpdateDialogTitle();
         ShowWelcomePage();

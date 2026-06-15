@@ -195,8 +195,6 @@ namespace AnyFSE::App::AppSettings::Settings
         Button m_updateButton;
         Button m_languageButton;
 
-        std::wstring GetLocalizationDirectory() const;
-        std::wstring GetDebugLocalizationDirectory() const;
         void RefreshLocalizedCaption();
         void AddLanguageButton();
         void OnSelectLanguage(const std::wstring &localeCode);

@@ -24,7 +24,9 @@
 #include <list>
 #include <map>
 #include <vector>
+#include <string>
 #include "App/AppConstants.hpp"
+#include "Tools/Localization.hpp"
 #include "FluentDesign/Theme.hpp"
 #include "FluentDesign/Button.hpp"
 #include "FluentDesign/TextBox.hpp"
@@ -151,6 +153,9 @@ namespace AnyFSE
             void PopulateLanguageMenu();
             void OnSelectLanguage(const std::wstring &localeCode);
             void UpdateDialogTitle();
+            void LoadResourceLocales();
+
+            Tools::Localization::ResourceLocales m_resourceLocales;
 
             bool IsConfigured();
             void CollectPostMortemInfo(const std::wstring &path);

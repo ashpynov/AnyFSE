@@ -13,7 +13,7 @@
 #include "Updater/Updater.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/Paths.hpp"
-#include "Configuration/nlohmann/json.hpp"
+#include "Tools/nlohmann/json.hpp"
 #include "Configuration/Config.hpp"
 #include "Logging/LogManager.hpp"
 #include "Tools/Process.hpp"
