@@ -136,6 +136,7 @@ namespace AnyFSE::App::Launchers
                     monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top
             ));
         }
+        FocusLauncher();  // Attempt to fix activation of playnite
     }
 
     void StartLauncher()
@@ -188,19 +189,6 @@ namespace AnyFSE::App::Launchers
         if (launcherHwnd)
         {
             Process::BringWindowToForeground(launcherHwnd, SW_SHOWMAXIMIZED);
-
-            HMONITOR hMonitor = MonitorFromWindow(launcherHwnd, MONITOR_DEFAULTTONEAREST);
-            MONITORINFOEX monitorInfo = {};
-            monitorInfo.cbSize = sizeof(monitorInfo);
-
-            if (GetMonitorInfo(hMonitor, &monitorInfo))
-            {
-                PostMessage(HWND_BROADCAST, WM_DISPLAYCHANGE, 32,
-                    MAKELPARAM(
-                        monitorInfo.rcMonitor.right-monitorInfo.rcMonitor.left,
-                        monitorInfo.rcMonitor.bottom-monitorInfo.rcMonitor.top
-                ));
-            }
         }
     }
 

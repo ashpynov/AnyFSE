@@ -70,13 +70,16 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     void ConfirmationsPage::LoadControls()
     {
         std::wstring key = L"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration\\SystemDialogResults";
-        m_confirmEnterCombo.SelectItem(Registry::ReadDWORD(key, L"EnterGamingPostureConfirmation", 0));
+        m_confirmEnterCombo.SelectItem(
+            Registry::ReadDWORD(key, L"EnterGamingPostureConfirmation_Config",
+                Registry::ReadDWORD(key, L"EnterGamingPostureConfirmation", 0)));
         m_confirmExitCombo.SelectItem(Registry::ReadDWORD(key, L"ExitGamingPostureConfirmation", 0));
     }
 
     void ConfirmationsPage::SaveControls()
     {
         std::wstring key = L"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration\\SystemDialogResults";
+        Registry::WriteDWORD(key, L"EnterGamingPostureConfirmation_Config", m_confirmEnterCombo.GetSelectedIndex());
         Registry::WriteDWORD(key, L"EnterGamingPostureConfirmation", m_confirmEnterCombo.GetSelectedIndex());
         Registry::WriteDWORD(key, L"ExitGamingPostureConfirmation", m_confirmExitCombo.GetSelectedIndex());
     }
