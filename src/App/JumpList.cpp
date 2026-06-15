@@ -2,6 +2,8 @@
 #include <winrt/Windows.Foundation.h>       // Foundation types
 #include <winrt/Windows.Foundation.Collections.h>
 
+#include "Tools/Localization.hpp"
+
 #pragma comment(lib, "windowsapp.lib")      // WinRT runtime
 
 namespace AnyFSE::App::JumpList
@@ -13,11 +15,11 @@ namespace AnyFSE::App::JumpList
         auto jumpList = winrt::Windows::UI::StartScreen::JumpList::LoadCurrentAsync().get();
 
         auto fseItem = winrt::Windows::UI::StartScreen::JumpListItem::CreateWithArguments(
-            L"/FSE", L"Enter full screen experience");
+            L"/FSE", Translate(L"jumpListEnterFse"));
         fseItem.Logo(winrt::Windows::Foundation::Uri(L"ms-appx:///Assets/fullscreen-icon.png"));
 
         auto settingsItem = winrt::Windows::UI::StartScreen::JumpListItem::CreateWithArguments(
-            L"/Settings", L"Configure");
+            L"/Settings", Translate(L"jumpListSettings"));
         settingsItem.Logo(winrt::Windows::Foundation::Uri(L"ms-appx:///Assets/settings-icon.png"));
 
 

@@ -18,6 +18,8 @@
   "installerDoneDescription": "Установка AnyFSE завершена.\n\nНажмите \"Настроить\", чтобы изменить параметры.\n",
   "configureBtn": "Настроить",
   "closeBtn": "Закрыть",
+  "jumpListEnterFse": "Перейти в режим Xbox",
+  "jumpListSettings": "Настройки",
   "progressUnpackFiles": "Распаковка файлов",
   "progressDownloadFiles": "Загрузка файлов",
   "progressRemoveOldVersion": "Удаление старой версии",

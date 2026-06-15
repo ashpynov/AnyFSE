@@ -18,6 +18,8 @@
   "installerDoneDescription": "Installation terminée.\n\nCliquez sur Configurer.\n",
   "configureBtn": "Configurer",
   "closeBtn": "Fermer",
+  "jumpListEnterFse": "Passer en mode plein écran",
+  "jumpListSettings": "Paramètres",
   "progressUnpackFiles": "Extraction des fichiers",
   "progressDownloadFiles": "Téléchargement des fichiers",
   "progressRemoveOldVersion": "Suppression de l'ancienne version",

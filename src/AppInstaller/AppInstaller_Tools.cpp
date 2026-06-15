@@ -270,6 +270,10 @@ namespace AnyFSE
         return Process::StartProcess(injectorExe, L"--enable") != 0;
     }
 
+    bool AppInstaller::IsNeedEnableAsusOptimization()
+    {
+        return Process::FindFirstByExe(AppConstants::ArmouryCrateServiceProcess) && !Process::FindFirstByExe(AppConstants::AsusOptimizationProcess);
+    }
     bool AppInstaller::EnableAsusOptimization()
     {
         if (!Process::FindFirstByExe(AppConstants::ArmouryCrateServiceProcess) || Process::FindFirstByExe(AppConstants::AsusOptimizationProcess))

@@ -160,7 +160,6 @@ namespace AnyFSE
 
     void AppInstaller::ShowWelcomePage()
     {
-        //m_languageButton.SetText(Translate(L"language"));
         m_languageButton.Show(true);
         if (m_isUpdate)
         {
@@ -228,9 +227,7 @@ namespace AnyFSE
 
     bool AppInstaller::IsConfigured()
     {
-        wchar_t appData[MAX_PATH]={0};
-        ExpandEnvironmentStringsW(L"%PROGRAMDATA%\\AnyFSE", appData, MAX_PATH);
-        return fs::exists(fs::path(std::wstring(appData) + L"\\AnyFSE.json"));
+        return fs::exists(fs::path(Tools::Paths::GetConfigPath() + L"\\AnyFSE.json"));
     }
 
     void AppInstaller::ShowErrorPage(const std::wstring &caption, const std::wstring &text, const std::wstring &icon)
@@ -365,12 +362,18 @@ namespace AnyFSE
                 CheckSuccess(m_isRootCertInstalled);
             }
 
-            SetCurrentProgress(Translate(L"progressRestoreAsusOptimizationService"));
-            CheckSuccess(EnableAsusOptimization());
+            if (IsNeedEnableAsusOptimization())
+            {
+                SetCurrentProgress(Translate(L"progressRestoreAsusOptimizationService"));
+                CheckSuccess(EnableAsusOptimization());
+            }
 
-            SetCurrentProgress(Translate(L"progressStopAcseInjectorService"));
             acseServiceWasRunning = IsInjectorServiceRun();
-            CheckSuccess(DisableInjectorService());
+            if (acseServiceWasRunning)
+            {
+                SetCurrentProgress(Translate(L"progressStopAcseInjectorService"));
+                CheckSuccess(DisableInjectorService());
+            }
 
             SetCurrentProgress(Translate(L"progressInstallPackage"));
             CheckSuccess(InstallPackage(
@@ -378,8 +381,11 @@ namespace AnyFSE
                 AppConstants::PackageFamilyName
             ));
 
-            SetCurrentProgress(Translate(L"progressStartAcseInjectorService"));
-            CheckSuccess(!acseServiceWasRunning || EnableInjectorService());
+            if (acseServiceWasRunning)
+            {
+                SetCurrentProgress(Translate(L"progressStartAcseInjectorService"));
+                CheckSuccess(EnableInjectorService());
+            }
 
             SetCurrentProgress(Translate(L"progressCleanupFiles"));
             CheckSuccess(true);

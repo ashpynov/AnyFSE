@@ -41,6 +41,7 @@
 #include "Tools/Localization.hpp"
 #include "Tools/Paths.hpp"
 #include "Ally/Ally.hpp"
+#include "App/JumpList.hpp"
 
 #define byte ::byte
 
@@ -855,7 +856,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         if (!items.empty())
         {
-            m_languageButton.SetMenu(items, 200, TPM_LEFTALIGN);
+            m_languageButton.SetMenu(items, 220, TPM_LEFTALIGN);
             m_languageButton.OnChanged += [this]() { m_languageButton.ShowMenu(); };
         }
     }
@@ -866,6 +867,7 @@ namespace AnyFSE::App::AppSettings::Settings
         Tools::Localization::SetPreferredLocale(localeCode);
         Tools::Localization::Initialize();
         SaveSettings();
+        AnyFSE::App::JumpList::RegisterJumpList();
         EndDialog(m_hDialog, IDRETRY);
     }
 }

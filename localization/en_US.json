@@ -18,6 +18,8 @@
   "installerDoneDescription": "AnyFSE installation has been completed.\n\nPress Configure change settings.\n",
   "configureBtn": "Configure",
   "closeBtn": "Close",
+  "jumpListEnterFse": "Enter full screen experience",
+  "jumpListSettings": "Settings",
   "progressUnpackFiles": "Unpack files",
   "progressDownloadFiles": "Download files",
   "progressRemoveOldVersion": "Remove old version",

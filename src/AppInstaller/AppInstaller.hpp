@@ -197,6 +197,7 @@ namespace AnyFSE
             bool IsInjectorServiceRun();
             bool DisableInjectorService();
             bool EnableInjectorService();
+            bool IsNeedEnableAsusOptimization();
             bool EnableAsusOptimization();
     };
 }
