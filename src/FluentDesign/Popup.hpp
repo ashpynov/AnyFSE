@@ -80,6 +80,7 @@ namespace FluentDesign
         int m_nPopupScrollPos = 0;
         int m_nPopupViewHeight = 0;
         int m_nPopupContentHeight = 0;
+        int m_itemPressed = -1;
 
     public:
         Popup(Theme &theme)
@@ -101,6 +102,7 @@ namespace FluentDesign
         void OnPaint(HWND hWnd);
         void OnMouseMove(HWND hWnd, LPARAM lParam);
         void OnLButtonDown(HWND hWnd, LPARAM lParam);
+        void OnLButtonUp(HWND hWnd, LPARAM lParam);
         void OnCaptureChanged(HWND hWnd, LPARAM lParam);
         void OnKeyDown(HWND hWnd, WPARAM wParam);
 
@@ -114,6 +116,8 @@ namespace FluentDesign
         void DrawPopupItem(HWND hWnd, HDC hdc, RECT itemRect, int itemId);
 
         void HandleListClick(int index);
+        int HitTestItem(HWND hWnd, POINT pt) const;
+        bool IsPointInClient(HWND hWnd, POINT pt) const;
 
         bool IsVisible() { return m_popupVisible; }
     };

@@ -47,8 +47,9 @@ namespace FluentDesign
         m_originalIndex = m_selectedIndex;
         m_hoveredIndex = -1;
         m_nPopupScrollPos = 0;
-        m_nPopupViewHeight = min(m_theme.DpiScale(400), (int)items.size() * m_theme.DpiScale(Layout_ItemHeight));
+        m_nPopupViewHeight = min(m_theme.DpiScale(450), (int)items.size() * m_theme.DpiScale(Layout_ItemHeight));
         m_nPopupContentHeight = (int)items.size() * m_theme.DpiScale(Layout_ItemHeight);
+        m_itemPressed = -1;
 
         int popupWidth = width;
         int popupHeight = m_nPopupViewHeight;
@@ -112,10 +113,10 @@ namespace FluentDesign
         if (m_popupVisible && m_hWnd)
         {
             HWND hOwner = GetWindow(m_hWnd, GW_OWNER);
-            ReleaseCapture();
+            m_popupVisible = false;
+            m_itemPressed = -1;
             DestroyWindow(m_hWnd);
             m_hWnd = NULL;
-            m_popupVisible = false;
             if (hOwner)
             {
                 SetFocus(hOwner);
@@ -273,39 +274,66 @@ namespace FluentDesign
     {
         SetCursor(LoadCursor(NULL, IDC_ARROW));
 
-        // Handle item hover
-        POINT pt = {LOWORD(lParam), HIWORD(lParam)};
-        pt.y += m_nPopupScrollPos;
-        RECT rc;
-        GetClientRect(hWnd, &rc);
-        int hoverIndex = pt.y / m_theme.DpiScale(Layout_ItemHeight);
-        m_hoveredIndex = (pt.x >= rc.left && pt.x <= rc.right && hoverIndex >= 0 && hoverIndex < (int)SendMessage(hWnd, LB_GETCOUNT, 0, 0))
-                             ? hoverIndex
-                             : -1;
+        POINT pt = {(short)LOWORD(lParam), (short)HIWORD(lParam)};
+        int hoverIndex = HitTestItem(hWnd, pt);
+
+        if (m_itemPressed >= 0 && m_itemPressed != HitTestItem(hWnd, pt))
+        {
+            m_itemPressed = -1;
+            InvalidateRect(hWnd, NULL, TRUE);
+            return;
+        }
+
+        m_hoveredIndex = hoverIndex;
         InvalidateRect(hWnd, NULL, TRUE);
     }
 
     void Popup::OnLButtonDown(HWND hWnd, LPARAM lParam)
     {
         POINT pt = {(short)LOWORD(lParam), (short)HIWORD(lParam)};
-        pt.y += m_nPopupScrollPos;
-        RECT rc;
-        GetClientRect(hWnd, &rc);
-        int clickIndex = pt.y / m_theme.DpiScale(Layout_ItemHeight);
-        if (pt.x >= rc.left && pt.x <=rc.right && clickIndex >= 0 && clickIndex < (int)SendMessage(hWnd, LB_GETCOUNT, 0, 0))
-        {
-            HandleListClick(clickIndex);
-        }
-        else
+
+        if (!IsPointInClient(hWnd, pt))
         {
             m_selectedIndex = m_originalIndex;
             OnSelectionChanged.Notify();
+            Hide();
+            return;
         }
-        Hide();
+
+        m_itemPressed = HitTestItem(hWnd, pt);
+        InvalidateRect(hWnd, NULL, TRUE);
+    }
+
+    void Popup::OnLButtonUp(HWND hWnd, LPARAM lParam)
+    {
+        if (m_itemPressed == -1)
+        {
+            return;
+        }
+
+        m_itemPressed = -1;
+
+        POINT pt = {(short)LOWORD(lParam), (short)HIWORD(lParam)};
+        const int releaseIndex = HitTestItem(hWnd, pt);
+        if (releaseIndex >= 0)
+        {
+            HandleListClick(releaseIndex);
+            Hide();
+            return;
+        }
+
+        InvalidateRect(hWnd, NULL, TRUE);
     }
 
     void Popup::OnCaptureChanged(HWND hWnd, LPARAM lParam)
     {
+        if (!m_popupVisible)
+        {
+            return;
+        }
+
+        m_itemPressed = -1;
+
         // If we lose capture, hide the popup
         if ((HWND)lParam != hWnd)
         {
@@ -380,15 +408,19 @@ namespace FluentDesign
 
         case WM_MOUSEMOVE:
             This->OnMouseMove(hWnd, lParam);
-            break;
+            return 0;
 
         case WM_LBUTTONDOWN:
             This->OnLButtonDown(hWnd, lParam);
             return 0;
 
+        case WM_LBUTTONUP:
+            This->OnLButtonUp(hWnd, lParam);
+            return 0;
+
         case WM_CAPTURECHANGED:
             This->OnCaptureChanged(hWnd, lParam);
-            break;
+            return 0;
 
         case WM_KEYDOWN:
             This->OnKeyDown(hWnd, wParam);
@@ -407,6 +439,7 @@ namespace FluentDesign
             }
 
             int scrollAmount = -GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA * 16 * 3;
+            This->m_itemPressed = -1;
             This->ScrollTo(This->m_nPopupScrollPos + scrollAmount);
 
             return 0;
@@ -480,6 +513,30 @@ namespace FluentDesign
         ScrollTo(newScrollPos);
     }
 
+    bool Popup::IsPointInClient(HWND hWnd, POINT pt) const
+    {
+        RECT rc;
+        GetClientRect(hWnd, &rc);
+        return pt.x >= rc.left && pt.x < rc.right && pt.y >= rc.top && pt.y < rc.bottom;
+    }
+
+    int Popup::HitTestItem(HWND hWnd, POINT pt) const
+    {
+        if (!IsPointInClient(hWnd, pt))
+        {
+            return -1;
+        }
+
+        pt.y += m_nPopupScrollPos;
+        if (pt.y < 0)
+        {
+            return -1;
+        }
+
+        int itemIndex = pt.y / m_theme.DpiScale(Layout_ItemHeight);
+        int itemCount = (int)SendMessage(hWnd, LB_GETCOUNT, 0, 0);
+        return itemIndex >= 0 && itemIndex < itemCount ? itemIndex : -1;
+    }
 
     void Popup::HandleListClick(int index)
     {
