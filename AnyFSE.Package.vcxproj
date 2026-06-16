@@ -42,7 +42,7 @@
     <MakeDir Directories="$(AppPackageContentsDir)\Localization" />
 
     <ItemGroup>
-      <ExeFiles Include="$(OutDir)/$(TargetName)*.exe" Exclude="$(OutDir)/$(TargetName).Installer.exe" />
+      <ExeFiles Include="$(OutDir)/$(TargetName)*.exe" Exclude="$(OutDir)/$(TargetName).Installer*.exe" />
       <DllFiles Include="$(OutDir)/$(TargetName)*.dll" />
     </ItemGroup>
 

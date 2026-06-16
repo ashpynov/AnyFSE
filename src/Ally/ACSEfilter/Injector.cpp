@@ -38,6 +38,7 @@ namespace
     bool g_shutdownRequested = false;
 
     bool RestartTargetService();
+    int StartInstalledService();
 
     std::wstring FormatError(DWORD error)
     {
