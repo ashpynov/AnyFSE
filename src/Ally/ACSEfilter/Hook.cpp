@@ -28,47 +28,6 @@ namespace ACSEFilter::Hook
             return result;
         }
 
-        BOOL WINAPI HookGetOverlappedResult(HANDLE file, LPOVERLAPPED overlapped, LPDWORD bytesTransferred, BOOL wait)
-        {
-            BOOL result = Native::GetOverlappedResult(file, overlapped, bytesTransferred, wait);
-            const DWORD lastError = GetLastError();
-
-            if (result && bytesTransferred)
-            {
-                CompletePendingRead(overlapped, *bytesTransferred);
-            }
-            else if (!result && lastError != ERROR_IO_INCOMPLETE)
-            {
-                DropPendingRead(overlapped);
-            }
-
-            SetLastError(lastError);
-            return result;
-        }
-
-        BOOL WINAPI HookGetOverlappedResultEx(
-            HANDLE file,
-            LPOVERLAPPED overlapped,
-            LPDWORD bytesTransferred,
-            DWORD milliseconds,
-            BOOL alertable)
-        {
-            BOOL result = Native::GetOverlappedResultEx(file, overlapped, bytesTransferred, milliseconds, alertable);
-            const DWORD lastError = GetLastError();
-
-            if (result && bytesTransferred)
-            {
-                CompletePendingRead(overlapped, *bytesTransferred);
-            }
-            else if (!result && lastError != ERROR_IO_INCOMPLETE && lastError != WAIT_TIMEOUT)
-            {
-                DropPendingRead(overlapped);
-            }
-
-            SetLastError(lastError);
-            return result;
-        }
-
         bool FindPendingWaitHandleIndex(
             DWORD count,
             const HANDLE *handles,
@@ -124,8 +83,6 @@ namespace ACSEFilter::Hook
             static const ImportHookSpec specs[] =
                 {
                     {"ReadFile", reinterpret_cast<void *>(HookReadFile)},
-                    {"GetOverlappedResult", reinterpret_cast<void *>(HookGetOverlappedResult)},
-                    {"GetOverlappedResultEx", reinterpret_cast<void *>(HookGetOverlappedResultEx)},
                     {"WaitForMultipleObjects", reinterpret_cast<void *>(HookWaitForMultipleObjects)},
                 };
 

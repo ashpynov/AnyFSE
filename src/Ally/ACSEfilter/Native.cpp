@@ -26,18 +26,14 @@ namespace ACSEFilter::Native
     } // namespace
 
     ReadFileProc ReadFile = nullptr;
-    GetOverlappedResultProc GetOverlappedResult = nullptr;
-    GetOverlappedResultExProc GetOverlappedResultEx = nullptr;
     WaitForMultipleObjectsProc WaitForMultipleObjects = nullptr;
 
     bool ResolveKernelFunctions()
     {
         ReadFile = reinterpret_cast<ReadFileProc>(ResolveKernelFunction("ReadFile"));
-        GetOverlappedResult = reinterpret_cast<GetOverlappedResultProc>(ResolveKernelFunction("GetOverlappedResult"));
-        GetOverlappedResultEx = reinterpret_cast<GetOverlappedResultExProc>(ResolveKernelFunction("GetOverlappedResultEx"));
         WaitForMultipleObjects = reinterpret_cast<WaitForMultipleObjectsProc>(ResolveKernelFunction("WaitForMultipleObjects"));
 
-        return ReadFile && GetOverlappedResult && GetOverlappedResultEx && WaitForMultipleObjects;
+        return ReadFile && WaitForMultipleObjects;
     }
 
 } // namespace ACSEFilter::Native

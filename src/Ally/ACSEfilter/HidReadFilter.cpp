@@ -223,7 +223,7 @@ namespace ACSEFilter
 
         HANDLE file = readState.targetFile;
         DWORD actualBytes = 0;
-        if (Native::GetOverlappedResult(file, overlapped, &actualBytes, FALSE))
+        if (GetOverlappedResult(file, overlapped, &actualBytes, FALSE))
         {
             CompletePendingRead(overlapped, actualBytes);
             return;
