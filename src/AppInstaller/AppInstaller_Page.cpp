@@ -255,7 +255,7 @@ namespace AnyFSE
 
         if (!items.empty())
         {
-            m_languageButton.SetMenu(items, 220, TPM_LEFTALIGN);
+            m_languageButton.SetMenu(items,  m_theme.DpiScale(120), TPM_LEFTALIGN);
             m_languageButton.OnChanged = [this]() { m_languageButton.ShowMenu(); };
         }
     }
