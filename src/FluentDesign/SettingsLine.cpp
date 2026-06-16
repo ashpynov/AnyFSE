@@ -38,17 +38,6 @@
 
 namespace FluentDesign
 {
-    namespace
-    {
-        void EnablePanGesture(HWND hWnd)
-        {
-            GESTURECONFIG gestureConfig{};
-            gestureConfig.dwID = GID_PAN;
-            gestureConfig.dwWant = GC_PAN;
-            SetGestureConfig(hWnd, 0, 1, &gestureConfig, sizeof(gestureConfig));
-        }
-    }
-
     static Logger log = LogManager::GetLogger("SettingsLine");
 
     // Window class registration
@@ -150,7 +139,7 @@ namespace FluentDesign
         }
         SetWindowLongPtr(m_hWnd, GWLP_USERDATA, (LONG_PTR)this);
         SetWindowSubclass(m_hWnd, WndProc, 0, (DWORD_PTR)this);
-        EnablePanGesture(m_hWnd);
+        EnablePanGesture();
         OnClick += delegate(OnLButtonDown);
 
         return m_hWnd;
@@ -175,14 +164,6 @@ namespace FluentDesign
 
         switch (message)
         {
-        case WM_GESTURE:
-            if (GetParent(m_hWnd))
-            {
-                return SendMessage(GetParent(m_hWnd), message, wParam, lParam);
-            }
-            CloseGestureInfoHandle(reinterpret_cast<HGESTUREINFO>(lParam));
-            return 0;
-
         case WM_PAINT:
             OnPaint();
             return 0;

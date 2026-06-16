@@ -38,17 +38,6 @@ using namespace Gdiplus;
 
 namespace FluentDesign
 {
-    namespace
-    {
-        void EnablePanGesture(HWND hWnd)
-        {
-            GESTURECONFIG gestureConfig{};
-            gestureConfig.dwID = GID_PAN;
-            gestureConfig.dwWant = GC_PAN;
-            SetGestureConfig(hWnd, 0, 1, &gestureConfig, sizeof(gestureConfig));
-        }
-    }
-
     Static::Static(Theme &theme, Align::Anchor align, GetParentRectFunc getParentRect)
         : FluentControl(theme, align, getParentRect)
         , m_large(false)
@@ -97,7 +86,7 @@ namespace FluentDesign
         m_theme.RegisterChild(m_hWnd);
         SetWindowLongPtr(m_hWnd, GWLP_USERDATA, (LONG_PTR)this);
         SetWindowSubclass(m_hWnd, StaticSubclassProc, 0, (DWORD_PTR)this);
-        EnablePanGesture(m_hWnd);
+        EnablePanGesture();
         return m_hWnd;
     }
 
@@ -156,14 +145,6 @@ namespace FluentDesign
         Static *This = reinterpret_cast<Static *>(dwRefData);
         switch (uMsg)
         {
-        case WM_GESTURE:
-            if (HWND parent = GetParent(hWnd))
-            {
-                return SendMessage(parent, uMsg, wParam, lParam);
-            }
-            CloseGestureInfoHandle(reinterpret_cast<HGESTUREINFO>(lParam));
-            return 0;
-
         case WM_PAINT:
             {
                 FluentDesign::DoubleBuferedPaint paint(hWnd);

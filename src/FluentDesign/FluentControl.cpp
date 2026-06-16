@@ -93,6 +93,14 @@ namespace FluentDesign
         }
     }
 
+    void FluentControl::EnablePanGesture()
+    {
+        GESTURECONFIG gestureConfig{};
+        gestureConfig.dwID = GID_PAN;
+        gestureConfig.dwWant = GC_PAN | GC_PAN_WITH_SINGLE_FINGER_VERTICALLY | GC_PAN_WITH_INERTIA;
+        SetGestureConfig(m_hWnd, 0, 1, &gestureConfig, sizeof(gestureConfig));
+    }
+
     void FluentControl::SetAnchor(Align::Anchor anchor, GetParentRectFunc getParentRect)
     {
 

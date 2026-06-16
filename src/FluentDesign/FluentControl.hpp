@@ -56,5 +56,6 @@ namespace FluentDesign
 
         protected:
             void HandleMouseEvents(HWND hWnd, UINT uMsg, LPARAM lParam);
+            void EnablePanGesture();
     };
 }

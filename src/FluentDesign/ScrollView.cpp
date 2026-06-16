@@ -29,17 +29,6 @@
 
 namespace FluentDesign
 {
-    namespace
-    {
-        void EnablePanGesture(HWND hWnd)
-        {
-            GESTURECONFIG gestureConfig{};
-            gestureConfig.dwID = GID_PAN;
-            gestureConfig.dwWant = GC_PAN;
-            SetGestureConfig(hWnd, 0, 1, &gestureConfig, sizeof(gestureConfig));
-        }
-    }
-
     LRESULT ScrollView::ScrollViewSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
     {
         ScrollView *This = reinterpret_cast<ScrollView *>(dwRefData);
@@ -293,7 +282,7 @@ namespace FluentDesign
         UpdateScrollBar();
         SetWindowLongPtr(m_hWnd, GWLP_USERDATA, (LONG_PTR)this);
         SetWindowSubclass(m_hWnd, ScrollViewSubclassProc, 0, (DWORD_PTR)this);
-        EnablePanGesture(m_hWnd);
+        EnablePanGesture();
         return m_hWnd;
     }
 
