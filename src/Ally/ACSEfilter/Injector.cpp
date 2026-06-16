@@ -665,7 +665,7 @@ namespace
         std::wcout << L"Installed service " << kServiceName << L".\n";
         CloseServiceHandle(service);
         CloseServiceHandle(manager);
-        return 0;
+        return StartInstalledService();
     }
 
     int StartInstalledService()

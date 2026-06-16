@@ -46,8 +46,9 @@ namespace Ally
     void Load();
     DWORD WINAPI HIDListener(LPVOID lpParam);
 
-    void EnableNativeHandler(bool bEnable);
+    void EnableACSEInjector(bool bEnable);
     bool IsNativeHandlerEnabled();
+    bool IsInjectorEnabled();
     bool UpdateHidListener();
     bool CheckListener();
     bool SetupListener();

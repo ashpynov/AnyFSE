@@ -193,10 +193,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             Config::AllyHidModeLibraryPress = m_modeLibraryPressCombo.GetCurentValue();
         }
 
-        if (changed || Config::AllyHidEnable)
-        {
-            Ally::EnableNativeHandler(!Config::AllyHidEnable);
-        }
+        Ally::EnableACSEInjector(Config::AllyHidEnable);
     }
 
     void AllyHidPage::OpenAllyHidPage()

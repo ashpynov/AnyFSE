@@ -267,15 +267,17 @@ namespace Ally
         return 0;
     }
 
-    void EnableNativeHandler(bool bEnable)
+    void EnableACSEInjector(bool bEnable)
     {
-        if (0 == Process::FindFirstByExe(AnyFSE::AppConstants::AsusOptimizationProcess))
-        {
-            return;
-        }
+        bEnable &= IsNativeHandlerEnabled();
+
+        // if (IsInjectorEnabled() == bEnable )
+        // {
+        //     return;
+        // }
 
         std::wstring injectorExe = L"\"" + std::filesystem::path(Paths::GetExePath()).append(AnyFSE::AppConstants::InjectorExe).wstring() + L"\"";
-        std::wstring commandLine = injectorExe + (bEnable ? L" --start" : L" --uninstall");
+        std::wstring commandLine = injectorExe + (bEnable ? L" --install" : L" --uninstall");
 
 
         // Execute through cmd.exe with hidden window
@@ -292,6 +294,11 @@ namespace Ally
     bool IsNativeHandlerEnabled()
     {
         return 0 != Process::FindFirstByExe(AnyFSE::AppConstants::AsusOptimizationProcess);
+    }
+
+    bool IsInjectorEnabled()
+    {
+        return 0 != Process::FindFirstByExe(AnyFSE::AppConstants::InjectorExe);
     }
 
     bool UpdateHidListener()
