@@ -275,7 +275,7 @@ namespace Ally
         }
 
         std::wstring injectorExe = L"\"" + std::filesystem::path(Paths::GetExePath()).append(AnyFSE::AppConstants::InjectorExe).wstring() + L"\"";
-        std::wstring commandLine = injectorExe + (bEnable ? L" --enable" : L" --disable");
+        std::wstring commandLine = injectorExe + (bEnable ? L" --start" : L" --uninstall");
 
 
         // Execute through cmd.exe with hidden window
