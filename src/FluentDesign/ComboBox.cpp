@@ -37,11 +37,9 @@ namespace FluentDesign
         : FluentControl(theme)
         , m_buttonMouseOver(false)
         , m_buttonPressed(false)
-        , m_popupVisible(false)
         , m_selectedIndex(-1)
-        , m_hoveredIndex(-1)
         , m_hImageList(NULL)
-        , m_hPopupList(nullptr)
+        , m_popup(theme)
     {
         theme.OnDPIChanged += [This = this]() { This->UpdateLayout(); };
     }
@@ -86,11 +84,7 @@ namespace FluentDesign
     {
         ImageList_RemoveAll(m_hImageList);
         ImageList_Destroy(m_hImageList);
-        if (m_hPopupList)
-        {
-            DestroyWindow(m_hPopupList);
-            m_hPopupList = nullptr;
-        }
+        m_popup.Hide();
         if (m_hWnd)
         {
             DestroyWindow(m_hWnd);
@@ -125,7 +119,14 @@ namespace FluentDesign
     {
         if (index >=0 && index < m_comboItems.size())
         {
-            m_selectedIndex = index;
+            if (m_selectedIndex != index)
+            {
+                m_selectedIndex = index;
+                if (m_hWnd)
+                {
+                    InvalidateRect(m_hWnd, NULL, TRUE);
+                }
+            }
         }
     }
 
@@ -203,9 +204,9 @@ namespace FluentDesign
                 }
                 break;
             case WM_SETFOCUS:
-                if ( This->m_popupVisible )
+                if ( This->m_popup.IsVisible() )
                 {
-                    SetFocus(This->m_hPopupList);
+                    SetFocus(This->m_popup.GetHwnd());
                 }
                 break;
 
@@ -359,7 +360,7 @@ namespace FluentDesign
 
     void ComboBox::ShowPopup()
     {
-        if (m_popupVisible)
+        if (m_popup.IsVisible())
             return;
 
         OnDropDown.Notify();
@@ -370,399 +371,40 @@ namespace FluentDesign
         InflateRect(&buttonRect, m_theme.DpiScale(Layout_LeftMargin) / 4, 0);
 
         int popupWidth = buttonRect.right - buttonRect.left;
-        int popupHeight = min(m_theme.DpiScale(Layout_ItemHeight) * 10, (int)m_comboItems.size() * m_theme.DpiScale(Layout_ItemHeight)); // Calculate height based on items
-
-        m_nPopupScrollPos = 0;
-        m_nPopupViewHeight = popupHeight;
-        m_nPopupContentHeight = (int)m_comboItems.size() * m_theme.DpiScale(Layout_ItemHeight);
-
-        MONITORINFO mi{sizeof(MONITORINFO)};
-        int monitorHeight = 2160;
-
-        if (GetMonitorInfo(MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST), &mi))
-        {
-            monitorHeight = mi.rcMonitor.bottom - mi.rcMonitor.top;
-        }
-
-        int top = buttonRect.bottom + 2;
-
-        if (top + popupHeight > monitorHeight)
-        {
-            top = monitorHeight - popupHeight - m_theme.DpiScale(Layout_ItemHeight);
-        }
-        // Create popup listbox window
-        m_hPopupList = CreateWindowEx(
-            WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
-            L"LISTBOX",
-            L"",
-            WS_CHILD | WS_POPUP | LBS_NOINTEGRALHEIGHT | CS_DROPSHADOW | WS_TABSTOP,
-            buttonRect.left,
-            top,
-            popupWidth,
-            popupHeight,
-            m_hWnd,//GetParent(hCombo),
-            NULL,
-            GetModuleHandle(NULL),
-            NULL);
-
-        // Set transparency for shadow
-        SetLayeredWindowAttributes(m_hPopupList, 0, 255, LWA_COLORKEY);
-
-        // Add items to listbox (we'll use item data to store our ComboItem index)
-        for (int i = 0; i < (int)m_comboItems.size(); i++)
-        {
-            int lbIndex = (int)SendMessage(m_hPopupList, LB_ADDSTRING, 0, (LPARAM)m_comboItems[i].name.c_str());
-            SendMessage(m_hPopupList, LB_SETITEMDATA, lbIndex, (LPARAM)i); // Store index to our comboItems
-            if (lbIndex == m_selectedIndex)
-            {
-                SendMessage(m_hPopupList, LB_SETCURSEL, m_selectedIndex, 0);  // ListBox
-            }
-        }
-        m_originalIndex = m_selectedIndex;
-
-        // Subclass the popup listbox
-        SetWindowSubclass(m_hPopupList, PopupListSubclassProc, 0, (DWORD_PTR)this);
-
-        // Set item height
-        SendMessage(m_hPopupList, LB_SETITEMHEIGHT, 0, (LPARAM)m_theme.DpiScale(Layout_ItemHeight)); // Match your DrawComboItem height
-
-        EnsureVisible(m_selectedIndex);
-
-        ShowWindow(m_hPopupList, SW_SHOW);
-        m_popupVisible = true;
-
-        // Capture mouse to close when clicking outside
-        SetFocus(m_hPopupList);
-        SetCapture(m_hPopupList);
-    }
-
-    void ComboBox::HidePopup()
-    {
-        if (m_popupVisible && m_hPopupList)
-        {
-            ReleaseCapture();
-            DestroyWindow(m_hPopupList);
-            m_hPopupList = NULL;
-            m_popupVisible = false;
-            m_hoveredIndex = -1;
-            SetFocus(m_hWnd);
-            InvalidateRect(m_hWnd, NULL, TRUE); // Redraw main button
-        }
-    }
-
-    void ComboBox::ScrollTo(int newPos)
-    {
-        int maxPos = m_nPopupContentHeight - m_nPopupViewHeight;
-        if (newPos < 0)
-            newPos = 0;
-        if (newPos > maxPos)
-            newPos = maxPos;
-
-        if (newPos != m_nPopupScrollPos)
-        {
-            int delta = m_nPopupScrollPos - newPos;
-            m_nPopupScrollPos = newPos;
-            // Scroll the window content
-            ScrollWindowEx(m_hPopupList, 0, delta, NULL, NULL, NULL, NULL, SW_INVALIDATE );
-            RedrawWindow(m_hPopupList, NULL, NULL, RDW_INVALIDATE);
-        }
-    }
-
-    void ComboBox::EnsureVisible(int index)
-    {
-        if ( m_nPopupContentHeight <= m_nPopupViewHeight)
+        if (m_comboItems.empty())
         {
             return;
         }
 
-        RECT rcItem;
-        SendMessage(m_hPopupList, LB_GETITEMRECT, index, (LPARAM)&rcItem);
+        std::vector<Popup::PopupItem> popupItems;
+        popupItems.reserve(m_comboItems.size());
 
-        int margin = m_theme.DpiScale(Layout_ItemHeight); // Optional margin around the item
-        int itemTop = rcItem.top - margin;
-        int itemBottom = rcItem.bottom + margin;
-        int visibleTop = m_nPopupScrollPos;
-        int visibleBottom = m_nPopupScrollPos + m_nPopupViewHeight;
-
-        // Check if item is already fully visible
-        if (itemTop >= visibleTop && itemBottom <= visibleBottom)
+        for (int i = 0; i < (int)m_comboItems.size(); i++)
         {
-            return; // Already fully visible
-        }
-
-        int newScrollPos = m_nPopupScrollPos;
-
-        // If item is above visible area, scroll to show it at top
-        if (itemTop < visibleTop)
-        {
-            newScrollPos = itemTop;
-        }
-        // If item is below visible area, scroll to show it at bottom
-        else if (itemBottom > visibleBottom)
-        {
-            newScrollPos = itemBottom - m_nPopupViewHeight;
-        }
-
-        // If item is taller than viewport, at least show the top
-        if (itemBottom - itemTop > m_nPopupViewHeight)
-        {
-            newScrollPos = itemTop;
-        }
-
-        ScrollTo(newScrollPos);
-    }
-
-    // Single popup listbox window procedure
-    LRESULT CALLBACK ComboBox::PopupListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
-    {
-        ComboBox *This = reinterpret_cast<ComboBox *>(dwRefData);
-
-        switch (uMsg)
-        {
-        case WM_ERASEBKGND:
-            return 1; // We handle background
-
-        case WM_PAINT:
-        {
-            FluentDesign::DoubleBuferedPaint paint(hWnd);
-
-            This->DrawPopupBackground(hWnd, paint.MemDC(), paint.ClientRect());
-
-            for (int i = 0; i < This->m_comboItems.size(); i++)
-            {
-                RECT itemRect;
-                SendMessage(hWnd, LB_GETITEMRECT, i, (LPARAM)&itemRect);
-                OffsetRect(&itemRect, 0, -This->m_nPopupScrollPos);
-                if (This->m_nPopupContentHeight > This->m_nPopupViewHeight)
+            popupItems.emplace_back(
+                m_comboItems[i].icon,
+                m_comboItems[i].name,
+                delegateparam(HandleListClick, i),
+                [this](HWND hWnd, HDC hdc, RECT rect, int itemId, bool selected, bool hovered)
                 {
-                    itemRect.right -= This->m_theme.DpiScale(6);
-                }
-                This->DrawPopupItem(hWnd, paint.MemDC(), itemRect, i);
-            }
-            if (This->m_theme.IsKeyboardFocused())
-            {
-                RECT itemRect;
-                SendMessage(hWnd, LB_GETITEMRECT, This->m_selectedIndex, (LPARAM)&itemRect);
-                InflateRect(&itemRect, This->m_theme.DpiScale(-Layout_LeftMargin/4), This->m_theme.DpiScale(-2));
-
-                OffsetRect(&itemRect, 0, -This->m_nPopupScrollPos);
-                if (This->m_nPopupContentHeight > This->m_nPopupViewHeight)
-                {
-                    itemRect.right -= This->m_theme.DpiScale(6);
-                }
-                This->m_theme.DrawFocusFrame(paint.MemDC(), itemRect, 0);
-            }
+                    DrawComboItem(hWnd, hdc, rect, itemId);
+                });
         }
-        return 0;
 
-        case WM_MOUSEWHEEL:
+        m_popup.OnSelectionChanged = [this]()
         {
-            // Typically, WHEEL_DELTA is 120, scroll 3 lines per wheel click
-            if (This->m_nPopupContentHeight <= This->m_nPopupViewHeight /*|| GetCapture()*/)
-            {
-                return 0; // No scrolling needed if content fits
-            }
+            m_selectedIndex = m_popup.GetSelectedIndex();
+            InvalidateRect(m_hWnd, NULL, TRUE);
+        };
 
-            int scrollAmount = -GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA * 16 * 3;
-            This->ScrollTo(This->m_nPopupScrollPos + scrollAmount);
-
-            return 0;
-        }
-        return 0;
-
-        case WM_NCPAINT:
-            return 0;
-
-        case WM_MOUSEMOVE:
-        {
-            // Handle item hover
-            POINT pt = {LOWORD(lParam), HIWORD(lParam)};
-            pt.y += This->m_nPopupScrollPos;
-            RECT rc;
-            GetClientRect(hWnd, &rc);
-            int hoverIndex = pt.y / This->m_theme.DpiScale(Layout_ItemHeight);
-            if (pt.x >= rc.left && pt.x <=rc.right && hoverIndex >= 0 && hoverIndex < (int)SendMessage(hWnd, LB_GETCOUNT, 0, 0))
-            {
-                This->m_hoveredIndex = hoverIndex;
-                InvalidateRect(hWnd, NULL, TRUE);
-            }
-            else
-            {
-                This->m_hoveredIndex = -1;
-                InvalidateRect(hWnd, NULL, TRUE);
-            }
-        }
-        break;
-
-        case WM_LBUTTONDOWN:
-        {
-            POINT pt = {(short)LOWORD(lParam), (short)HIWORD(lParam)};
-            pt.y += This->m_nPopupScrollPos;
-            RECT rc;
-            GetClientRect(hWnd, &rc);
-            int clickIndex = pt.y / This->m_theme.DpiScale(Layout_ItemHeight);
-            if (pt.x >= rc.left && pt.x <=rc.right && clickIndex >= 0 && clickIndex < (int)SendMessage(hWnd, LB_GETCOUNT, 0, 0))
-            {
-                // Get the actual ComboItem index from item data
-                int itemIndex = (int)SendMessage(hWnd, LB_GETITEMDATA, clickIndex, 0);
-                This->HandleListClick(itemIndex);
-                This->HidePopup();
-            }
-            else
-            {
-                // Clicked outside items, hide popup
-                This->m_selectedIndex = This->m_originalIndex;
-                This->HidePopup();
-            }
-            This->m_theme.SetKeyboardFocused(NULL);
-        }
-        return 0;
-
-        case WM_CAPTURECHANGED:
-            // If we lose capture, hide the popup
-            if ((HWND)lParam != hWnd && (HWND)lParam != This->m_hWnd )
-            {
-                This->HidePopup();
-            }
-            else
-            {
-                SetCapture(hWnd);
-            }
-            break;
-        case WM_KEYDOWN:
-            if (wParam == VK_ESCAPE || wParam == VK_GAMEPAD_B)
-            {
-                This->m_selectedIndex = This->m_originalIndex;
-                This->HidePopup();
-                return 0;
-            }
-            else if (wParam == VK_RETURN || wParam == VK_SPACE || wParam == VK_GAMEPAD_A)
-            {
-                This->HandleListClick(This->m_selectedIndex);
-                This->HidePopup();
-                return 0;
-            }
-            else if (wParam == VK_UP || wParam == VK_GAMEPAD_DPAD_UP)
-            {
-                if (This->m_selectedIndex >0 )
-                {
-                    This->m_selectedIndex -= 1;
-                    This->EnsureVisible(This->m_selectedIndex);
-                    InvalidateRect(This->m_hPopupList, NULL, TRUE);
-                    InvalidateRect(This->m_hWnd, NULL, TRUE);
-                }
-            }
-            else if (wParam == VK_DOWN || wParam == VK_GAMEPAD_DPAD_DOWN)
-            {
-                if (This->m_selectedIndex < This->m_comboItems.size() - 1 )
-                {
-                    This->m_selectedIndex += 1;
-                    This->EnsureVisible(This->m_selectedIndex);
-                    InvalidateRect(This->m_hPopupList, NULL, TRUE);
-                    InvalidateRect(This->m_hWnd, NULL, TRUE);
-                }
-            }
-            This->m_theme.SetKeyboardFocused(This->m_hPopupList);
-            return 0;
-
-        case WM_DESTROY:
-            RemoveWindowSubclass(hWnd, PopupListSubclassProc, uIdSubclass);
-            break;
-        }
-
-        return DefSubclassProc(hWnd, uMsg, wParam, lParam);
-    }
-
-    void ComboBox::DrawPopupBackground(HWND hWnd, HDC hdcMem, RECT rect)
-    {
-        // Draw popup background with rounded corners
-
-        HBRUSH hNilBrush = CreateSolidBrush(RGB(0,0,0));
-        FillRect(hdcMem, &rect, hNilBrush);
-
-        HPEN hBgPen = CreatePen(PS_SOLID, m_theme.DpiScale(1),  m_theme.GetColorRef(Theme::Colors::ComboPopupBorder));
-        HBRUSH hBgBrush = CreateSolidBrush( m_theme.GetColorRef(Theme::Colors::ComboPopup));
-
-        HGDIOBJ hOldBrush = SelectObject(hdcMem, hBgBrush);
-        HGDIOBJ hOldPen = SelectObject(hdcMem, hBgPen);
-
-        InflateRect(&rect, -1, -1);
-        RoundRect(hdcMem, rect.left, rect.top, rect.right, rect.bottom, m_theme.GetSize_Corner(), m_theme.GetSize_Corner());
-
-        SelectObject(hdcMem, hOldBrush);
-        SelectObject(hdcMem, hOldPen);
-
-        DeleteObject(hBgBrush);
-        DeleteObject(hNilBrush);
-        DeleteObject(hBgPen);
-
-        if (m_nPopupContentHeight > m_nPopupViewHeight)
-        {
-            rect.right -= m_theme.DpiScale(4);
-            rect.left = rect.right - m_theme.DpiScale(2);
-            rect.top += m_theme.DpiScale(2);
-
-            int height = rect.bottom - rect.top;
-            int thumbHeight = max((m_nPopupViewHeight * height / m_nPopupContentHeight), m_theme.DpiScale(20));
-            rect.top = m_theme.DpiScale(2) + m_nPopupScrollPos * (height - thumbHeight) / (m_nPopupContentHeight - height);
-            rect.bottom = rect.top + thumbHeight;
-
-            Gdiplus::RectF rectF = Gdiplus::ToRectF(rect);
-            Gdiplus::Graphics graphics(hdcMem);
-            DWORD color = m_theme.GetColor(false ? Theme::Colors::ScrollThumb : Theme::Colors::ScrollThumbStroke);
-            Gdiplus::SolidBrush thumbBrush(color);
-            Gdiplus::Pen thumbPen(color, 0.5);
-
-            Gdiplus::RoundRect(graphics, rectF, rectF.Width, &thumbBrush, thumbPen);
-
-        }
-
-    }
-
-    void ComboBox::DrawPopupItem(HWND hWnd, HDC hdcMem, RECT itemRect, int itemId)
-    {
-        RECT backgroundRect = itemRect;
-        InflateRect(&backgroundRect, m_theme.DpiScale(-Layout_LeftMargin/4), m_theme.DpiScale(-2));
-        if ( itemId == m_hoveredIndex || itemId == m_selectedIndex)
-        {
-            COLORREF color = (itemId == m_hoveredIndex) ? m_theme.GetColorRef(Theme::Colors::ComboPopupHover)
-                                                        : m_theme.GetColorRef(Theme::Colors::ComboPopupSelected);
-
-            HBRUSH hHoverBrush = CreateSolidBrush(color);
-            HPEN hBorderPen = CreatePen(PS_SOLID,  1, color);
-            HPEN hOldPen = (HPEN)SelectObject(hdcMem, hBorderPen);
-            HBRUSH hPrevBrush = (HBRUSH)SelectObject(hdcMem, hHoverBrush);
-            RoundRect(hdcMem, backgroundRect.left,
-                backgroundRect.top, backgroundRect.right,
-                backgroundRect.bottom, m_theme.DpiScale(Layout_CornerRadius),
-                m_theme.DpiScale(Layout_CornerRadius));
-            SelectObject(hdcMem, hPrevBrush);
-            SelectObject(hdcMem, hOldPen);
-            DeleteObject(hHoverBrush);
-            DeleteObject(hBorderPen);
-        }
-        if ( itemId == m_selectedIndex)
-        {
-            HBRUSH hGripBrush = CreateSolidBrush(m_theme.GetColorRef(Theme::Colors::ComboPopupSelectedMark));
-            RECT gripRect = backgroundRect;
-            gripRect.left += 2;
-            gripRect.right = gripRect.left + m_theme.DpiScale(3);
-            gripRect.top += (gripRect.bottom - gripRect.top - m_theme.DpiScale(16)) / 2;
-            gripRect.bottom = gripRect.top + m_theme.DpiScale(16);
-            FillRect(hdcMem, &gripRect, hGripBrush);
-            DeleteObject(hGripBrush);
-        }
-        DrawComboItem(hWnd, hdcMem, itemRect, itemId);
+        m_popup.Show( m_hWnd, buttonRect.left, buttonRect.bottom + 2, popupItems, popupWidth, 0, m_selectedIndex );
     }
 
     void ComboBox::HandleListClick(int index)
     {
         if (index >= 0 && index < (int)m_comboItems.size())
         {
-            m_selectedIndex = index;
-            // Update your main button display here
-            InvalidateRect(m_hWnd, NULL, TRUE);
-
+            SelectItem(index);
             OnChanged.Notify();
         }
     }

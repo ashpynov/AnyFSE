@@ -31,6 +31,7 @@
 #include "Tools/Event.hpp"
 #include "Theme.hpp"
 #include "FluentControl.hpp"
+#include "Popup.hpp"
 
 namespace FluentDesign
 {
@@ -55,35 +56,22 @@ namespace FluentDesign
         HIMAGELIST m_hImageList = NULL;
 
         std::vector<ComboItem> m_comboItems;
+        Popup m_popup;
 
         bool m_buttonPressed;
         bool m_buttonMouseOver;
 
         int m_designWidth = 0;
 
-        // Listbox part
-        HWND m_hPopupList;
-        bool m_popupVisible;
         int m_selectedIndex;
-        int m_originalIndex = 0;
-        int m_hoveredIndex;
-
-        int m_nPopupScrollPos = 0;
-        int m_nPopupViewHeight = 0;
-        int m_nPopupContentHeight = 0;
 
         static LRESULT CALLBACK ComboBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
-            UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
-
-        static LRESULT CALLBACK PopupListSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
             UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
         void HandleMouse(HWND hWnd, UINT uMsg);
         void DrawComboBackground(HWND hWnd, HDC hdc, RECT rc);
         void DrawComboItem(HWND hWnd, HDC hdc, RECT rect, int itemId);
         void DrawComboChevron(HWND hWnd, HDC hdc, RECT rect);
-        void DrawPopupBackground(HWND hWnd, HDC hdc, RECT rect);
-        void DrawPopupItem(HWND hWnd, HDC hdc, RECT rect, int itemId);
         void HandleListClick(int index);
 
         void UpdateLayout();
@@ -111,8 +99,5 @@ namespace FluentDesign
         Event OnDropDown;
 
         void ShowPopup();
-        void HidePopup();
-        void ScrollTo(int newPos);
-        void EnsureVisible(int index);
     };
 }

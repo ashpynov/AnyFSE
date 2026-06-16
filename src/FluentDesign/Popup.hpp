@@ -27,7 +27,9 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <string>
+#include <vector>
 #include <functional>
+#include <utility>
 #include "Tools/Event.hpp"
 #include "Theme.hpp"
 #include "FluentControl.hpp"
@@ -37,16 +39,30 @@ namespace FluentDesign
     class Popup : public FluentControl
     {
     public:
+        using PopupDrawItem = std::function<void(HWND, HDC, RECT, int, bool, bool)>;
+
         struct PopupItem
         {
             std::wstring name;
             std::wstring icon;
             std::function<void()> callback;
+            PopupDrawItem draw;
 
             PopupItem(const std::wstring& itemGlyph, const std::wstring& itemName,  std::function<void()> itemCallback)
                 : name(itemName)
                 , icon(itemGlyph)
                 , callback(itemCallback)
+            {}
+
+            PopupItem(
+                const std::wstring& itemGlyph,
+                const std::wstring& itemName,
+                std::function<void()> itemCallback,
+                PopupDrawItem itemDraw)
+                : name(itemName)
+                , icon(itemGlyph)
+                , callback(std::move(itemCallback))
+                , draw(std::move(itemDraw))
             {}
         };
     private:
@@ -58,21 +74,28 @@ namespace FluentDesign
 
         bool m_popupVisible;
         int m_selectedIndex;
+        int m_originalIndex;
         int m_hoveredIndex;
         std::vector<PopupItem> m_popupItems;
+        int m_nPopupScrollPos = 0;
+        int m_nPopupViewHeight = 0;
+        int m_nPopupContentHeight = 0;
 
     public:
         Popup(Theme &theme)
             : FluentControl(theme)
             , m_selectedIndex(-1)
+            , m_originalIndex(-1)
             , m_hoveredIndex(-1)
             , m_popupVisible(false)
         {
         }
+        Event OnSelectionChanged;
 
         HWND GetHwnd() { return m_popupVisible ? m_hWnd : nullptr; }
+        int GetSelectedIndex() const { return m_selectedIndex; }
 
-        void Show(HWND hParent, int x, int y, const std::vector<PopupItem>& items, int width, int flags = TPM_RIGHTALIGN);
+        void Show(HWND hParent, int x, int y, const std::vector<PopupItem>& items, int width, int flags = TPM_RIGHTALIGN, int selectedIndex = -1);
         void Hide();
 
         void OnPaint(HWND hWnd);
@@ -82,6 +105,9 @@ namespace FluentDesign
         void OnKeyDown(HWND hWnd, WPARAM wParam);
 
         static LRESULT PopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+
+        void ScrollTo(int newPos);
+        void EnsureVisible(int index);
 
         void DrawPopupBackground(HWND hWnd, HDC hdc, RECT rect);
         void DrawPopupItemBackground(HWND hWnd, HDC hdc, RECT itemRect, int itemId);
