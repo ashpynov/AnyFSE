@@ -4,6 +4,95 @@
 
 namespace FluentDesign
 {
+    void FluentControl::HandleMouseEvents(HWND hWnd, UINT uMsg, LPARAM lParam)
+    {
+        const bool enabled = IsWindowEnabled(hWnd);
+
+        switch (uMsg)
+        {
+        case WM_MOUSEMOVE:
+            if (!enabled)
+            {
+                break;
+            }
+
+            if (m_mousePressed && !m_mouseDragged)
+            {
+                POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+                if (abs(pt.x - m_mouseDownPoint.x) > GetSystemMetrics(SM_CXDRAG)
+                    || abs(pt.y - m_mouseDownPoint.y) > GetSystemMetrics(SM_CYDRAG))
+                {
+                    m_mouseDragged = true;
+                    m_mousePressed = false;
+                    InvalidateRect(hWnd, NULL, FALSE);
+                }
+            }
+            break;
+
+        case WM_LBUTTONDOWN:
+            if (!enabled)
+            {
+                break;
+            }
+
+            m_mousePressed = true;
+            m_mouseDragged = false;
+            m_mouseDownPoint = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+            SetCapture(hWnd);
+            InvalidateRect(hWnd, NULL, FALSE);
+            break;
+
+        case WM_LBUTTONUP:
+            if (!enabled)
+            {
+                m_mousePressed = false;
+                m_mouseDragged = false;
+                if (GetCapture() == hWnd)
+                {
+                    ReleaseCapture();
+                }
+                break;
+            }
+
+            if (m_mousePressed || m_mouseDragged)
+            {
+                const bool clicked = m_mousePressed && !m_mouseDragged;
+                m_mousePressed = false;
+                m_mouseDragged = false;
+                if (GetCapture() == hWnd)
+                {
+                    ReleaseCapture();
+                }
+                InvalidateRect(hWnd, NULL, FALSE);
+
+                if (clicked)
+                {
+                    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+                    RECT rc;
+                    GetClientRect(hWnd, &rc);
+                    if (PtInRect(&rc, pt))
+                    {
+                        OnClick.Notify();
+                    }
+                }
+            }
+            break;
+
+        case WM_MOUSELEAVE:
+            if (m_mousePressed || m_mouseDragged)
+            {
+                m_mousePressed = false;
+                m_mouseDragged = false;
+                if (GetCapture() == hWnd)
+                {
+                    ReleaseCapture();
+                }
+                InvalidateRect(hWnd, NULL, FALSE);
+            }
+            break;
+        }
+    }
+
     void FluentControl::SetAnchor(Align::Anchor anchor, GetParentRectFunc getParentRect)
     {
 

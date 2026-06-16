@@ -50,11 +50,15 @@ namespace FluentDesign
         bool m_dragging;
         int  m_dragStartScrollPos;
         int  m_dragStartMousePos;
+        bool m_panDragging = false;
+        int  m_panStartScrollPos = 0;
+        POINT m_panStartPoint{};
 
         void SetOffset(int newOffset);
 
         void CalculateRects();
         LRESULT OnPaint(HWND hWnd);
+        LRESULT OnGesture(HGESTUREINFO hGestureInfo);
 
     public:
         ScrollView(Theme &theme, Align::Anchor align = Align::Client(), GetParentRectFunc getParentRect = GetParentRect);

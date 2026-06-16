@@ -49,7 +49,6 @@ namespace FluentDesign
         UINT_PTR m_animationTimer;
         bool m_animationLoop;
 
-        bool m_buttonPressed;
         bool m_buttonMouseOver;
         bool m_bFlat;
         bool m_bSquare;
@@ -75,7 +74,8 @@ namespace FluentDesign
         static LRESULT CALLBACK ButtonSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
                                                    UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
-        void HandleMouse(HWND hWnd, UINT uMsg, LPARAM lParam);
+        void HandleMouse(HWND hWnd, UINT uMsg);
+        void HandleClick();
         void DrawButton(HWND hWnd, HDC hdc, RECT rc);
 
         void UpdateLayout();

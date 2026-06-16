@@ -37,10 +37,20 @@ using namespace Gdiplus;
 
 namespace FluentDesign
 {
+    namespace
+    {
+        void EnablePanGesture(HWND hWnd)
+        {
+            GESTURECONFIG gestureConfig{};
+            gestureConfig.dwID = GID_PAN;
+            gestureConfig.dwWant = GC_PAN;
+            SetGestureConfig(hWnd, 0, 1, &gestureConfig, sizeof(gestureConfig));
+        }
+    }
+
     Button::Button(Theme &theme, Align::Anchor align, GetParentRectFunc getParentRect)
         : FluentControl(theme, align, getParentRect)
         , m_buttonMouseOver(false)
-        , m_buttonPressed(false)
         , m_bFlat(false)
         , m_bSquare(false)
         , m_isSmallIcon(false)
@@ -81,7 +91,7 @@ namespace FluentDesign
         m_hWnd = CreateWindow(
             L"BUTTON",
             L"",
-            WS_VISIBLE | WS_CHILD | BS_DEFCOMMANDLINK | WS_TABSTOP | BS_CENTER,
+            WS_VISIBLE | WS_CHILD | WS_TABSTOP | BS_CENTER,
             x, y, width, height,
             hParent, NULL, GetModuleHandle(NULL), NULL);
 
@@ -93,6 +103,8 @@ namespace FluentDesign
         m_theme.RegisterChild(m_hWnd);
         SetWindowLongPtr(m_hWnd, GWLP_USERDATA, (LONG_PTR)this);
         SetWindowSubclass(m_hWnd, ButtonSubclassProc, 0, (DWORD_PTR)this);
+        EnablePanGesture(m_hWnd);
+        OnClick += delegate(HandleClick);
         return *this;
     }
 
@@ -254,6 +266,19 @@ namespace FluentDesign
         m_theme.SwapFocus(popup.GetHwnd());
     }
 
+    void Button::HandleClick()
+    {
+        if (!m_menuItems.empty())
+        {
+            m_theme.SwapFocus(m_hWnd);
+            ShowMenu();
+            return;
+        }
+
+        OnButtonDown.Notify();
+        OnChanged.Notify();
+    }
+
     SIZE Button::GetMinSize()
     {
         RECT clientRect;
@@ -362,8 +387,17 @@ namespace FluentDesign
     {
 
         Button *This = reinterpret_cast<Button *>(dwRefData);
+        This->HandleMouseEvents(hWnd, uMsg, lParam);
         switch (uMsg)
         {
+            case WM_GESTURE:
+                if (HWND parent = GetParent(hWnd))
+                {
+                    return SendMessage(parent, uMsg, wParam, lParam);
+                }
+                CloseGestureInfoHandle(reinterpret_cast<HGESTUREINFO>(lParam));
+                return 0;
+
             case WM_SETCURSOR:
                 if ((GetWindowLong(hWnd, GWL_STYLE) & BS_TYPEMASK) == BS_COMMANDLINK)
                 {
@@ -377,12 +411,8 @@ namespace FluentDesign
             case WM_MOUSELEAVE:
             case WM_LBUTTONDOWN:
             case WM_LBUTTONUP:
-                This->HandleMouse(hWnd, uMsg, lParam);
-                if (This->m_menuItems.size())
-                {
-                    return 0;
-                }
-                break;
+                This->HandleMouse(hWnd, uMsg);
+                return 0;
 
             case WM_GETDLGCODE:
                 if ( wParam == VK_SPACE || wParam ==VK_RETURN || wParam ==VK_GAMEPAD_A
@@ -393,20 +423,10 @@ namespace FluentDesign
                 break;
 
             case WM_KEYDOWN:
-                if ( This->m_theme.IsKeyboardFocused() &&
-                       wParam == VK_SPACE
-                    || wParam == VK_RETURN
-                    || wParam == VK_GAMEPAD_A)
+                if (This->m_theme.IsKeyboardFocused() &&
+                    (wParam == VK_SPACE || wParam == VK_RETURN || wParam == VK_GAMEPAD_A))
                 {
-                    if (This->m_menuItems.size())
-                    {
-                        This->ShowMenu();
-                    }
-                    else
-                    {
-                        This->OnButtonDown.Notify();
-                        This->OnChanged.Notify();
-                    }
+                    This->OnClick.Notify();
                     return 0;
                 }
                 else if (wParam == VK_LEFT  || wParam == VK_UP
@@ -438,7 +458,7 @@ namespace FluentDesign
         return DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }
 
-    void Button::HandleMouse(HWND hWnd, UINT uMsg, LPARAM lParam)
+    void Button::HandleMouse(HWND hWnd, UINT uMsg)
     {
         switch (uMsg)
         {
@@ -458,45 +478,8 @@ namespace FluentDesign
 
         case WM_MOUSELEAVE:
             m_buttonMouseOver = false;
-            m_buttonPressed = false;
             InvalidateRect(hWnd, NULL, FALSE);
             SendMessage(GetParent(hWnd), WM_NCMOUSELEAVE, 0, 0);
-            break;
-
-        case WM_LBUTTONDOWN:
-            m_buttonPressed = true;
-            InvalidateRect(hWnd, NULL, FALSE);
-            SetCapture(hWnd);
-
-            if (m_menuItems.size())
-            {
-                m_theme.SwapFocus(hWnd);
-                ShowMenu();
-            }
-            else
-            {
-                OnButtonDown.Notify();
-            }
-            break;
-
-        case WM_LBUTTONUP:
-            if (m_buttonPressed)
-            {
-                m_buttonPressed = false;
-                ReleaseCapture();
-                InvalidateRect(hWnd, NULL, FALSE);
-
-                POINT pt;
-                GetCursorPos(&pt);
-                MapWindowPoints(NULL, m_hWnd, &pt, 1);
-
-                RECT rc;
-                GetClientRect(m_hWnd, &rc);
-                if (PtInRect(&rc, pt) && !m_menuItems.size())
-                {
-                    OnChanged.Notify();
-                }
-            }
             break;
         }
         return;
@@ -524,13 +507,13 @@ namespace FluentDesign
 
         // Determine colors based on state
         Color borderColor(m_theme.GetColor(
-                m_buttonPressed ? Theme::Colors::ButtonBorderPressed
+                m_mousePressed ? Theme::Colors::ButtonBorderPressed
             : m_buttonMouseOver ? Theme::Colors::ButtonBorderHover
                                 : Theme::Colors::ButtonBorder
         ));
 
         Color backColor(m_theme.GetColor(
-                m_buttonPressed ? m_backgroundPressedColor
+                m_mousePressed ? m_backgroundPressedColor
             : m_buttonMouseOver ? m_backgroundHoverColor
                                 : m_backgroundNormalColor
         ));
@@ -545,7 +528,7 @@ namespace FluentDesign
             br.Inflate(m_theme.DpiScaleF(-1), m_theme.DpiScaleF(-1));
         }
 
-        if (!m_bFlat || m_buttonPressed || m_buttonMouseOver)
+        if (!m_bFlat || m_mousePressed || m_buttonMouseOver)
         {
             // Draw outer rounded rectangle (track)
             Pen borderPen(borderColor, (REAL)m_theme.DpiScale(1));
@@ -571,7 +554,7 @@ namespace FluentDesign
 
         Color textColor(m_theme.GetColor(
             ! enabled           ? Theme::Colors::TextDisabled
-            : m_buttonPressed   ? m_textPressedColor
+            : m_mousePressed    ? m_textPressedColor
             : m_buttonMouseOver ? m_textHoverColor
                                 : m_textNormalColor
         ));

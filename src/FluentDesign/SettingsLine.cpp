@@ -38,6 +38,17 @@
 
 namespace FluentDesign
 {
+    namespace
+    {
+        void EnablePanGesture(HWND hWnd)
+        {
+            GESTURECONFIG gestureConfig{};
+            gestureConfig.dwID = GID_PAN;
+            gestureConfig.dwWant = GC_PAN;
+            SetGestureConfig(hWnd, 0, 1, &gestureConfig, sizeof(gestureConfig));
+        }
+    }
+
     static Logger log = LogManager::GetLogger("SettingsLine");
 
     // Window class registration
@@ -139,6 +150,8 @@ namespace FluentDesign
         }
         SetWindowLongPtr(m_hWnd, GWLP_USERDATA, (LONG_PTR)this);
         SetWindowSubclass(m_hWnd, WndProc, 0, (DWORD_PTR)this);
+        EnablePanGesture(m_hWnd);
+        OnClick += delegate(OnLButtonDown);
 
         return m_hWnd;
     }
@@ -158,8 +171,18 @@ namespace FluentDesign
 
     LRESULT SettingsLine::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam)
     {
+        FluentControl::HandleMouseEvents(m_hWnd, message, lParam);
+
         switch (message)
         {
+        case WM_GESTURE:
+            if (GetParent(m_hWnd))
+            {
+                return SendMessage(GetParent(m_hWnd), message, wParam, lParam);
+            }
+            CloseGestureInfoHandle(reinterpret_cast<HGESTUREINFO>(lParam));
+            return 0;
+
         case WM_PAINT:
             OnPaint();
             return 0;
@@ -170,6 +193,10 @@ namespace FluentDesign
 
         case WM_MOUSEMOVE:
             OnMouseMove();
+            return 0;
+
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:
             return 0;
 
         case WM_SETCURSOR:
@@ -189,10 +216,6 @@ namespace FluentDesign
         case WM_NCMOUSELEAVE:
         case WM_MOUSELEAVE:
             OnMouseLeave();
-            return 0;
-
-        case WM_LBUTTONDOWN:
-            OnLButtonDown();
             return 0;
 
         case WM_ENABLE:
@@ -508,7 +531,7 @@ namespace FluentDesign
                 m_theme.DpiScale(CHEVRON_SIZE)
             );
             m_chevronButton.SetFlat(true);
-            m_chevronButton.OnButtonDown += delegate(OnLButtonDown);
+            m_chevronButton.OnClick += delegate(OnLButtonDown);
             m_chevronButton.SetColors(
                 Theme::Colors::Default, Theme::Colors::Default,
                 Theme::Colors::Default, Theme::Colors::PanelHover,

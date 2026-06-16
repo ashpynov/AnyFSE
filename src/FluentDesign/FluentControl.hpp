@@ -1,6 +1,8 @@
 #pragma once
 #include <windows.h>
+#include <windowsx.h>
 #include "Tools/GdiPlus.hpp"
+#include "Tools/Event.hpp"
 #include "FluentDesign/Theme.hpp"
 #include "FluentDesign/Align.hpp"
 
@@ -19,6 +21,9 @@ namespace FluentDesign
             GetParentRectFunc m_getParentRect = GetParentRect;
             Align::Margins m_designMargins;
             Align::Anchor m_anchor = Align::None;
+            bool m_mousePressed = false;
+            bool m_mouseDragged = false;
+            POINT m_mouseDownPoint{};
 
         protected:
             Theme &m_theme;
@@ -42,10 +47,14 @@ namespace FluentDesign
 
         public:
             HWND GetHwnd() const { return m_hWnd; }
+            Event OnClick;
 
             void SetAnchor(Align::Anchor anchor, GetParentRectFunc getParentRect = GetParentRect);
             void SetSize(LONG cx, LONG cy);
             void StoreDesign();
             HDWP ReflowControl(HDWP hdwp = nullptr);
+
+        protected:
+            void HandleMouseEvents(HWND hWnd, UINT uMsg, LPARAM lParam);
     };
 }

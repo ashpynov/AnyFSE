@@ -29,6 +29,17 @@
 
 namespace FluentDesign
 {
+    namespace
+    {
+        void EnablePanGesture(HWND hWnd)
+        {
+            GESTURECONFIG gestureConfig{};
+            gestureConfig.dwID = GID_PAN;
+            gestureConfig.dwWant = GC_PAN;
+            SetGestureConfig(hWnd, 0, 1, &gestureConfig, sizeof(gestureConfig));
+        }
+    }
+
     LRESULT ScrollView::ScrollViewSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
     {
         ScrollView *This = reinterpret_cast<ScrollView *>(dwRefData);
@@ -68,6 +79,9 @@ namespace FluentDesign
 
             case WM_ERASEBKGND:
                 return This->OnEraseBkgnd((HDC)wParam, (HWND)lParam);
+
+            case WM_GESTURE:
+                return This->OnGesture(reinterpret_cast<HGESTUREINFO>(lParam));
 
             case WM_NCDESTROY:
                 RemoveWindowSubclass(hWnd, ScrollViewSubclassProc, uIdSubclass);
@@ -279,6 +293,7 @@ namespace FluentDesign
         UpdateScrollBar();
         SetWindowLongPtr(m_hWnd, GWLP_USERDATA, (LONG_PTR)this);
         SetWindowSubclass(m_hWnd, ScrollViewSubclassProc, 0, (DWORD_PTR)this);
+        EnablePanGesture(m_hWnd);
         return m_hWnd;
     }
 
@@ -438,8 +453,44 @@ namespace FluentDesign
             return 0; // No scrolling needed if content fits
         }
 
-        int scrollAmount = -delta / WHEEL_DELTA * 16 * 3;
-        ScrollBy(scrollAmount);
+        ScrollBy(-delta);
+        return 0;
+    }
+
+    LRESULT ScrollView::OnGesture(HGESTUREINFO hGestureInfo)
+    {
+        GESTUREINFO gestureInfo{};
+        gestureInfo.cbSize = sizeof(gestureInfo);
+
+        if (!GetGestureInfo(hGestureInfo, &gestureInfo))
+        {
+            CloseGestureInfoHandle(hGestureInfo);
+            return 0;
+        }
+
+        if (gestureInfo.dwID == GID_PAN)
+        {
+            POINT pt = { gestureInfo.ptsLocation.x, gestureInfo.ptsLocation.y };
+            ScreenToClient(m_hWnd, &pt);
+
+            if (gestureInfo.dwFlags & GF_BEGIN)
+            {
+                m_panDragging = true;
+                m_panStartPoint = pt;
+                m_panStartScrollPos = m_scrollPos;
+            }
+            else if (m_panDragging)
+            {
+                ScrollTo(m_panStartScrollPos - (pt.y - m_panStartPoint.y));
+            }
+
+            if (gestureInfo.dwFlags & GF_END)
+            {
+                m_panDragging = false;
+            }
+        }
+
+        CloseGestureInfoHandle(hGestureInfo);
         return 0;
     }
 }
