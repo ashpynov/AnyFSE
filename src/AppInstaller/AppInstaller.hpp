@@ -23,6 +23,7 @@
 
 #include <list>
 #include <map>
+#include <set>
 #include <vector>
 #include <string>
 #include "App/AppConstants.hpp"
@@ -199,5 +200,6 @@ namespace AnyFSE
             bool EnableInjectorService();
             bool IsNeedEnableAsusOptimization();
             bool EnableAsusOptimization();
+            void StopAnyFSE();
     };
 }

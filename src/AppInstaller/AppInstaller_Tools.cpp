@@ -267,7 +267,7 @@ namespace AnyFSE
     bool AppInstaller::EnableInjectorService()
     {
         const std::wstring injectorExe = std::filesystem::path(Paths::GetExePath()).append(AppConstants::InjectorExe).wstring();
-        return Process::StartProcess(injectorExe, L"--start") != 0;
+        return Process::StartProcess(injectorExe, L"--install") != 0;
     }
 
     bool AppInstaller::IsNeedEnableAsusOptimization()

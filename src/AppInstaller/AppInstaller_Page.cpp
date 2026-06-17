@@ -375,12 +375,7 @@ namespace AnyFSE
                 CheckSuccess(DisableInjectorService());
             }
 
-            std::set<DWORD> ids;
-            Process::FindAllByName(L"AnyFSE.exe", ids);
-            for( auto id: ids)
-            {
-                Process::Kill(id);
-            }
+            StopAnyFSE();
 
             SetCurrentProgress(Translate(L"progressInstallPackage"));
             CheckSuccess(InstallPackage(

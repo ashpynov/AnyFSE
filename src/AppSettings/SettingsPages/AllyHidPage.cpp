@@ -221,8 +221,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             m_pModeACPressLine->SetIcon(path + L"ac" + suffix);
             m_pACHoldLine->SetIcon(path + L"ac" + suffix);
             m_pCCPressLine->SetIcon(path + L"cc" + suffix);
-            m_pModeACHoldLine->SetIcon(path + L"cc" + suffix);
-            m_pModeCCPressLine->SetIcon(path + L"ac" + suffix);
+            m_pModeACHoldLine->SetIcon(path + L"ac" + suffix);
+            m_pModeCCPressLine->SetIcon(path + L"cc" + suffix);
         } else {
             m_pACPressLine->SetIcon(path + L"ac_left" + suffix);
             m_pModeACPressLine->SetIcon(path + L"ac_left" + suffix);
