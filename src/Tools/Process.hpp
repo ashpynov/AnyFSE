@@ -41,6 +41,7 @@ namespace AnyFSE::Tools::Process
     BOOL EnumWindowsAlt(HWND start, BOOL (*callback)(HWND, LPARAM), LPARAM lParam);
     bool BringWindowToForeground(HWND hWnd, int nShowCmd = SW_SHOWDEFAULT);
     std::wstring GetWindowProcessName(HWND hWnd);
+    HRESULT Kill(DWORD processId);
 }
 
 namespace Process = AnyFSE::Tools::Process;

@@ -276,19 +276,20 @@ namespace Ally
         //     return;
         // }
 
-        std::wstring injectorExe = L"\"" + std::filesystem::path(Paths::GetExePath()).append(AnyFSE::AppConstants::InjectorExe).wstring() + L"\"";
+        std::wstring injectorExe = std::filesystem::path(Paths::GetExePath()).append(AnyFSE::AppConstants::InjectorExe).wstring();
         std::wstring commandLine = injectorExe + (bEnable ? L" --install" : L" --uninstall");
 
 
         // Execute through cmd.exe with hidden window
-        ShellExecuteW(
+        HINSTANCE result = ShellExecuteW(
             NULL,                           // Parent window handle
             L"runas",                       // Operation (runas for elevation)
-            L"cmd.exe",                     // Program to execute
-            (L"/c " + commandLine).c_str(), // Command line arguments
+            injectorExe.c_str(),            // Program to execute
+            (bEnable ? L"--install" : L"--uninstall"), // Command line arguments
             NULL,                           // Working directory
             SW_HIDE                         // Window state (hidden)
         );
+        log.Trace("EnableACSEInjector result %d", result);
     }
 
     bool IsNativeHandlerEnabled()

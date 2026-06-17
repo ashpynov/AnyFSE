@@ -375,6 +375,13 @@ namespace AnyFSE
                 CheckSuccess(DisableInjectorService());
             }
 
+            std::set<DWORD> ids;
+            Process::FindAllByName(L"AnyFSE.exe", ids);
+            for( auto id: ids)
+            {
+                Process::Kill(id);
+            }
+
             SetCurrentProgress(Translate(L"progressInstallPackage"));
             CheckSuccess(InstallPackage(
                 path.wstring() + L"/" + AppConstants::AppxFilePrefix + Unicode::to_wstring(VER_VERSION_STR) + L".appx",

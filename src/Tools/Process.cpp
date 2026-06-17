@@ -419,4 +419,30 @@ namespace AnyFSE::Tools::Process
         }
         return std::wstring();
     }
+
+    HRESULT Kill(DWORD processId)
+    {
+        if (processId == 0)
+        {
+            return ERROR_INVALID_PARAMETER;
+        }
+
+        HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, processId);
+        if (hProcess == NULL)
+        {
+            log.Error(log.APIError(), "Kill process. OpenProcess failed");
+            return GetLastError();
+        }
+
+        if (!TerminateProcess(hProcess, 0))
+        {
+            log.Error(log.APIError(), "Kill process. TerminateProcess failed");
+            HRESULT error = GetLastError();
+            CloseHandle(hProcess);
+            return error;
+        }
+
+        CloseHandle(hProcess);
+        return ERROR_SUCCESS;
+    }
 }
