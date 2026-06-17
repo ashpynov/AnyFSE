@@ -70,7 +70,7 @@ namespace ACSEFilter::Hook
                 && FindPendingWaitHandleIndex(count, handles, pendingWaitHandleIndex)
                 && result == WAIT_OBJECT_0 + pendingWaitHandleIndex)
             {
-                DEBUG(L"Read data via WaitForMultipleObjects");
+                LOG(L"Read data via WaitForMultipleObjects");
                 CompletePendingReadAfterWait();
             }
 
@@ -97,7 +97,7 @@ namespace ACSEFilter::Hook
         const HMODULE selfModule = static_cast<HMODULE>(context);
         if (!Native::ResolveKernelFunctions())
         {
-            DEBUG(L"Failed to resolve required kernel functions.");
+            LOG(L"Failed to resolve required kernel functions.");
             return 1;
         }
 
@@ -105,7 +105,7 @@ namespace ACSEFilter::Hook
         const ImportHookSpec *specs = HookSpecs(count);
         PatchAllModuleImports(selfModule, specs, count);
 
-        DEBUG(L"Hooks installed.");
+        LOG(L"Hooks installed.");
         return 0;
     }
 

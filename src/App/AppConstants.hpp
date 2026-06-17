@@ -15,6 +15,10 @@ namespace AnyFSE::AppConstants
 
     // ASUS / ACSE integration
     inline constexpr wchar_t InjectorServiceName[] = L"ACSEFilterInjector";
+    inline constexpr wchar_t InjectorServiceDisplayName[] = L"AnyFSE ACSE Filter Injector";
+    inline constexpr wchar_t InjectorServiceDescription[] = L"Injects ACSEFilterHook into ASUS Optimization process and blocks it from ASUS-specific keys processing.";
+
+
     inline constexpr wchar_t AsusOptimizationService[] = L"ASUSOptimization";
     inline constexpr wchar_t AsusOptimizationProcess[] = L"AsusOptimization.exe";
     inline constexpr wchar_t ArmouryCrateServiceProcess[] = L"ArmouryCrateSE.Service.exe";

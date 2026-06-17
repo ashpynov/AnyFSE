@@ -76,7 +76,7 @@ namespace ACSEFilter
             {
                 if (productId == attributes.ProductID)
                 {
-                    DEBUG(L"Correct HID device read: Handle %p: VID_%04X PID_%04X.", file, attributes.VendorID, attributes.ProductID);
+                    LOG(L"Correct HID device read: Handle %p: VID_%04X PID_%04X.", file, attributes.VendorID, attributes.ProductID);
                     return true;
                 }
             }
@@ -163,18 +163,18 @@ namespace ACSEFilter
 
         if ( actualBytes == Config::kExpectedReadLength)
         {
-            DEBUG(L"Read data: %02X %02X %02X %02X %02X %02X",
+            LOG(L"Read data: %02X %02X %02X %02X %02X %02X",
                   ((BYTE*)buffer)[0], ((BYTE*)buffer)[1], ((BYTE*)buffer)[2],
                   ((BYTE*)buffer)[3], ((BYTE*)buffer)[4], ((BYTE*)buffer)[5]);
         }
 
         if (!ValidateTargetRead(file, buffer, requestedBytes, actualBytes))
         {
-            DEBUG(L"Pass unchanged");
+            LOG(L"Pass unchanged");
             return;
         }
 
-        DEBUG(L"Key code to hide 0x%02X detected. Replace by 0x00", ((BYTE*)buffer)[1]);
+        LOG(L"Key code to hide 0x%02X detected. Replace by 0x00", ((BYTE*)buffer)[1]);
 
         CopyMemory(buffer, Config::kReplacementBytes, Config::kExpectedReadLength);
     }

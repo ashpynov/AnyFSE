@@ -159,6 +159,7 @@
     <ClCompile Include="src\Tools\Localization.cpp" />
     <ClCompile Include="src\Logging\*.cpp" />
     <ClCompile Include="src\App\GamingExperience.cpp" />
+    <ClCompile Include="src\Ally\Services.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\localization\*.json" />

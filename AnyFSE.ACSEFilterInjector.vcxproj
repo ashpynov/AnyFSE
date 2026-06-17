@@ -84,6 +84,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Ally\ACSEfilter\Injector.cpp" />
+    <ClCompile Include="src\Tools\PowerEfficiency.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Ally\ACSEfilter\DebugLog.h" />

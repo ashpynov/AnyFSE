@@ -15,6 +15,7 @@
 #include "Tools/Registry.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/Process.hpp"
+#include "Ally/Services.hpp"
 
 
 namespace AnyFSE
@@ -255,19 +256,12 @@ namespace AnyFSE
 
     bool AppInstaller::DisableInjectorService()
     {
-        if (!IsInjectorServiceRun())
-        {
-            return true;
-        }
-
-        const std::wstring injectorExe = std::filesystem::path(Paths::GetExePath()).append(AppConstants::InjectorExe).wstring();
-        return Process::StartProcess(injectorExe, L"--uninstall") != 0;
+        return Ally::Services::DisableInjectorService();
     }
 
     bool AppInstaller::EnableInjectorService()
     {
-        const std::wstring injectorExe = std::filesystem::path(Paths::GetExePath()).append(AppConstants::InjectorExe).wstring();
-        return Process::StartProcess(injectorExe, L"--install") != 0;
+        return Ally::Services::EnableInjectorService();
     }
 
     bool AppInstaller::IsNeedEnableAsusOptimization()
@@ -276,20 +270,6 @@ namespace AnyFSE
     }
     bool AppInstaller::EnableAsusOptimization()
     {
-        if (!Process::FindFirstByExe(AppConstants::ArmouryCrateServiceProcess) || Process::FindFirstByExe(AppConstants::AsusOptimizationProcess))
-        {
-            return true;
-        }
-        const std::wstring commandLine = std::wstring(L"/c sc config ") + AppConstants::AsusOptimizationService +
-            L" start=auto & sc start " + AppConstants::AsusOptimizationService;
-        HINSTANCE result = ShellExecuteW(
-            nullptr,
-            L"open",
-            L"cmd.exe",
-            commandLine.c_str(),
-            nullptr,
-            SW_HIDE);
-
-        return reinterpret_cast<INT_PTR>(result) > 32;
+        return Ally::Services::EnableAsusOptimizationService();
     }
 };

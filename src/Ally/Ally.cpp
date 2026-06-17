@@ -10,8 +10,10 @@
 #include "Tools/Paths.hpp"
 #include "Tools/Registry.hpp"
 #include "Tools/Unicode.hpp"
+#include "Tools/PowerEfficiency.hpp"
 #include "App/AppConstants.hpp"
 #include "Ally.hpp"
+#include "Ally/Services.hpp"
 
 
 namespace Ally
@@ -168,6 +170,7 @@ namespace Ally
             return -1;
         }
 
+        AnyFSE::Tools::EnablePowerEfficencyMode(true);
         Load();
 
         // Create hidden window for raw input
@@ -271,25 +274,12 @@ namespace Ally
     {
         bEnable &= IsNativeHandlerEnabled();
 
-        // if (IsInjectorEnabled() == bEnable )
-        // {
-        //     return;
-        // }
+        if (IsInjectorEnabled() == bEnable )
+        {
+            return;
+        }
 
-        std::wstring injectorExe = std::filesystem::path(Paths::GetExePath()).append(AnyFSE::AppConstants::InjectorExe).wstring();
-        std::wstring commandLine = injectorExe + (bEnable ? L" --install" : L" --uninstall");
-
-
-        // Execute through cmd.exe with hidden window
-        HINSTANCE result = ShellExecuteW(
-            NULL,                           // Parent window handle
-            L"runas",                       // Operation (runas for elevation)
-            injectorExe.c_str(),            // Program to execute
-            (bEnable ? L"--install" : L"--uninstall"), // Command line arguments
-            NULL,                           // Working directory
-            SW_HIDE                         // Window state (hidden)
-        );
-        log.Trace("EnableACSEInjector result %d", result);
+        bEnable ? Services::EnableInjectorService() : Services::DisableInjectorService();
     }
 
     bool IsNativeHandlerEnabled()

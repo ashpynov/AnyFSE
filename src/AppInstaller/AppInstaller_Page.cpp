@@ -322,7 +322,7 @@ namespace AnyFSE
 
         fs::create_directories(path.wstring() + L"\\logs");
 
-        LogManager::Initialize("AnyFSE.Installer", LogLevels::Debug, path.wstring() + L"\\logs");
+        LogManager::Initialize("AnyFSE.Installer", LogLevels::Trace, path.wstring() + L"\\logs");
         log.Info("Starting Installation AnyFSE v%s to %s", APP_VERSION, path.string().c_str());
 
         bool acseServiceWasRunning = false;
@@ -407,6 +407,8 @@ namespace AnyFSE
                 CheckSuccess(true);
             }
 
+            Process::StartProtocol(AnyFSE::AppConstants::AnyFseProtocolAllyHid);
+
             ShowCompletePage();
 
             LogManager::DeleteLog();
@@ -418,6 +420,9 @@ namespace AnyFSE
         }
         catch(const std::exception& e)
         {
+            log.Error(e, "Installation fail:");
+            ShowErrorPage(Translate(L"installationErrorCaption"), GetProgressText(4) + Unicode::to_wstring(e.what()));
+
             // Best-effort service recovery after failed update.
             if (acseServiceWasRunning)
             {
@@ -433,9 +438,6 @@ namespace AnyFSE
             {
                 EnableDeveloperMode(false);
             }
-
-            log.Error(e, "Installation fail:");
-            ShowErrorPage(Translate(L"installationErrorCaption"), GetProgressText(4) + Unicode::to_wstring(e.what()));
         }
     }
 
