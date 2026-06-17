@@ -4,10 +4,10 @@
 #include <algorithm>
 #include <cwctype>
 #include <filesystem>
-#include <iostream>
-#include <string>
 #include <shellapi.h>
+#include <string>
 #include "../../App/AppConstants.hpp"
+#include "DebugLog.h"
 
 namespace
 {
@@ -17,7 +17,7 @@ namespace
     constexpr const wchar_t *kServiceDescription = L"Injects ACSEFilterHook into ASUS Optimization process and blocks it from ASUS-specific keys processing.";
     constexpr const wchar_t *kTargetProcessName = L"AsusOptimization.exe";
     constexpr const wchar_t *kTargetServiceName = L"ASUSOptimization";
-    constexpr const wchar_t *kHookDllName = L"ACSEFilterHook.dll";
+    constexpr const wchar_t *kHookDllName = L"AnyFSE.ACSEFilterHook.dll";
     constexpr DWORD kMissingProcessDelayMs = 10000;
     constexpr DWORD kRemoteThreadTimeoutMs = 30000;
     constexpr DWORD kServiceStopWaitHintMs = 60000;
@@ -208,7 +208,7 @@ namespace
         const std::filesystem::path fullDllPath = std::filesystem::absolute(dllPath);
         if (!std::filesystem::exists(fullDllPath))
         {
-            std::wcerr << L"DLL does not exist: " << fullDllPath.wstring() << L"\n";
+            DEBUG(L"DLL does not exist: %s", fullDllPath.wstring().c_str());
             return false;
         }
 
@@ -217,13 +217,13 @@ namespace
         void *remotePath = VirtualAllocEx(process, nullptr, bytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
         if (!remotePath)
         {
-            std::wcerr << L"VirtualAllocEx failed: " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"VirtualAllocEx failed: %s", FormatError(GetLastError()).c_str());
             return false;
         }
 
         if (!WriteProcessMemory(process, remotePath, fullDllPathText.c_str(), bytes, nullptr))
         {
-            std::wcerr << L"WriteProcessMemory failed: " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"WriteProcessMemory failed: %s", FormatError(GetLastError()).c_str());
             VirtualFreeEx(process, remotePath, 0, MEM_RELEASE);
             return false;
         }
@@ -233,7 +233,7 @@ namespace
 
         if (!loadLibraryW)
         {
-            std::wcerr << L"Could not resolve LoadLibraryW.\n";
+            DEBUG(L"Could not resolve LoadLibraryW.");
             VirtualFreeEx(process, remotePath, 0, MEM_RELEASE);
             return false;
         }
@@ -241,7 +241,7 @@ namespace
         HANDLE thread = CreateRemoteThread(process, nullptr, 0, loadLibraryW, remotePath, 0, nullptr);
         if (!thread)
         {
-            std::wcerr << L"CreateRemoteThread failed: " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"CreateRemoteThread failed: %s", FormatError(GetLastError()).c_str());
             VirtualFreeEx(process, remotePath, 0, MEM_RELEASE);
             return false;
         }
@@ -249,7 +249,7 @@ namespace
         const DWORD waitResult = WaitForSingleObject(thread, kRemoteThreadTimeoutMs);
         if (waitResult != WAIT_OBJECT_0)
         {
-            std::wcerr << L"LoadLibraryW remote thread did not finish: " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"LoadLibraryW remote thread did not finish. Wait result: %lu. Last error: %s", waitResult, FormatError(GetLastError()).c_str());
             CloseHandle(thread);
             return false;
         }
@@ -259,7 +259,7 @@ namespace
 
         if (!IsDllLoaded(pid, dllPath))
         {
-            std::wcerr << L"LoadLibraryW failed in target process. Check DLL dependencies and bitness.\n";
+            DEBUG(L"LoadLibraryW failed in target process. Check DLL dependencies and bitness.");
             return false;
         }
 
@@ -280,8 +280,8 @@ namespace
     {
         const std::filesystem::path dllPath = DefaultDllPath();
 
-        std::wcout << L"Watching for " << kTargetProcessName << L". Press Ctrl+C to stop in console mode.\n";
-        std::wcout << L"Loading DLL: " << dllPath.wstring() << L"\n";
+        DEBUG(L"Watching for %s. Press Ctrl+C to stop in console mode.", kTargetProcessName);
+        DEBUG(L"Loading DLL: %s", dllPath.wstring().c_str());
 
         for (;;)
         {
@@ -303,7 +303,7 @@ namespace
             HANDLE process = OpenProcess(kTargetProcessAccess, FALSE, pid);
             if (!process)
             {
-                std::wcerr << L"OpenProcess failed for PID " << pid << L": " << FormatError(GetLastError()) << L"\n";
+                DEBUG(L"OpenProcess failed for PID %lu: %s", pid, FormatError(GetLastError()).c_str());
                 if (WaitForStop(stopEvent, kMissingProcessDelayMs))
                 {
                     return 0;
@@ -311,22 +311,22 @@ namespace
                 continue;
             }
 
-            std::wcout << L"Found " << kTargetProcessName << L" process. PID: " << pid << L"\n";
+            DEBUG(L"Found %s process. PID: %lu", kTargetProcessName, pid);
             bool loaded = true;
             if (IsDllLoaded(pid, dllPath))
             {
-                std::wcout << kHookDllName << L" is already loaded in PID " << pid << L".\n";
+                DEBUG(L"%s is already loaded in PID %lu.", kHookDllName, pid);
             }
             else
             {
                 loaded = InjectDll(process, pid, dllPath);
                 if (loaded)
                 {
-                    std::wcout << L"Injected successfully into PID " << pid << L".\n";
+                    DEBUG(L"Injected successfully into PID %lu.", pid);
                 }
                 else
                 {
-                    std::wcerr << L"Injection failed for PID " << pid << L". Retrying later.\n";
+                    DEBUG(L"Injection failed for PID %lu. Retrying later.", pid);
                 }
             }
 
@@ -340,23 +340,23 @@ namespace
                 continue;
             }
 
-            std::wcout << L"Wait for " << kTargetProcessName << L" exit or stop request.\n";
+            DEBUG(L"Wait for %s exit or stop request.", kTargetProcessName);
 
             HANDLE waitHandles[] = {stopEvent, process};
             const DWORD waitResult = WaitForMultipleObjects(ARRAYSIZE(waitHandles), waitHandles, FALSE, INFINITE);
             if (waitResult == WAIT_OBJECT_0)
             {
-                std::wcout << L"Stop requested. Watcher exits.\n";
+                DEBUG(L"Stop requested. Watcher exits.");
                 CloseHandle(process);
                 return 0;
             }
             else if (waitResult == WAIT_OBJECT_0 + 1)
             {
-                std::wcout << kTargetProcessName << L" exit detected. Reinject in  " << kMissingProcessDelayMs / 1000 << L" seconds.\n";
+                DEBUG(L"%s exit detected. Reinject in %lu seconds.", kTargetProcessName, kMissingProcessDelayMs / 1000);
             }
             else
             {
-                std::wcerr << L"WaitForMultipleObjects failed: " << FormatError(GetLastError()) << L"\n";
+                DEBUG(L"WaitForMultipleObjects failed: %s", FormatError(GetLastError()).c_str());
             }
 
             CloseHandle(process);
@@ -458,7 +458,7 @@ namespace
 
         if (!StartServiceCtrlDispatcherW(serviceTable))
         {
-            std::wcerr << L"StartServiceCtrlDispatcherW failed: " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"StartServiceCtrlDispatcherW failed: %s", FormatError(GetLastError()).c_str());
             return 1;
         }
 
@@ -493,7 +493,7 @@ namespace
         g_consoleStopEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
         if (!g_consoleStopEvent)
         {
-            std::wcerr << L"CreateEventW failed: " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"CreateEventW failed: %s", FormatError(GetLastError()).c_str());
             return 1;
         }
 
@@ -521,7 +521,7 @@ namespace
                     sizeof(status),
                     &bytesNeeded))
             {
-                std::wcerr << L"QueryServiceStatusEx failed: " << FormatError(GetLastError()) << L"\n";
+                DEBUG(L"QueryServiceStatusEx failed: %s", FormatError(GetLastError()).c_str());
                 return false;
             }
 
@@ -541,12 +541,12 @@ namespace
 
     bool RestartTargetService()
     {
-        std::wcout << L"Restarting " << kTargetServiceName << L" service.\n";
+        DEBUG(L"Restarting %s service.", kTargetServiceName);
 
         SC_HANDLE manager = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
         if (!manager)
         {
-            std::wcerr << L"OpenSCManagerW failed: " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"OpenSCManagerW failed: %s", FormatError(GetLastError()).c_str());
             return false;
         }
 
@@ -556,7 +556,7 @@ namespace
             SERVICE_START | SERVICE_STOP | SERVICE_QUERY_STATUS);
         if (!service)
         {
-            std::wcerr << L"OpenServiceW failed for " << kTargetServiceName << L": " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"OpenServiceW failed for %s: %s", kTargetServiceName, FormatError(GetLastError()).c_str());
             CloseServiceHandle(manager);
             return false;
         }
@@ -570,7 +570,7 @@ namespace
                 sizeof(status),
                 &bytesNeeded))
         {
-            std::wcerr << L"QueryServiceStatusEx failed for " << kTargetServiceName << L": " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"QueryServiceStatusEx failed for %s: %s", kTargetServiceName, FormatError(GetLastError()).c_str());
             CloseServiceHandle(service);
             CloseServiceHandle(manager);
             return false;
@@ -581,7 +581,7 @@ namespace
             SERVICE_STATUS stopStatus = {};
             if (!ControlService(service, SERVICE_CONTROL_STOP, &stopStatus) && GetLastError() != ERROR_SERVICE_NOT_ACTIVE)
             {
-                std::wcerr << L"ControlService stop failed for " << kTargetServiceName << L": " << FormatError(GetLastError()) << L"\n";
+                DEBUG(L"ControlService stop failed for %s: %s", kTargetServiceName, FormatError(GetLastError()).c_str());
                 CloseServiceHandle(service);
                 CloseServiceHandle(manager);
                 return false;
@@ -589,7 +589,7 @@ namespace
 
             if (!WaitForServiceState(service, SERVICE_STOPPED, kTargetServiceRestartTimeoutMs))
             {
-                std::wcerr << kTargetServiceName << L" did not stop in time.\n";
+                DEBUG(L"%s did not stop in time.", kTargetServiceName);
                 CloseServiceHandle(service);
                 CloseServiceHandle(manager);
                 return false;
@@ -598,14 +598,14 @@ namespace
 
         if (!StartServiceW(service, 0, nullptr) && GetLastError() != ERROR_SERVICE_ALREADY_RUNNING)
         {
-            std::wcerr << L"StartServiceW failed for " << kTargetServiceName << L": " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"StartServiceW failed for %s: %s", kTargetServiceName, FormatError(GetLastError()).c_str());
             CloseServiceHandle(service);
             CloseServiceHandle(manager);
             return false;
         }
 
         const bool running = WaitForServiceState(service, SERVICE_RUNNING, kTargetServiceRestartTimeoutMs);
-        std::wcout << (running ? L"ASUS Optimization restarted.\n" : L"ASUS Optimization restart is still pending.\n");
+        DEBUG(running ? L"ASUS Optimization restarted." : L"ASUS Optimization restart is still pending.");
 
         CloseServiceHandle(service);
         CloseServiceHandle(manager);
@@ -617,7 +617,7 @@ namespace
         const std::filesystem::path exePath = CurrentExecutablePath();
         if (exePath.empty())
         {
-            std::wcerr << L"Could not resolve executable path.\n";
+            DEBUG(L"Could not resolve executable path.");
             return 1;
         }
 
@@ -625,7 +625,7 @@ namespace
         SC_HANDLE manager = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CREATE_SERVICE);
         if (!manager)
         {
-            std::wcerr << L"OpenSCManagerW failed: " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"OpenSCManagerW failed: %s", FormatError(GetLastError()).c_str());
             return 1;
         }
 
@@ -649,12 +649,12 @@ namespace
             const DWORD error = GetLastError();
             if (error == ERROR_SERVICE_EXISTS || error == ERROR_DUP_NAME)
             {
-                std::wcout << L"Service " << kServiceName << L" is already installed.\n";
+                DEBUG(L"Service %s is already installed.", kServiceName);
                 CloseServiceHandle(manager);
                 return 0;
             }
 
-            std::wcerr << L"CreateServiceW failed: " << FormatError(error) << L"\n";
+            DEBUG(L"CreateServiceW failed: %s", FormatError(error).c_str());
             CloseServiceHandle(manager);
             return 1;
         }
@@ -663,7 +663,7 @@ namespace
         description.lpDescription = const_cast<LPWSTR>(kServiceDescription);
         ChangeServiceConfig2W(service, SERVICE_CONFIG_DESCRIPTION, &description);
 
-        std::wcout << L"Installed service " << kServiceName << L".\n";
+        DEBUG(L"Installed service %s.", kServiceName);
         CloseServiceHandle(service);
         CloseServiceHandle(manager);
         return StartInstalledService();
@@ -674,28 +674,28 @@ namespace
         SC_HANDLE manager = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
         if (!manager)
         {
-            std::wcerr << L"OpenSCManagerW failed: " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"OpenSCManagerW failed: %s", FormatError(GetLastError()).c_str());
             return 1;
         }
 
         SC_HANDLE service = OpenServiceW(manager, kServiceName, SERVICE_START | SERVICE_QUERY_STATUS);
         if (!service)
         {
-            std::wcerr << L"OpenServiceW failed: " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"OpenServiceW failed: %s", FormatError(GetLastError()).c_str());
             CloseServiceHandle(manager);
             return 1;
         }
 
         if (!StartServiceW(service, 0, nullptr) && GetLastError() != ERROR_SERVICE_ALREADY_RUNNING)
         {
-            std::wcerr << L"StartServiceW failed: " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"StartServiceW failed: %s", FormatError(GetLastError()).c_str());
             CloseServiceHandle(service);
             CloseServiceHandle(manager);
             return 1;
         }
 
         const bool started = WaitForServiceState(service, SERVICE_RUNNING, 30000);
-        std::wcout << (started ? L"Service started.\n" : L"Service start is still pending.\n");
+        DEBUG(started ? L"Service started." : L"Service start is still pending.");
 
         CloseServiceHandle(service);
         CloseServiceHandle(manager);
@@ -707,14 +707,14 @@ namespace
         SC_HANDLE manager = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
         if (!manager)
         {
-            std::wcerr << L"OpenSCManagerW failed: " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"OpenSCManagerW failed: %s", FormatError(GetLastError()).c_str());
             return 1;
         }
 
         SC_HANDLE service = OpenServiceW(manager, kServiceName, SERVICE_STOP | SERVICE_QUERY_STATUS);
         if (!service)
         {
-            std::wcerr << L"OpenServiceW failed: " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"OpenServiceW failed: %s", FormatError(GetLastError()).c_str());
             CloseServiceHandle(manager);
             return 1;
         }
@@ -729,7 +729,7 @@ namespace
                 &bytesNeeded) &&
             status.dwCurrentState == SERVICE_STOPPED)
         {
-            std::wcout << L"Service is already stopped.\n";
+            DEBUG(L"Service is already stopped.");
             CloseServiceHandle(service);
             CloseServiceHandle(manager);
             return 0;
@@ -738,14 +738,14 @@ namespace
         SERVICE_STATUS serviceStatus = {};
         if (!ControlService(service, SERVICE_CONTROL_STOP, &serviceStatus) && GetLastError() != ERROR_SERVICE_NOT_ACTIVE)
         {
-            std::wcerr << L"ControlService stop failed: " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"ControlService stop failed: %s", FormatError(GetLastError()).c_str());
             CloseServiceHandle(service);
             CloseServiceHandle(manager);
             return 1;
         }
 
         const bool stopped = WaitForServiceState(service, SERVICE_STOPPED, kServiceStopWaitHintMs + 5000);
-        std::wcout << (stopped ? L"Service stopped.\n" : L"Service stop timed out.\n");
+        DEBUG(stopped ? L"Service stopped." : L"Service stop timed out.");
 
         CloseServiceHandle(service);
         CloseServiceHandle(manager);
@@ -759,7 +759,7 @@ namespace
         SC_HANDLE manager = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
         if (!manager)
         {
-            std::wcerr << L"OpenSCManagerW failed: " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"OpenSCManagerW failed: %s", FormatError(GetLastError()).c_str());
             return 1;
         }
 
@@ -769,25 +769,25 @@ namespace
             const DWORD error = GetLastError();
             if (error == ERROR_SERVICE_DOES_NOT_EXIST)
             {
-                std::wcout << L"Service " << kServiceName << L" is not installed.\n";
+                DEBUG(L"Service %s is not installed.", kServiceName);
                 CloseServiceHandle(manager);
                 return 0;
             }
 
-            std::wcerr << L"OpenServiceW failed: " << FormatError(error) << L"\n";
+            DEBUG(L"OpenServiceW failed: %s", FormatError(error).c_str());
             CloseServiceHandle(manager);
             return 1;
         }
 
         if (!DeleteService(service))
         {
-            std::wcerr << L"DeleteService failed: " << FormatError(GetLastError()) << L"\n";
+            DEBUG(L"DeleteService failed: %s", FormatError(GetLastError()).c_str());
             CloseServiceHandle(service);
             CloseServiceHandle(manager);
             return 1;
         }
 
-        std::wcout << L"Uninstalled service " << kServiceName << L".\n";
+        DEBUG(L"Uninstalled service %s.", kServiceName);
         CloseServiceHandle(service);
         CloseServiceHandle(manager);
         return 0;
@@ -817,16 +817,15 @@ namespace
 
     void PrintUsage()
     {
-        std::wcout
-            << L"ACSEFilterInjector commands:\n"
-            << L"  --debug, --console   Run foreground watcher for debugging.\n"
-            << L"  --install            Install the Windows service.\n"
-            << L"  --start              Start the installed service.\n"
-            << L"  --stop               Stop the installed service and restart ASUS Optimization.\n"
-            << L"  --uninstall          Stop and remove the Windows service.\n"
-            << L"  --enable             Install service as autorun if needed and start it.\n"
-            << L"  --disable            Stop service if running and remove it.\n"
-            << L"  --service            Entry point used by the Service Control Manager.\n";
+        DEBUG(L"ACSEFilterInjector commands:");
+        DEBUG(L"  --debug, --console   Run foreground watcher for debugging.");
+        DEBUG(L"  --install            Install the Windows service.");
+        DEBUG(L"  --start              Start the installed service.");
+        DEBUG(L"  --stop               Stop the installed service and restart ASUS Optimization.");
+        DEBUG(L"  --uninstall          Stop and remove the Windows service.");
+        DEBUG(L"  --enable             Install service as autorun if needed and start it.");
+        DEBUG(L"  --disable            Stop service if running and remove it.");
+        DEBUG(L"  --service            Entry point used by the Service Control Manager.");
     }
 
 } // namespace
@@ -890,7 +889,7 @@ int RunFromArgs(int argc, wchar_t **argv)
         return 0;
     }
 
-    std::wcerr << L"Unknown command: " << argv[1] << L"\n";
+    DEBUG(L"Unknown command: %s", argv[1]);
     PrintUsage();
     return 1;
 }

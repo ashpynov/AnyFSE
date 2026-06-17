@@ -305,7 +305,7 @@ namespace AnyFSE
         std::wstring step = (bSuccess ? L"\x2713 ": L"\x2715 ") + m_progressStatus.back();
         m_progressStatus.pop_back();
         SetCurrentProgress(step);
-
+        Sleep(1000);
         if (!bSuccess)
         {
             throw Logging::Logger::APIError();

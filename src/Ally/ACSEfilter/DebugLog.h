@@ -1,6 +1,6 @@
 #pragma once
 
-#ifndef NDEBUG
+#if 1
 
 #include <windows.h>
 #include <strsafe.h>
