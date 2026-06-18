@@ -1,6 +1,6 @@
 {
   "language": "Français",
-  "updaterWelcomeCaption": "Bienvenue dans l'outil de mise à jour AnyFSE",
+  "updaterWelcomeCaption": "Mise à jour AnyFSE",
   "updaterWelcomeDescription": "Mise à jour d'AnyFSE vers %ls.\n\nCliquez sur Mettre à jour, ou Annuler pour quitter.",
   "cancelBtn": "Annuler",
   "updateBtn": "Mettre à jour",
@@ -24,7 +24,7 @@
   "configureBtn": "Configurer",
   "closeBtn": "Fermer",
   "uninstallerInsufficientPermissionsCaption": "Permissions insuffisantes",
-  "uninstallerInsufficientPermissionsDescription": "Des privilèges élevés sont nécessaires pour supprimer AnyFSE, car le programme de désinstallation supprime la tâche de démarrage automatique planifiée.\n\nVeuillez lancer le programme de désinstallation en tant qu'administrateur et autoriser l'invite du contrôle de compte d'utilisateur (UAC).",
+  "uninstallerInsufficientPermissionsDescription": "Des privilèges élevés sont nécessaires pour supprimer AnyFSE.\n\nVeuillez lancer le programme de désinstallation en tant qu'administrateur et autoriser l'invite du contrôle de compte d'utilisateur (UAC).",
   "uninstallationErrorCaption": "Erreur de désinstallation",
   "jumpListEnterFse": "Passer en mode plein écran",
   "jumpListSettings": "Paramètres",

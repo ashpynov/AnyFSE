@@ -49,6 +49,32 @@ namespace AnyFSE
     namespace fs = std::filesystem;
     static Logger log = LogManager::GetLogger("Installer");
 
+    namespace
+    {
+        bool ExtractZipArchive(const std::wstring &zipArchive, const std::wstring &path)
+        {
+            SHELLEXECUTEINFOW sei = {sizeof(sei)};
+            sei.fMask = SEE_MASK_NOCLOSEPROCESS;
+            sei.lpFile = L"tar";
+
+            std::wstring parameters = L"-xf \"" + zipArchive + L"\" -C \"" + path + L"\"";
+            sei.lpParameters = parameters.c_str();
+            sei.nShow = SW_HIDE;
+
+            BOOL success = ShellExecuteExW(&sei);
+            if (success)
+            {
+                WaitForSingleObject(sei.hProcess, INFINITE);
+                DWORD exitCode;
+                GetExitCodeProcess(sei.hProcess, &exitCode);
+                success = (exitCode == 0);
+                CloseHandle(sei.hProcess);
+            }
+
+            return success == TRUE;
+        }
+    }
+
     std::list<HWND> AppInstaller::CreatePage()
     {
         RECT rc;
@@ -305,7 +331,6 @@ namespace AnyFSE
         std::wstring step = (bSuccess ? L"\x2713 ": L"\x2715 ") + m_progressStatus.back();
         m_progressStatus.pop_back();
         SetCurrentProgress(step);
-        Sleep(1000);
         if (!bSuccess)
         {
             throw Logging::Logger::APIError();
@@ -394,32 +419,15 @@ namespace AnyFSE
         }
 
         // Write resource to temporary ZIP file
-        std::wstring zipArchive = path + L"\\AnyFSE." + Unicode::to_wstring(APP_VERSION) + L".zip";
+        std::wstring zipArchive = path + L"\\" + std::wstring(AppConstants::ReleaseZipPrefix) + Unicode::to_wstring(APP_VERSION) + L".zip";
 
         std::ofstream tempStream(zipArchive, std::ios::binary);
         tempStream.write(static_cast<const char *>(zipData), zipSize);
         tempStream.close();
 
 
-        // Use Windows built-in tar to extract
-        SHELLEXECUTEINFOW sei = {sizeof(sei)};
-        sei.fMask = SEE_MASK_NOCLOSEPROCESS;
-        sei.lpFile = L"tar";
-
-        std::wstring parameters = L"-xf \"" + zipArchive + L"\" -C \"" + path + L"\"";
-        sei.lpParameters = parameters.c_str();
-        sei.nShow = SW_HIDE;
-
-        BOOL success = ShellExecuteExW(&sei);
-        if (success)
-        {
-            WaitForSingleObject(sei.hProcess, INFINITE);
-            DWORD exitCode;
-            GetExitCodeProcess(sei.hProcess, &exitCode);
-            success = (exitCode == 0);
-            CloseHandle(sei.hProcess);
-        }
-        else
+        bool success = ExtractZipArchive(zipArchive, path);
+        if (!success)
         {
             throw std::exception("Instalation file is corrupted. Failed unpacking.");
         }
@@ -439,32 +447,36 @@ namespace AnyFSE
         }
         const std::wstring rootPath = std::wstring(AppConstants::GitHubReleaseRoot) + Unicode::to_wstring(APP_VERSION);
         const std::wstring rootPathAlt = std::wstring(AppConstants::CodebergReleaseRoot) + Unicode::to_wstring(APP_VERSION);
-        std::list<std::wstring> files;
-        files.push_back(std::wstring(L"/") + AppConstants::PublisherCertFile);
-        files.push_back(std::wstring(L"/") + AppConstants::AppxFilePrefix + Unicode::to_wstring(APP_VERSION) + L".appx");
-        files.push_back(std::wstring(L"/") + AppConstants::AppxFilePrefix + Unicode::to_wstring(APP_VERSION) + L".identity.appx");
+        const std::wstring zipName = std::wstring(AppConstants::ReleaseZipPrefix) + Unicode::to_wstring(APP_VERSION) + L".zip";
+        const std::wstring zipArchive = path + L"\\" + zipName;
 
-        for (std::wstring file : files)
+        HRESULT hr = URLDownloadToFileW(
+            NULL,
+            (rootPath + L"/" + zipName).c_str(),
+            zipArchive.c_str(),
+            0,
+            NULL);
+
+        if (FAILED(hr))
         {
-            HRESULT hr = URLDownloadToFileW(
+            hr = URLDownloadToFileW(
                 NULL,
-                (rootPath + file).c_str(),
-                (path + file).c_str(),
-                0, NULL);
+                (rootPathAlt + L"/" + zipName).c_str(),
+                zipArchive.c_str(),
+                0,
+                NULL);
+        }
 
-            if (FAILED(hr))
-            {
-                hr = URLDownloadToFileW(
-                NULL,
-                (rootPathAlt + file).c_str(),
-                (path + file).c_str(),
-                0, NULL);
-            }
+        if (FAILED(hr))
+        {
+            throw std::runtime_error("Download failed");
+        }
 
-            if (FAILED(hr))
-            {
-                throw std::runtime_error("Download failed");
-            }
+        bool success = ExtractZipArchive(zipArchive, path);
+        DeleteFile(zipArchive.c_str());
+        if (!success)
+        {
+            throw std::runtime_error("Download failed unpacking");
         }
 
         return true;

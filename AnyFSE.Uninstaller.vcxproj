@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project InitialTargets="BeforeBuild"
-    DefaultTargets="Build" ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    DefaultTargets="BuildSigned" ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
@@ -15,12 +15,18 @@
     <ProjectName>Uninstaller</ProjectName>
     <ProjectGuid>{A3F1C4B2-8D9E-4F67-92A1-5B3C8D7E6F4A}</ProjectGuid>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
     <RootNamespace>AnyFSE</RootNamespace>
     <AssemblyDescription>AnyFSE Uninstaller</AssemblyDescription>
+    <WindowsSdkToolsPath>$(WindowsSdkDir)bin\$(WindowsTargetPlatformVersion)\x64</WindowsSdkToolsPath>
+    <SignToolExe>$(WindowsSdkToolsPath)\signtool.exe</SignToolExe>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="AnyFSE.Version.props" />
+  <PropertyGroup>
+    <AssemblyProduct>AnyFSE Uninstaller</AssemblyProduct>
+    <AssemblyDescription>AnyFSE Uninstaller</AssemblyDescription>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -43,6 +49,7 @@
     <OutDir>$(SolutionDir)build\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)\build\objs\$(TargetName)\$(Configuration)\</IntDir>
     <TargetName>unins000</TargetName>
+    <OutExe>$(OutDir)$(TargetName).exe</OutExe>
     <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
   </PropertyGroup>
 
@@ -84,9 +91,11 @@
       <AdditionalIncludeDirectories>$(ProjectDir)src</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <Optimization>MinSpace</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
+      <LinkIncremental>false</LinkIncremental>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
@@ -119,5 +128,25 @@
       <AdditionalOptions>/v /I&quot;$(ProjectDir)src\Uninstaller&quot;/I&quot;$(ProjectDir)src&quot;</AdditionalOptions>
     </ResourceCompile>
   </ItemGroup>
+
+    <!-- Target: Get certificate thumbprint by name -->
+    <Target Name="GetCertificateThumbprint">
+        <Message Text="Finding certificate for: $(AssemblyCompany)" Importance="high" />
+
+        <Exec Command="powershell -NoProfile -Command &quot;try { $cert = Get-ChildItem -Path 'Cert:\CurrentUser\My' | Where-Object { $_.Subject -like '*$(AssemblyCompany)*' } | Select-Object -First 1; if (-not $cert) { throw 'Certificate not found' }; $cert.Thumbprint } catch { Write-Error $_.Exception.Message; exit 1 }&quot;" ContinueOnError="false" ConsoleToMSBuild="true">
+            <Output TaskParameter="ConsoleOutput" PropertyName="CertificateThumbprint" />
+        </Exec>
+
+        <Message Text="Found certificate thumbprint: $(CertificateThumbprint)" Importance="high" />
+    </Target>
+
+    <!-- Target: Sign the EXE -->
+    <Target Name="BuildSigned" DependsOnTargets="Build;GetCertificateThumbprint">
+        <Message Text="Signing EXE with certificate: $(CertificateThumbprint)" Importance="high" />
+
+        <Exec Command="&quot;$(SignToolExe)&quot; sign /sha1 &quot;$(CertificateThumbprint)&quot; /fd SHA256 /a &quot;$(OutExe)&quot;" WorkingDirectory="$(MSBuildProjectDirectory)" />
+
+        <Message Text="EXE signed successfully: $(OutExe)" Importance="high" />
+    </Target>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

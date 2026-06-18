@@ -24,7 +24,7 @@
   "configureBtn": "Configure",
   "closeBtn": "Close",
   "uninstallerInsufficientPermissionsCaption": "Insufficient permissions",
-  "uninstallerInsufficientPermissionsDescription": "Elevated privileges are required to remove AnyFSE because the uninstaller deletes the scheduled autorun task.\n\nPlease run the uninstaller as Administrator and approve the User Account Control (UAC) prompt.",
+  "uninstallerInsufficientPermissionsDescription": "Elevated privileges are required to remove AnyFSE.\n\nPlease run the uninstaller as Administrator and approve the User Account Control (UAC) prompt.",
   "uninstallationErrorCaption": "Uninstallation Error",
   "jumpListEnterFse": "Enter full screen experience",
   "jumpListSettings": "Settings",

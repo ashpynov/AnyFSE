@@ -57,50 +57,46 @@ In case if ASUS ROG Ally buttons remaping is configured it will start second ins
 
 ### How to install
 
-Just Launch AnyFSE.Installer.exe. Wait few seconds to complete and Configure.
+Launch `AnyFSE.Installer.exe`, wait for it to finish, then configure AnyFSE from the Start menu entry.
 
-You launcher should be installed additionally.
+Your launcher should be installed additionally.
 
 Please note: that AnyFSE work only when it is selected as home application in Settings->Gaming->Full screen experience.
-
-> [!IMPORTANT]
-> During installation of the package is should be signed. I have not ability to got code signin certificate from trusted authorities. So I had to use self-signed certificate during instalation.
-> Installer will add it to trusted authorities section automatically and then will remove it.
-> If something goes wrong and installation process was not complete, feel free to check and delete certificate manually.
-> 1. Run Certlm.msc.
-> 2. Open Trusted Root Certification Authorities -> Certificates
-> 3. Find "DDCC7751-898D-4BC9-B80C-4AA73E5D5762" (Artem Shpynov Code signin) certificate -> press right mouse button -> Delete
-
-### Manual installation
-
-In case if your antivirus still blames on AnyFSE.Installer.exe file - you may install package manualy. (Same action as installer do):
-
-1. Uninstall AnyFSE pre-0.90 version to avoid conflicting.
-2. Install Artem Shpynov Root certificate:
-- Download certificate: [here](https://github.com/ashpynov/AnyFSE/releases/download/v0.90.12/Artem.Shpynov.cer) and open it.
-- Press 'Install certificate',
-- Select store location 'Local Machine',
-- Press 'Next'
-- Allow changes
-- Select 'Place all certificates in the folowing store'
-- Press 'Browse' and select 'Trusted Root Certificate Authorities' and press OK and then Next.
-- Certificate installation is Done.
-3. Allow installation of packages in developer mode:
-- Open Settings -> System -> Advanced and turn on 'Developer Mode'
-- You can disable it after installation
-4. Now you can dowload and install appx package
-5. After installing you may turn off developer mode and uninstall certificate "DDCC7751-898D-4BC9-B80C-4AA73E5D5762"
 
 
 ### How to launch and configure
 
 In start menu find AnyFSE application. Press right mouse key and choose 'Configure' task.
 
-### How to uninstall it
+### Cleanup if uninstall was broken
 
-Open Settings -> Apps -> Instaled apps.
+If uninstall failed or left files behind, clean up the remaining pieces manually.
+Run these commands from an elevated Command Prompt.
 
-Find AnyFSE and select "Uninstall"
+Remove the identity package:
+
+```cmd
+powershell -Command "Get-AppxPackage *AnyFSE* | Remove-AppxPackage"
+```
+
+Remove the ACSE Filter injector service:
+
+```cmd
+sc stop ACSEFilterInjector
+sc delete ACSEFilterInjector
+```
+
+Delete the installation folder:
+
+```cmd
+rmdir /s /q "%ProgramFiles%\AnyFSE"
+```
+
+Remove the uninstall registration from the registry:
+
+```cmd
+reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\AnyFSE" /f
+```
 
 
 ## Splash Videos
@@ -118,6 +114,3 @@ You can specify custom position of loop via filename. To do this - name should c
 - 'm' or 'M' - mute video during loop
 - '4000' and '5000' position in milliseconds from start of video to rewind to during loop.
 
-# Limitations
-
-Also application is require singned msix package. Currently I use self signed certifacate to be installed into trusted root authorities certificate storage during installation phase.

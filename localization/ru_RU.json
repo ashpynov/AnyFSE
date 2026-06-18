@@ -1,6 +1,6 @@
 {
   "language": "Русский",
-  "updaterWelcomeCaption": "Добро пожаловать в программу обновления AnyFSE",
+  "updaterWelcomeCaption": "Программа обновления AnyFSE",
   "updaterWelcomeDescription": "Программа обновит AnyFSE до версии %ls на этом компьютере.\n\nНажмите \"Обновить\", чтобы продолжить, или \"Отмена\" для выхода.",
   "cancelBtn": "Отмена",
   "updateBtn": "Обновить",
@@ -24,7 +24,7 @@
   "configureBtn": "Настроить",
   "closeBtn": "Закрыть",
   "uninstallerInsufficientPermissionsCaption": "Недостаточно прав",
-  "uninstallerInsufficientPermissionsDescription": "Для удаления AnyFSE требуются повышенные привилегии, так как программа удаления удаляет запланированную задачу автозапуска.\n\nЗапустите программу удаления от имени администратора и подтвердите запрос контроля учётных записей (UAC).",
+  "uninstallerInsufficientPermissionsDescription": "Для удаления AnyFSE требуются повышенные привилегии.\n\nЗапустите программу удаления от имени администратора и подтвердите запрос контроля учётных записей (UAC).",
   "uninstallationErrorCaption": "Ошибка удаления",
   "jumpListEnterFse": "Перейти в режим Xbox",
   "jumpListSettings": "Настройки",

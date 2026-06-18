@@ -39,6 +39,7 @@
 #include "Tools/Window.hpp"
 #include "Tools/Process.hpp"
 #include "Tools/Paths.hpp"
+#include "Tools/Packages.hpp"
 #include "Tools/Localization.hpp"
 #include "AppInstaller/Admin.hpp"
 #include "App/GamingExperience.hpp"
@@ -73,7 +74,7 @@ namespace AnyFSE
 
     INT_PTR AppInstaller::Show(HINSTANCE hInstance, bool bAutoUpdate)
     {
-        m_isUpdate = bAutoUpdate;
+        m_isUpdate = bAutoUpdate || Tools::Packages::IsPackageInstalled(AppConstants::PackageFamilyName);
         Tools::Localization::InitializeFromLocales();
 
         if (bAutoUpdate)
