@@ -70,6 +70,17 @@
             "cwd": "${workspaceFolder}/build/Debug",
             "environment": [],
             "preLaunchTask": "Build AnyFSE.Installer Debug"
+        },
+        {
+            "name": "Debug Uninstaller",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "unins000.exe",
+            "args": ["/s", "/u"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bin/Debug",
+            "environment": [],
+            "preLaunchTask": "Build AnyFSE.Uninstaller Debug"
         }
     ]
 }

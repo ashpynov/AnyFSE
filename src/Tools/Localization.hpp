@@ -15,13 +15,14 @@ namespace AnyFSE::Tools::Localization
         std::wstring language;
     };
 
+    ResourceLocales LoadResourceLocales();
     bool Initialize();
-    bool InitializeFromLocales(const ResourceLocales &resourceLocales);
+    bool InitializeFromLocales();
     void SetPreferredLocale(const std::wstring &localeCode);
     std::wstring GetPreferredLocale();
     std::wstring GetCurrentLocale();
     std::vector<LocaleInfo> EnumerateLocales();
-    std::vector<LocaleInfo> EnumerateLocales(const ResourceLocales &resourceLocales);
+    std::vector<LocaleInfo> EnumerateResourceLocales();
     std::wstring Translate(const std::wstring &key);
     std::wstring TranslateF(const wchar_t *key, ...);
     std::wstring VTranslateF(const wchar_t *key, va_list args);

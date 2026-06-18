@@ -19,12 +19,59 @@
 
 namespace AnyFSE::Tools::Localization
 {
+    bool Initialize();
+    std::vector<LocaleInfo> EnumerateLocales();
+
     namespace
     {
         std::map<std::wstring, std::wstring> g_dictionary;
         std::mutex g_lock;
         std::wstring g_forcedLocale;
         std::wstring g_currentLocale = L"en_US";
+
+        BOOL CALLBACK EnumLocalizationResNameProc(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam)
+        {
+            auto *locales = reinterpret_cast<ResourceLocales *>(lParam);
+            if (!locales || IS_INTRESOURCE(lpszName))
+            {
+                return TRUE;
+            }
+
+            HRSRC hResource = FindResourceW(hModule, lpszName, lpszType);
+            if (!hResource)
+            {
+                return TRUE;
+            }
+
+            HGLOBAL hGlobal = LoadResource(hModule, hResource);
+            if (!hGlobal)
+            {
+                return TRUE;
+            }
+
+            DWORD size = SizeofResource(hModule, hResource);
+            const void *ptr = LockResource(hGlobal);
+            if (!ptr || !size)
+            {
+                return TRUE;
+            }
+
+            std::wstring code = lpszName;
+            if (code.size() >= 2 && code.front() == L'"' && code.back() == L'"')
+            {
+                code = code.substr(1, code.size() - 2);
+            }
+            std::transform(code.begin(), code.end(), code.begin(), towupper);
+            (*locales)[code] = std::string(static_cast<const char *>(ptr), static_cast<size_t>(size));
+            return TRUE;
+        }
+
+        ResourceLocales LoadResourceLocalesFromModule(HMODULE hModule)
+        {
+            ResourceLocales locales;
+            EnumResourceNamesW(hModule, L"LOCALIZATION", EnumLocalizationResNameProc, reinterpret_cast<LONG_PTR>(&locales));
+            return locales;
+        }
 
         bool ReadFileUtf8(const std::wstring &filePath, std::string &content)
         {
@@ -139,6 +186,97 @@ namespace AnyFSE::Tools::Localization
             return true;
         }
 
+        bool InitializeFromResourceLocales(const ResourceLocales &resourceLocales)
+        {
+            if (resourceLocales.empty())
+            {
+                return Initialize();
+            }
+
+            std::lock_guard<std::mutex> guard(g_lock);
+            g_dictionary.clear();
+            g_currentLocale = L"en_US";
+
+            MergeLocaleFromMap(resourceLocales, L"en_US");
+
+            std::wstring localeFileName;
+            if (!g_forcedLocale.empty())
+            {
+                localeFileName = g_forcedLocale;
+            }
+            else
+            {
+                wchar_t localeName[LOCALE_NAME_MAX_LENGTH] = {0};
+                if (GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH) <= 0)
+                {
+                    return true;
+                }
+                localeFileName = localeName;
+                for (wchar_t &ch : localeFileName)
+                {
+                    if (ch == L'-')
+                    {
+                        ch = L'_';
+                    }
+                }
+            }
+
+            if (!localeFileName.empty() && _wcsicmp(localeFileName.c_str(), L"en_US") != 0)
+            {
+                if (MergeLocaleFromMap(resourceLocales, localeFileName))
+                {
+                    g_currentLocale = localeFileName;
+                }
+            }
+
+            return true;
+        }
+
+        std::vector<LocaleInfo> EnumerateResourceLocales(const ResourceLocales &resourceLocales)
+        {
+            if (resourceLocales.empty())
+            {
+                return EnumerateLocales();
+            }
+
+            std::vector<LocaleInfo> result;
+            std::set<std::wstring> seen;
+
+            for (const auto &[code, content] : resourceLocales)
+            {
+                std::wstring upperCode = code;
+                std::transform(upperCode.begin(), upperCode.end(), upperCode.begin(), towupper);
+
+                if (seen.find(upperCode) != seen.end())
+                {
+                    continue;
+                }
+
+                LocaleInfo info;
+                info.code = upperCode;
+                info.language = upperCode;
+                std::map<std::wstring, std::wstring> parsed;
+                if (LoadLanguageContentToMap(content, parsed))
+                {
+                    const auto it = parsed.find(L"language");
+                    if (it != parsed.end() && !it->second.empty())
+                    {
+                        info.language = it->second;
+                    }
+                }
+
+                seen.insert(info.code);
+                result.push_back(info);
+            }
+
+            std::sort(result.begin(), result.end(), [](const LocaleInfo &a, const LocaleInfo &b)
+            {
+                return _wcsicmp(a.language.c_str(), b.language.c_str()) < 0;
+            });
+
+            return result;
+        }
+
     }
 
     bool Initialize()
@@ -197,67 +335,14 @@ namespace AnyFSE::Tools::Localization
         return true;
     }
 
-    bool InitializeFromLocales(const ResourceLocales &resourceLocales)
+    bool InitializeFromLocales()
     {
-        if (resourceLocales.empty())
-        {
-            return Initialize();
-        }
-        std::lock_guard<std::mutex> guard(g_lock);
-        g_dictionary.clear();
-        g_currentLocale = L"en_US";
-
-        MergeLocaleFromMap(resourceLocales, L"en_US");
-
-        std::wstring localeFileName;
-        if (!g_forcedLocale.empty())
-        {
-            localeFileName = g_forcedLocale;
-        }
-        else
-        {
-            wchar_t localeName[LOCALE_NAME_MAX_LENGTH] = {0};
-            if (GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH) <= 0)
-            {
-                return true;
-            }
-            localeFileName = localeName;
-            for (wchar_t &ch : localeFileName)
-            {
-                if (ch == L'-')
-                {
-                    ch = L'_';
-                }
-            }
-        }
-
-        if (!localeFileName.empty() && _wcsicmp(localeFileName.c_str(), L"en_US") != 0)
-        {
-            if (MergeLocaleFromMap(resourceLocales, localeFileName))
-            {
-                g_currentLocale = localeFileName;
-            }
-        }
-
-        return true;
+        return InitializeFromResourceLocales(LoadResourceLocales());
     }
 
-    void SetPreferredLocale(const std::wstring &localeCode)
+    ResourceLocales LoadResourceLocales()
     {
-        std::lock_guard<std::mutex> guard(g_lock);
-        g_forcedLocale = localeCode;
-    }
-
-    std::wstring GetPreferredLocale()
-    {
-        std::lock_guard<std::mutex> guard(g_lock);
-        return g_forcedLocale;
-    }
-
-    std::wstring GetCurrentLocale()
-    {
-        std::lock_guard<std::mutex> guard(g_lock);
-        return g_currentLocale;
+        return LoadResourceLocalesFromModule(GetModuleHandleW(NULL));
     }
 
     std::vector<LocaleInfo> EnumerateLocales()
@@ -316,50 +401,27 @@ namespace AnyFSE::Tools::Localization
         return result;
     }
 
-    std::vector<LocaleInfo> EnumerateLocales(const ResourceLocales &resourceLocales)
+    std::vector<LocaleInfo> EnumerateResourceLocales()
     {
-        if (resourceLocales.empty())
-        {
-            return EnumerateLocales();
-        }
+        return EnumerateResourceLocales(LoadResourceLocales());
+    }
 
-        std::vector<LocaleInfo> result;
-        std::set<std::wstring> seen;
+    void SetPreferredLocale(const std::wstring &localeCode)
+    {
+        std::lock_guard<std::mutex> guard(g_lock);
+        g_forcedLocale = localeCode;
+    }
 
-        for (const auto &[code, content] : resourceLocales)
-        {
-            std::wstring upperCode = code;
-            std::transform(upperCode.begin(), upperCode.end(), upperCode.begin(), towupper);
+    std::wstring GetPreferredLocale()
+    {
+        std::lock_guard<std::mutex> guard(g_lock);
+        return g_forcedLocale;
+    }
 
-            if (seen.find(upperCode) != seen.end())
-            {
-                continue;
-            }
-
-            LocaleInfo info;
-            info.code = code;
-            info.language = code;
-
-            std::map<std::wstring, std::wstring> parsed;
-            if (LoadLanguageContentToMap(content, parsed))
-            {
-                const auto it = parsed.find(L"language");
-                if (it != parsed.end() && !it->second.empty())
-                {
-                    info.language = it->second;
-                }
-            }
-
-            seen.insert(upperCode);
-            result.push_back(info);
-        }
-
-        std::sort(result.begin(), result.end(), [](const LocaleInfo &a, const LocaleInfo &b)
-        {
-            return _wcsicmp(a.language.c_str(), b.language.c_str()) < 0;
-        });
-
-        return result;
+    std::wstring GetCurrentLocale()
+    {
+        std::lock_guard<std::mutex> guard(g_lock);
+        return g_currentLocale;
     }
 
     std::wstring Translate(const std::wstring &key)

@@ -150,6 +150,7 @@
     <ClCompile Include="src\AppInstaller\AppInstaller_Page.cpp" />
     <ClCompile Include="src\AppInstaller\AppInstaller_Tools.cpp" />
     <ClCompile Include="src\AppInstaller\Admin.cpp" />
+    <ClCompile Include="src\AppInstaller\Certificate.cpp" />
     <ClCompile Include="src\FluentDesign\Theme.cpp" />
     <ClCompile Include="src\FluentDesign\FluentControl.cpp" />
     <ClCompile Include="src\FluentDesign\Align.cpp" />

@@ -154,12 +154,8 @@ namespace AnyFSE
             void PopulateLanguageMenu();
             void OnSelectLanguage(const std::wstring &localeCode);
             void UpdateDialogTitle();
-            void LoadResourceLocales();
-
-            Tools::Localization::ResourceLocales m_resourceLocales;
 
             bool IsConfigured();
-            void CollectPostMortemInfo(const std::wstring &path);
             void ShowErrorPage(const std::wstring &caption, const std::wstring &text, const std::wstring &icon = L"");
 
             void OnInitDialog(HWND hwnd);
@@ -188,14 +184,11 @@ namespace AnyFSE
 
             // Tools
             bool IsDeveloperModeEnabled();
+
             void EnableDeveloperMode(bool bEnable);
-            bool IsRootCertificateInstalled(const std::wstring &commonName);
-            bool InstallRootCertificate(const std::wstring &certFilePath);
-            bool RemoveRootCertificate(const std::wstring &CN);
-            bool IsPackageInstalled(const std::wstring &packageId);
-            bool InstallPackage(const std::wstring &packageFilePath, const std::wstring & packageFamilyName);
+
+            bool CopyFiles(const std::wstring &sourcePath, const std::wstring &destPath);
             bool RegisterUninstall();
-            bool LaunchApp(const std::wstring &packageFamilyName, const std::wstring &arguments);
             bool IsInjectorServiceRun();
             bool DisableInjectorService();
             bool EnableInjectorService();

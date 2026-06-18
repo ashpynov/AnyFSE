@@ -93,201 +93,24 @@ namespace AnyFSE
             bEnable ? 1 : 0);
     }
 
-    bool AppInstaller::IsRootCertificateInstalled(const std::wstring &commonName)
+    bool AppInstaller::CopyFiles( const std::wstring & sourcePath, const std::wstring & destPath)
     {
-        HCERTSTORE hStore = CertOpenStore(
-            CERT_STORE_PROV_SYSTEM_W,
-            0,
-            NULL,
-            CERT_SYSTEM_STORE_LOCAL_MACHINE | CERT_STORE_READONLY_FLAG,
-            L"ROOT"
-        );
-        if (!hStore)
-            return false;
+        namespace fs = std::filesystem;
 
-        PCCERT_CONTEXT pCertContext = nullptr;
-        bool found = false;
-
-        while ((pCertContext = CertFindCertificateInStore(hStore, X509_ASN_ENCODING, 0, CERT_FIND_SUBJECT_STR, commonName.c_str(), pCertContext)))
+        if (fs::exists(destPath))
         {
-            found = true; // Certificate found
-            break;
+            fs::remove_all(destPath);
         }
 
-        CertCloseStore(hStore, 0);
-        return found;
-    }
-
-    bool AppInstaller::InstallRootCertificate(const std::wstring &certFilePath)
-    {
-        HCERTSTORE hStore = CertOpenStore(
-            CERT_STORE_PROV_SYSTEM_W,
-            0,
-            NULL,
-            CERT_SYSTEM_STORE_LOCAL_MACHINE,
-            L"ROOT"
-        );
-
-        if (!hStore)
-        {
-            return false;
-        }
-
-        HANDLE hFile = CreateFile(certFilePath.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (hFile == INVALID_HANDLE_VALUE)
-        {
-            CertCloseStore(hStore, 0);
-            return false;
-        }
-
-        DWORD fileSize = GetFileSize(hFile, NULL);
-        BYTE *buffer = new BYTE[fileSize];
-        DWORD bytesRead;
-
-        if (!ReadFile(hFile, buffer, fileSize, &bytesRead, NULL))
-        {
-            CloseHandle(hFile);
-            delete[] buffer;
-            CertCloseStore(hStore, 0);
-            return false;
-        }
-
-        CloseHandle(hFile);
-
-        PCCERT_CONTEXT pCertContext = CertCreateCertificateContext(X509_ASN_ENCODING, buffer, fileSize);
-        delete[] buffer;
-
-        if (!pCertContext)
-        {
-            CertCloseStore(hStore, 0);
-            return false;
-        }
-
-        bool result = CertAddCertificateContextToStore(hStore, pCertContext, CERT_STORE_ADD_REPLACE_EXISTING, NULL);
-        CertFreeCertificateContext(pCertContext);
-        CertCloseStore(hStore, 0);
-
-        return result;
-    }
-
-    bool AppInstaller::RemoveRootCertificate(const std::wstring &publisherCN)
-    {
-        HCERTSTORE hStore = CertOpenStore(
-            CERT_STORE_PROV_SYSTEM_W,
-            0,
-            NULL,
-            CERT_SYSTEM_STORE_LOCAL_MACHINE,
-            L"ROOT"
-        );
-
-        if (!hStore)
-        {
-            return false;
-        }
-
-        PCCERT_CONTEXT pCertContext = nullptr;
-        bool removed = false;
-
-        // Find and remove all certificates with the matching common name
-        while ((pCertContext = CertFindCertificateInStore(hStore, X509_ASN_ENCODING, 0, CERT_FIND_SUBJECT_STR, publisherCN.c_str(), pCertContext)))
-        {
-            // Duplicate the context before deletion since CertDeleteCertificateFromStore will free it
-            PCCERT_CONTEXT pCertToDelete = CertDuplicateCertificateContext(pCertContext);
-
-            if (pCertToDelete)
-            {
-                if (CertDeleteCertificateFromStore(pCertToDelete))
-                {
-                    removed = true;
-                }
-                // Note: CertDeleteCertificateFromStore automatically frees pCertToDelete
-            }
-        }
-        if (pCertContext)
-        {
-            CertFreeCertificateContext(pCertContext);
-        }
-
-        CertCloseStore(hStore, 0);
-        return removed;
-    }
-
-    bool AppInstaller::IsPackageInstalled(const std::wstring &packageFamilyName)
-    {
-        winrt::Windows::Management::Deployment::PackageManager packageManager;
-
-        auto packages = packageManager.FindPackages(packageFamilyName);
-        return (bool)packages;
-    }
-
-    bool AppInstaller::InstallPackage(const std::wstring &packageFilePath, const std::wstring & packageFamilyName)
-    {
-        winrt::init_apartment(); // Initialize WinRT apartment for using WinRT APIs
-
-        try
-        {
-            namespace fs = std::filesystem;
-            namespace d = winrt::Windows::Management::Deployment;
-            namespace f = winrt::Windows::Foundation;
-
-            d::PackageManager packageManager;
-            const fs::path sourcePath = fs::absolute(packageFilePath).parent_path();
-            const std::wstring externalInstallPath = fs::absolute(Tools::Paths::GetInstallPath()).wstring();
-            const fs::path installPath(externalInstallPath);
-
-            // auto packages = packageManager.FindPackages(packageFamilyName);
-            // for (auto& package : packages)
-            // {
-            //     auto removing = packageManager.RemovePackageAsync(package.Id().FullName());
-            //     auto removed = removing.get();
-            // }
-
-            if (fs::exists(installPath))
-            {
-                fs::remove_all(installPath);
-            }
-
-            fs::create_directories(installPath);
-            fs::copy(sourcePath, installPath, fs::copy_options::recursive | fs::copy_options::overwrite_existing);
-
-            RegisterUninstall();
-
-            f::Uri packageUri(fs::absolute(packageFilePath).wstring());
-            std::wcerr << packageUri.ToString().c_str() << std::endl;
-
-            d::AddPackageOptions options;
-            options.ForceUpdateFromAnyVersion(true);
-            options.ForceTargetAppShutdown(true);
-            options.ForceAppShutdown(true);
-            options.ExternalLocationUri(f::Uri(externalInstallPath));
-
-            // Start the installation
-            auto operation = packageManager.AddPackageByUriAsync(packageUri, options);
-
-            // Wait for installation to complete
-            auto result = operation.get();
-
-            if (result.IsRegistered())
-            {
-                return true;
-            }
-            else
-            {
-                throw std::exception(Unicode::to_string(result.ErrorText().c_str()).c_str());
-            }
-
-            return true;
-        }
-        catch (const winrt::hresult_error &e)
-        {
-            throw std::exception(Unicode::to_string(e.message().c_str()).c_str());
-        }
+        fs::create_directories(destPath);
+        fs::copy(sourcePath, destPath, fs::copy_options::recursive | fs::copy_options::overwrite_existing);
+        return true;
     }
 
     bool AppInstaller::RegisterUninstall()
     {
         const std::wstring installPath = Tools::Paths::GetInstallPath();
-        const std::wstring uninstallPath = Tools::Paths::GetExeFileName();
+        const std::wstring uninstallPath = Tools::Paths::GetInstallPath() + L"\\unins000.exe";
         const DWORD estimatedSizeKb = static_cast<DWORD>((GetDirectorySize(installPath) + 1023) / 1024);
 
         return

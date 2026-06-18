@@ -22,17 +22,10 @@
 //
 
 #include <string>
-#include <vector>
 
-namespace AnyFSE::Tools::Packages
+namespace AnyFSE::ToolsEx::Certificate
 {
-    std::wstring GetPackageFamilyName(const std::wstring &appUserModelID);
-    std::wstring GetAppxInstallLocation(const std::wstring &appUserModelID);
-    std::wstring GetAppDisplayName(const std::wstring &appUserModelID);
-    std::vector<uint8_t> GetAppDisplayLogoRawBytes(const std::wstring &appUserModelID, int size);
-    std::vector<DWORD> GetAppProcessIds(const std::wstring &appUserModelID);
-    std::vector<std::wstring> GetNativeLaunchers();
-    bool IsPackageInstalled(const std::wstring &packageFamilyName);
-    bool InstallPackage(const std::wstring &packageFilePath, const std::wstring &packageFamilyName, const std::wstring &externalInstallPath = L"");
-    bool RemovePackage(const std::wstring &packageFamilyName);
-};
+    bool IsRootCertificateInstalled(const std::wstring &commonName);
+    bool InstallRootCertificate(const std::wstring &certFilePath);
+    bool RemoveRootCertificate(const std::wstring &publisherCN);
+}

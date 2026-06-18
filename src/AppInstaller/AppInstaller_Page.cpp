@@ -242,7 +242,7 @@ namespace AnyFSE
     void AppInstaller::PopulateLanguageMenu()
     {
         std::vector<Popup::PopupItem> items;
-        for (const auto &locale : Tools::Localization::EnumerateLocales(m_resourceLocales))
+        for (const auto &locale : Tools::Localization::EnumerateResourceLocales())
         {
             items.emplace_back(
                 Unicode::to_upper(locale.code) == Unicode::to_upper(Tools::Localization::GetCurrentLocale())
@@ -264,7 +264,7 @@ namespace AnyFSE
     {
         Tools::Localization::SetPreferredLocale(localeCode);
 
-        Tools::Localization::InitializeFromLocales(m_resourceLocales);
+        Tools::Localization::InitializeFromLocales();
 
         PopulateLanguageMenu();
         UpdateDialogTitle();
@@ -322,7 +322,7 @@ namespace AnyFSE
         // Execute uninstaller
         SHELLEXECUTEINFOW sei = { sizeof(sei) };
         sei.lpFile = uninstaller.c_str();
-        sei.lpParameters = L"/s";
+        sei.lpParameters = L"/s /u";
         sei.nShow = SW_HIDE;
         sei.fMask = SEE_MASK_NOCLOSEPROCESS;
 

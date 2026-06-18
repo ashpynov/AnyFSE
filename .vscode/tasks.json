@@ -169,6 +169,19 @@
             "dependsOn": [
                 "Package Debug"
             ]
-        }
+        },
+        {
+            "type": "shell",
+            "label": "Build AnyFSE.Uninstaller Debug",
+            "command": "msbuild.exe",
+            "args": [
+                "AnyFSE.Uninstaller.vcxproj",
+                "-property:Configuration=Debug",
+                "-property:Platform=x64"
+            ],
+            "problemMatcher": [
+                "$msCompile"
+            ]
+        },
     ]
 }

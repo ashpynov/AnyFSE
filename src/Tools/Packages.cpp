@@ -3,8 +3,11 @@
 #include <windows.h>
 #include <appmodel.h>
 #include <iostream>
+#include <filesystem>
+
 #include "Packages.hpp"
 #include "App/AppConstants.hpp"
+#include "Tools/Unicode.hpp"
 
 #include <winrt/windows.foundation.collections.h>
 #include <winrt/Windows.Management.Deployment.h>
@@ -23,7 +26,7 @@ using namespace Windows::System::Diagnostics;
 using namespace Windows::ApplicationModel::AppExtensions;
 
 
-namespace AnyFSE::Tools
+namespace AnyFSE::Tools::Packages
 {
     std::wstring GetPackageFamilyName(const std::wstring& appUserModelID)
     {
@@ -31,7 +34,7 @@ namespace AnyFSE::Tools
         return pos == std::wstring::npos ? appUserModelID : appUserModelID.substr(0, pos);
     }
 
-    std::wstring Packages::GetAppxInstallLocation(const std::wstring &appUserModelID)
+    std::wstring GetAppxInstallLocation(const std::wstring &appUserModelID)
     {
         UINT32 count = 0;
         UINT32 bufferLength = 0;
@@ -76,7 +79,7 @@ namespace AnyFSE::Tools
         return L"";
     }
 
-    std::wstring Packages::GetAppDisplayName(const std::wstring &appUserModelID)
+    std::wstring GetAppDisplayName(const std::wstring &appUserModelID)
     {
         PackageManager pm;
         auto packages = pm.FindPackagesForUser(L"", GetPackageFamilyName(appUserModelID));
@@ -88,7 +91,7 @@ namespace AnyFSE::Tools
         return L"";
     }
 
-    std::vector<uint8_t> Packages::GetAppDisplayLogoRawBytes(const std::wstring &path, int size)
+    std::vector<uint8_t> GetAppDisplayLogoRawBytes(const std::wstring &path, int size)
     {
         PackageManager pm;
 
@@ -138,7 +141,7 @@ namespace AnyFSE::Tools
         return std::vector<uint8_t>();
     }
 
-    std::vector<DWORD> Packages::GetAppProcessIds(const std::wstring &appUserModelID)
+    std::vector<DWORD> GetAppProcessIds(const std::wstring &appUserModelID)
     {
         std::vector<DWORD> pids;
         auto infos = AppDiagnosticInfo::RequestInfoForAppAsync(appUserModelID).get();
@@ -159,7 +162,7 @@ namespace AnyFSE::Tools
         return pids;
     }
 
-    std::vector<std::wstring> Packages::GetNativeLaunchers()
+    std::vector<std::wstring> GetNativeLaunchers()
     {
         std::vector<std::wstring> launchers;
 
@@ -173,5 +176,85 @@ namespace AnyFSE::Tools
 
         return launchers;
 
+    }
+
+    bool IsPackageInstalled(const std::wstring &packageFamilyName)
+    {
+        winrt::Windows::Management::Deployment::PackageManager packageManager;
+
+        auto packages = packageManager.FindPackages(packageFamilyName);
+        return (bool)packages;
+    }
+
+    bool InstallPackage( const std::wstring & packageFilePath, const std::wstring & packageFamilyName, const std::wstring & externalInstallPath)
+    {
+        winrt::init_apartment(); // Initialize WinRT apartment for using WinRT APIs
+
+        try
+        {
+            namespace fs = std::filesystem;
+            namespace d = winrt::Windows::Management::Deployment;
+            namespace f = winrt::Windows::Foundation;
+
+            d::PackageManager packageManager;
+
+
+            f::Uri packageUri(fs::absolute(packageFilePath).wstring());
+            std::wcerr << packageUri.ToString().c_str() << std::endl;
+
+            d::AddPackageOptions options;
+            options.ForceUpdateFromAnyVersion(true);
+            options.ForceTargetAppShutdown(true);
+            options.ForceAppShutdown(true);
+            options.ExternalLocationUri(f::Uri(externalInstallPath));
+
+            // Start the installation
+            auto operation = packageManager.AddPackageByUriAsync(packageUri, options);
+
+            // Wait for installation to complete
+            auto result = operation.get();
+
+            if (result.IsRegistered())
+            {
+                return true;
+            }
+            else
+            {
+                throw std::exception(Unicode::to_string(result.ErrorText().c_str()).c_str());
+            }
+
+            return true;
+        }
+        catch (const winrt::hresult_error &e)
+        {
+            throw std::exception(Unicode::to_string(e.message().c_str()).c_str());
+        }
+        return false;
+    }
+
+    bool RemovePackage(const std::wstring & packageFamilyName)
+    {
+        winrt::init_apartment(); // Initialize WinRT apartment for using WinRT APIs
+
+        try
+        {
+            namespace fs = std::filesystem;
+            namespace d = winrt::Windows::Management::Deployment;
+            namespace f = winrt::Windows::Foundation;
+
+            d::PackageManager packageManager;
+            auto packages = packageManager.FindPackages(packageFamilyName);
+            for (auto& package : packages)
+            {
+                auto removing = packageManager.RemovePackageAsync(package.Id().FullName());
+                auto removed = removing.get();
+            }
+            return true;
+        }
+        catch (const winrt::hresult_error &e)
+        {
+            throw std::exception(Unicode::to_string(e.message().c_str()).c_str());
+        }
+        return false;
     }
 }

@@ -31,6 +31,9 @@
 #include "Tools/Process.hpp"
 #include "Tools/Registry.hpp"
 #include "Tools/Unicode.hpp"
+#include "Tools/Paths.hpp"
+#include "Tools/Packages.hpp"
+#include "AppInstaller/Certificate.hpp"
 
 namespace AnyFSE
 {
@@ -48,7 +51,9 @@ namespace AnyFSE
         LogManager::Initialize("AnyFSE.Installer", LogLevels::Trace);
         log.Info("Starting Installation AnyFSE v%s to %s", APP_VERSION, path.string().c_str());
 
-        bool acseServiceWasRunning = false;
+        bool acseServiceWasRunning = IsInjectorServiceRun();
+        bool certificateWasInstalled = ToolsEx::Certificate::IsRootCertificateInstalled(Unicode::to_wstring(VER_PUBLISHER_CN));
+
         try
         {
             ShowProgressPage();
@@ -63,12 +68,12 @@ namespace AnyFSE
             CheckSuccess(DownloadFiles(path));
 #endif
 
-            // std::wstring oldPath = Registry::ReadString(registryPath, L"InstallLocation");
-            // if (!oldPath.empty())
-            // {
-            //     SetCurrentProgress(Translate(L"progressRemoveOldVersion"));
-            //     CheckSuccess(DeleteOldVersion() && DeleteOldFiles(oldPath));
-            // }
+            std::wstring oldPath = Registry::ReadString(registryPath, L"InstallLocation");
+            if (!oldPath.empty())
+            {
+                SetCurrentProgress(Translate(L"progressRemoveOldVersion"));
+                CheckSuccess(DeleteOldVersion() && DeleteOldFiles(oldPath));
+            }
 
             m_isDevModeEnabled = IsDeveloperModeEnabled();
             if (!m_isDevModeEnabled)
@@ -78,10 +83,10 @@ namespace AnyFSE
                 CheckSuccess(true);
             }
 
-            if (!IsRootCertificateInstalled(Unicode::to_wstring(VER_PUBLISHER_CN)))
+            if (ToolsEx::Certificate::IsRootCertificateInstalled(Unicode::to_wstring(VER_PUBLISHER_CN)))
             {
                 SetCurrentProgress(Translate(L"progressInstallPublisherCertificate"));
-                m_isRootCertInstalled = InstallRootCertificate(path.wstring() + L"/" + AppConstants::PublisherCertFile);
+                m_isRootCertInstalled = ToolsEx::Certificate::InstallRootCertificate(path.wstring() + L"/" + AppConstants::PublisherCertFile);
                 CheckSuccess(m_isRootCertInstalled);
             }
 
@@ -91,20 +96,16 @@ namespace AnyFSE
                 CheckSuccess(EnableAsusOptimization());
             }
 
-            acseServiceWasRunning = IsInjectorServiceRun();
-            if (acseServiceWasRunning)
-            {
-                SetCurrentProgress(Translate(L"progressStopAcseInjectorService"));
-                CheckSuccess(DisableInjectorService());
-            }
-
-            StopAnyFSE();
-
             SetCurrentProgress(Translate(L"progressInstallPackage"));
-            CheckSuccess(InstallPackage(
+            CopyFiles(path, Tools::Paths::GetInstallPath());
+
+            CheckSuccess(Tools::Packages::InstallPackage(
                 path.wstring() + L"/" + AppConstants::AppxFilePrefix + Unicode::to_wstring(VER_VERSION_STR) + L".identity.appx",
-                AppConstants::PackageFamilyName
+                AppConstants::PackageFamilyName,
+                Tools::Paths::GetInstallPath()
             ));
+
+            RegisterUninstall();
 
             if (acseServiceWasRunning)
             {
@@ -125,7 +126,7 @@ namespace AnyFSE
             if (m_isRootCertInstalled)
             {
                 SetCurrentProgress(Translate(L"progressRemovingCertificate"));
-                RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
+                ToolsEx::Certificate::RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
                 m_isRootCertInstalled = false;
                 CheckSuccess(true);
             }
@@ -152,9 +153,9 @@ namespace AnyFSE
                 EnableInjectorService();
             }
 
-            if (m_isRootCertInstalled)
+            if (!certificateWasInstalled)
             {
-                RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
+                ToolsEx::Certificate::RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
             }
 
             if (!m_isDevModeEnabled)
