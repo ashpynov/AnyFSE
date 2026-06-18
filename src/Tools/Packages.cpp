@@ -180,9 +180,10 @@ namespace AnyFSE::Tools::Packages
 
     bool IsPackageInstalled(const std::wstring &packageFamilyName)
     {
+        winrt::init_apartment(); // Initialize WinRT apartment for using WinRT APIs
         winrt::Windows::Management::Deployment::PackageManager packageManager;
 
-        auto packages = packageManager.FindPackages(packageFamilyName);
+        auto packages = packageManager.FindPackagesForUser(L"", packageFamilyName);
         return (bool)packages;
     }
 
