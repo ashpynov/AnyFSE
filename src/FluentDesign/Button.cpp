@@ -43,6 +43,7 @@ namespace FluentDesign
         , m_bFlat(false)
         , m_bSquare(false)
         , m_isSmallIcon(false)
+        , m_popup(theme)
         , m_textNormalColor(Theme::Colors::Text)
         , m_backgroundNormalColor(Theme::Colors::Button)
         , m_textHoverColor(Theme::Colors::Text)
@@ -241,8 +242,6 @@ namespace FluentDesign
 
     void Button::ShowMenu()
     {
-        static Popup popup(m_theme);
-
         RECT rect;
         GetWindowRect(m_hWnd, &rect);
         int x = (m_menuAlingment & TPM_RIGHTALIGN) ? rect.right
@@ -251,8 +250,9 @@ namespace FluentDesign
         int y = (m_menuAlingment & TPM_BOTTOMALIGN) ? rect.top
                 : (m_menuAlingment & TPM_VCENTERALIGN) ? (rect.top + rect.bottom) / 2
                 : rect.bottom;
-        popup.Show(m_hWnd, x, y, m_menuItems, m_menuWidth, m_menuAlingment);
-        m_theme.SwapFocus(popup.GetHwnd());
+        m_popup.Show(m_hWnd, x, y, m_menuItems, m_menuWidth, m_menuAlingment);
+        m_theme.SwapFocus(m_popup.GetHwnd());
+        InvalidateRect(m_hWnd, NULL, FALSE);
     }
 
     void Button::HandleClick()
@@ -313,6 +313,7 @@ namespace FluentDesign
     {
         if (m_hWnd)
         {
+            m_popup.Hide();
             DestroyWindow(m_hWnd);
             m_hWnd = nullptr;
         }
@@ -476,6 +477,7 @@ namespace FluentDesign
         // Get button state
         bool enabled = IsWindowEnabled(hWnd);
         bool focused = (GetFocus() == hWnd);
+        bool pressed = m_mousePressed || m_popup.IsVisible();
 
         // Convert RECT to GDI+ RectF
         RectF gdiRect((REAL)rect.left, (REAL)rect.top,
@@ -488,13 +490,13 @@ namespace FluentDesign
 
         // Determine colors based on state
         Color borderColor(m_theme.GetColor(
-                m_mousePressed ? Theme::Colors::ButtonBorderPressed
+                pressed ? Theme::Colors::ButtonBorderPressed
             : m_buttonMouseOver ? Theme::Colors::ButtonBorderHover
                                 : Theme::Colors::ButtonBorder
         ));
 
         Color backColor(m_theme.GetColor(
-                m_mousePressed ? m_backgroundPressedColor
+                pressed ? m_backgroundPressedColor
             : m_buttonMouseOver ? m_backgroundHoverColor
                                 : m_backgroundNormalColor
         ));
@@ -509,7 +511,7 @@ namespace FluentDesign
             br.Inflate(m_theme.DpiScaleF(-1), m_theme.DpiScaleF(-1));
         }
 
-        if (!m_bFlat || m_mousePressed || m_buttonMouseOver)
+        if (!m_bFlat || pressed || m_buttonMouseOver)
         {
             // Draw outer rounded rectangle (track)
             Pen borderPen(borderColor, (REAL)m_theme.DpiScale(1));
@@ -535,7 +537,7 @@ namespace FluentDesign
 
         Color textColor(m_theme.GetColor(
             ! enabled           ? Theme::Colors::TextDisabled
-            : m_mousePressed    ? m_textPressedColor
+            : pressed           ? m_textPressedColor
             : m_buttonMouseOver ? m_textHoverColor
                                 : m_textNormalColor
         ));

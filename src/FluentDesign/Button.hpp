@@ -58,6 +58,7 @@ namespace FluentDesign
         std::vector<Popup::PopupItem> m_menuItems;
         int m_menuWidth = 300;
         int m_menuAlingment = TPM_RIGHTALIGN;
+        Popup m_popup;
 
         Theme::Colors m_textNormalColor;
         Theme::Colors m_backgroundNormalColor;

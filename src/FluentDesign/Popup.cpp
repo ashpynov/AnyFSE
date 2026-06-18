@@ -119,7 +119,8 @@ namespace FluentDesign
             m_hWnd = NULL;
             if (hOwner)
             {
-                SetFocus(hOwner);
+                InvalidateRect(hOwner, NULL, FALSE);
+                m_theme.SwapFocus(hOwner);
             }
         }
     }
