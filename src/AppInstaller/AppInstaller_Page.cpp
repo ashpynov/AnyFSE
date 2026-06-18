@@ -312,135 +312,6 @@ namespace AnyFSE
         }
     }
 
-    void AppInstaller::OnInstall()
-    {
-        fs::path path(fs::temp_directory_path().append(AppConstants::TempInstallDirName));
-        if (fs::exists(path))
-        {
-            fs::remove_all(path);
-        }
-
-        fs::create_directories(path.wstring() + L"\\logs");
-
-        LogManager::Initialize("AnyFSE.Installer", LogLevels::Trace, path.wstring() + L"\\logs");
-        log.Info("Starting Installation AnyFSE v%s to %s", APP_VERSION, path.string().c_str());
-
-        bool acseServiceWasRunning = false;
-        try
-        {
-            ShowProgressPage();
-            Sleep(1);
-
-#ifdef OFFLINE_INSTALLER
-            // Extract resource file
-            SetCurrentProgress(Translate(L"progressUnpackFiles"));
-            CheckSuccess(ExtractEmbeddedZip(path));
-#else
-            SetCurrentProgress(Translate(L"progressDownloadFiles"));
-            CheckSuccess(DownloadFiles(path));
-#endif
-
-            std::wstring oldPath = Registry::ReadString(registryPath, L"InstallLocation");
-            if (!oldPath.empty())
-            {
-                SetCurrentProgress(Translate(L"progressRemoveOldVersion"));
-                CheckSuccess(DeleteOldVersion() && DeleteOldFiles(oldPath));
-            }
-
-            m_isDevModeEnabled = IsDeveloperModeEnabled();
-            if (!m_isDevModeEnabled)
-            {
-                SetCurrentProgress(Translate(L"progressEnableDeveloperMode"));
-                EnableDeveloperMode(true);
-                CheckSuccess(true);
-            }
-
-            if (!IsRootCertificateInstalled(Unicode::to_wstring(VER_PUBLISHER_CN)))
-            {
-                SetCurrentProgress(Translate(L"progressInstallPublisherCertificate"));
-                m_isRootCertInstalled = InstallRootCertificate(path.wstring() + L"/" + AppConstants::PublisherCertFile);
-                CheckSuccess(m_isRootCertInstalled);
-            }
-
-            if (IsNeedEnableAsusOptimization())
-            {
-                SetCurrentProgress(Translate(L"progressRestoreAsusOptimizationService"));
-                CheckSuccess(EnableAsusOptimization());
-            }
-
-            acseServiceWasRunning = IsInjectorServiceRun();
-            if (acseServiceWasRunning)
-            {
-                SetCurrentProgress(Translate(L"progressStopAcseInjectorService"));
-                CheckSuccess(DisableInjectorService());
-            }
-
-            StopAnyFSE();
-
-            SetCurrentProgress(Translate(L"progressInstallPackage"));
-            CheckSuccess(InstallPackage(
-                path.wstring() + L"/" + AppConstants::AppxFilePrefix + Unicode::to_wstring(VER_VERSION_STR) + L".appx",
-                AppConstants::PackageFamilyName
-            ));
-
-            if (acseServiceWasRunning)
-            {
-                SetCurrentProgress(Translate(L"progressStartAcseInjectorService"));
-                CheckSuccess(EnableInjectorService());
-            }
-
-            SetCurrentProgress(Translate(L"progressCleanupFiles"));
-            CheckSuccess(true);
-
-            if (!m_isDevModeEnabled)
-            {
-                SetCurrentProgress(Translate(L"progressDisableDeveloperMode"));
-                EnableDeveloperMode(false);
-                CheckSuccess(true);
-            }
-
-            if (m_isRootCertInstalled)
-            {
-                SetCurrentProgress(Translate(L"progressRemovingCertificate"));
-                RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
-                m_isRootCertInstalled = false;
-                CheckSuccess(true);
-            }
-
-            Process::StartProtocol(AnyFSE::AppConstants::AnyFseProtocolAllyHid);
-
-            ShowCompletePage();
-
-            LogManager::DeleteLog();
-            if (fs::exists(path))
-            {
-                fs::remove_all(path);
-            }
-
-        }
-        catch(const std::exception& e)
-        {
-            log.Error(e, "Installation fail:");
-            ShowErrorPage(Translate(L"installationErrorCaption"), GetProgressText(4) + Unicode::to_wstring(e.what()));
-
-            // Best-effort service recovery after failed update.
-            if (acseServiceWasRunning)
-            {
-                EnableInjectorService();
-            }
-
-            if (m_isRootCertInstalled)
-            {
-                RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
-            }
-
-            if (!m_isDevModeEnabled)
-            {
-                EnableDeveloperMode(false);
-            }
-        }
-    }
-
     bool AppInstaller::DeleteOldVersion()
     {
         std::wstring uninstaller = Registry::ReadString(registryPath, L"UninstallString");
@@ -571,6 +442,7 @@ namespace AnyFSE
         std::list<std::wstring> files;
         files.push_back(std::wstring(L"/") + AppConstants::PublisherCertFile);
         files.push_back(std::wstring(L"/") + AppConstants::AppxFilePrefix + Unicode::to_wstring(APP_VERSION) + L".appx");
+        files.push_back(std::wstring(L"/") + AppConstants::AppxFilePrefix + Unicode::to_wstring(APP_VERSION) + L".identity.appx");
 
         for (std::wstring file : files)
         {

@@ -1,6 +1,6 @@
 #include <filesystem>
 #include "Tools/Unicode.hpp"
-#include "Tools/Packages.hpp"
+#include "Tools/Paths.hpp"
 #include "Tools/Process.hpp"
 #include "App/AppConstants.hpp"
 #include "Logging/LogManager.hpp"
@@ -15,12 +15,8 @@ namespace Ally::Services
 
     bool EnableInjectorService()
     {
-        log.Info("Found package at %s", std::filesystem::path(Tools::Packages::GetAppxInstallLocation(c::PackageFamilyName)).string().c_str());
-
         const std::wstring injectorExe =
-            std::filesystem::path(Tools::Packages::GetAppxInstallLocation(c::PackageFamilyName))
-            .append(c::InjectorExe)
-            .wstring();
+            fs::path(Tools::Paths::GetInstallPath()).append(c::InjectorExe).wstring();
 
          std::wstring commandLine = std::wstring(L"/c")
             + L" sc create " + c::InjectorServiceName

@@ -10,6 +10,7 @@ namespace AnyFSE::Tools::Paths
     std::wstring GetSplashDefaultPath();
     std::wstring GetExeFileName();
     std::wstring GetExePath();
+    std::wstring GetInstallPath();
 
     std::wstring GetAppPath();
     std::wstring GetDataPath();

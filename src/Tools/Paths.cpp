@@ -124,6 +124,13 @@ namespace AnyFSE::Tools::Paths
         return appData;
     }
 
+    std::wstring GetInstallPath()
+    {
+        wchar_t appData[MAX_PATH]={0};
+        ExpandEnvironmentStringsW(L"%PROGRAMFILES%\\AnyFSE", appData, MAX_PATH);
+        return appData;
+    }
+
     std::wstring GetAppPath()
     {
         wchar_t appData[MAX_PATH]={0};

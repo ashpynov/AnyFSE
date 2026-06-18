@@ -194,6 +194,7 @@ namespace AnyFSE
             bool RemoveRootCertificate(const std::wstring &CN);
             bool IsPackageInstalled(const std::wstring &packageId);
             bool InstallPackage(const std::wstring &packageFilePath, const std::wstring & packageFamilyName);
+            bool RegisterUninstall();
             bool LaunchApp(const std::wstring &packageFamilyName, const std::wstring &arguments);
             bool IsInjectorServiceRun();
             bool DisableInjectorService();

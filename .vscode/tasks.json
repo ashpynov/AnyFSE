@@ -68,7 +68,6 @@
                 "isDefault": true
             }
         },
-
         {
             "label": "Run Program with Coverage",
             "type": "shell",
@@ -81,7 +80,9 @@
                 "--",
                 "${workspaceFolder}\\build\\Debug\\AnyFSE.exe"
             ],
-            "dependsOn": ["Build AnyFSE Debug"],
+            "dependsOn": [
+                "Build AnyFSE Debug"
+            ],
             "group": "none"
         },
         {
@@ -114,7 +115,7 @@
             "args": [
                 "AnyFSE.Installer.vcxproj",
                 "-property:Configuration=Release",
-                "-property:Platform=x64",
+                "-property:Platform=x64"
             ],
             "problemMatcher": [
                 "$msCompile"
@@ -123,8 +124,8 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "dependsOn":[
-                "Package",
+            "dependsOn": [
+                "Package"
             ]
         },
         {
@@ -135,7 +136,7 @@
                 "AnyFSE.Installer.vcxproj",
                 "-property:Offline=Offline",
                 "-property:Configuration=Release",
-                "-property:Platform=x64",
+                "-property:Platform=x64"
             ],
             "problemMatcher": [
                 "$msCompile"
@@ -144,8 +145,8 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "dependsOn":[
-                "Package",
+            "dependsOn": [
+                "Package"
             ]
         },
         {
@@ -155,7 +156,8 @@
             "args": [
                 "AnyFSE.Installer.vcxproj",
                 "-property:Configuration=Debug",
-                "-property:Platform=x64",
+                "-property:Offline=Offline",
+                "-property:Platform=x64"
             ],
             "problemMatcher": [
                 "$msCompile"
@@ -164,8 +166,8 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "dependsOn":[
-                "Package Debug",
+            "dependsOn": [
+                "Package Debug"
             ]
         }
     ]

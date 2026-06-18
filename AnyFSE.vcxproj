@@ -105,5 +105,16 @@
         <Image Include="media\AnyFSEIcon.ico" />
     </ItemGroup>
 
+    <Target Name="CopyLocalization" AfterTargets="Build">
+        <ItemGroup>
+            <LocalizationFiles Include="$(ProjectDir)Localization\*" />
+        </ItemGroup>
+        <MakeDir Directories="$(OutDir)Localization" />
+        <Copy
+            SourceFiles="@(LocalizationFiles)"
+            DestinationFiles="@(LocalizationFiles->'$(OutDir)Localization\%(RecursiveDir)%(Filename)%(Extension)')"
+            SkipUnchangedFiles="true" />
+    </Target>
+
     <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

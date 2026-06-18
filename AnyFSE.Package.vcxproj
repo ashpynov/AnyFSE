@@ -21,7 +21,9 @@
     <WindowsSdkToolsPath>$(WindowsSdkDir)bin\$(WindowsTargetPlatformVersion)\x64</WindowsSdkToolsPath>
     <AppPackageContentsDir>$(MSBuildProjectDirectory)\build\objs\Package</AppPackageContentsDir>
     <AppPackagesDir>$(MSBuildProjectDirectory)\build\$(Configuration)</AppPackagesDir>
-    <PackageFileName>$(AppPackagesDir)\$(TargetName)-$(AssemblyVersion).appx</PackageFileName>
+    <ExternalPayloadDir>$(AppPackagesDir)\Package</ExternalPayloadDir>
+    <ExternalInstallDir>C:\Program Files\AnyFSE</ExternalInstallDir>
+    <PackageFileName>$(AppPackagesDir)\$(TargetName)-$(AssemblyVersion).identity.appx</PackageFileName>
     <MakeAppxExe>$(WindowsSdkToolsPath)\MakeAppx.exe</MakeAppxExe>
     <MakePriExe>$(WindowsSdkToolsPath)\MakePri.exe</MakePriExe>
     <SignToolExe>$(WindowsSdkToolsPath)\signtool.exe</SignToolExe>
@@ -39,21 +41,6 @@
     <RemoveDir Directories="$(AppPackageContentsDir)" />
     <MakeDir Directories="$(AppPackageContentsDir)" />
     <MakeDir Directories="$(AppPackageContentsDir)\Assets" />
-    <MakeDir Directories="$(AppPackageContentsDir)\Localization" />
-
-    <ItemGroup>
-      <ExeFiles Include="$(OutDir)/$(TargetName)*.exe" Exclude="$(OutDir)/$(TargetName).Installer*.exe" />
-      <DllFiles Include="$(OutDir)/$(TargetName)*.dll" />
-    </ItemGroup>
-
-
-    <Copy
-      SourceFiles="@(ExeFiles);@(DllFiles)"
-      DestinationFolder="$(AppPackageContentsDir)\" />
-
-    <Copy
-      SourceFiles="@(DllFiles)"
-      DestinationFolder="$(AppPackageContentsDir)\" />
 
     <Copy
       SourceFiles="$(MSBuildProjectDirectory)\AppxManifest.xml"
@@ -106,14 +93,10 @@
 
     <ItemGroup>
       <AssetFiles Include="$(MSBuildProjectDirectory)\Assets\*" />
-      <LocalizationFiles Include="$(MSBuildProjectDirectory)\Localization\*" />
     </ItemGroup>
     <Copy
       SourceFiles="@(AssetFiles)"
       DestinationFolder="$(AppPackageContentsDir)\Assets" />
-    <Copy
-      SourceFiles="@(LocalizationFiles)"
-      DestinationFolder="$(AppPackageContentsDir)\Localization" />
 
     <!-- Copy custom capability if exists -->
     <ItemGroup>
@@ -137,9 +120,9 @@
     <!-- Create output directory if it doesn't exist -->
     <MakeDir Directories="$(AppPackagesDir)" />
 
-    <!-- Run MakeAppx to create the package -->
+    <!-- Build a sparse identity package. Runtime binaries live in $(ExternalInstallDir). -->
     <Exec
-      Command="&quot;$(MakeAppxExe)&quot; pack /overwrite /d &quot;$(AppPackageContentsDir)&quot; /p &quot;$(PackageFileName)&quot;"
+      Command="&quot;$(MakeAppxExe)&quot; pack /overwrite /nv /d &quot;$(AppPackageContentsDir)&quot; /p &quot;$(PackageFileName)&quot;"
       WorkingDirectory="$(MSBuildProjectDirectory)" />
 
     <Message Text="APPX package created: $(PackageFileName)" Importance="high" />
@@ -170,12 +153,18 @@
   <Target Name="Package" DependsOnTargets="SignAppPackage">
     <Message Text="Packaging complete! Package available at: $(PackageFileName)" Importance="high" />
     <ItemGroup>
+      <PackageContent Include="$(AppPackageContentsDir)\**\*" />
       <CertificateFile Include="$(MSBuildProjectDirectory)\*.cer" />
     </ItemGroup>
     <PropertyGroup>
       <!-- First, calculate the incremented value -->
       <NewVersionRevision>$([MSBuild]::Add($(VersionRevision), 1))</NewVersionRevision>
     </PropertyGroup>
+    <RemoveDir Directories="$(ExternalPayloadDir)" />
+    <Copy
+      SourceFiles="@(PackageContent)"
+      DestinationFiles="@(PackageContent->'$(ExternalPayloadDir)\%(RecursiveDir)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="false" />
     <Copy
       SourceFiles="@(CertificateFile)"
       DestinationFolder="$(OutDir)\" />

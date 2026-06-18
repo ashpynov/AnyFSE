@@ -62,8 +62,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ApplicationFiles Include="$(OutDir)AnyFSE-$(AssemblyVersion).appx" />
     <ApplicationFiles Include="$(OutDir)*.cer" />
+    <ApplicationFiles Include="$(OutDir)*.exe" Exclude="$(OutDir)AnyFSE.Installer*.exe" />
+    <ApplicationFiles Include="$(OutDir)*.dll" />
+    <ApplicationFiles Include="$(OutDir)Assets" />
+    <ApplicationFiles Include="$(OutDir)AppxManifest.xml" />
+    <ApplicationFiles Include="$(OutDir)priconfig.xml" />
+    <ApplicationFiles Include="$(OutDir)resources.pri" />
+    <ApplicationFiles Include="$(OutDir)resources.scale-200.pri" />
+    <ApplicationFiles Include="$(OutDir)CustomCapability.SCCD" />
+    <ApplicationFiles Include="$(OutDir)Localization" />
+    <ApplicationFiles Include="$(OutDir)*.identity.appx" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDumpFiles Include="$(OutDir)AnyFSE*.pdb" Exclude="$(OutDir)AnyFSE*-*.pdb" />
@@ -125,7 +134,7 @@
       <!-- <AdditionalDependencies>delayimp.lib;Shell32.lib;Ole32.lib;User32.lib;ComCtl32.lib;Advapi32.lib</AdditionalDependencies> -->
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)|$(Offline)'=='Release|x64|Offline'">
+  <ItemDefinitionGroup Condition="'$(Offline)'=='Offline'">
     <ClCompile>
       <PreprocessorDefinitions>
         OFFLINE_INSTALLER;
@@ -137,6 +146,7 @@
 
   <ItemGroup>
     <ClCompile Include="src\AppInstaller\AppInstaller.cpp" />
+    <ClCompile Include="src\AppInstaller\AppInstaller_Install.cpp" />
     <ClCompile Include="src\AppInstaller\AppInstaller_Page.cpp" />
     <ClCompile Include="src\AppInstaller\AppInstaller_Tools.cpp" />
     <ClCompile Include="src\AppInstaller\Admin.cpp" />
@@ -166,7 +176,7 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\AppInstaller\Installer.rc">
-        <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)|$(Offline)'=='Release|x64|Offline'">
+        <PreprocessorDefinitions Condition="'$(Offline)'=='Offline'">
             OFFLINE_INSTALLER;
             BUILD_ARCHIVE=\"$(OutDir.Replace('\', '\\'))$(AssemblyProduct).$(AssemblyVersion).zip\";
             %(PreprocessorDefinitions)
@@ -175,10 +185,10 @@
     </ResourceCompile>
   </ItemGroup>
 
-<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)|$(Offline)'=='Release|x64|Offline'">
+<ItemDefinitionGroup>
     <CustomBuildStep>
         <Message>Archive $(InstallFiles) and $(PDBFiles) to $(AssemblyProduct).$(AssemblyVersion).zip and $(AssemblyProduct).$(AssemblyVersion).pdb.zip </Message>
-        <Command>cd &quot;$(OutDir)&quot; &amp;&amp; tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion).zip&quot; $(InstallFiles) &amp;&amp; tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion).pdb.zip&quot; $(PDBFiles)</Command>
+        <Command>if exist &quot;$(OutDir)Package&quot; xcopy &quot;$(OutDir)Package&quot; &quot;$(OutDir)&quot; /E /I /Y &amp;&amp; cd &quot;$(OutDir)&quot; &amp;&amp; tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion).zip&quot; $(InstallFiles) &amp;&amp; tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion).pdb.zip&quot; $(PDBFiles)</Command>
         <Outputs>$(AssemblyProduct).$(AssemblyVersion).zip; $(AssemblyProduct).$(AssemblyVersion).pdb.zip </Outputs>
     </CustomBuildStep>
 </ItemDefinitionGroup>
