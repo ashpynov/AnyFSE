@@ -340,7 +340,7 @@ namespace AnyFSE
     bool AppInstaller::DeleteOldVersion()
     {
         std::wstring uninstaller = Registry::ReadString(registryPath, L"UninstallString");
-        if (uninstaller.empty())
+        if (uninstaller.empty() || !fs::exists(uninstaller))
         {
             return true;
         }
@@ -356,7 +356,6 @@ namespace AnyFSE
             WaitForSingleObject(sei.hProcess, 30000);
             CloseHandle(sei.hProcess);
         }
-        EnableAsusOptimization();
         return true;
     }
 
