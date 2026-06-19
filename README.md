@@ -63,7 +63,7 @@ Each button can be assigned to a custom action. AnyFSE also supports combination
 
 Armoury Crate SE and the ASUS Optimization service normally receive these button events too. If both AnyFSE and ASUS software handle the same input, the native ASUS action can still be triggered. To avoid this, either uninstall Armoury Crate SE or let AnyFSE filter these inputs before ASUS Optimization handles them.
 
-For this purpose AnyFSE includes the `AnyFSE ACSE Filter Injector` service. The service monitors the ASUS Optimization process and injects a small filter into the device-read path used by that process. The filter only targets the ASUS-specific button reports required for Armoury Crate, Command Center, and Library handling. Other input processing is left untouched.
+For this purpose AnyFSE includes the `AnyFSE ACSE Filter Injector` service. The service monitors the ASUS Optimization process and injects a small filter into the device-read path used by that process. The filter only targets the ASUS-specific button reports required for Armoury Crate, Command Center, and Library buttons handling. Other input processing is left untouched.
 
 This component is not in the critical path for normal input, launcher startup, or Full Screen Experience operation. It is enabled only when ASUS ROG Ally button remapping is enabled, and it is designed to make the smallest practical change: suppress the conflicting ASUS button events while allowing the rest of the system and device input stack to continue normally.
 
