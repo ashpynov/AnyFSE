@@ -20,13 +20,16 @@ Some other launchers potentially can be supported too with minor customizations
 ## Features
 
 - Ability to select one of supported launchers:
+    - [Playnite Fullscreen](https://playnite.link)
+    - [Playnite Desktop](https://playnite.link)
+    - [Steam Big Picture Mode](https://store.steampowered.com/about/)
     - [LaunchBox BigBox](https://www.launchbox-app.com/download)
     - [One Game Launcher](https://ogl.app/)
-    - [Playnite Fullscreen and Desktop](https://playnite.link)
     - [RetroBat](https://www.retrobat.org/download/)
-    - [Steam Big Picture Mode](https://store.steampowered.com/about/)
     - [Armoury Crate SE](https://armoury-crate.com/#download)
     - [Kodi](https://kodi.tv/)
+    - [Razer Cortex](https://www.razer.com/cortex)
+- Ability to use a custom executable or other installed native Gaming Home application.
 - Maximized performance during minimal runtime memory and perfomance footprint due to C++ sorce code.
 - Ability to navigate to download pages of supported launchers.
 - User defined video splash during launchers start.
@@ -48,6 +51,21 @@ If AnyFSE is selected as home application:
 Same for cases when AnyFSE executed from gamebar.
 
 In case if ASUS ROG Ally buttons remaping is configured it will start second instance as background app that listen such buttons and execute handlers on keypress.
+
+## ASUS ROG Ally buttons
+
+On ASUS ROG Ally devices AnyFSE can redefine the dedicated system buttons:
+
+- Armoury Crate
+- Command Center / Library
+
+Each button can be assigned to a custom action. AnyFSE also supports combinations with the Mode button, the usual back paddle on ROG Ally devices, so the same physical buttons can have an additional `Mode + button` action.
+
+Armoury Crate SE and the ASUS Optimization service normally receive these button events too. If both AnyFSE and ASUS software handle the same input, the native ASUS action can still be triggered. To avoid this, either uninstall Armoury Crate SE or let AnyFSE filter these inputs before ASUS Optimization handles them.
+
+For this purpose AnyFSE includes the `AnyFSE ACSE Filter Injector` service. The service monitors the ASUS Optimization process and injects a small filter into the device-read path used by that process. The filter only targets the ASUS-specific button reports required for Armoury Crate, Command Center, and Library handling. Other input processing is left untouched.
+
+This component is not in the critical path for normal input, launcher startup, or Full Screen Experience operation. It is enabled only when ASUS ROG Ally button remapping is enabled, and it is designed to make the smallest practical change: suppress the conflicting ASUS button events while allowing the rest of the system and device input stack to continue normally.
 
 
 ## Install, Configure and Uninstall
