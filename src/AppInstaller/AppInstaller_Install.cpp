@@ -52,7 +52,7 @@ namespace AnyFSE
         log.Info("Starting Installation AnyFSE v%s to %s", APP_VERSION, path.string().c_str());
 
         bool acseServiceWasRunning = IsInjectorServiceRun();
-        bool certificateWasInstalled = ToolsEx::Certificate::IsRootCertificateInstalled(Unicode::to_wstring(VER_PUBLISHER_CN));
+        bool certificateWasInstalled = ToolsEx::Certificate::IsRootCertificateInstalled(Unicode::to_wstring(VER_COMPANY_NAME));
 
         try
         {
@@ -83,7 +83,7 @@ namespace AnyFSE
                 CheckSuccess(true);
             }
 
-            if (ToolsEx::Certificate::IsRootCertificateInstalled(Unicode::to_wstring(VER_PUBLISHER_CN)))
+            if (!ToolsEx::Certificate::IsRootCertificateInstalled(Unicode::to_wstring(VER_COMPANY_NAME)))
             {
                 SetCurrentProgress(Translate(L"progressInstallPublisherCertificate"));
                 m_isRootCertInstalled = ToolsEx::Certificate::InstallRootCertificate(path.wstring() + L"/" + AppConstants::PublisherCertFile);
@@ -123,11 +123,10 @@ namespace AnyFSE
                 CheckSuccess(true);
             }
 
-            if (m_isRootCertInstalled)
+            if (!certificateWasInstalled)
             {
                 SetCurrentProgress(Translate(L"progressRemovingCertificate"));
                 ToolsEx::Certificate::RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
-                m_isRootCertInstalled = false;
                 CheckSuccess(true);
             }
 
