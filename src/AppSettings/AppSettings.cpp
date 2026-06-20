@@ -55,8 +55,7 @@ int WINAPI Main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, i
     Config::Load();
     Config::GetStartupConfigured();
     AnyFSE::Logging::LogManager::Initialize("AnyFSE.Settings", Config::LogLevel, Config::LogPath);
-    AnyFSE::Tools::Localization::SetPreferredLocale(Config::Locale);
-    AnyFSE::Tools::Localization::Initialize();
+    AnyFSE::Tools::Localization::Initialize(Config::Locale);
 
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 

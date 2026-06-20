@@ -16,10 +16,8 @@ namespace AnyFSE::Tools::Localization
     };
 
     ResourceLocales LoadResourceLocales();
-    bool Initialize();
-    bool InitializeFromLocales();
-    void SetPreferredLocale(const std::wstring &localeCode);
-    std::wstring GetPreferredLocale();
+    bool Initialize(const std::wstring &code = L"");
+    bool InitializeFromLocales(const std::wstring &code = L"");
     std::wstring GetCurrentLocale();
     std::vector<LocaleInfo> EnumerateLocales();
     std::vector<LocaleInfo> EnumerateResourceLocales();

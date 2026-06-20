@@ -196,8 +196,7 @@ namespace AnyFSE::App
                     int nCmdShow)
     {
         Config::Load();
-        AnyFSE::Tools::Localization::SetPreferredLocale(Config::Locale);
-        AnyFSE::Tools::Localization::Initialize();
+        AnyFSE::Tools::Localization::Initialize(Config::Locale);
 
         AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
         log.Debug("Application is started (hInstance=%08x) args: [%s]", hInstance, lpCmdLine);

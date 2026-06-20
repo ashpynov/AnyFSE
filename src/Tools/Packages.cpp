@@ -184,7 +184,7 @@ namespace AnyFSE::Tools::Packages
         winrt::Windows::Management::Deployment::PackageManager packageManager;
 
         auto packages = packageManager.FindPackagesForUser(L"", packageFamilyName);
-        return (bool)packages;
+        return packages.begin() != packages.end();
     }
 
     bool InstallPackage( const std::wstring & packageFilePath, const std::wstring & packageFamilyName, const std::wstring & externalInstallPath)

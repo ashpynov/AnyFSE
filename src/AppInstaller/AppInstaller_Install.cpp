@@ -52,7 +52,8 @@ namespace AnyFSE
         log.Info("Starting Installation AnyFSE v%s to %s", APP_VERSION, path.string().c_str());
 
         bool acseServiceWasRunning = IsInjectorServiceRun();
-        bool certificateWasInstalled = ToolsEx::Certificate::IsRootCertificateInstalled(Unicode::to_wstring(VER_COMPANY_NAME));
+        bool certificateWasInstalled = IsCertificatesWasInstalled();
+        bool devModeWasEnabled = IsDeveloperModeEnabled();
 
         try
         {
@@ -75,19 +76,22 @@ namespace AnyFSE
                 CheckSuccess(DeleteOldVersion() && DeleteOldFiles(oldPath));
             }
 
-            m_isDevModeEnabled = IsDeveloperModeEnabled();
-            if (!m_isDevModeEnabled)
+            if (!devModeWasEnabled)
             {
                 SetCurrentProgress(Translate(L"progressEnableDeveloperMode"));
                 EnableDeveloperMode(true);
                 CheckSuccess(true);
             }
 
-            if (!ToolsEx::Certificate::IsRootCertificateInstalled(Unicode::to_wstring(VER_COMPANY_NAME)))
+            if (certificateWasInstalled)
+            {
+                RemoveOldCertificates();
+            }
+
+            if (true)
             {
                 SetCurrentProgress(Translate(L"progressInstallPublisherCertificate"));
-                m_isRootCertInstalled = ToolsEx::Certificate::InstallRootCertificate(path.wstring() + L"/" + AppConstants::PublisherCertFile);
-                CheckSuccess(m_isRootCertInstalled);
+                CheckSuccess(ToolsEx::Certificate::InstallRootCertificate(path.wstring() + L"/" + AppConstants::PublisherCertFile));
             }
 
             if (IsNeedEnableAsusOptimization())
@@ -116,17 +120,10 @@ namespace AnyFSE
             SetCurrentProgress(Translate(L"progressCleanupFiles"));
             CheckSuccess(true);
 
-            if (!m_isDevModeEnabled)
+            if (!devModeWasEnabled)
             {
                 SetCurrentProgress(Translate(L"progressDisableDeveloperMode"));
                 EnableDeveloperMode(false);
-                CheckSuccess(true);
-            }
-
-            if (!certificateWasInstalled)
-            {
-                SetCurrentProgress(Translate(L"progressRemovingCertificate"));
-                ToolsEx::Certificate::RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
                 CheckSuccess(true);
             }
 
@@ -154,10 +151,10 @@ namespace AnyFSE
 
             if (!certificateWasInstalled)
             {
-                ToolsEx::Certificate::RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
+                ToolsEx::Certificate::RemoveRootCertificate(Unicode::to_wstring(VER_COMPANY_NAME));
             }
 
-            if (!m_isDevModeEnabled)
+            if (!devModeWasEnabled)
             {
                 EnableDeveloperMode(false);
             }

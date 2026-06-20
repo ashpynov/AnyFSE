@@ -197,6 +197,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         void RefreshLocalizedCaption();
         void AddLanguageButton();
+        void PopulateLanguageMenu();
         void OnSelectLanguage(const std::wstring &localeCode);
 
         void AddUpdateControls();

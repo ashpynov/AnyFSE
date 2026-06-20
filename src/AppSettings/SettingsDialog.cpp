@@ -119,7 +119,7 @@ namespace AnyFSE::App::AppSettings::Settings
         int y = (screenHeight - cy) / 2;
 
         // Move dialog to center
-        SetWindowPos(hwnd, NULL, x, y, cx, cy, SWP_NOZORDER);
+        SetWindowPos(hwnd, HWND_TOP, x, y, cx, cy, 0);
     }
 
     void SettingsDialog::StoreWindowPlacement()
@@ -838,34 +838,42 @@ namespace AnyFSE::App::AppSettings::Settings
         m_languageButton
             .SetAnchor(Align::BottomRight(), GetDialogCenteredRect)
             .Create(m_hDialog,
-                -Layout::MarginRight - Layout::UpdateHeight,
+                -Layout::MarginRight - Layout::UpdateHeight * 2,
                 -Layout::MarginBottom - Layout::UpdateHeight,
-                Layout::UpdateHeight,
+                Layout::UpdateHeight * 2,
                 Layout::UpdateHeight)
             .SetIcon(L"\xE164")
             .SetFlat(true);
+        PopulateLanguageMenu();
+    }
 
-        std::vector<Tools::Localization::LocaleInfo> locales = Tools::Localization::EnumerateLocales();
-
+    void SettingsDialog::PopulateLanguageMenu()
+    {
         std::vector<Popup::PopupItem> items;
-        items.reserve(locales.size());
-        for (const auto &locale : locales)
+        for (const auto &locale : Tools::Localization::EnumerateLocales())
         {
-            items.emplace_back(locale.code == Tools::Localization::GetCurrentLocale() ? L"\xE1D2" : L"\xEA3F", locale.language, [this, code = locale.code]() { OnSelectLanguage(code); });
+            items.emplace_back(
+                Unicode::to_upper(locale.code) == Unicode::to_upper(Tools::Localization::GetCurrentLocale())
+                    ? L"\xE1D2"
+                    : L"\xEA3F",
+                locale.language,
+                [this, code = locale.code]() { OnSelectLanguage(code); }
+            );
         }
 
         if (!items.empty())
         {
-            m_languageButton.SetMenu(items, m_theme.DpiScale(120), TPM_LEFTALIGN);
-            m_languageButton.OnChanged += [this]() { m_languageButton.ShowMenu(); };
+            m_languageButton.SetMenu(items,  m_theme.DpiScale(120), TPM_LEFTALIGN);
+            m_languageButton.OnChanged = [this]() { m_languageButton.ShowMenu(); };
         }
+        m_languageButton.SetText(Unicode::to_upper(Tools::Localization::GetCurrentLocale()).substr(0, 2));
     }
+
 
     void SettingsDialog::OnSelectLanguage(const std::wstring &localeCode)
     {
         Config::Locale = localeCode;
-        Tools::Localization::SetPreferredLocale(localeCode);
-        Tools::Localization::Initialize();
+        Tools::Localization::Initialize(localeCode);
         SaveSettings();
         AnyFSE::App::JumpList::RegisterJumpList();
         EndDialog(m_hDialog, IDRETRY);

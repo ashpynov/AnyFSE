@@ -15,11 +15,12 @@
 
 #include "Tools/Unicode.hpp"
 #include "Tools/Paths.hpp"
+#include "Tools/nlohmann/adl_serializer_wstring.hpp"
 #include "Tools/nlohmann/json.hpp"
 
 namespace AnyFSE::Tools::Localization
 {
-    bool Initialize();
+    bool Initialize(const std::wstring &code);
     std::vector<LocaleInfo> EnumerateLocales();
 
     namespace
@@ -71,6 +72,55 @@ namespace AnyFSE::Tools::Localization
             ResourceLocales locales;
             EnumResourceNamesW(hModule, L"LOCALIZATION", EnumLocalizationResNameProc, reinterpret_cast<LONG_PTR>(&locales));
             return locales;
+        }
+
+        std::wstring GetUserDefaultLocaleCode()
+        {
+            wchar_t localeName[LOCALE_NAME_MAX_LENGTH] = {0};
+            if (GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH) <= 0)
+            {
+                return L"";
+            }
+
+            std::wstring localeCode = localeName;
+            for (wchar_t &ch : localeCode)
+            {
+                if (ch == L'-')
+                {
+                    ch = L'_';
+                }
+            }
+            return localeCode;
+        }
+
+        std::wstring GetPreferedLocale()
+        {
+            namespace fs = std::filesystem;
+
+            const fs::path configPath = fs::path(Paths::GetConfigPath()) / L"AnyFSE.json";
+            std::error_code ec;
+            if (!fs::exists(configPath, ec))
+            {
+                return L"";
+            }
+
+            try
+            {
+                std::ifstream file(configPath);
+                const auto config = nlohmann::json::parse(file);
+                return config.value(nlohmann::json::json_pointer("/Locale"), std::wstring());
+            }
+            catch (...)
+            {
+                return L"";
+            }
+        }
+
+        std::wstring SetPreferredLocale(const std::wstring &localeCode)
+        {
+            std::lock_guard<std::mutex> guard(g_lock);
+            g_forcedLocale = localeCode;
+            return g_forcedLocale;
         }
 
         bool ReadFileUtf8(const std::wstring &filePath, std::string &content)
@@ -186,11 +236,13 @@ namespace AnyFSE::Tools::Localization
             return true;
         }
 
-        bool InitializeFromResourceLocales(const ResourceLocales &resourceLocales)
+        bool InitializeFromResourceLocales(const ResourceLocales &resourceLocales, const std::wstring &code)
         {
+            SetPreferredLocale(!code.empty() ? code : GetPreferedLocale());
+
             if (resourceLocales.empty())
             {
-                return Initialize();
+                return Initialize(code);
             }
 
             std::lock_guard<std::mutex> guard(g_lock);
@@ -199,27 +251,7 @@ namespace AnyFSE::Tools::Localization
 
             MergeLocaleFromMap(resourceLocales, L"en_US");
 
-            std::wstring localeFileName;
-            if (!g_forcedLocale.empty())
-            {
-                localeFileName = g_forcedLocale;
-            }
-            else
-            {
-                wchar_t localeName[LOCALE_NAME_MAX_LENGTH] = {0};
-                if (GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH) <= 0)
-                {
-                    return true;
-                }
-                localeFileName = localeName;
-                for (wchar_t &ch : localeFileName)
-                {
-                    if (ch == L'-')
-                    {
-                        ch = L'_';
-                    }
-                }
-            }
+            std::wstring localeFileName = !g_forcedLocale.empty() ? g_forcedLocale : GetUserDefaultLocaleCode();
 
             if (!localeFileName.empty() && _wcsicmp(localeFileName.c_str(), L"en_US") != 0)
             {
@@ -279,9 +311,11 @@ namespace AnyFSE::Tools::Localization
 
     }
 
-    bool Initialize()
+    bool Initialize(const std::wstring &code)
     {
         namespace fs = std::filesystem;
+
+        SetPreferredLocale(!code.empty() ? code : GetPreferedLocale());
 
         std::lock_guard<std::mutex> guard(g_lock);
         g_dictionary.clear();
@@ -295,31 +329,10 @@ namespace AnyFSE::Tools::Localization
         LoadLanguageFile((exeAssetsPath / L"en_US.json").wstring());
 
 
-        std::wstring localeFileName;
-        if (!g_forcedLocale.empty())
-        {
-            localeFileName = g_forcedLocale;
-        }
-        else
-        {
-            wchar_t localeName[LOCALE_NAME_MAX_LENGTH] = {0};
-            if (GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH) <= 0)
-            {
-                return true;
-            }
-            localeFileName = localeName;
-        }
+        std::wstring localeFileName = !g_forcedLocale.empty() ? g_forcedLocale : GetUserDefaultLocaleCode();
 
         if (!localeFileName.empty())
         {
-            for (wchar_t &ch : localeFileName)
-            {
-                if (ch == L'-')
-                {
-                    ch = L'_';
-                }
-            }
-
             if (_wcsicmp(localeFileName.c_str(), L"en_US") != 0)
             {
                 const bool loaded =
@@ -335,9 +348,9 @@ namespace AnyFSE::Tools::Localization
         return true;
     }
 
-    bool InitializeFromLocales()
+    bool InitializeFromLocales(const std::wstring &code)
     {
-        return InitializeFromResourceLocales(LoadResourceLocales());
+        return InitializeFromResourceLocales(LoadResourceLocales(), code);
     }
 
     ResourceLocales LoadResourceLocales()
@@ -404,18 +417,6 @@ namespace AnyFSE::Tools::Localization
     std::vector<LocaleInfo> EnumerateResourceLocales()
     {
         return EnumerateResourceLocales(LoadResourceLocales());
-    }
-
-    void SetPreferredLocale(const std::wstring &localeCode)
-    {
-        std::lock_guard<std::mutex> guard(g_lock);
-        g_forcedLocale = localeCode;
-    }
-
-    std::wstring GetPreferredLocale()
-    {
-        std::lock_guard<std::mutex> guard(g_lock);
-        return g_forcedLocale;
     }
 
     std::wstring GetCurrentLocale()

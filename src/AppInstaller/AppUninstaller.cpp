@@ -367,7 +367,7 @@ namespace AnyFSE
             .Create(m_hDialog,
                 rc.left - m_theme.DpiScale(Layout_ImageWidth + Layout_Margins * 2),
                 rc.bottom - m_theme.DpiScale(Layout_ButtonHeight),
-                m_theme.DpiScale(Layout_ButtonHeight),
+                m_theme.DpiScale(Layout_ButtonHeight * 2),
                 m_theme.DpiScale(Layout_ButtonHeight))
             .SetIcon(L"\xE164")
             .SetFlat(true)
@@ -492,12 +492,12 @@ namespace AnyFSE
             m_languageButton.SetMenu(items, m_theme.DpiScale(120), TPM_LEFTALIGN);
             m_languageButton.OnChanged = [this]() { m_languageButton.ShowMenu(); };
         }
+        m_languageButton.SetText(Unicode::to_upper(Tools::Localization::GetCurrentLocale()).substr(0, 2));
     }
 
     void AppUninstaller::OnSelectLanguage(const std::wstring &localeCode)
     {
-        Tools::Localization::SetPreferredLocale(localeCode);
-        Tools::Localization::InitializeFromLocales();
+        Tools::Localization::InitializeFromLocales(localeCode);
 
         PopulateLanguageMenu();
         UpdateDialogTitle();

@@ -128,7 +128,6 @@ namespace AnyFSE
         private:
             bool m_isUpdate = false;
             bool m_isDevModeEnabled = false;
-            bool m_isRootCertInstalled = false;
 
             std::list<std::wstring> m_progressStatus;
 
@@ -194,6 +193,8 @@ namespace AnyFSE
             bool EnableInjectorService();
             bool IsNeedEnableAsusOptimization();
             bool EnableAsusOptimization();
+            bool IsCertificatesWasInstalled();
+            bool RemoveOldCertificates();
             void StopAnyFSE();
     };
 }
