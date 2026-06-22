@@ -42,6 +42,7 @@ namespace FluentDesign
 
     // Window class registration
     static const wchar_t *SETTINGS_LINE_CLASS = AnyFSE::AppConstants::SettingsLineClass;
+    static bool IsSelfVisible(HWND hwnd);
 
     SettingsLine::SettingsLine(FluentDesign::Theme& theme)
         : FluentControl(theme)
@@ -116,6 +117,7 @@ namespace FluentDesign
         m_width = width;
         m_height = height;
         m_designHeight = m_theme.DpiUnscale(height);
+        m_actualDesignHeight = m_designHeight;
 
         // Calculate position and size
         RECT parentRect;
@@ -282,6 +284,95 @@ namespace FluentDesign
         }
     }
 
+    RECT SettingsLine::GetTextRect(const RECT &clientRect) const
+    {
+        RECT rect = clientRect;
+        rect.left += (m_state != State::Caption) ? m_theme.DpiScale(m_leftMargin) : 0;
+
+        if (m_icon || m_hIcon)
+        {
+            rect.left += m_theme.GetSize_Icon() + m_theme.DpiScale(m_leftMargin);
+        }
+
+        int rightPos = rect.right - ((m_state != State::Caption) ? m_theme.DpiScale(20) : 0);
+
+        if (HasChevron())
+        {
+            rightPos -= m_theme.DpiScale(CHEVRON_SIZE + CHEVRON_SPACE);
+        }
+
+        for (auto it = m_childControlsList.rbegin(); it != m_childControlsList.rend(); ++it)
+        {
+            HWND hChildControl = *it;
+            if (!IsSelfVisible(hChildControl))
+            {
+                continue;
+            }
+
+            RECT childRect;
+            GetWindowRect(hChildControl, &childRect);
+            rightPos -= (childRect.right - childRect.left) + m_theme.DpiScale(4);
+        }
+
+        rect.right = max(rect.left, rightPos);
+        return rect;
+    }
+
+    int SettingsLine::GetTextBlockHeight(int maximumWidth) const
+    {
+        if (maximumWidth <= 0)
+        {
+            return 0;
+        }
+
+        HFONT nameFont = (m_state != State::Caption) ? m_theme.GetFont_Text() : m_theme.GetFont_TextBold();
+        int height = max(m_theme.GetSize_Text(), Gdiplus::MeasureTextHeight(m_name, nameFont, maximumWidth));
+
+        if (!m_description.empty())
+        {
+            height += m_theme.DpiScale(m_linePadding);
+            height += max(
+                m_theme.GetSize_TextSecondary(),
+                Gdiplus::MeasureTextHeight(m_description, m_theme.GetFont_TextSecondary(), maximumWidth)
+            );
+        }
+
+        return height;
+    }
+
+    int SettingsLine::GetActualDesignHeight() const
+    {
+        if (m_linkButtons.size())
+        {
+            return m_theme.DpiUnscale(m_height);
+        }
+
+        RECT clientRect{0, 0, m_width, m_theme.DpiScale(m_designHeight)};
+        RECT textRect = GetTextRect(clientRect);
+        int textWidth = textRect.right - textRect.left;
+        if (textWidth <= 0)
+        {
+            return m_designHeight;
+        }
+
+        int singleLineBlockHeight = m_theme.GetSize_Text();
+        if (!m_description.empty())
+        {
+            singleLineBlockHeight += m_theme.DpiScale(m_linePadding) + m_theme.GetSize_TextSecondary();
+        }
+
+        int verticalMargins = max(0, m_theme.DpiScale(m_designHeight) - singleLineBlockHeight);
+        int actualHeight = verticalMargins + GetTextBlockHeight(textWidth);
+        int designHeight = max(m_designHeight, m_theme.DpiUnscale(actualHeight));
+
+        while (m_theme.DpiScale(designHeight) < actualHeight)
+        {
+            ++designHeight;
+        }
+
+        return designHeight;
+    }
+
     void SettingsLine::DrawText(HDC hdc)
     {
         RECT rect;
@@ -292,32 +383,33 @@ namespace FluentDesign
 
         SetBkMode(hdc, TRANSPARENT);
 
-        // Draw name
-        rect.left += (m_state != State::Caption) ? m_theme.DpiScale(m_leftMargin) : 0;   // Margin
-
-        if (m_icon || m_hIcon)
+        rect = GetTextRect(rect);
+        int textWidth = rect.right - rect.left;
+        if (textWidth <= 0)
         {
-            rect.left += m_theme.GetSize_Icon() + m_theme.DpiScale(m_leftMargin);
+            return;
         }
-        //rect.right -= 160; // Space for child control
 
         SelectObject(hdc, (m_state != State::Caption) ? m_theme.GetFont_Text() : m_theme.GetFont_TextBold());
         SetTextColor(hdc, textColor);
 
-        int height = m_theme.GetSize_Text();
-        if (!m_description.empty())
-        {
-            height += m_theme.DpiScale(m_linePadding) + m_theme.GetSize_TextSecondary();
-        }
+        int height = GetTextBlockHeight(textWidth);
 
         RECT nameRect = rect;
         nameRect.top = (m_state != State::Caption)
             ? (rect.bottom - rect.top - height) / 2
             : (rect.bottom - height - m_theme.DpiScale(m_linePadding));
 
-        nameRect.bottom = nameRect.top + m_theme.GetSize_Text();
+        nameRect.bottom = nameRect.top + max(
+            m_theme.GetSize_Text(),
+            Gdiplus::MeasureTextHeight(
+                m_name,
+                (m_state != State::Caption) ? m_theme.GetFont_Text() : m_theme.GetFont_TextBold(),
+                textWidth
+            )
+        );
 
-        ::DrawText(hdc, m_name.c_str(), -1, &nameRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
+        ::DrawText(hdc, m_name.c_str(), -1, &nameRect, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX | DT_NOCLIP);
 
         if ( !m_description.empty())
         {
@@ -330,10 +422,12 @@ namespace FluentDesign
 
             RECT descRect = rect;
             descRect.top = nameRect.bottom + m_theme.DpiScale(m_linePadding);
-            descRect.bottom = descRect.top + m_theme.GetSize_TextSecondary();
+            descRect.bottom = descRect.top + max(
+                m_theme.GetSize_TextSecondary(),
+                Gdiplus::MeasureTextHeight(m_description, m_theme.GetFont_TextSecondary(), textWidth)
+            );
 
-            ::DrawText(hdc, m_description.c_str(), -1, &descRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE| DT_NOCLIP|DT_CALCRECT);
-            ::DrawText(hdc, m_description.c_str(), -1, &descRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE| DT_NOCLIP);
+            ::DrawText(hdc, m_description.c_str(), -1, &descRect, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX | DT_NOCLIP);
 
             m_secondaryTextRect = descRect;
         }
@@ -564,7 +658,7 @@ namespace FluentDesign
         return hwnd && (GetWindowLong(hwnd, GWL_STYLE) & WS_VISIBLE);
     }
 
-    bool SettingsLine::HasChevron()
+    bool SettingsLine::HasChevron() const
     {
         return m_chevronButton.GetHwnd() && IsSelfVisible(m_chevronButton.GetHwnd());
     }
@@ -572,6 +666,13 @@ namespace FluentDesign
     void SettingsLine::UpdateLayout()
     {
         static bool bProtectRecurrency = false;
+
+        m_actualDesignHeight = GetActualDesignHeight();
+        int actualHeight = m_theme.DpiScale(GetDesignHeight());
+        if (m_height != actualHeight)
+        {
+            SetSize(m_width, actualHeight);
+        }
 
         if (m_linkButtons.size() && !bProtectRecurrency)
         {
@@ -756,10 +857,10 @@ namespace FluentDesign
     void SettingsLine::AddChildControl(HWND hChildControl)
     {
         SetParent(hChildControl, m_hWnd);
-        PositionChildControl();
         EnableWindow(hChildControl, m_enabled);
         ShowWindow(hChildControl, SW_SHOWNOACTIVATE);
         m_childControlsList.push_back(hChildControl);
+        UpdateLayout();
     }
 
     HWND SettingsLine::GetChildControl(int n)
@@ -776,13 +877,13 @@ namespace FluentDesign
     void SettingsLine::SetName(const std::wstring &name)
     {
         m_name = name;
-        Invalidate();
+        UpdateLayout();
     }
 
     void SettingsLine::SetDescription(const std::wstring &description)
     {
         m_description = description;
-        Invalidate();
+        UpdateLayout();
     }
 
     void SettingsLine::Enable(bool enable)
@@ -819,7 +920,8 @@ namespace FluentDesign
         {
             return m_theme.DpiUnscale(m_height);
         }
-        return m_designHeight;
+        m_actualDesignHeight = GetActualDesignHeight();
+        return max(m_designHeight, m_actualDesignHeight);
     }
 
     int SettingsLine::GetDesignPadding() const
@@ -857,7 +959,7 @@ namespace FluentDesign
     void SettingsLine::SetLeftMargin(int margin)
     {
         m_leftMargin = margin;
-        Invalidate();
+        UpdateLayout();
     }
     void SettingsLine::SetState(State state)
     {

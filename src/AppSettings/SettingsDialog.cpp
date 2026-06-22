@@ -397,9 +397,9 @@ namespace AnyFSE::App::AppSettings::Settings
                     r.top = m_breadCrumbRect.top;
                     r.bottom = m_breadCrumbRect.bottom;
                     r.left = r.right;
-                    r.right = paint.ClientRect().right;
+                    r.right = paint.ClientRect().right - m_theme.DpiScale(Layout::MarginRight);
                     SelectFont(paint.MemDC(), m_theme.GetFont_Title());
-                    ::DrawText(paint.MemDC(), m_pageName.c_str(), -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
+                    ::DrawText(paint.MemDC(), m_pageName.c_str(), -1, &r, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_END_ELLIPSIS);
                 }
 
                 HWND hFocused = GetFocus();

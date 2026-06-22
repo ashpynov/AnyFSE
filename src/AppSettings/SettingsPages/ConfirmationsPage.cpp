@@ -33,14 +33,14 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             Translate(L"settingsConfirmationsEnterMode"),
             Translate(L"settingsConfirmationsEnterModeDescription"),
             m_confirmEnterCombo,
-            Layout::LineHeight, Layout::LinePadding, 0, 240)
+            Layout::LineHeight, Layout::LinePadding, 0, 330)
             .SetIcon(L'\xE93A');
 
         m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
             Translate(L"settingsConfirmationsExitMode"),
             L"",
             m_confirmExitCombo,
-            Layout::LineHeight, Layout::LinePadding, 0, 240)
+            Layout::LineHeight, Layout::LinePadding, 0, 330)
             .SetIcon(L'\xEE47');
 
         std::vector<std::wstring> enterOptions{

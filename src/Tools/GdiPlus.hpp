@@ -26,6 +26,7 @@
 
 #define byte ::byte
 #include <gdiplus.h>
+#include <string>
 
 namespace Gdiplus
 {
@@ -153,6 +154,41 @@ namespace Gdiplus
     static Rect ToRect(const RECT &rect)
     {
         return Rect(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
+    }
+
+    static int MeasureTextHeight(const std::wstring &text, HFONT hFont, int maximumWidth, SIZE *actualSize = nullptr)
+    {
+        if (actualSize)
+        {
+            *actualSize = SIZE{0, 0};
+        }
+        if (text.empty() || !hFont || maximumWidth <= 0)
+        {
+            return 0;
+        }
+
+        HDC hdc = GetDC(nullptr);
+        if (!hdc)
+        {
+            return 0;
+        }
+
+        HGDIOBJ oldFont = SelectObject(hdc, hFont);
+        RECT rect{0, 0, maximumWidth, 0};
+        DrawTextW(hdc, text.c_str(), -1, &rect, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX | DT_CALCRECT);
+
+        if (oldFont)
+        {
+            SelectObject(hdc, oldFont);
+        }
+        ReleaseDC(nullptr, hdc);
+
+        SIZE measuredSize{rect.right - rect.left, rect.bottom - rect.top};
+        if (actualSize)
+        {
+            *actualSize = measuredSize;
+        }
+        return measuredSize.cy;
     }
 
     static Image* LoadImageFromResource(HMODULE hMod, const wchar_t* resid, const wchar_t* restype)

@@ -73,6 +73,7 @@ namespace FluentDesign
 
         int m_designHeight = 0;
         int m_designPadding = 0;
+        mutable int m_actualDesignHeight = 0;
 
         bool m_visible;
         bool m_enabled;
@@ -164,7 +165,7 @@ namespace FluentDesign
         std::list<SettingsLine *> &GetGroupItems() { return m_groupItemsList; }
         void EnsureChevron();
         void SetChevron(State state);
-        bool HasChevron();
+        bool HasChevron() const;
         void UpdateLayout();
         bool IsNested() const { return m_groupLine; }
         void Invalidate(BOOL bErase = FALSE);
@@ -208,6 +209,9 @@ namespace FluentDesign
 
         // Layout management
 
+        RECT GetTextRect(const RECT &clientRect) const;
+        int GetTextBlockHeight(int maximumWidth) const;
+        int GetActualDesignHeight() const;
         void PositionChildControl();
 
     };
