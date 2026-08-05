@@ -42,6 +42,11 @@ namespace AnyFSE::Tools::List
         auto it = std::find_if(list.begin(), list.end(), pred);
         return (it != list.end()) ? std::distance(list.begin(), it) : npos;
     }
+
+    template<typename T, typename Predicate>
+    auto find(T& list, Predicate pred) {
+        return std::find_if(list.begin(), list.end(), pred);
+    }
 }
 
 namespace List = AnyFSE::Tools::List;

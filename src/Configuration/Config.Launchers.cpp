@@ -96,6 +96,15 @@ namespace AnyFSE::Configuration
             result.push_back(OneGameLauncher);
         }
         {
+            LauncherConfig PocketDeck = {};
+            PocketDeck.Type = LauncherType::PocketDeck;
+            PocketDeck.Name = L"PocketDeck";
+            PocketDeck.URL = L"https://www.pocketdeckapp.com/";
+            PocketDeck.StartCommand = L"PocketDeck.exe";
+            PocketDeck.ProcessName = L"PocketDeck.exe";
+            result.push_back(PocketDeck);
+        }
+        {
             LauncherConfig RetroBat = {};
             RetroBat.Type = LauncherType::RetroBat;
             RetroBat.Name = L"RetroBat";

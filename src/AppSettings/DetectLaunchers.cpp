@@ -132,6 +132,7 @@ namespace AnyFSE::Configuration
         FindSteam(found);
         FindBigBox(found);
         FindOneGameLauncher(found);
+        FindPocketDeck(found);
         FindRetroBat(found);
         FindKodi(found);
         FindCortex(found);
@@ -207,6 +208,28 @@ namespace AnyFSE::Configuration
         if (!installPath.empty())
         {
             found.push_back(L"ogl://");
+        }
+    }
+
+    void Config::FindPocketDeck(std::list<std::wstring>& found)
+    {
+        std::wstring installPath = Packages::GetAppxInstallLocation(L"cyberdesk.PocketDeck_a94wxpzanyhhj");
+        auto config = List::find(
+            Config::LauncherConfigs,
+            [](auto& l){ return l.Type == LauncherType::PocketDeck; }
+        );
+
+        if (!installPath.empty())
+        {
+            found.push_back(fs::path(installPath).append(L"PocketDeck.exe").wstring());
+            config->Name = L"PocketDeck";
+        }
+
+        installPath = Packages::GetAppxInstallLocation(L"cyberdesk.PocketDeckLite_a94wxpzanyhhj");
+        if (!installPath.empty())
+        {
+            found.push_back(fs::path(installPath).append(L"PocketDeck.exe").wstring());
+            config->Name = L"PocketDeck Lite";
         }
     }
 
