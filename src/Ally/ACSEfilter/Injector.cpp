@@ -22,13 +22,13 @@ namespace
     constexpr DWORD kRemoteThreadTimeoutMs = 30000;
     constexpr DWORD kServiceStopWaitHintMs = 60000;
     constexpr DWORD kTargetServiceRestartTimeoutMs = 45000;
-    constexpr DWORD kTargetProcessAccess =
-        SYNCHRONIZE |
+    constexpr DWORD kTargetProcessInjectionAccess =
         PROCESS_CREATE_THREAD |
         PROCESS_QUERY_INFORMATION |
         PROCESS_VM_OPERATION |
         PROCESS_VM_WRITE |
         PROCESS_VM_READ;
+    constexpr DWORD kTargetProcessWaitAccess = SYNCHRONIZE;
 
     SERVICE_STATUS_HANDLE g_serviceStatusHandle = nullptr;
     SERVICE_STATUS g_serviceStatus = {};
@@ -39,7 +39,7 @@ namespace
 
     bool RestartTargetService();
 
-    bool EnableDebugPrivilege()
+    bool SetDebugPrivilege(bool enabled)
     {
         HANDLE token = nullptr;
         if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
@@ -56,12 +56,26 @@ namespace
             return false;
         }
 
-        privileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-        AdjustTokenPrivileges(token, FALSE, &privileges, sizeof(privileges), nullptr, nullptr);
+        privileges.Privileges[0].Attributes = enabled ? SE_PRIVILEGE_ENABLED : 0;
+        SetLastError(ERROR_SUCCESS);
+        const bool adjusted = AdjustTokenPrivileges(token, FALSE, &privileges, sizeof(privileges), nullptr, nullptr) != FALSE;
 
-        const bool result = GetLastError() == ERROR_SUCCESS;
+        const bool result = adjusted && GetLastError() == ERROR_SUCCESS;
         CloseHandle(token);
         return result;
+    }
+
+    HANDLE OpenTargetProcessForInjection(DWORD pid)
+    {
+        // SeDebugPrivilege and a process handle with VM/thread rights are both
+        // strong injector indicators. Keep them only for the brief injection
+        // window; the steady-state watcher needs SYNCHRONIZE access only.
+        SetDebugPrivilege(true);
+        HANDLE process = OpenProcess(kTargetProcessInjectionAccess, FALSE, pid);
+        const DWORD openError = GetLastError();
+        SetDebugPrivilege(false);
+        SetLastError(openError);
+        return process;
     }
 
     std::wstring ToLower(std::wstring value)
@@ -268,26 +282,27 @@ namespace
                 continue;
             }
 
-            HANDLE process = OpenProcess(kTargetProcessAccess, FALSE, pid);
-            if (!process)
-            {
-                LOG_ERROR("OpenProcess failed for PID %lu", pid);
-                if (WaitForStop(stopEvent, kMissingProcessDelayMs))
-                {
-                    return 0;
-                }
-                continue;
-            }
-
             LOG(L"Found %s process. PID: %lu", kTargetProcessName, pid);
-            bool loaded = true;
-            if (IsDllLoaded(pid, dllPath))
+            bool loaded = IsDllLoaded(pid, dllPath);
+            if (loaded)
             {
                 LOG(L"%s is already loaded in PID %lu.", kHookDllName, pid);
             }
             else
             {
-                loaded = InjectDll(process, pid, dllPath);
+                HANDLE injectionProcess = OpenTargetProcessForInjection(pid);
+                if (!injectionProcess)
+                {
+                    LOG_ERROR("OpenProcess for injection failed for PID %lu", pid);
+                    if (WaitForStop(stopEvent, kMissingProcessDelayMs))
+                    {
+                        return 0;
+                    }
+                    continue;
+                }
+
+                loaded = InjectDll(injectionProcess, pid, dllPath);
+                CloseHandle(injectionProcess);
                 if (loaded)
                 {
                     LOG(L"Injected successfully into PID %lu.", pid);
@@ -300,7 +315,17 @@ namespace
 
             if (!loaded)
             {
-                CloseHandle(process);
+                if (WaitForStop(stopEvent, kMissingProcessDelayMs))
+                {
+                    return 0;
+                }
+                continue;
+            }
+
+            HANDLE process = OpenProcess(kTargetProcessWaitAccess, FALSE, pid);
+            if (!process)
+            {
+                LOG_ERROR("OpenProcess for wait failed for PID %lu", pid);
                 if (WaitForStop(stopEvent, kMissingProcessDelayMs))
                 {
                     return 0;
@@ -397,7 +422,7 @@ namespace
             return;
         }
 
-        EnableDebugPrivilege();
+        SetDebugPrivilege(false);
         ReportServiceStatus(SERVICE_RUNNING);
 
         const int result = WatchAndInject(g_serviceStopEvent);
@@ -456,7 +481,7 @@ namespace
 
     int RunConsoleDebug()
     {
-        EnableDebugPrivilege();
+        SetDebugPrivilege(false);
 
         g_consoleStopEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
         if (!g_consoleStopEvent)
