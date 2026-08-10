@@ -483,7 +483,7 @@ namespace AnyFSE::Updater
         sei.cbSize = sizeof(sei);
         sei.fMask = SEE_MASK_NOCLOSEPROCESS;
         sei.hwnd = NULL;
-        sei.lpVerb = L"runas";
+        sei.lpVerb = NULL;
         sei.lpFile = localPath.c_str();
         sei.lpParameters = L"/autoupdate";
         sei.nShow = SW_SHOWNORMAL;

@@ -28,7 +28,6 @@
 #include <objbase.h>
 #include <string>
 #include <vector>
-#include <fstream>
 #include <thread>
 #include <filesystem>
 
@@ -539,56 +538,28 @@ namespace AnyFSE
 
     bool AppUninstaller::AutoDeleteSelf(const std::wstring& path, bool deleteFolder)
     {
-        std::wstring batchPath = fs::temp_directory_path().wstring() + L"\\unins000_anyfse_cleanup.bat";
+        bool scheduled = true;
+        const std::wstring executablePath = Paths::GetExeFileName();
 
-        std::wofstream batch(batchPath);
-        if (!batch.is_open()) return false;
-
-        batch << L"@echo off\n";
-        batch << L"chcp 65001 >nul\n";
-        batch << L"echo Cleaning up...\n";
-        batch << L"timeout /t 2 /nobreak >nul\n\n";
-
-        batch << L":waitloop\n";
-        batch << L"tasklist /fi \"PID eq " << GetCurrentProcessId() << L"\" | find \"" << GetCurrentProcessId() << L"\" >nul\n";
-        batch << L"if not errorlevel 1 (\n";
-        batch << L"  timeout /t 1 /nobreak >nul\n";
-        batch << L"  goto waitloop\n";
-        batch << L")\n\n";
-
-        // Delete this batch file
-        batch << L"del /f /q \"" << path << L"\\unins000.exe\"\n";
-
-
-        if (deleteFolder)
+        // Windows cannot remove a running executable. Ask Session Manager to
+        // delete it during the next boot instead of dropping and hiding a
+        // command script in the user's temporary directory.
+        if (!MoveFileExW(executablePath.c_str(), nullptr, MOVEFILE_DELAY_UNTIL_REBOOT))
         {
-            // Delete installation directory
-            batch << L"if exist \"" << path << L"\" (\n";
-            batch << L"  echo Deleting: " << path << L"\n";
-            batch << L"  rd /q \"" << path << L"\"\n";
-            batch << L")\n\n";
+            log.Error(log.APIError(), "Unable to schedule the uninstaller for deletion");
+            scheduled = false;
         }
 
-        batch << L"del /f /q \"" << batchPath << L"\"\n";
-
-        batch << L"echo Uninstallation complete!\n";
-        batch << L"timeout /t 3\n";
-
-        batch.close();
-
-        // Execute batch
-        SHELLEXECUTEINFOW sei = { sizeof(sei) };
-        sei.lpFile = batchPath.c_str();
-        sei.nShow = SW_HIDE;
-        sei.fMask = SEE_MASK_NOCLOSEPROCESS;
-
-        if (ShellExecuteExW(&sei))
+        // Delayed operations are processed in registration order, so schedule
+        // the now-empty directory after its remaining executable.
+        if (deleteFolder &&
+            !MoveFileExW(fs::path(path).lexically_normal().c_str(), nullptr, MOVEFILE_DELAY_UNTIL_REBOOT))
         {
-            WaitForSingleObject(sei.hProcess, 1000);
-            CloseHandle(sei.hProcess);
+            log.Error(log.APIError(), "Unable to schedule the installation directory for deletion");
+            scheduled = false;
         }
 
-        return true;
+        return scheduled;
     }
 
     bool AppUninstaller::TerminateAnyFSE()
