@@ -1,9 +1,6 @@
 #include "IATHook.h"
 
-#include <tlhelp32.h>
-
 #include <cstring>
-#include <vector>
 
 namespace ACSEFilter
 {
@@ -24,48 +21,6 @@ namespace ACSEFilter
 
             const auto *nt = reinterpret_cast<const IMAGE_NT_HEADERS *>(reinterpret_cast<const BYTE *>(module) + dos->e_lfanew);
             return nt->Signature == IMAGE_NT_SIGNATURE;
-        }
-
-        bool ShouldSkipModule(HMODULE module, HMODULE selfModule)
-        {
-            if (!module || module == selfModule)
-            {
-                return true;
-            }
-
-            if (module == GetModuleHandleW(L"ntdll.dll") ||
-                module == GetModuleHandleW(L"kernel32.dll") ||
-                module == GetModuleHandleW(L"KernelBase.dll"))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        std::vector<HMODULE> SnapshotModules()
-        {
-            std::vector<HMODULE> modules;
-
-            HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, GetCurrentProcessId());
-            if (snapshot == INVALID_HANDLE_VALUE)
-            {
-                return modules;
-            }
-
-            MODULEENTRY32W entry = {};
-            entry.dwSize = sizeof(entry);
-
-            if (Module32FirstW(snapshot, &entry))
-            {
-                do
-                {
-                    modules.push_back(entry.hModule);
-                } while (Module32NextW(snapshot, &entry));
-            }
-
-            CloseHandle(snapshot);
-            return modules;
         }
 
         const ImportHookSpec *FindHook(const char *functionName, const ImportHookSpec *hooks, size_t hookCount)
@@ -107,7 +62,7 @@ namespace ACSEFilter
             FlushInstructionCache(GetCurrentProcess(), slot, sizeof(void *));
         }
 
-        void PatchModuleImports(HMODULE module, const ImportHookSpec *hooks, size_t hookCount)
+        void PatchModuleImportsImpl(HMODULE module, const ImportHookSpec *hooks, size_t hookCount)
         {
             if (!IsReadablePeImage(module))
             {
@@ -157,17 +112,9 @@ namespace ACSEFilter
 
     } // namespace
 
-    void PatchAllModuleImports(HMODULE selfModule, const ImportHookSpec *hooks, size_t hookCount)
+    void PatchModuleImports(HMODULE module, const ImportHookSpec *hooks, size_t hookCount)
     {
-        const std::vector<HMODULE> modules = SnapshotModules();
-
-        for (HMODULE module : modules)
-        {
-            if (!ShouldSkipModule(module, selfModule))
-            {
-                PatchModuleImports(module, hooks, hookCount);
-            }
-        }
+        PatchModuleImportsImpl(module, hooks, hookCount);
     }
 
 } // namespace ACSEFilter

@@ -13,6 +13,6 @@ namespace ACSEFilter
         void *hookFunction;
     };
 
-    void PatchAllModuleImports(HMODULE selfModule, const ImportHookSpec *hooks, size_t hookCount);
+    void PatchModuleImports(HMODULE module, const ImportHookSpec *hooks, size_t hookCount);
 
 } // namespace ACSEFilter

@@ -67,6 +67,20 @@ For this purpose AnyFSE includes the `AnyFSE ACSE Filter Injector` service. The 
 
 This component is not in the critical path for normal input, launcher startup, or Full Screen Experience operation. It is enabled only when ASUS ROG Ally button remapping is enabled, and it is designed to make the smallest practical change: suppress the conflicting ASUS button events while allowing the rest of the system and device input stack to continue normally.
 
+### ACSE Filter and antivirus detection
+
+- ACSE Filter prevents ASUS Optimization from handling selected ROG Ally buttons when AnyFSE remaps them. It monitors `AsusOptimization.exe` and injects `AnyFSE.ACSEFilterHook.dll` into that process.
+
+- Injection uses the traditional `VirtualAllocEx` → `WriteProcessMemory` → `CreateRemoteThread` → `LoadLibraryW` technique. This is legitimate DLL injection, but the same API sequence is widely used by malware and is the most likely reason for an antivirus alert.
+
+- For the short injection window, it enables `SeDebugPrivilege` and opens the target with process-memory and remote-thread permissions. These are strong behavioral indicators for antivirus products even though the privilege is disabled immediately afterward.
+
+- The injector is installed as an automatically started Windows service, watches for ASUS Optimization restarts, and reinjects the DLL when necessary. Service persistence combined with process monitoring and injection can appear suspicious to Defender.
+
+- What is filtered: The hook examines only six-byte HID reports from ASUS devices with vendor ID 0x0B05 and the configured product IDs. It replaces only the configured Armoury Crate, Command Center, and Library button reports with an empty report. Other reads are passed through unchanged
+
+- In the ACSE Filter source, there is no networking, downloading, credential access, keylogging, file encryption, Defender disabling, or arbitrary payload execution. The DLL path is fixed to AnyFSE.ACSEFilterHook.dll beside the injector executable.
+
 
 ## Install, Configure and Uninstall
 

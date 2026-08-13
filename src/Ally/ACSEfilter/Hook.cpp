@@ -1,5 +1,6 @@
 #include <windows.h>
 
+#include "../../App/AppConstants.hpp"
 #include "DebugLog.h"
 #include "HidReadFilter.h"
 #include "IATHook.h"
@@ -103,9 +104,16 @@ namespace ACSEFilter::Hook
 
         size_t count = 0;
         const ImportHookSpec *specs = HookSpecs(count);
-        PatchAllModuleImports(selfModule, specs, count);
+        const HMODULE targetModule = GetModuleHandleW(AnyFSE::AppConstants::AsusOptimizationProcess);
+        if (!targetModule || targetModule == selfModule)
+        {
+            LOG(L"Failed to resolve the target executable module.");
+            return 1;
+        }
 
-        LOG(L"Hooks installed.");
+        PatchModuleImports(targetModule, specs, count);
+
+        LOG(L"Hooks installed in the target executable module only.");
         return 0;
     }
 
