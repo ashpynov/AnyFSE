@@ -26,7 +26,7 @@
 #include <set>
 #include <vector>
 #include <string>
-#include "App/AppConstants.hpp"
+#include "App/Constants.hpp"
 #include "Tools/Localization.hpp"
 #include "FluentDesign/Theme.hpp"
 #include "FluentDesign/Button.hpp"
@@ -105,7 +105,7 @@ namespace AnyFSE
             const int Layout_EditHeight = 36;
             const int Layout_ButtonPadding = 16;
 
-            const wchar_t * registryPath = AppConstants::UninstallAnyFseRegKey;
+            const wchar_t * registryPath = App::Constants::UninstallAnyFseRegKey;
 
             const wchar_t * Icon_EULA = L"C:\\Windows\\system32\\imageres.dll,-81";
             const wchar_t * Icon_Browse = L"C:\\Windows\\system32\\imageres.dll,-1025";
@@ -171,7 +171,6 @@ namespace AnyFSE
             void OnInstall();
             void OnSettings();
             void OnDone();
-            bool AutoDeleteSelf();
             bool DeleteOldVersion();
             bool DeleteOldFiles(const std::wstring &dir);
 
@@ -183,7 +182,6 @@ namespace AnyFSE
 
             // Tools
             bool IsDeveloperModeEnabled();
-
             void EnableDeveloperMode(bool bEnable);
 
             bool CopyFiles(const std::wstring &sourcePath, const std::wstring &destPath);

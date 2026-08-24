@@ -20,6 +20,7 @@
     <AssemblyDescription>AnyFSE Installer</AssemblyDescription>
     <WindowsSdkToolsPath>$(WindowsSdkDir)bin\$(WindowsTargetPlatformVersion)\x64</WindowsSdkToolsPath>
     <SignToolExe>$(WindowsSdkToolsPath)\signtool.exe</SignToolExe>
+    <TimestampUrl>http://timestamp.digicert.com</TimestampUrl>
   </PropertyGroup>
   <PropertyGroup Condition="'$(VCTargetsPath)'==''" >
     <VCTargetsPath>C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\</VCTargetsPath>
@@ -72,7 +73,7 @@
     <ApplicationFiles Include="$(OutDir)resources.scale-200.pri" />
     <ApplicationFiles Include="$(OutDir)CustomCapability.SCCD" />
     <ApplicationFiles Include="$(OutDir)Localization" />
-    <ApplicationFiles Include="$(OutDir)*.identity.appx" />
+    <ApplicationFiles Include="$(OutDir)$(AssemblyProduct)-$(AssemblyVersion).identity.appx" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDumpFiles Include="$(OutDir)AnyFSE*.pdb" Exclude="$(OutDir)AnyFSE*-*.pdb" />
@@ -102,6 +103,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <DelayLoadDLLs>api-ms-win-gaming-experience-l1-1-0.dll</DelayLoadDLLs>
       <!-- <AdditionalDependencies>Shell32.lib;Ole32.lib;User32.lib;ComCtl32.lib;Advapi32.lib</AdditionalDependencies> -->
@@ -128,6 +130,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <DelayLoadDLLs>api-ms-win-gaming-experience-l1-1-0.dll</DelayLoadDLLs>
@@ -149,7 +152,6 @@
     <ClCompile Include="src\AppInstaller\AppInstaller_Install.cpp" />
     <ClCompile Include="src\AppInstaller\AppInstaller_Page.cpp" />
     <ClCompile Include="src\AppInstaller\AppInstaller_Tools.cpp" />
-    <ClCompile Include="src\AppInstaller\Admin.cpp" />
     <ClCompile Include="src\AppInstaller\Certificate.cpp" />
     <ClCompile Include="src\FluentDesign\Theme.cpp" />
     <ClCompile Include="src\FluentDesign\FluentControl.cpp" />
@@ -198,7 +200,7 @@
     <Target Name="GetCertificateThumbprint">
         <Message Text="Finding certificate for: $(AssemblyCompany)" Importance="high" />
 
-        <Exec Command="powershell -NoProfile -Command &quot;try { $cert = Get-ChildItem -Path 'Cert:\CurrentUser\My' | Where-Object { $_.Subject -like '*$(AssemblyCompany)*' -and -not $_.Extensions.CertificateAuthority } | Select-Object -First 1; if (-not $cert) { throw 'Certificate not found' }; $cert.Thumbprint } catch { Write-Error $_.Exception.Message; exit 1 }&quot;" ContinueOnError="false" ConsoleToMSBuild="true">
+        <Exec Command="powershell -NoProfile -Command &quot;try { Import-Module PKI; $cert = Get-ChildItem -Path 'Cert:\CurrentUser\My' | Where-Object { $_.Subject -like '*$(AssemblyCompany)*' -and -not $_.Extensions.CertificateAuthority } | Select-Object -First 1; if (-not $cert) { throw 'Certificate not found' }; $cert.Thumbprint } catch { Write-Error $_.Exception.Message; exit 1 }&quot;" ContinueOnError="false" ConsoleToMSBuild="true">
             <Output TaskParameter="ConsoleOutput" PropertyName="CertificateThumbprint" />
         </Exec>
 
@@ -210,7 +212,7 @@
         <Message Text="Signing EXE with certificate: $(CertificateThumbprint)" Importance="high" />
 
         <!-- Run SignTool with the found certificate thumbprint -->
-        <Exec Command="&quot;$(SignToolExe)&quot; sign /sha1 &quot;$(CertificateThumbprint)&quot; /fd SHA256 /a &quot;$(OutExe)&quot;" WorkingDirectory="$(MSBuildProjectDirectory)" />
+        <Exec Command="&quot;$(SignToolExe)&quot; sign /sha1 &quot;$(CertificateThumbprint)&quot; /fd SHA256 /tr &quot;$(TimestampUrl)&quot; /td SHA256 /a &quot;$(OutExe)&quot;" WorkingDirectory="$(MSBuildProjectDirectory)" />
 
         <Message Text="EXE signed successfully: $(OutExe)" Importance="high" />
     </Target>

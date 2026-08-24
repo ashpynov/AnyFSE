@@ -36,13 +36,12 @@
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/Window.hpp"
-#include "AppInstaller/Admin.hpp"
 #include "Tools/Process.hpp"
 #include "Tools/Registry.hpp"
 #include "Tools/Paths.hpp"
 #include "Tools/Packages.hpp"
 #include "Tools/Localization.hpp"
-#include "App/AppConstants.hpp"
+#include "App/Constants.hpp"
 #include "Ally/Services.hpp"
 #include "AppInstaller/Certificate.hpp"
 
@@ -224,18 +223,7 @@ namespace AnyFSE
         CreatePage();
         UpdateDialogTitle();
 
-        if (!ToolsEx::Admin::IsRunningAsAdministrator() && !ToolsEx::Admin::RequestAdminElevation()
-        )
-        {
-            ShowErrorPage(
-                Translate(L"uninstallerInsufficientPermissionsCaption"),
-                Translate(L"uninstallerInsufficientPermissionsDescription"),
-                Icon_Permission);
-        }
-        else
-        {
-            ShowWelcomePage();
-        }
+        ShowWelcomePage();
     }
 
     void AppUninstaller::OnPaint(HWND hwnd)
@@ -513,8 +501,9 @@ namespace AnyFSE
 
         if (!update)
         {
-            Tools::Packages::RemovePackage(AppConstants::PackageFamilyName);
+            Tools::Packages::RemovePackage(App::Constants::PackageFamilyName);
         }
+        ToolsEx::Certificate::RemoveRootCertificate(Unicode::to_wstring(VER_COMPANY_NAME));
         ToolsEx::Certificate::RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
 
         Registry::DeleteKey(L"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AnyFSE");

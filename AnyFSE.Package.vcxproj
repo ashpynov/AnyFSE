@@ -27,6 +27,7 @@
     <MakeAppxExe>$(WindowsSdkToolsPath)\MakeAppx.exe</MakeAppxExe>
     <MakePriExe>$(WindowsSdkToolsPath)\MakePri.exe</MakePriExe>
     <SignToolExe>$(WindowsSdkToolsPath)\signtool.exe</SignToolExe>
+    <TimestampUrl>http://timestamp.digicert.com</TimestampUrl>
     <CertificateName>Artem Shpynov</CertificateName>
   </PropertyGroup>
   <!-- <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -35,7 +36,21 @@
   <Target Name="Build">
   </Target>
 
-  <Target Name="CreateAppPackageContents" DependsOnTargets="Build">
+  <ItemGroup>
+    <PayloadBinary Include="$(OutDir)AnyFSE.exe" />
+    <PayloadBinary Include="$(OutDir)AnyFSE.Settings.dll" />
+    <PayloadBinary Include="$(OutDir)AnyFSE.ACSEFilterInjector.exe" />
+    <PayloadBinary Include="$(OutDir)AnyFSE.ACSEFilterHook.dll" />
+  </ItemGroup>
+
+  <Target Name="SignPayloadFiles" DependsOnTargets="GetCertificateThumbprint">
+    <Message Text="Signing external payload binaries..." Importance="high" />
+    <Exec
+      Command="&quot;$(SignToolExe)&quot; sign /sha1 &quot;$(CertificateThumbprint)&quot; /fd SHA256 /tr &quot;$(TimestampUrl)&quot; /td SHA256 /a @(PayloadBinary->'&quot;%(FullPath)&quot;', ' ')"
+      WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+
+  <Target Name="CreateAppPackageContents" DependsOnTargets="Build;SignPayloadFiles">
     <Message Text="Creating app package contents folder..." Importance="high" />
 
     <RemoveDir Directories="$(AppPackageContentsDir)" />
@@ -132,7 +147,7 @@
   <Target Name="GetCertificateThumbprint">
     <Message Text="Finding certificate for: $(CertificateName)" Importance="high" />
 
-    <Exec Command="powershell -NoProfile -Command &quot;try { $cert = Get-ChildItem -Path 'Cert:\CurrentUser\My' | Where-Object { $_.Subject -like '*$(PublisherCN)*' -and -not $_.Extensions.CertificateAuthority } | Select-Object -First 1; if (-not $cert) { throw 'Certificate not found' }; $cert.Thumbprint } catch { Write-Error $_.Exception.Message; exit 1 }&quot;" ContinueOnError="false" ConsoleToMSBuild="true">
+    <Exec Command="powershell -NoProfile -Command &quot;try { Import-Module PKI; $cert = Get-ChildItem -Path 'Cert:\CurrentUser\My' | Where-Object { $_.Subject -like '*$(PublisherCN)*' -and -not $_.Extensions.CertificateAuthority } | Select-Object -First 1; if (-not $cert) { throw 'Certificate not found' }; $cert.Thumbprint } catch { Write-Error $_.Exception.Message; exit 1 }&quot;" ContinueOnError="false" ConsoleToMSBuild="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="CertificateThumbprint" />
     </Exec>
 
@@ -144,7 +159,7 @@
     <Message Text="Signing APPX package with certificate: $(CertificateThumbprint)" Importance="high" />
 
     <!-- Run SignTool with the found certificate thumbprint -->
-    <Exec Command="&quot;$(SignToolExe)&quot; sign /sha1 &quot;$(CertificateThumbprint)&quot; /fd SHA256 /a &quot;$(PackageFileName)&quot;" WorkingDirectory="$(MSBuildProjectDirectory)" />
+    <Exec Command="&quot;$(SignToolExe)&quot; sign /sha1 &quot;$(CertificateThumbprint)&quot; /fd SHA256 /tr &quot;$(TimestampUrl)&quot; /td SHA256 /a &quot;$(PackageFileName)&quot;" WorkingDirectory="$(MSBuildProjectDirectory)" />
 
     <Message Text="APPX package signed successfully: $(PackageFileName)" Importance="high" />
   </Target>

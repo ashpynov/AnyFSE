@@ -38,13 +38,14 @@
 #include "Tools/Unicode.hpp"
 
 #include "App/App.hpp"
-#include "App/AppConstants.hpp"
+#include "App/Constants.hpp"
 #include "App/GamingExperience.hpp"
 #include "App/ExitFSE.hpp"
 #include "App/MainWindow.hpp"
 #include "App/Launchers.hpp"
 #include "App/JumpList.hpp"
 #include "Ally/Ally.hpp"
+#include "Ally/Handlers.hpp"
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -109,7 +110,7 @@ namespace AnyFSE::App
 
     int App::ShowSettings()
     {
-        return CallLibrary(AppConstants::AnyFseSettingsDll, GetModuleHandle(NULL), NULL, NULL, 0);;
+        return CallLibrary(Constants::AnyFseSettingsDll, GetModuleHandle(NULL), NULL, NULL, 0);;
     }
 
     void App::InitCustomControls()
@@ -120,11 +121,11 @@ namespace AnyFSE::App
         ::InitCommonControlsEx(&icex);
     }
 
-    bool App::AsAllyHid(LPSTR lpCmdLine)
+    bool App::AsHidListener(LPSTR lpCmdLine)
     {
         for (char *a = lpCmdLine; *a; a++)
         {
-            if (_strnicmp(a, "/AllyHid", 8) == 0)
+            if (_strnicmp(a, "/HidListener", 12) == 0)
             {
                 return true;
             }
@@ -144,6 +145,31 @@ namespace AnyFSE::App
         }
         return false;
     }
+
+    bool App::AsFSENow(LPSTR lpCmdLine)
+    {
+        for (char *a = lpCmdLine; *a; a++)
+        {
+            if (_strnicmp(a, "/FSENow", 7) == 0)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool App::AsFSEReboot(LPSTR lpCmdLine)
+    {
+        for (char *a = lpCmdLine; *a; a++)
+        {
+            if (_strnicmp(a, "/FSEReboot", 10) == 0)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     bool App::AsSettings(LPSTR lpCmdLine)
     {
@@ -175,10 +201,10 @@ namespace AnyFSE::App
         }
 
         // Registry != AnyFSE
-        const std::wstring AnyFSEApp = AppConstants::AppUserModelId;
+        const std::wstring AnyFSEApp = Constants::AppUserModelId;
         const std::wstring selectedApp = Registry::ReadString(
-            AppConstants::GamingHomeAppRegKey,
-            AppConstants::GamingHomeAppRegValue);
+            Constants::GamingHomeAppRegKey,
+            Constants::GamingHomeAppRegValue);
 
         if (_wcsicmp(selectedApp.c_str(), AnyFSEApp.c_str() ) != 0)
         {
@@ -201,30 +227,28 @@ namespace AnyFSE::App
         AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
         log.Debug("Application is started (hInstance=%08x) args: [%s]", hInstance, lpCmdLine);
 
-        if (Ally::IsSupported() && Config::AllyHidEnable)
+       GamingExperience::RestoreEnterFSEConfirmation();
+
+        if (AsHidListener(lpCmdLine))
         {
-            log.Debug("Ally::IsSupported and enabled\n");
-            if (AsAllyHid(lpCmdLine))
+            if (Config::HotkeysEnable || (Config::AllyHidEnable && Ally::IsSupported()))
             {
-                log.Debug("Ally start as HIDListener\n");
-                AnyFSE::Logging::LogManager::Initialize("AnyFSE/AllyHID", Config::LogLevel, Config::LogPath);
+                log.Debug("Starting background HID/hotkey listener\n");
+                AnyFSE::Logging::LogManager::Initialize("AnyFSE/BackgroundListener", Config::LogLevel, Config::LogPath);
                 return Ally::HIDListener(NULL);
             }
-
-            if (Ally::CheckListener())
-            {
-                log.Debug("Ally not started and enabled\n");
-                Process::StartProtocol(AppConstants::AnyFseProtocolAllyHid);
-            }
-        }
-        else if (AsAllyHid(lpCmdLine))
-        {
             return 0;
+        }
+
+        if (Ally::CheckListener())
+        {
+            log.Debug("Background HID/hotkey listener is not running; starting it\n");
+            // Process::StartProtocol(Constants::AnyFseProtocolHidListener);
         }
 
         AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
 
-        if (FindWindow(AppConstants::MainWindowClass, NULL))
+        if (FindWindow(Constants::MainWindowClass, NULL))
         {
             log.Debug("Application control is executed already, exiting\n");
             return 0;
@@ -253,9 +277,9 @@ namespace AnyFSE::App
 
         bool bFirstLaunch = false;
 
-        if (!GlobalFindAtom(AppConstants::PackageAtomName))
+        if (!GlobalFindAtom(Constants::PackageAtomName))
         {
-            GlobalAddAtom(AppConstants::PackageAtomName);
+            GlobalAddAtom(Constants::PackageAtomName);
             log.Debug("First launch at fullscreen experience mode");
             bFirstLaunch = true;
         }
@@ -271,7 +295,11 @@ namespace AnyFSE::App
                 return 0;
             }
 
-            return GamingExperience::EnterFSEMode();
+            return GamingExperience::EnterFSEMode(
+                    AsFSEReboot(lpCmdLine) ? GamingExperience::Reboot
+                    : AsFSENow(lpCmdLine) ? GamingExperience::Now
+                    : GamingExperience::Ask
+            );
         }
 
         if (AsSettings(lpCmdLine))
@@ -326,7 +354,7 @@ namespace AnyFSE::App
         {
             Window::MainWindow mainWindow;
 
-            if (!mainWindow.Create(AppConstants::MainWindowClass, hInstance, (Config::Launcher.Name + L" is launching").c_str()))
+            if (!mainWindow.Create(Constants::MainWindowClass, hInstance, (Config::Launcher.Name + L" is launching").c_str()))
             {
                 return (int)GetLastError();
             }

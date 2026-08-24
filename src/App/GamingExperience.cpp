@@ -26,12 +26,16 @@
 #include <libloaderapi2.h>
 #include <gamingexperience.h>
 #include "Logging/LogManager.hpp"
+#include "Constants.hpp"
 #include "GamingExperience.hpp"
+#include "Tools/Registry.hpp"
 
 
 #pragma comment(lib, "delayimp.lib")
 #pragma comment(lib, "windowsapp.lib")
 #pragma comment(lib, "onecore.lib")
+
+using namespace AnyFSE::App::Constants;
 
 namespace AnyFSE::App
 {
@@ -70,12 +74,59 @@ namespace AnyFSE::App
         return false;
     }
 
-    bool GamingExperience::EnterFSEMode()
+    bool GamingExperience::EnterFSEMode(ConfirmationMode mode)
     {
+        if (IsFullscreenMode())
+        {
+            log.Info("EnterFSEMode: Already in Fullscreen mode");
+            return false;
+        }
+
+        if (mode != ConfirmationMode::Ask)
+        {
+            if (mode == ConfirmationMode::Reboot)
+            {
+                if (!_wcsicmp(Registry::ReadString(Constants::GamingHomeAppRegKey, Constants::GamingHomeAppRegValue).c_str(), Constants::AppUserModelId)
+                    && !Registry::ReadBool(Constants::GamingHomeAppRegKey, Constants::StartupToGamingHomeRegValue))
+                {
+                    Registry::WriteBool(Constants::GamingHomeAppRegKey, Constants::StartupToGamingHomeRestoreRegValue, false);
+                    Registry::WriteBool(Constants::GamingHomeAppRegKey, Constants::StartupToGamingHomeRegValue, true);
+                }
+            }
+
+            Registry::WriteDWORD(SystemDialogResultsRegKey, EnterGamingPostureConfirmationRestoreRegValue,
+                Registry::ReadDWORD(SystemDialogResultsRegKey, EnterGamingPostureConfirmationConfigRegValue,
+                    Registry::ReadDWORD(SystemDialogResultsRegKey, EnterGamingPostureConfirmationRegValue, 0)));
+
+            Registry::WriteDWORD(SystemDialogResultsRegKey, EnterGamingPostureConfirmationConfigRegValue, mode);
+            Registry::WriteDWORD(SystemDialogResultsRegKey, EnterGamingPostureConfirmationRegValue, mode);
+        }
+
         HRESULT hres = SetGamingFullScreenExperience(TRUE);
         log.Debug("Entering FSE mode return %u", hres);
         return false;
     }
+
+    void GamingExperience::RestoreEnterFSEConfirmation()
+    {
+        if (Registry::ValueExists(Constants::GamingHomeAppRegKey, Constants::StartupToGamingHomeRestoreRegValue))
+        {
+            Registry::WriteBool(Constants::GamingHomeAppRegKey, Constants::StartupToGamingHomeRegValue,
+                Registry::ReadBool(Constants::GamingHomeAppRegKey, Constants::StartupToGamingHomeRestoreRegValue));
+            Registry::DeleteValue(Constants::GamingHomeAppRegKey, Constants::StartupToGamingHomeRestoreRegValue);
+        }
+
+        DWORD restoreValue = Registry::ReadDWORD(SystemDialogResultsRegKey, EnterGamingPostureConfirmationRestoreRegValue, 0);
+        if (!restoreValue)
+        {
+            return;
+        }
+
+        Registry::WriteDWORD(SystemDialogResultsRegKey, EnterGamingPostureConfirmationConfigRegValue, restoreValue);
+        Registry::WriteDWORD(SystemDialogResultsRegKey, EnterGamingPostureConfirmationRegValue, restoreValue);
+        Registry::DeleteValue(SystemDialogResultsRegKey, EnterGamingPostureConfirmationRestoreRegValue);
+    }
+
 
     GamingExperience::GamingExperience()
     {

@@ -6,7 +6,7 @@
 #include <filesystem>
 
 #include "Packages.hpp"
-#include "App/AppConstants.hpp"
+#include "App/Constants.hpp"
 #include "Tools/Unicode.hpp"
 
 #include <winrt/windows.foundation.collections.h>
@@ -99,7 +99,7 @@ namespace AnyFSE::Tools::Packages
         std::wstring resourcePath;
         size_t pathPos = path.find(L'/');
 
-        familyName = pathPos ? GetPackageFamilyName(path.substr(0, pathPos)) : AppConstants::PackageFamilyName;
+        familyName = pathPos ? GetPackageFamilyName(path.substr(0, pathPos)) : App::Constants::PackageFamilyName;
         resourcePath = pathPos != std::wstring::npos ? path.substr(pathPos) : L"";
 
         auto packages = pm.FindPackagesForUser(L"", familyName);

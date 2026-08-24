@@ -8,11 +8,15 @@
 #include "Tools/Process.hpp"
 #include "Tools/Unicode.hpp"
 #include "Logging/LogManager.hpp"
-#include "App/AppConstants.hpp"
+#include "App/Constants.hpp"
 #include "Handlers.hpp"
+#include "Tools/Registry.hpp"
 #include "Tools/Steam.hpp"
+#include "App/GamingExperience.hpp"
 
 #pragma comment(lib, "psapi.lib")
+
+using namespace AnyFSE::App;
 
 namespace Ally::Handlers
 {
@@ -104,7 +108,7 @@ namespace Ally::Handlers
 
     void Handlers::OpenAnyFSESettings()
     {
-        Process::StartProtocol(AnyFSE::AppConstants::AnyFseProtocolSettings);
+        Process::StartProtocol(Constants::AnyFseProtocolSettings);
     }
 
     void Handlers::OpenGameBar()

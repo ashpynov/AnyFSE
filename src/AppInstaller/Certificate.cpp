@@ -4,14 +4,16 @@
 
 namespace AnyFSE::ToolsEx::Certificate
 {
-    bool IsRootCertificateInstalled(const std::wstring &commonName)
+    namespace
+    {
+    bool IsCertificateInstalled(const std::wstring &commonName, const wchar_t *storeName)
     {
         HCERTSTORE hStore = CertOpenStore(
             CERT_STORE_PROV_SYSTEM_W,
             0,
             NULL,
             CERT_SYSTEM_STORE_LOCAL_MACHINE | CERT_STORE_READONLY_FLAG,
-            L"ROOT"
+            storeName
         );
         if (!hStore)
             return false;
@@ -27,6 +29,43 @@ namespace AnyFSE::ToolsEx::Certificate
 
         CertCloseStore(hStore, 0);
         return found;
+    }
+
+    bool RemoveCertificate(const std::wstring &publisherCN, const wchar_t *storeName)
+    {
+        HCERTSTORE hStore = CertOpenStore(
+            CERT_STORE_PROV_SYSTEM_W,
+            0,
+            NULL,
+            CERT_SYSTEM_STORE_LOCAL_MACHINE,
+            storeName
+        );
+
+        if (!hStore)
+        {
+            return false;
+        }
+
+        PCCERT_CONTEXT pCertContext = nullptr;
+        bool removed = false;
+
+        while ((pCertContext = CertFindCertificateInStore(hStore, X509_ASN_ENCODING, 0, CERT_FIND_SUBJECT_STR, publisherCN.c_str(), pCertContext)))
+        {
+            PCCERT_CONTEXT pCertToDelete = CertDuplicateCertificateContext(pCertContext);
+            if (pCertToDelete && CertDeleteCertificateFromStore(pCertToDelete))
+            {
+                removed = true;
+            }
+        }
+
+        CertCloseStore(hStore, 0);
+        return removed;
+    }
+    }
+
+    bool IsRootCertificateInstalled(const std::wstring &commonName)
+    {
+        return IsCertificateInstalled(commonName, L"ROOT");
     }
 
     bool InstallRootCertificate(const std::wstring &certFilePath)
@@ -83,44 +122,6 @@ namespace AnyFSE::ToolsEx::Certificate
 
     bool RemoveRootCertificate(const std::wstring &publisherCN)
     {
-        HCERTSTORE hStore = CertOpenStore(
-            CERT_STORE_PROV_SYSTEM_W,
-            0,
-            NULL,
-            CERT_SYSTEM_STORE_LOCAL_MACHINE,
-            L"ROOT"
-        );
-
-        if (!hStore)
-        {
-            return false;
-        }
-
-        PCCERT_CONTEXT pCertContext = nullptr;
-        bool removed = false;
-
-        // Find and remove all certificates with the matching common name
-        while ((pCertContext = CertFindCertificateInStore(hStore, X509_ASN_ENCODING, 0, CERT_FIND_SUBJECT_STR, publisherCN.c_str(), pCertContext)))
-        {
-            // Duplicate the context before deletion since CertDeleteCertificateFromStore will free it
-            PCCERT_CONTEXT pCertToDelete = CertDuplicateCertificateContext(pCertContext);
-
-            if (pCertToDelete)
-            {
-                if (CertDeleteCertificateFromStore(pCertToDelete))
-                {
-                    removed = true;
-                }
-                // Note: CertDeleteCertificateFromStore automatically frees pCertToDelete
-            }
-        }
-        if (pCertContext)
-        {
-            CertFreeCertificateContext(pCertContext);
-        }
-
-        CertCloseStore(hStore, 0);
-        return removed;
+        return RemoveCertificate(publisherCN, L"ROOT");
     }
-
 }

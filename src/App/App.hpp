@@ -39,8 +39,10 @@ namespace AnyFSE::App
     public:
         static int ShowSettings();
         static void InitCustomControls();
-        static bool AsAllyHid(LPSTR lpCmdLine);
+        static bool AsHidListener(LPSTR lpCmdLine);
         static bool AsFSE(LPSTR lpCmdLine);
+        static bool AsFSENow(LPSTR lpCmdLine);
+        static bool AsFSEReboot(LPSTR lpCmdLine);
         static bool AsSettings(LPSTR lpCmdLine);
         static int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
     };

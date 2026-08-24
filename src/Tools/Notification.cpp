@@ -3,15 +3,15 @@
 #include "resource.h"
 #include <shellapi.h>
 #include "Notification.hpp"
-#include "App/AppConstants.hpp"
+#include "App/Constants.hpp"
 
 #ifndef VER_VERSION_STR
 #define VER_VERSION_STR "0.0.0"
 #endif
 
-namespace AnyFSE::Tools
+namespace AnyFSE::Tools::Notification
 {
-    void Notification::Show(HWND hwnd, const std::wstring& title, const std::wstring& message, const std::wstring& /*launchUrl*/ )
+    void Show(HWND hwnd, const std::wstring& title, const std::wstring& message, const std::wstring& /*launchUrl*/ )
     {
         bool createdWindow = false;
         HWND hWnd = hwnd;
@@ -23,7 +23,7 @@ namespace AnyFSE::Tools
             createdWindow = true;
             wc.lpfnWndProc = DefWindowProcW;
             wc.hInstance = GetModuleHandleW(NULL);
-            wc.lpszClassName = AppConstants::UpdaterNotifyWindowClass;
+            wc.lpszClassName = App::Constants::UpdaterNotifyWindowClass;
             RegisterClassW(&wc);
 
             hWnd = CreateWindowExW(0, wc.lpszClassName, L"", 0, 0,0,0,0, HWND_MESSAGE, NULL, wc.hInstance, NULL);
@@ -67,19 +67,19 @@ namespace AnyFSE::Tools
             UnregisterClassW(wc.lpszClassName, wc.hInstance);
         }
     }
-    void Notification::ShowNewVersion(HWND hwnd, const std::wstring &version, const std::wstring &launchUrl)
+    void ShowNewVersion(HWND hwnd, const std::wstring &version, const std::wstring &launchUrl)
     {
         if (version.empty())
         {
             return;
         }
         std::wstring msg = L"New version " + version + L" is available.";
-        Tools::Notification::Show(hwnd, L"AnyFSE Update available", msg);
+        Show(hwnd, L"AnyFSE Update available", msg);
     }
 
-    void Notification::ShowCurrentVersion(HWND hwnd, bool installed)
+    void ShowCurrentVersion(HWND hwnd, bool installed)
     {
         std::wstring msg = L"Current version is " + Unicode::to_wstring(VER_VERSION_STR);
-        Tools::Notification::Show(hwnd, installed ? L"AnyFSE was installed" : L"AnyFSE was updated", msg);
+        Show(hwnd, installed ? L"AnyFSE was installed" : L"AnyFSE was updated", msg);
     }
 }

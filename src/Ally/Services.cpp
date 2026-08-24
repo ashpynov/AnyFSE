@@ -2,13 +2,13 @@
 #include "Tools/Unicode.hpp"
 #include "Tools/Paths.hpp"
 #include "Tools/Process.hpp"
-#include "App/AppConstants.hpp"
+#include "App/Constants.hpp"
 #include "Logging/LogManager.hpp"
 
 namespace Ally::Services
 {
     namespace fs = std::filesystem;
-    namespace c = AnyFSE::AppConstants;
+    namespace c = AnyFSE::App::Constants;
     namespace Tools = AnyFSE::Tools;
 
     static Logger log = LogManager::GetLogger("AllyServices");

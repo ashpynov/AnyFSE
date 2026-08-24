@@ -22,7 +22,6 @@ namespace Ally::Handlers
     void ToggleRecord();
     void ShowKeyboard();
     void ToggleMicrophone();
-
     void OpenArmouryCrate();
     void OpenAnyFSESettings();
     void OpenGameBar();

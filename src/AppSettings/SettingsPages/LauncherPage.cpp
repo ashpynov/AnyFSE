@@ -1,6 +1,6 @@
 #include <filesystem>
 #include "Tools/Registry.hpp"
-#include "App/AppConstants.hpp"
+#include "App/Constants.hpp"
 #include "Tools/Event.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/List.hpp"
@@ -207,26 +207,25 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     void LauncherPage::SaveControls()
     {
         const std::wstring gamingConfiguration = L"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration";
-        const std::wstring startupToGamingHome = L"StartupToGamingHome";
-        const std::wstring gamingHomeApp = AppConstants::GamingHomeAppRegValue;
+        const std::wstring gamingHomeApp = App::Constants::GamingHomeAppRegValue;
         //const std::wstring xboxApp = L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";
-        const std::wstring anyFSEApp = AppConstants::AppUserModelId;
+        const std::wstring anyFSEApp = App::Constants::AppUserModelId;
 
         if (m_config.Type == LauncherType::None)
         {
             Registry::DeleteValue(gamingConfiguration, gamingHomeApp);
-            Registry::WriteBool(gamingConfiguration, startupToGamingHome, false);
+            Registry::WriteBool(gamingConfiguration, App::Constants::StartupToGamingHomeRegValue, false);
         }
         else if (m_config.Type == LauncherType::Native)
         {
             log.Debug("Saving %s as launcher", Unicode::to_string(m_config.Name).c_str());
-            Registry::WriteBool(gamingConfiguration, startupToGamingHome, m_fseOnStartupToggle.GetCheck());
+            Registry::WriteBool(gamingConfiguration, App::Constants::StartupToGamingHomeRegValue, m_fseOnStartupToggle.GetCheck());
             Registry::WriteString(gamingConfiguration, gamingHomeApp, m_config.AppUserModelID);
         }
         else
         {
             log.Debug("Saving AnyFSE as launcher");
-            Registry::WriteBool(gamingConfiguration, startupToGamingHome, m_fseOnStartupToggle.GetCheck());
+            Registry::WriteBool(gamingConfiguration, App::Constants::StartupToGamingHomeRegValue, m_fseOnStartupToggle.GetCheck());
             Registry::WriteString(gamingConfiguration, gamingHomeApp, anyFSEApp);
         }
 

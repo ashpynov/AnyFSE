@@ -56,4 +56,8 @@ namespace Ally
 
     RogAllyVersion GetRogAllyVersion();
     bool IsXBoxRogAlly();
+
+    void OnInput(bool allyEnabled, HANDLE hDevice, HRAWINPUT rawInput, bool *pbModePressed);
+    void OnHotkey(int id);
+    
 }

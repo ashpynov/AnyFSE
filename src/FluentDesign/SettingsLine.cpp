@@ -28,7 +28,7 @@
 #include "Tools/GdiPlus.hpp"
 #include "Tools/List.hpp"
 #include "Tools/Window.hpp"
-#include "App/AppConstants.hpp"
+#include "App/Constants.hpp"
 #include "Tools/Icon.hpp"
 #include <filesystem>
 #include <commctrl.h>
@@ -41,8 +41,25 @@ namespace FluentDesign
     static Logger log = LogManager::GetLogger("SettingsLine");
 
     // Window class registration
-    static const wchar_t *SETTINGS_LINE_CLASS = AnyFSE::AppConstants::SettingsLineClass;
+    static const wchar_t *SETTINGS_LINE_CLASS = Constants::SettingsLineClass;
     static bool IsSelfVisible(HWND hwnd);
+
+    static std::wstring NormalizeLineFeeds(const std::wstring &text)
+    {
+        std::wstring normalized;
+        normalized.reserve(text.size());
+
+        for (size_t i = 0; i < text.size(); ++i)
+        {
+            if (text[i] == L'\n' && (i == 0 || text[i - 1] != L'\r'))
+            {
+                normalized += L'\r';
+            }
+            normalized += text[i];
+        }
+
+        return normalized;
+    }
 
     SettingsLine::SettingsLine(FluentDesign::Theme& theme)
         : FluentControl(theme)
@@ -111,7 +128,7 @@ namespace FluentDesign
 
         m_hParent = hParent;
         m_name = name;
-        m_description = description;
+        m_description = NormalizeLineFeeds(description);
         m_left = x;
         m_top = y;
         m_width = width;
@@ -882,7 +899,7 @@ namespace FluentDesign
 
     void SettingsLine::SetDescription(const std::wstring &description)
     {
-        m_description = description;
+        m_description = NormalizeLineFeeds(description);
         UpdateLayout();
     }
 

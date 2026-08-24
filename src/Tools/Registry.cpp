@@ -27,9 +27,9 @@
 #include <string>
 #include "Registry.hpp"
 
-namespace AnyFSE::Tools
+namespace AnyFSE::Tools::Registry
 {
-    HKEY Registry::GetRootKey(const std::wstring &subKey, std::wstring &actualPath)
+    HKEY GetRootKey(const std::wstring &subKey, std::wstring &actualPath)
     {
         // Extract root key from subKey (e.g., "HKEY_CURRENT_USER\\Software\\MyApp" -> HKEY_CURRENT_USER)
         size_t pos = subKey.find('\\');
@@ -60,7 +60,7 @@ namespace AnyFSE::Tools
 
     // Read string from registry
     // static
-    std::wstring Registry::ReadString(const std::wstring &subKey, const std::wstring &valueName, const std::wstring &defaultValue )
+    std::wstring ReadString(const std::wstring &subKey, const std::wstring &valueName, const std::wstring &defaultValue )
     {
         HKEY hOpenedKey;
         std::wstring result = defaultValue;
@@ -87,7 +87,7 @@ namespace AnyFSE::Tools
 
     // Read DWORD from registry
     //static
-    DWORD Registry::ReadDWORD(const std::wstring &subKey, const std::wstring &valueName, DWORD defaultValue)
+    DWORD ReadDWORD(const std::wstring &subKey, const std::wstring &valueName, DWORD defaultValue)
     {
         HKEY hOpenedKey;
         DWORD result = defaultValue;
@@ -106,12 +106,28 @@ namespace AnyFSE::Tools
 
     // Read boolean from registry
     //static
-    bool Registry::ReadBool(const std::wstring &subKey, const std::wstring &valueName, bool defaultValue)
+    bool ReadBool(const std::wstring &subKey, const std::wstring &valueName, bool defaultValue)
     {
         return ReadDWORD(subKey, valueName, defaultValue ? 1 : 0) != 0;
     }
 
-    bool Registry::WriteString(const std::wstring &subKey, const std::wstring &valueName, const std::wstring &value)
+    bool ValueExists(const std::wstring &subKey, const std::wstring &valueName)
+    {
+        std::wstring actualPath;
+        HKEY rootKey = GetRootKey(subKey, actualPath);
+        HKEY hOpenedKey;
+
+        if (RegOpenKeyExW(rootKey, actualPath.c_str(), 0, KEY_QUERY_VALUE, &hOpenedKey) != ERROR_SUCCESS)
+        {
+            return false;
+        }
+
+        LONG result = RegQueryValueExW(hOpenedKey, valueName.c_str(), NULL, NULL, NULL, NULL);
+        RegCloseKey(hOpenedKey);
+        return result == ERROR_SUCCESS;
+    }
+
+    bool WriteString(const std::wstring &subKey, const std::wstring &valueName, const std::wstring &value)
     {
         std::wstring actualPath;
         HKEY rootKey = GetRootKey(subKey, actualPath);
@@ -130,7 +146,7 @@ namespace AnyFSE::Tools
         return (result == ERROR_SUCCESS);
     }
 
-    bool Registry::WriteDWORD(const std::wstring &subKey, const std::wstring &valueName, DWORD value)
+    bool WriteDWORD(const std::wstring &subKey, const std::wstring &valueName, DWORD value)
     {
         std::wstring actualPath;
         HKEY rootKey = GetRootKey(subKey, actualPath);
@@ -148,12 +164,12 @@ namespace AnyFSE::Tools
         return (result == ERROR_SUCCESS);
     }
 
-    bool Registry::WriteBool(const std::wstring &subKey, const std::wstring &valueName, bool value)
+    bool WriteBool(const std::wstring &subKey, const std::wstring &valueName, bool value)
     {
         return WriteDWORD(subKey, valueName, value ? 1 : 0);
     }
 
-    bool Registry::WriteBinary(const std::wstring &subKey, const std::wstring &valueName, const BYTE *data, DWORD size)
+    bool WriteBinary(const std::wstring &subKey, const std::wstring &valueName, const BYTE *data, DWORD size)
     {
         std::wstring actualPath;
         HKEY rootKey = GetRootKey(subKey, actualPath);
@@ -170,7 +186,7 @@ namespace AnyFSE::Tools
         return (result == ERROR_SUCCESS);
     }
 
-    bool Registry::DeleteValue(const std::wstring &subKey, const std::wstring &valueName)
+    bool DeleteValue(const std::wstring &subKey, const std::wstring &valueName)
     {
         std::wstring actualPath;
         HKEY rootKey = GetRootKey(subKey, actualPath);
@@ -186,7 +202,7 @@ namespace AnyFSE::Tools
         return (result == ERROR_SUCCESS);
     }
 
-    bool Registry::DeleteKey(const std::wstring &subKey)
+    bool DeleteKey(const std::wstring &subKey)
     {
         std::wstring actualPath;
         HKEY rootKey = GetRootKey(subKey, actualPath);

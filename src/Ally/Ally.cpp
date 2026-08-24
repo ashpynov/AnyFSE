@@ -11,17 +11,54 @@
 #include "Tools/Registry.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/PowerEfficiency.hpp"
-#include "App/AppConstants.hpp"
+#include "App/Constants.hpp"
 #include "Ally.hpp"
 #include "Ally/Services.hpp"
+#include "App/GamingExperience.hpp"
 
+using namespace AnyFSE::App;
 
 namespace Ally
 {
+
     static Logger log = LogManager::GetLogger("HIDListener");
     static const wchar_t *HidListenerClass = L"HIDListener";
-
+    static constexpr int HotkeyEnterFSEWithReboot = (int)GamingExperience::ConfirmationMode::Reboot;
+    static constexpr int HotkeyEnterFSENow = (int)GamingExperience::ConfirmationMode::Now;
     static HANDLE hHidThread = nullptr;
+
+    static bool UpdateHotkeys(HWND hWnd)
+    {
+        UnregisterHotKey(hWnd, HotkeyEnterFSEWithReboot);
+        UnregisterHotKey(hWnd, HotkeyEnterFSENow);
+
+        if (!Config::HotkeysEnable)
+        {
+            return false;
+        }
+
+        bool rebootRegistered = RegisterHotKey(
+            hWnd,
+            HotkeyEnterFSEWithReboot,
+            MOD_WIN | MOD_SHIFT | MOD_NOREPEAT,
+            VK_F11) != FALSE;
+        if (!rebootRegistered)
+        {
+            log.Warn(log.APIError(), "Could not register Win+Shift+F11");
+        }
+
+        bool nowRegistered = RegisterHotKey(
+            hWnd,
+            HotkeyEnterFSENow,
+            MOD_WIN | MOD_CONTROL | MOD_NOREPEAT,
+            VK_F11) != FALSE;
+        if (!nowRegistered)
+        {
+            log.Warn(log.APIError(), "Could not register Win+Ctrl+F11");
+        }
+
+        return rebootRegistered || nowRegistered;
+    }
 
     bool IsSupported()
     {
@@ -151,19 +188,114 @@ namespace Ally
         }
     }
 
+    void OnInput(bool allyEnabled, HANDLE hDevice, HRAWINPUT rawInput, bool * pbModePressed)
+    {
+        if (!allyEnabled)
+        {
+            return;
+        }
+
+        UINT dwSize;
+        GetRawInputData(rawInput, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
+        std::vector<BYTE> lpb(dwSize);
+
+        if (GetRawInputData(rawInput, RID_INPUT, lpb.data(), &dwSize, sizeof(RAWINPUTHEADER)) != dwSize)
+        {
+            return;
+        }
+
+        RAWINPUT *raw = (RAWINPUT *)lpb.data();
+        if (raw->header.dwType == RIM_TYPEHID && (raw->header.hDevice == hDevice || raw->header.hDevice == Ally::FindHIDDevice()))
+        {
+            hDevice = raw->header.hDevice;
+
+            std::stringstream seq;
+            for (size_t i = 0; i < raw->data.hid.dwCount * raw->data.hid.dwSizeHid; i++)
+            {
+                seq << (int)raw->data.hid.bRawData[i] << " ";
+            }
+            seq << ("\n");
+            log.Trace("Recieved sequence: %s", seq.str().c_str());
+
+            Ally::EventCode buttonCode = (Ally::EventCode)raw->data.hid.bRawData[1];
+
+            if (buttonCode == Ally::EventCode::ModePress)
+            {
+                *pbModePressed = true;
+            }
+            else if (buttonCode == Ally::EventCode::Release)
+            {
+                *pbModePressed = false;
+            }
+            else if (*pbModePressed &&
+                     (buttonCode == Ally::ACHold || buttonCode == Ally::ACPress || buttonCode == Ally::CCPress || buttonCode == Ally::LibraryPress))
+            {
+                buttonCode = (Ally::EventCode)(buttonCode + Ally::EventCode::ModePress);
+            }
+
+            if (Ally::ButtonBind.find(buttonCode) != Ally::ButtonBind.end() &&
+                Ally::ButtonBind[buttonCode])
+            {
+                Ally::ButtonBind[buttonCode]();
+            }
+        }
+    }
+
+    void OnHotkey(int id)
+    {
+        switch (id)
+        {
+            case HotkeyEnterFSEWithReboot:
+                GamingExperience::EnterFSEModeWithReboot();
+                break;
+            case HotkeyEnterFSENow:
+                GamingExperience::EnterFSEModeNow();
+                break;
+        }
+    }
+
+    void OnUser(HWND hwnd, bool allyEnabled, HANDLE hDevice, RAWINPUTDEVICE& rid)
+    {
+        Config::Load();
+        bool enableAlly = Config::AllyHidEnable && Ally::IsSupported();
+        if (enableAlly)
+        {
+            Ally::Load();
+            if (!allyEnabled)
+            {
+                hDevice = Ally::FindHIDDevice();
+                if (Ally::GetRawInputDevice(hDevice, hwnd, &rid))
+                {
+                    RegisterRawInputDevices(&rid, 1, sizeof(rid));
+                }
+            }
+        }
+        else if (allyEnabled)
+        {
+            rid.dwFlags = RIDEV_REMOVE;
+            rid.hwndTarget = NULL;
+            RegisterRawInputDevices(&rid, 1, sizeof(rid));
+            rid = {};
+            hDevice = NULL;
+        }
+
+        allyEnabled = enableAlly;
+        bool hotkeysRegistered = UpdateHotkeys(hwnd);
+        if (!allyEnabled && !hotkeysRegistered)
+        {
+            PostQuitMessage(0);
+        }
+    }
+
     DWORD WINAPI HIDListener(LPVOID lpParam)
     {
-        if (!Config::AllyHidEnable)
+        bool allyEnabled = Config::AllyHidEnable && Ally::IsSupported();
+        if (!allyEnabled && !Config::HotkeysEnable)
         {
             return -1;
         }
 
-        HANDLE hDevice = Ally::FindHIDDevice();
-
-        if (!hDevice)
-        {
-            return -1;
-        }
+        HANDLE hDevice = allyEnabled ? Ally::FindHIDDevice() : NULL;
 
         if (FindWindow(HidListenerClass,NULL) != NULL)
         {
@@ -171,7 +303,10 @@ namespace Ally
         }
 
         AnyFSE::Tools::EnablePowerEfficencyMode(true);
-        Load();
+        if (allyEnabled)
+        {
+            Load();
+        }
 
         // Create hidden window for raw input
         WNDCLASS wc = {0};
@@ -181,15 +316,26 @@ namespace Ally
         RegisterClass(&wc);
 
         HWND hwnd = CreateWindow(HidListenerClass, NULL, 0, 0, 0, 0, 0, NULL, NULL, GetModuleHandle(NULL), NULL);
+        if (!hwnd)
+        {
+            return -1;
+        }
 
         // Register raw input for ASUS Rog Ally service device
-        RAWINPUTDEVICE rid;
-        if (Ally::GetRawInputDevice(hDevice, hwnd, &rid))
+        RAWINPUTDEVICE rid = {};
+        if (allyEnabled && Ally::GetRawInputDevice(hDevice, hwnd, &rid))
         {
             RegisterRawInputDevices(&rid, 1, sizeof(rid));
         }
 
-        log.Trace("Starting Ally HID sink window");
+        bool hotkeysRegistered = UpdateHotkeys(hwnd);
+        if (!allyEnabled && !hotkeysRegistered)
+        {
+            DestroyWindow(hwnd);
+            return -1;
+        }
+
+        log.Trace("Starting Ally HID and hotkey sink window");
 
         MSG msg;
 
@@ -197,76 +343,25 @@ namespace Ally
 
         while (GetMessage(&msg, NULL, 0, 0))
         {
-            if (msg.message == WM_INPUT)
+            switch (msg.message)
             {
-                UINT dwSize;
-                GetRawInputData((HRAWINPUT)msg.lParam, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
-                std::vector<BYTE> lpb(dwSize);
-
-                if (GetRawInputData((HRAWINPUT)msg.lParam, RID_INPUT, lpb.data(), &dwSize, sizeof(RAWINPUTHEADER)) != dwSize)
-                {
-                    continue;
-                }
-
-                RAWINPUT *raw = (RAWINPUT *)lpb.data();
-                if (raw->header.dwType == RIM_TYPEHID
-                    && (raw->header.hDevice == hDevice
-                     || raw->header.hDevice == Ally::FindHIDDevice()))
-                {
-                    hDevice = raw->header.hDevice;
-
-                    std::stringstream seq;
-                    for (size_t i = 0; i < raw->data.hid.dwCount * raw->data.hid.dwSizeHid; i++)
-                    {
-                        seq << (int)raw->data.hid.bRawData[i] << " ";
-                    }
-                    seq << ("\n");
-                    log.Trace("Recieved sequence: %s", seq.str().c_str());
-
-                    Ally::EventCode buttonCode = (Ally::EventCode) raw->data.hid.bRawData[1];
-
-                    if (buttonCode == Ally::EventCode::ModePress)
-                    {
-                        bModePressed = true;
-                    }
-                    else if (buttonCode == Ally::EventCode::Release)
-                    {
-                        bModePressed = false;
-                    }
-                    else if (bModePressed &&
-                                (  buttonCode == Ally::ACHold
-                                || buttonCode == Ally::ACPress
-                                || buttonCode == Ally::CCPress
-                                || buttonCode == Ally::LibraryPress )
-                    )
-                    {
-                        buttonCode = (Ally::EventCode)(buttonCode + Ally::EventCode::ModePress);
-                    }
-
-                    if (Ally::ButtonBind.find(buttonCode) != Ally::ButtonBind.end() &&
-                        Ally::ButtonBind[buttonCode])
-                    {
-                        Ally::ButtonBind[buttonCode]();
-                    }
-                }
+            case WM_INPUT:
+                OnInput(allyEnabled, hDevice, (HRAWINPUT)msg.lParam, &bModePressed);
+                break;
+            case WM_HOTKEY:
+                OnHotkey((int)msg.wParam);
+                break;
+            case WM_USER:
+                OnUser(hwnd, allyEnabled, hDevice, rid);
+                break;
             }
-            else if (msg.message == WM_USER)
-            {
-                Config::Load();
-                if (!Config::AllyHidEnable)
-                {
-                    PostQuitMessage(0);
-                }
-                else
-                {
-                    Ally::Load();
-                }
-            }
-
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-        log.Trace("Exit HID sink thread");
+        UnregisterHotKey(hwnd, HotkeyEnterFSEWithReboot);
+        UnregisterHotKey(hwnd, HotkeyEnterFSENow);
+        DestroyWindow(hwnd);
+        log.Trace("Exit HID and hotkey sink thread");
         return 0;
     }
 
@@ -284,12 +379,12 @@ namespace Ally
 
     bool IsNativeHandlerEnabled()
     {
-        return 0 != Process::FindFirstByExe(AnyFSE::AppConstants::AsusOptimizationProcess);
+        return 0 != Process::FindFirstByExe(Constants::AsusOptimizationProcess);
     }
 
     bool IsInjectorEnabled()
     {
-        return 0 != Process::FindFirstByExe(AnyFSE::AppConstants::InjectorExe);
+        return 0 != Process::FindFirstByExe(Constants::InjectorExe);
     }
 
     bool UpdateHidListener()
@@ -305,7 +400,8 @@ namespace Ally
 
     bool CheckListener()
     {
-        return Ally::IsSupported() && FindWindow(HidListenerClass, NULL) == NULL;
+        return (Config::HotkeysEnable || (Config::AllyHidEnable && Ally::IsSupported()))
+            && FindWindow(HidListenerClass, NULL) == NULL;
     }
 
     bool SetupListener()

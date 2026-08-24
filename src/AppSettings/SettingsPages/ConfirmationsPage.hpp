@@ -21,6 +21,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             , m_dialog(dialog)
             , m_confirmEnterCombo(m_theme)
             , m_confirmExitCombo(m_theme)
+            , m_hotkeysToggle(m_theme)
         {}
 
         std::list<SettingsLine> &GetSettingsLines() { return m_pageLinesList;  };
@@ -37,5 +38,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         ComboBox m_confirmEnterCombo;
         ComboBox m_confirmExitCombo;
+        Toggle m_hotkeysToggle;
     };
 };

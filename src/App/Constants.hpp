@@ -1,6 +1,6 @@
 #pragma once
 
-namespace AnyFSE::AppConstants
+namespace AnyFSE::App::Constants
 {
     // Package / identity
     inline constexpr wchar_t PackageFamilyName[] = L"ArtemShpynov.AnyFSE_by4wjhxmygwn4";
@@ -27,6 +27,12 @@ namespace AnyFSE::AppConstants
     inline constexpr wchar_t UninstallAnyFseRegKey[] = L"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AnyFSE";
     inline constexpr wchar_t GamingHomeAppRegKey[] = L"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration";
     inline constexpr wchar_t GamingHomeAppRegValue[] = L"GamingHomeApp";
+    inline constexpr wchar_t StartupToGamingHomeRegValue[] = L"StartupToGamingHome";
+    inline constexpr wchar_t StartupToGamingHomeRestoreRegValue[] = L"StartupToGamingHome_Restore";
+    inline constexpr wchar_t SystemDialogResultsRegKey[] = L"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration\\SystemDialogResults";
+    inline constexpr wchar_t EnterGamingPostureConfirmationRegValue[] = L"EnterGamingPostureConfirmation";
+    inline constexpr wchar_t EnterGamingPostureConfirmationConfigRegValue[] = L"EnterGamingPostureConfirmation_Config";
+    inline constexpr wchar_t EnterGamingPostureConfirmationRestoreRegValue[] = L"EnterGamingPostureConfirmation_Restore";
 
     // Installer / updater assets
     inline constexpr wchar_t PublisherCertFile[] = L"Artem.Shpynov.cer";
@@ -37,7 +43,9 @@ namespace AnyFSE::AppConstants
     inline constexpr wchar_t CodebergReleaseRoot[] = L"https://codeberg.org/ashpynov/AnyFSE/releases/download/v";
     inline constexpr wchar_t UpdaterCommandMessage[] = L"AnyFSE.Updater.Command";
     inline constexpr wchar_t AnyFseProtocolSettings[] = L"anyfse://settings";
-    inline constexpr wchar_t AnyFseProtocolAllyHid[] = L"anyfse://AllyHid";
+    inline constexpr wchar_t AnyFseProtocolHidListener[] = L"anyfse://HidListener";
+    inline constexpr wchar_t HidListenerAutorunKey[] = L"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run";
+    inline constexpr wchar_t HidListenerAutorunValue[] = L"AnyFSE Hotkeys";
     inline constexpr wchar_t MainWindowClass[] = L"AnyFSE";
     inline constexpr wchar_t SettingsDialogClass[] = L"AnyFSESettingsDialogClass";
     inline constexpr wchar_t SettingsLineClass[] = L"AnyFSE_SettingsLineClass";
@@ -49,3 +57,5 @@ namespace AnyFSE::AppConstants
     inline constexpr wchar_t UpdaterTempExeSuffix[] = L".Update.exe";
 
 }
+
+namespace Constants = AnyFSE::App::Constants;

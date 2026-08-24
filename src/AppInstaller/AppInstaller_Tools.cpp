@@ -10,7 +10,7 @@
 
 #include "AppInstaller.hpp"
 #include "AppInstaller/Certificate.hpp"
-#include "App/AppConstants.hpp"
+#include "App/Constants.hpp"
 #include "Logging/LogManager.hpp"
 #include "Tools/Paths.hpp"
 #include "Tools/Registry.hpp"
@@ -129,7 +129,7 @@ namespace AnyFSE
 
     bool AppInstaller::IsInjectorServiceRun()
     {
-        return Process::FindFirstByExe(AppConstants::InjectorExe) != 0;
+        return Process::FindFirstByExe(App::Constants::InjectorExe) != 0;
     }
 
     bool AppInstaller::DisableInjectorService()
@@ -144,7 +144,7 @@ namespace AnyFSE
 
     bool AppInstaller::IsNeedEnableAsusOptimization()
     {
-        return Process::FindFirstByExe(AppConstants::ArmouryCrateServiceProcess) && !Process::FindFirstByExe(AppConstants::AsusOptimizationProcess);
+        return Process::FindFirstByExe(App::Constants::ArmouryCrateServiceProcess) && !Process::FindFirstByExe(App::Constants::AsusOptimizationProcess);
     }
     bool AppInstaller::EnableAsusOptimization()
     {

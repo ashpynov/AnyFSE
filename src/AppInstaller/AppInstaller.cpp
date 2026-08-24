@@ -41,7 +41,6 @@
 #include "Tools/Paths.hpp"
 #include "Tools/Packages.hpp"
 #include "Tools/Localization.hpp"
-#include "AppInstaller/Admin.hpp"
 #include "App/GamingExperience.hpp"
 
 #pragma comment(lib, "delayimp.lib")
@@ -74,13 +73,8 @@ namespace AnyFSE
 
     INT_PTR AppInstaller::Show(HINSTANCE hInstance, bool bAutoUpdate)
     {
-        m_isUpdate = bAutoUpdate || Tools::Packages::IsPackageInstalled(AppConstants::PackageFamilyName);
+        m_isUpdate = bAutoUpdate || Tools::Packages::IsPackageInstalled(App::Constants::PackageFamilyName);
         Tools::Localization::InitializeFromLocales();
-
-        if (bAutoUpdate)
-        {
-            AutoDeleteSelf();
-        }
 
         size_t size = sizeof(DLGTEMPLATE) + sizeof(WORD) * 3; // menu, class, title
         HGLOBAL hGlobal = GlobalAlloc(GHND, size);
@@ -202,14 +196,6 @@ namespace AnyFSE
                 Translate(L"notSupportedDescription"),
                 Icon_Error
             );
-        }
-        else if (!ToolsEx::Admin::IsRunningAsAdministrator() && !ToolsEx::Admin::RequestAdminElevation()
-        )
-        {
-            ShowErrorPage(
-                Translate(L"insufficientPermissionsCaption"),
-                Translate(L"insufficientPermissionsDescription"),
-                Icon_Permission);
         }
         else
         {

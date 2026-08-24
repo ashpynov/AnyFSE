@@ -36,3 +36,5 @@ namespace AnyFSE::Tools::Packages
     bool InstallPackage(const std::wstring &packageFilePath, const std::wstring &packageFamilyName, const std::wstring &externalInstallPath = L"");
     bool RemovePackage(const std::wstring &packageFamilyName);
 };
+
+namespace Packages = AnyFSE::Tools::Packages;

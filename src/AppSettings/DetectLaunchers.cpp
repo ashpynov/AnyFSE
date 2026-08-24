@@ -31,7 +31,7 @@
 #include "Tools/List.hpp"
 #include "Configuration/Config.hpp"
 #include "Tools/Paths.hpp"
-#include "App/AppConstants.hpp"
+#include "App/Constants.hpp"
 
 
 namespace AnyFSE::Configuration
@@ -76,7 +76,7 @@ namespace AnyFSE::Configuration
     {
         return 1 == Registry::ReadDWORD(
             L"Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration",
-            L"StartupToGamingHome"
+            App::Constants::StartupToGamingHomeRegValue
         );
     }
 
@@ -84,7 +84,7 @@ namespace AnyFSE::Configuration
     {
         std::wstring appPackageId = Registry::ReadString(
             L"Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration",
-            AppConstants::GamingHomeAppRegValue);
+            App::Constants::GamingHomeAppRegValue);
         return !IsAnyFSEConfigured() && !Packages::GetAppxInstallLocation(appPackageId).empty();
     }
 
@@ -92,7 +92,7 @@ namespace AnyFSE::Configuration
     {
         return Registry::ReadString(
             L"Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration",
-            AppConstants::GamingHomeAppRegValue) == AppConstants::AppUserModelId;
+            App::Constants::GamingHomeAppRegValue) == App::Constants::AppUserModelId;
     }
 
     std::wstring Config::GetNativePath(const std::wstring& launcher)
@@ -101,7 +101,7 @@ namespace AnyFSE::Configuration
         {
             return Registry::ReadString(
                 L"Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration",
-                AppConstants::GamingHomeAppRegValue);
+                App::Constants::GamingHomeAppRegValue);
         }
         return launcher;
     }
@@ -266,7 +266,7 @@ namespace AnyFSE::Configuration
         auto launchers = Packages::GetNativeLaunchers();
         for (auto appUserModelId : launchers)
         {
-            if (appUserModelId == AppConstants::AppUserModelId)
+            if (appUserModelId == App::Constants::AppUserModelId)
                 continue;
 
             if (List::npos == List::index_of_if(

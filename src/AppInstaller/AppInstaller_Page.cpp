@@ -38,7 +38,7 @@
 #include "Tools/Registry.hpp"
 #include "Tools/Paths.hpp"
 #include "Tools/Localization.hpp"
-#include "App/AppConstants.hpp"
+#include "App/Constants.hpp"
 #include "AppInstaller.hpp"
 #include "Logging/LogManager.hpp"
 
@@ -417,7 +417,7 @@ namespace AnyFSE
         }
 
         // Write resource to temporary ZIP file
-        std::wstring zipArchive = path + L"\\" + std::wstring(AppConstants::ReleaseZipPrefix) + Unicode::to_wstring(APP_VERSION) + L".zip";
+        std::wstring zipArchive = path + L"\\" + std::wstring(App::Constants::ReleaseZipPrefix) + Unicode::to_wstring(APP_VERSION) + L".zip";
 
         std::ofstream tempStream(zipArchive, std::ios::binary);
         tempStream.write(static_cast<const char *>(zipData), zipSize);
@@ -443,9 +443,9 @@ namespace AnyFSE
         } catch (const std::filesystem::filesystem_error&) {
             throw std::exception("Cannot create binary folder");
         }
-        const std::wstring rootPath = std::wstring(AppConstants::GitHubReleaseRoot) + Unicode::to_wstring(APP_VERSION);
-        const std::wstring rootPathAlt = std::wstring(AppConstants::CodebergReleaseRoot) + Unicode::to_wstring(APP_VERSION);
-        const std::wstring zipName = std::wstring(AppConstants::ReleaseZipPrefix) + Unicode::to_wstring(APP_VERSION) + L".zip";
+        const std::wstring rootPath = std::wstring(App::Constants::GitHubReleaseRoot) + Unicode::to_wstring(APP_VERSION);
+        const std::wstring rootPathAlt = std::wstring(App::Constants::CodebergReleaseRoot) + Unicode::to_wstring(APP_VERSION);
+        const std::wstring zipName = std::wstring(App::Constants::ReleaseZipPrefix) + Unicode::to_wstring(APP_VERSION) + L".zip";
         const std::wstring zipArchive = path + L"\\" + zipName;
 
         HRESULT hr = URLDownloadToFileW(
@@ -483,53 +483,13 @@ namespace AnyFSE
 
     void AppInstaller::OnSettings()
     {
-        Process::StartProtocol(AppConstants::AnyFseProtocolSettings);
+        Process::StartProtocol(App::Constants::AnyFseProtocolSettings);
         EndDialog(m_hDialog, IDOK);
     }
 
     void AppInstaller::OnDone()
     {
         EndDialog(m_hDialog, IDOK);
-    }
-
-    bool AppInstaller::AutoDeleteSelf()
-    {
-        std::wstring batchPath = fs::temp_directory_path().wstring() + L"\\ins000_anyfse_cleanup.bat";
-
-        std::wofstream batch(batchPath);
-        if (!batch.is_open()) return false;
-
-        batch << L"@echo off\n";
-        batch << L"chcp 65001 >nul\n";
-        batch << L"echo Cleaning up...\n";
-
-        batch << L":waitloop\n";
-        batch << L"tasklist /fi \"PID eq " << GetCurrentProcessId() << L"\" | find \"" << GetCurrentProcessId() << L"\" >nul\n";
-        batch << L"if not errorlevel 1 (\n";
-        batch << L"  timeout /t 1 /nobreak >nul\n";
-        batch << L"  goto waitloop\n";
-        batch << L")\n\n";
-
-        // Delete this batch file
-        batch << L"del /f /q \"" << Tools::Paths::GetExeFileName() << "\"\n";
-        batch << L"del /f /q \"" << batchPath << L"\"\n";
-
-        batch << L"echo Cleaning complete!\n";
-
-        batch.close();
-
-        // Execute batch
-        SHELLEXECUTEINFOW sei = { sizeof(sei) };
-        sei.lpFile = batchPath.c_str();
-        sei.nShow = SW_HIDE;
-        sei.fMask = SEE_MASK_NOCLOSEPROCESS;
-
-        if (ShellExecuteExW(&sei))
-        {
-            CloseHandle(sei.hProcess);
-        }
-
-        return true;
     }
 
 }

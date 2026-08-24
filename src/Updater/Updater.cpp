@@ -9,7 +9,7 @@
 #include <string>
 
 #include "Updater.hpp"
-#include "App/AppConstants.hpp"
+#include "App/Constants.hpp"
 #include "Updater/Updater.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/Paths.hpp"
@@ -43,8 +43,8 @@ namespace AnyFSE::Updater
     const std::wstring GetUserAgent(bool alt = true)
     {
         return alt
-            ? AppConstants::UpdaterUserAgentHeader
-            : std::wstring(AppConstants::UpdaterUserAgentHeader) + AppConstants::UpdaterGitHubAcceptHeader;
+            ? App::Constants::UpdaterUserAgentHeader
+            : std::wstring(App::Constants::UpdaterUserAgentHeader) + App::Constants::UpdaterGitHubAcceptHeader;
     }
 
     const std::wstring GetReleasesLatest(bool alt = true)
@@ -76,7 +76,7 @@ namespace AnyFSE::Updater
     }
 
 
-    static UINT WM_UPDATER_COMMAND = RegisterWindowMessage(AppConstants::UpdaterCommandMessage);
+    static UINT WM_UPDATER_COMMAND = RegisterWindowMessage(App::Constants::UpdaterCommandMessage);
     static bool m_bThreadExecuted = false;
     static std::mutex m_readMutex;
     static UpdateInfo m_lastUpdateInfo{UpdaterState::Idle};
@@ -128,7 +128,7 @@ namespace AnyFSE::Updater
     {
         log.Debug("Getting url: %s", Unicode::to_string(path).c_str());
 
-        HINTERNET hSession = WinHttpOpen(AppConstants::UpdaterSessionUserAgent,
+        HINTERNET hSession = WinHttpOpen(App::Constants::UpdaterSessionUserAgent,
                                          WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
                                          WINHTTP_NO_PROXY_NAME,
                                          WINHTTP_NO_PROXY_BYPASS, 0);
@@ -283,7 +283,7 @@ namespace AnyFSE::Updater
             if (name.empty() || url.empty())
                 continue;
             // Prefer exact installer filename AnyFSE.Installer.exe
-            if (!_stricmp(name.c_str(), Unicode::to_string(AppConstants::InstallerExe).c_str()))
+            if (!_stricmp(name.c_str(), Unicode::to_string(App::Constants::InstallerExe).c_str()))
             {
                 log.Debug("Installer at %s", url.c_str());
                 return url;
@@ -448,7 +448,7 @@ namespace AnyFSE::Updater
                 if (name.empty() || url.empty())
                     continue;
                 // prefer exact AnyFSE.Installer.exe
-                if (!_stricmp(name.c_str(), Unicode::to_string(AppConstants::InstallerExe).c_str()))
+                if (!_stricmp(name.c_str(), Unicode::to_string(App::Constants::InstallerExe).c_str()))
                 {
                     downloadUrl = url;
                     assetName = name;
@@ -463,7 +463,7 @@ namespace AnyFSE::Updater
 
         // convert assetName to wstring
         std::wstring wname = Tools::Unicode::to_wstring(assetName);
-        std::wstring localPath = Tools::Paths::GetTempPath() + L"\\" + AppConstants::UpdaterTempExePrefix + tag + AppConstants::UpdaterTempExeSuffix;
+        std::wstring localPath = Tools::Paths::GetTempPath() + L"\\" + App::Constants::UpdaterTempExePrefix + tag + App::Constants::UpdaterTempExeSuffix;
 
         // download
         std::wstring wurl = Tools::Unicode::to_wstring(downloadUrl);
@@ -504,6 +504,11 @@ namespace AnyFSE::Updater
             WaitForSingleObject(sei.hProcess, INFINITE);
             CloseHandle(sei.hProcess);
         }
+
+        // The updater owns the downloaded installer and is still alive after
+        // waiting for it. Delete it here instead of making the installer
+        // schedule deletion of its own executable.
+        DeleteFileW(localPath.c_str());
 
         return true;
     }

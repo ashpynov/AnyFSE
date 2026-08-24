@@ -37,11 +37,21 @@ namespace AnyFSE::App
         static void Callback(GamingExperience * This);
 
     public:
+        enum ConfirmationMode
+        {
+            Ask = 0,
+            Reboot = 1,
+            Now = 2
+        };
+
         static bool ApiIsAvailable;
         static bool IsFullscreenMode();
         static bool IsDesktopMode();
         static bool ExitFSEMode();
-        static bool EnterFSEMode();
+        static bool EnterFSEMode(ConfirmationMode mode = ConfirmationMode::Ask);
+        static bool EnterFSEModeWithReboot() { return ApiIsAvailable && EnterFSEMode(ConfirmationMode::Reboot); }
+        static bool EnterFSEModeNow() { return ApiIsAvailable && EnterFSEMode(ConfirmationMode::Now); }
+        static void RestoreEnterFSEConfirmation();
         GamingExperience();
         ~GamingExperience();
 

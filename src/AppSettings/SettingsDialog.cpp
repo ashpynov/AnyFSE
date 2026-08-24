@@ -33,7 +33,7 @@
 #include "FluentDesign/Align.hpp"
 #include "Tools/List.hpp"
 #include "Tools/Unicode.hpp"
-#include "App/AppConstants.hpp"
+#include "App/Constants.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/Window.hpp"
 #include "Tools/Registry.hpp"
@@ -648,7 +648,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
     HWND SettingsDialog::GetMainWindow()
     {
-        return FindWindow(AppConstants::MainWindowClass, NULL);
+        return FindWindow(App::Constants::MainWindowClass, NULL);
     }
 
     void SettingsDialog::AddCaptionButtons()
@@ -813,12 +813,15 @@ namespace AnyFSE::App::AppSettings::Settings
 
         Config::Save();
 
-        if (Ally::IsSupported())
+        if (!Ally::UpdateHidListener() && Ally::CheckListener())
         {
-            if (!Ally::UpdateHidListener() && Config::AllyHidEnable)
-            {
-                Process::StartProtocol(AppConstants::AnyFseProtocolAllyHid);
-            }
+            const std::wstring command = L"\"" + Tools::Paths::GetExeFileName() + L"\" /HidListener";
+            Registry::WriteString(Constants::HidListenerAutorunKey, Constants::HidListenerAutorunValue, command);
+            Process::StartProtocol(Constants::AnyFseProtocolHidListener);
+        }
+        else
+        {
+            Registry::DeleteValue(Constants::HidListenerAutorunKey, Constants::HidListenerAutorunValue);
         }
     }
 

@@ -57,11 +57,11 @@ Export-PfxCertificate `
     -Password $pfxPassword
 ```
 
-The certificate is now installed in the current user's personal certificate store and can be used by the repo's signing targets. 
+The certificate is now installed in the current user's personal certificate store and can be used by the repo's signing targets.
 
 ## Extract the public CER file
 
-The installer copies `*.cer` files into `build\<Configuration>\` and also uses `src\App\AppConstants.hpp` to decide the exact certificate file name to install. Export the public certificate and place it in the repo root.
+The installer copies `*.cer` files into `build\<Configuration>\` and also uses `src\App\Constants.hpp` to decide the exact certificate file name to install. Export the public certificate and place it in the repo root.
 
 ```powershell
 $publisherCn = "Your Publisher Name"
@@ -79,7 +79,7 @@ if (-not $cert) {
 Export-Certificate -Cert $cert -FilePath $certFile
 ```
 
-If you keep the current file naming convention, replace `Artem.Shpynov.cer` with the exported `.cer`. Otherwise update the certificate file name in `src\App\AppConstants.hpp`.
+If you keep the current file naming convention, replace `Artem.Shpynov.cer` with the exported `.cer`. Otherwise update the certificate file name in `src\App\Constants.hpp`.
 
 To trust packages signed by this self-signed certificate on the local machine, run PowerShell as Administrator and install the public certificate into Local Machine Trusted Root:
 
@@ -108,7 +108,7 @@ Update these files together. Do not change only one of them.
    - Update `<CertificateName>` for readable build output.
    - The actual APPX signing lookup currently uses `PublisherCN`, not `CertificateName`.
 
-4. `src\App\AppConstants.hpp`
+4. `src\App\Constants.hpp`
    - Update `PublisherCertFile` to the exported `.cer` file name.
    - If package `Identity Name` or `Publisher` changed, update `PackageFamilyName`, `AppUserModelId`, and `PackageAtomName`.
    - If this is a fork or private build, update `GitHubReleaseRoot`, `CodebergReleaseRoot`, and updater user-agent strings, or disable update checks as described below.
@@ -120,7 +120,7 @@ Get-AppxPackage -Name "Your.Package.Identity.Name" |
     Select-Object Name, Publisher, PackageFamilyName, PackageFullName
 ```
 
-Use the returned `PackageFamilyName` in `src\App\AppConstants.hpp`; `AppUserModelId` is `<PackageFamilyName>!App`.
+Use the returned `PackageFamilyName` in `src\App\Constants.hpp`; `AppUserModelId` is `<PackageFamilyName>!App`.
 
 ## Build the offline package
 
@@ -226,7 +226,7 @@ int ScheduledCheckAsync(const std::wstring& lastCheck, int checkInterval, bool i
 }
 ```
 
-5. Optional cleanup: update or clear the release URLs in `src\App\AppConstants.hpp` and `src\Updater\Updater.cpp` so accidental future calls do not contact the upstream project.
+5. Optional cleanup: update or clear the release URLs in `src\App\Constants.hpp` and `src\Updater\Updater.cpp` so accidental future calls do not contact the upstream project.
 
 Runtime/user setting for existing installs:
 

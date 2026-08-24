@@ -25,7 +25,7 @@
 #include <filesystem>
 #include <string>
 
-#include "App/AppConstants.hpp"
+#include "App/Constants.hpp"
 #include "AppInstaller.hpp"
 #include "Logging/LogManager.hpp"
 #include "Tools/Process.hpp"
@@ -42,7 +42,7 @@ namespace AnyFSE
 
     void AppInstaller::OnInstall()
     {
-        fs::path path(fs::temp_directory_path().append(AppConstants::TempInstallDirName));
+        fs::path path(fs::temp_directory_path().append(App::Constants::TempInstallDirName));
         if (fs::exists(path))
         {
             fs::remove_all(path);
@@ -91,7 +91,7 @@ namespace AnyFSE
             if (true)
             {
                 SetCurrentProgress(Translate(L"progressInstallPublisherCertificate"));
-                CheckSuccess(ToolsEx::Certificate::InstallRootCertificate(path.wstring() + L"/" + AppConstants::PublisherCertFile));
+                CheckSuccess(ToolsEx::Certificate::InstallRootCertificate(path.wstring() + L"/" + App::Constants::PublisherCertFile));
             }
 
             if (IsNeedEnableAsusOptimization())
@@ -104,8 +104,8 @@ namespace AnyFSE
             CopyFiles(path, Tools::Paths::GetInstallPath());
 
             CheckSuccess(Tools::Packages::InstallPackage(
-                path.wstring() + L"/" + AppConstants::AppxFilePrefix + Unicode::to_wstring(VER_VERSION_STR) + L".identity.appx",
-                AppConstants::PackageFamilyName,
+                path.wstring() + L"/" + App::Constants::AppxFilePrefix + Unicode::to_wstring(VER_VERSION_STR) + L".identity.appx",
+                App::Constants::PackageFamilyName,
                 Tools::Paths::GetInstallPath()
             ));
 
@@ -127,7 +127,7 @@ namespace AnyFSE
                 CheckSuccess(true);
             }
 
-            Process::StartProtocol(AnyFSE::AppConstants::AnyFseProtocolAllyHid);
+            Process::StartProtocol(Constants::AnyFseProtocolHidListener);
 
             ShowCompletePage();
 

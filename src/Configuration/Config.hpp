@@ -174,6 +174,8 @@ namespace AnyFSE::Configuration
 
             static bool ExitFSEOnHomeExit;
 
+            static bool HotkeysEnable;
+
             static bool         UpdatePreRelease;
             static bool         UpdateNotifications;
             static int          UpdateCheckInterval;

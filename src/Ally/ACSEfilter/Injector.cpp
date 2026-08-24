@@ -7,16 +7,16 @@
 #include <filesystem>
 #include <shellapi.h>
 #include <string>
-#include "../../App/AppConstants.hpp"
+#include "../../App/Constants.hpp"
 #include "../../Tools/PowerEfficiency.hpp"
 #include "DebugLog.h"
 
 namespace
 {
 
-    constexpr const wchar_t *kServiceName = AnyFSE::AppConstants::InjectorServiceName;
-    constexpr const wchar_t *kTargetProcessName = AnyFSE::AppConstants::AsusOptimizationProcess;
-    constexpr const wchar_t *kTargetServiceName = AnyFSE::AppConstants::AsusOptimizationService;
+    constexpr const wchar_t *kServiceName = Constants::InjectorServiceName;
+    constexpr const wchar_t *kTargetProcessName = Constants::AsusOptimizationProcess;
+    constexpr const wchar_t *kTargetServiceName = Constants::AsusOptimizationService;
     constexpr const wchar_t *kHookDllName = L"AnyFSE.ACSEFilterHook.dll";
     constexpr DWORD kMissingProcessDelayMs = 10000;
     constexpr DWORD kRemoteThreadTimeoutMs = 30000;
