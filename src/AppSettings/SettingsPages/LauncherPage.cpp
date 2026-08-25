@@ -1,6 +1,10 @@
 #include <filesystem>
+#include <windows.h>
+#include <shellapi.h>
 #include "Tools/Registry.hpp"
+#include "Tools/Paths.hpp"
 #include "App/Constants.hpp"
+#include "App/GamingExperience.hpp"
 #include "Tools/Event.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/List.hpp"
@@ -11,20 +15,31 @@
 #include "Logging/LogManager.hpp"
 #include "Tools/Localization.hpp"
 
+namespace c = AnyFSE::App::Constants;
+
 namespace AnyFSE::App::AppSettings::Settings::Page
 {
     static Logger log = LogManager::GetLogger("Settings/Launcher");
 
     void LauncherPage::AddPage(std::list<SettingsLine>& settingPageList, ULONG &top)
     {
-        FluentDesign::SettingsLine &launcher = m_dialog.AddSettingsLine(settingPageList, top,
+        m_pHomeAppSelectionLine = &m_dialog.AddSettingsLine(settingPageList, top,
+            Translate(L"settingsHomeAppSelectionUnavailable"),
+            Translate(L"settingsHomeAppSelectionUnavailableDescription"),
+            m_enableHomeAppSelectionButton,
+            Layout::LineHeight, Layout::LinePadding, 0,
+            Layout::CustomSettingsWidth, Layout::BrowseHeight);
+        m_pHomeAppSelectionLine->SetIcon(L'\xE7BA');
+        m_pHomeAppSelectionLine->Show(false);
+
+        m_pLauncherLine = &m_dialog.AddSettingsLine(settingPageList, top,
             Translate(L"settingsChooseHomeApp"),
             Translate(L"settingsChooseHomeAppDescription"),
             m_launcherCombo,
             Layout::LineHeight, Layout::LauncherBrowsePadding, 0,
             Layout::LauncherComboWidth );
 
-        launcher.SetFrame(Gdiplus::FrameFlags::SIDE_NO_BOTTOM | Gdiplus::FrameFlags::CORNER_TOP);
+        m_pLauncherLine->SetFrame(Gdiplus::FrameFlags::SIDE_NO_BOTTOM | Gdiplus::FrameFlags::CORNER_TOP);
 
         m_pBrowseLine = &m_dialog.AddSettingsLine(settingPageList, top,
             L"",
@@ -91,6 +106,10 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         m_browseButton.SetText(Translate(L"browseBtn"));
         m_browseButton.OnChanged += delegate(OnBrowseLauncher);
+
+        m_enableHomeAppSelectionButton.SetText(
+            Translate(L"settingsEnableHomeAppSelection"));
+        m_enableHomeAppSelectionButton.OnChanged += delegate(OnEnableHomeAppSelection);
     }
 
     void LauncherPage::AddCustomPage()
@@ -202,34 +221,37 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_dialog.UpdateLayout();
         UpdateControls();
         UpdateCustomSettings();
+        UpdateHomeAppSelection();
     }
 
     void LauncherPage::SaveControls()
     {
         const std::wstring gamingConfiguration = L"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration";
-        const std::wstring gamingHomeApp = App::Constants::GamingHomeAppRegValue;
+        const std::wstring gamingHomeApp = c::GamingHomeAppRegValue;
         //const std::wstring xboxApp = L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";
-        const std::wstring anyFSEApp = App::Constants::AppUserModelId;
+        const std::wstring anyFSEApp = c::AppUserModelId;
+        const bool fseOnStartup = m_fseOnStartupToggle.GetCheck();
 
         if (m_config.Type == LauncherType::None)
         {
             Registry::DeleteValue(gamingConfiguration, gamingHomeApp);
-            Registry::WriteBool(gamingConfiguration, App::Constants::StartupToGamingHomeRegValue, false);
+            Registry::WriteBool(gamingConfiguration, c::StartupToGamingHomeRegValue, false);
         }
         else if (m_config.Type == LauncherType::Native)
         {
             log.Debug("Saving %s as launcher", Unicode::to_string(m_config.Name).c_str());
-            Registry::WriteBool(gamingConfiguration, App::Constants::StartupToGamingHomeRegValue, m_fseOnStartupToggle.GetCheck());
+            Registry::WriteBool(gamingConfiguration, c::StartupToGamingHomeRegValue, fseOnStartup);
             Registry::WriteString(gamingConfiguration, gamingHomeApp, m_config.AppUserModelID);
         }
         else
         {
             log.Debug("Saving AnyFSE as launcher");
-            Registry::WriteBool(gamingConfiguration, App::Constants::StartupToGamingHomeRegValue, m_fseOnStartupToggle.GetCheck());
+            Registry::WriteBool(gamingConfiguration, c::StartupToGamingHomeRegValue, fseOnStartup);
             Registry::WriteString(gamingConfiguration, gamingHomeApp, anyFSEApp);
         }
 
-        log.Debug("Saved launcher: %s", Unicode::to_string(Registry::ReadString(gamingConfiguration, gamingHomeApp)).c_str());
+        std::wstring savedLauncher = Registry::ReadString(gamingConfiguration, gamingHomeApp);
+        log.Debug("Saved launcher: %s", Unicode::to_string(savedLauncher).c_str());
 
         Config::Launcher.StartCommand = m_config.StartCommand;
         Config::ExitFSEOnHomeExit = m_fseExitOnHomeExitToggle.GetCheck();
@@ -275,6 +297,89 @@ namespace AnyFSE::App::AppSettings::Settings::Page
                 UpdateControls();
                 UpdateCustomSettings();
             }
+        }
+    }
+
+    void LauncherPage::OnRestoreGamingPC()
+    {
+        const std::wstring executable = Tools::Paths::GetExeFileName();
+        const std::wstring arguments = L"/RestoreGamingPC";
+
+        SHELLEXECUTEINFOW sei = {sizeof(sei)};
+        sei.fMask = SEE_MASK_NOCLOSEPROCESS;
+        sei.hwnd = m_dialog.GetHwnd();
+        sei.lpVerb = L"runas";
+        sei.lpFile = executable.c_str();
+        sei.lpParameters = arguments.c_str();
+        sei.nShow = SW_HIDE;
+
+        if (ShellExecuteExW(&sei))
+        {
+            if (sei.hProcess)
+            {
+                WaitForSingleObject(sei.hProcess, INFINITE);
+                CloseHandle(sei.hProcess);
+            }
+        }
+        UpdateHomeAppSelection();
+    }
+
+    void LauncherPage::OnEnableHomeAppSelection()
+    {
+        const std::wstring executable = Tools::Paths::GetExeFileName();
+        const std::wstring arguments = L"/EnableGamingHandheld";
+
+        SHELLEXECUTEINFOW sei = {sizeof(sei)};
+        sei.fMask = SEE_MASK_NOCLOSEPROCESS;
+        sei.hwnd = m_dialog.GetHwnd();
+        sei.lpVerb = L"runas";
+        sei.lpFile = executable.c_str();
+        sei.lpParameters = arguments.c_str();
+        sei.nShow = SW_HIDE;
+
+        m_enableHomeAppSelectionButton.Enable(false);
+        if (ShellExecuteExW(&sei))
+        {
+            if (sei.hProcess)
+            {
+                WaitForSingleObject(sei.hProcess, INFINITE);
+                CloseHandle(sei.hProcess);
+            }
+        }
+        m_enableHomeAppSelectionButton.Enable(true);
+        UpdateHomeAppSelection();
+    }
+
+    void LauncherPage::UpdateHomeAppSelection()
+    {
+        const bool available = GamingExperience::IsGamingHandheld();
+        m_pHomeAppSelectionLine->Show(!available);
+        m_pLauncherLine->Show(available);
+        m_pBrowseLine->Show(available);
+        m_pFseOnStartupLine->Show(available);
+        m_pExitOnHomeExitLine->Show(available);
+        m_pCustomSettingsLine->Show(available);
+        m_pSplashSettingsLine->Show(available);
+        m_pStartupSettingsLine->Show(available);
+
+        UpdateRestoreGamingPC();
+        m_dialog.UpdateLayout();
+    }
+
+    void LauncherPage::UpdateRestoreGamingPC()
+    {
+        if (Registry::ValueExists(c::DeviceFormRegKey, c::DeviceFormBackupRegValue))
+        {
+            m_pBrowseLine->OnLink = delegate(OnRestoreGamingPC);
+            m_pBrowseLine->SetDescription(Translate(L"settingsRestoreXboxPcMode"));
+        }
+        else
+        {
+            m_pBrowseLine->OnLink.Clear();
+            m_pBrowseLine->SetDescription(
+                m_defaultConfig.Type == LauncherType::Native
+                    ? Translate(L"settingsNativeLauncherSelected")
+                    : L"");
         }
     }
 
@@ -380,11 +485,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             UpdateCustomSettings();
         }
 
-        m_pBrowseLine->SetDescription(
-            m_defaultConfig.Type == LauncherType::Native
-                ? Translate(L"settingsNativeLauncherSelected")
-                : L""
-        );
+        UpdateRestoreGamingPC();
     }
 
     void LauncherPage::OnLauncherDropDown()

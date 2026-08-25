@@ -39,6 +39,8 @@ namespace AnyFSE::App
     public:
         static int ShowSettings();
         static void InitCustomControls();
+        static bool AsEnableGamingHandheld(LPSTR lpCmdLine);
+        static bool AsRestoreGamingPC(LPSTR lpCmdLine);
         static bool AsHidListener(LPSTR lpCmdLine);
         static bool AsFSE(LPSTR lpCmdLine);
         static bool AsFSENow(LPSTR lpCmdLine);

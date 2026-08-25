@@ -25,6 +25,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             , m_dialog(dialog)
             , m_launcherCombo(m_theme)
             , m_browseButton(m_theme)
+            , m_enableHomeAppSelectionButton(m_theme)
             , m_fseOnStartupToggle(m_theme)
             , m_fseExitOnHomeExitToggle(m_theme)
             , m_customSettingsToggle(m_theme)
@@ -64,6 +65,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         ComboBox m_launcherCombo;
         Button m_browseButton;
+        Button m_enableHomeAppSelectionButton;
         Toggle m_fseOnStartupToggle;
         Toggle m_fseExitOnHomeExitToggle;
         Toggle m_customSettingsToggle;
@@ -77,7 +79,9 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         TextBox m_titleAltEdit;
         TextBox m_classAltEdit;
 
+        SettingsLine * m_pLauncherLine = nullptr;
         SettingsLine * m_pBrowseLine = nullptr;
+        SettingsLine * m_pHomeAppSelectionLine = nullptr;
         SettingsLine * m_pFseOnStartupLine = nullptr;
         SettingsLine * m_pExitOnHomeExitLine = nullptr;
         SettingsLine * m_pCustomSettingsLine = nullptr;
@@ -92,6 +96,10 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         void AddCustomPage();
 
         void OnBrowseLauncher();
+        void OnRestoreGamingPC();
+        void OnEnableHomeAppSelection();
+        void UpdateHomeAppSelection();
+        void UpdateRestoreGamingPC();
         void OnCustomChanged();
         void OnCustomReset();
         void UpdateCustomResetEnabled();

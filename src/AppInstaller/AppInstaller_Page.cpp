@@ -39,6 +39,7 @@
 #include "Tools/Paths.hpp"
 #include "Tools/Localization.hpp"
 #include "App/Constants.hpp"
+#include "App/GamingExperience.hpp"
 #include "AppInstaller.hpp"
 #include "Logging/LogManager.hpp"
 
@@ -193,7 +194,7 @@ namespace AnyFSE
                 Translate(L"updaterWelcomeCaption"),
                 TranslateF(L"updaterWelcomeDescription", Unicode::to_wstring(APP_VERSION).c_str()),
                 Translate(L"cancelBtn"), delegate(OnCancel),
-                Translate(L"updateBtn"), delegate(OnInstall)
+                Translate(L"updateBtn"), delegate(ShowXboxModeCheckPage)
             );
         }
         else
@@ -216,8 +217,32 @@ namespace AnyFSE
             Translate(L"licenseDescription"),
 
             Translate(L"cancelBtn"), delegate(OnCancel),
-            Translate(L"acceptBtn"), delegate(OnInstall)
+            Translate(L"acceptBtn"), delegate(ShowXboxModeCheckPage)
         );
+    }
+
+    void AppInstaller::ShowXboxModeCheckPage()
+    {
+        if (GamingExperience::IsGamingHandheld())
+        {
+            OnInstall();
+            return;
+        }
+
+        ShowPage(
+            Icon_Permission,
+            Translate(L"settingsChooseHomeApp"),
+            Translate(L"xboxModeCheckDescription"),
+            Translate(L"cancelBtn"), delegate(OnCancel),
+            Translate(L"enableBtn"), delegate(OnEnableHomeAppSelection));
+    }
+
+    void AppInstaller::OnEnableHomeAppSelection()
+    {
+        if (GamingExperience::EnableGamingHandheld())
+        {
+            OnInstall();
+        }
     }
 
     void AppInstaller::ShowProgressPage()

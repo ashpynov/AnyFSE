@@ -148,6 +148,7 @@ namespace AnyFSE
             );
             void ShowWelcomePage();
             void ShowLicensePage();
+            void ShowXboxModeCheckPage();
             void ShowProgressPage();
             void ShowCompletePage();
             void PopulateLanguageMenu();
@@ -168,6 +169,7 @@ namespace AnyFSE
             void CheckSuccess(bool bSuccess);
 
             void OnCancel();
+            void OnEnableHomeAppSelection();
             void OnInstall();
             void OnSettings();
             void OnDone();

@@ -25,6 +25,10 @@ namespace AnyFSE::App::Constants
 
     // Registry
     inline constexpr wchar_t UninstallAnyFseRegKey[] = L"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AnyFSE";
+    inline constexpr wchar_t DeviceFormRegKey[] = L"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\OEM";
+    inline constexpr wchar_t DeviceFormRegValue[] = L"DeviceForm";
+    inline constexpr wchar_t DeviceFormBackupRegValue[] = L"DeviceForm_AnyFSE";
+    inline constexpr unsigned long HandheldDeviceForm = 46;
     inline constexpr wchar_t GamingHomeAppRegKey[] = L"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration";
     inline constexpr wchar_t GamingHomeAppRegValue[] = L"GamingHomeApp";
     inline constexpr wchar_t StartupToGamingHomeRegValue[] = L"StartupToGamingHome";

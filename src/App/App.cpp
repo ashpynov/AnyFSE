@@ -133,6 +133,32 @@ namespace AnyFSE::App
         return false;
     }
 
+    bool App::AsEnableGamingHandheld(LPSTR lpCmdLine)
+    {
+        constexpr char argument[] = "/EnableGamingHandheld";
+        for (char *a = lpCmdLine; *a; a++)
+        {
+            if (_strnicmp(a, argument, sizeof(argument) - 1) == 0)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool App::AsRestoreGamingPC(LPSTR lpCmdLine)
+    {
+        constexpr char argument[] = "/RestoreGamingPC";
+        for (char *a = lpCmdLine; *a; a++)
+        {
+            if (_strnicmp(a, argument, sizeof(argument) - 1) == 0)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     bool App::AsFSE(LPSTR lpCmdLine)
     {
@@ -226,6 +252,16 @@ namespace AnyFSE::App
 
         AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
         log.Debug("Application is started (hInstance=%08x) args: [%s]", hInstance, lpCmdLine);
+
+        if (AsEnableGamingHandheld(lpCmdLine))
+        {
+            return GamingExperience::EnableGamingHandheld() ? 0 : 1;
+        }
+
+        if (AsRestoreGamingPC(lpCmdLine))
+        {
+            return GamingExperience::RestoreGamingPC() ? 0 : 1;
+        }
 
        GamingExperience::RestoreEnterFSEConfirmation();
 

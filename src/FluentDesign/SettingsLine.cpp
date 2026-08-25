@@ -919,6 +919,12 @@ namespace FluentDesign
         Enable(false);
     }
 
+    void SettingsLine::Show(bool show)
+    {
+        m_visible = show;
+        ShowWindow(m_hWnd, show ? SW_SHOW : SW_HIDE);
+    }
+
     void SettingsLine::SetSize(int width, int height)
     {
         m_width = width;

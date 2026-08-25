@@ -139,6 +139,8 @@ namespace FluentDesign
         // State management
         void Enable(bool enable = true);
         void Disable();
+        void Show(bool show = true);
+        bool IsVisible() const { return m_visible; }
         bool IsEnabled() const { return m_enabled; }
 
         void SetFrame(UINT flags)

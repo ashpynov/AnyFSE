@@ -45,6 +45,9 @@ namespace AnyFSE::App
         };
 
         static bool ApiIsAvailable;
+        static bool IsGamingHandheld();
+        static bool EnableGamingHandheld();
+        static bool RestoreGamingPC();
         static bool IsFullscreenMode();
         static bool IsDesktopMode();
         static bool ExitFSEMode();

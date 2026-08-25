@@ -42,6 +42,7 @@
 #include "Tools/Packages.hpp"
 #include "Tools/Localization.hpp"
 #include "App/Constants.hpp"
+#include "App/GamingExperience.hpp"
 #include "Ally/Services.hpp"
 #include "AppInstaller/Certificate.hpp"
 
@@ -501,6 +502,7 @@ namespace AnyFSE
 
         if (!update)
         {
+            App::GamingExperience::RestoreGamingPC();
             Tools::Packages::RemovePackage(App::Constants::PackageFamilyName);
         }
         ToolsEx::Certificate::RemoveRootCertificate(Unicode::to_wstring(VER_COMPANY_NAME));

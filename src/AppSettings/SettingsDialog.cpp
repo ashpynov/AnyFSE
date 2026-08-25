@@ -633,7 +633,7 @@ namespace AnyFSE::App::AppSettings::Settings
             {
                 if (!line.IsNested())
                 {
-                    ShowWindow(line.GetHWnd(), SW_SHOW);
+                    ShowWindow(line.GetHWnd(), line.IsVisible() ? SW_SHOW : SW_HIDE);
                     ::MoveWindow(line.GetHWnd(), left, top, width, m_theme.DpiScale(line.GetDesignHeight()), FALSE);
                     line.UpdateLayout();
                     top += line.GetTotalHeight();

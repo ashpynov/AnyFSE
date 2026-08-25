@@ -104,6 +104,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\App\GamingExperience.cpp" />
     <ClCompile Include="src\AppInstaller\AppUninstaller.cpp" />
     <ClCompile Include="src\AppInstaller\Certificate.cpp" />
     <ClCompile Include="src\Ally\Services.cpp" />
