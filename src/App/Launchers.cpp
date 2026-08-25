@@ -54,6 +54,8 @@ namespace AnyFSE::App::Launchers
             case LauncherType::PlayniteDesktop:
             case LauncherType::PlayniteFullscreen:
                 return PlayniteOnStarted();
+            case LauncherType::RetroBat:
+                return FocusLauncher();
         };
     }
 
