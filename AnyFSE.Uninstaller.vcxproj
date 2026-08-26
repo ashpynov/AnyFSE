@@ -20,7 +20,6 @@
     <AssemblyDescription>AnyFSE Uninstaller</AssemblyDescription>
     <WindowsSdkToolsPath>$(WindowsSdkDir)bin\$(WindowsTargetPlatformVersion)\x64</WindowsSdkToolsPath>
     <SignToolExe>$(WindowsSdkToolsPath)\signtool.exe</SignToolExe>
-    <TimestampUrl>http://timestamp.digicert.com</TimestampUrl>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="AnyFSE.Version.props" />
@@ -106,6 +105,7 @@
   <ItemGroup>
     <ClCompile Include="src\App\GamingExperience.cpp" />
     <ClCompile Include="src\AppInstaller\AppUninstaller.cpp" />
+    <ClCompile Include="src\AppInstaller\Admin.cpp" />
     <ClCompile Include="src\AppInstaller\Certificate.cpp" />
     <ClCompile Include="src\Ally\Services.cpp" />
     <ClCompile Include="src\FluentDesign\Theme.cpp" />
@@ -136,7 +136,7 @@
     <Target Name="GetCertificateThumbprint">
         <Message Text="Finding certificate for: $(AssemblyCompany)" Importance="high" />
 
-        <Exec Command="powershell -NoProfile -Command &quot;try { Import-Module PKI; $cert = Get-ChildItem -Path 'Cert:\CurrentUser\My' | Where-Object { $_.Subject -like '*$(AssemblyCompany)*' -and -not $_.Extensions.CertificateAuthority } | Select-Object -First 1; if (-not $cert) { throw 'Certificate not found' }; $cert.Thumbprint } catch { Write-Error $_.Exception.Message; exit 1 }&quot;" ContinueOnError="false" ConsoleToMSBuild="true">
+        <Exec Command="powershell -NoProfile -Command &quot;try { $cert = Get-ChildItem -Path 'Cert:\CurrentUser\My' | Where-Object { $_.Subject -like '*$(AssemblyCompany)*' -and -not $_.Extensions.CertificateAuthority } | Select-Object -First 1; if (-not $cert) { throw 'Certificate not found' }; $cert.Thumbprint } catch { Write-Error $_.Exception.Message; exit 1 }&quot;" ContinueOnError="false" ConsoleToMSBuild="true">
             <Output TaskParameter="ConsoleOutput" PropertyName="CertificateThumbprint" />
         </Exec>
 
@@ -147,7 +147,7 @@
     <Target Name="BuildSigned" DependsOnTargets="Build;GetCertificateThumbprint">
         <Message Text="Signing EXE with certificate: $(CertificateThumbprint)" Importance="high" />
 
-        <Exec Command="&quot;$(SignToolExe)&quot; sign /sha1 &quot;$(CertificateThumbprint)&quot; /fd SHA256 /tr &quot;$(TimestampUrl)&quot; /td SHA256 /a &quot;$(OutExe)&quot;" WorkingDirectory="$(MSBuildProjectDirectory)" />
+        <Exec Command="&quot;$(SignToolExe)&quot; sign /sha1 &quot;$(CertificateThumbprint)&quot; /fd SHA256 /a &quot;$(OutExe)&quot;" WorkingDirectory="$(MSBuildProjectDirectory)" />
 
         <Message Text="EXE signed successfully: $(OutExe)" Importance="high" />
     </Target>
