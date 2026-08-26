@@ -137,6 +137,8 @@ namespace AnyFSE
             void OnCancel();
             void OnUninstall();
             std::list<std::wstring> ListDir(const std::wstring &path, const std::wstring &mask);
+            bool CanDeleteFile(const std::wstring& name);
+            bool DeleteFileWithRetry(const std::wstring& name, DWORD timeoutMs);
             bool DeleteFiles(const std::wstring &path);
             bool AutoDeleteSelf(const std::wstring &path, bool deleteFolder);
             bool TerminateAnyFSE();

@@ -305,6 +305,42 @@ namespace AnyFSE
 
     namespace fs = std::filesystem;
 
+    bool AppUninstaller::CanDeleteFile(const std::wstring& name)
+    {
+        HANDLE file = CreateFileW(
+            name.c_str(),
+            DELETE,
+            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            nullptr,
+            OPEN_EXISTING,
+            FILE_ATTRIBUTE_NORMAL,
+            nullptr);
+
+        if (file == INVALID_HANDLE_VALUE)
+        {
+            return false;
+        }
+
+        CloseHandle(file);
+        return true;
+    }
+
+    bool AppUninstaller::DeleteFileWithRetry(const std::wstring& name, DWORD timeoutMs)
+    {
+        const DWORD startTick = GetTickCount();
+
+        while (fs::exists(name) &&
+               !CanDeleteFile(name) &&
+               GetTickCount() - startTick < timeoutMs)
+        {
+            Sleep(100);
+        }
+
+
+        DeleteFileW(name.c_str());
+        return !fs::exists(name);
+    }
+
     std::list<HWND> AppUninstaller::CreatePage()
     {
         RECT rc;
@@ -442,7 +478,14 @@ namespace AnyFSE
         }
         for (auto& p : to_delete)
         {
-            fs::is_directory(p) ? fs::remove_all(p) : fs::remove(p);
+            if (fs::is_directory(p))
+            {
+                fs::remove_all(p);
+            }
+            else if (!DeleteFileWithRetry(p, 10000))
+            {
+                return false;
+            }
         }
         return true;
     }
