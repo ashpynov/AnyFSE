@@ -151,6 +151,27 @@
         },
         {
             "type": "shell",
+            "label": "Build AnyFSE.Installer Offline and check with VirusTotal",
+            "command": "powershell.exe",
+            "args": [
+                "-NoLogo",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\scripts\\Test-VirusTotal.ps1"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "dependsOn": [
+                "Build AnyFSE.Installer Offline"
+            ]
+        },
+        {
+            "type": "shell",
             "label": "Build AnyFSE.Installer Debug",
             "command": "msbuild.exe",
             "args": [
@@ -172,11 +193,11 @@
         },
         {
             "type": "shell",
-            "label": "Build AnyFSE.Uninstaller Debug",
+            "label": "Build AnyFSE.Uninstaller Release",
             "command": "msbuild.exe",
             "args": [
                 "AnyFSE.Uninstaller.vcxproj",
-                "-property:Configuration=Debug",
+                "-property:Configuration=Release",
                 "-property:Platform=x64"
             ],
             "problemMatcher": [

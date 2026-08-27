@@ -156,6 +156,25 @@ Expected outputs are under `build\Release\`, including:
 
 Note: `AnyFSE.Package.vcxproj` increments `<VersionRevision>` in `AnyFSE.Version.props` during packaging. Review that file after every packaging build.
 
+## Scan the offline installer with VirusTotal
+
+Set your VirusTotal API v3 key in the environment before starting VS Code, so the integrated terminal and tasks inherit it:
+
+```powershell
+$env:VIRUSTOTAL_API_KEY = '<your API key>'
+code .
+```
+
+Run the `Check AnyFSE.Installer Offline with VirusTotal` task. It builds the offline installer, uploads the newest matching file from
+`build\Release`, waits for the analysis, and fails if any engine reports it as `malicious` or `suspicious`.
+
+The task uses the public VirusTotal file-upload API. Uploaded files may be shared with VirusTotal partners; do not use it for confidential builds.
+The free public API is rate-limited, so the scan can take several minutes. The script also accepts an explicit file when run manually:
+
+```powershell
+.\scripts\Test-VirusTotal.ps1 -FilePath .\build\Release\AnyFSE.Installer.Offline.0.90.18-56.exe
+```
+
 ## Disable update checks
 
 For a private/offline build, disable update checks in code instead of relying only on user settings.

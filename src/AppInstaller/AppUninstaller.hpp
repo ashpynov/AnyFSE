@@ -40,6 +40,11 @@ namespace AnyFSE
 #define VER_PUBLISHER_CN "DDCC7751-898D-4BC9-B80C-4AA73E5D5762"
 #endif
 
+#ifndef VER_COMPANY_NAME
+#define VER_COMPANY_NAME "Artem Shpynov"
+#endif
+
+
 #define IDR_EMBEDDED_ZIP 3
 
 #ifndef APP_VERSION

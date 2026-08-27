@@ -318,7 +318,8 @@ namespace AnyFSE
 
         if (file == INVALID_HANDLE_VALUE)
         {
-            return false;
+            const DWORD error = GetLastError();
+            return error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND;
         }
 
         CloseHandle(file);
@@ -329,16 +330,13 @@ namespace AnyFSE
     {
         const DWORD startTick = GetTickCount();
 
-        while (fs::exists(name) &&
-               !CanDeleteFile(name) &&
+        while (!CanDeleteFile(name) &&
                GetTickCount() - startTick < timeoutMs)
         {
             Sleep(100);
         }
 
-
-        DeleteFileW(name.c_str());
-        return !fs::exists(name);
+        return DeleteFileW(name.c_str()) || GetLastError() == ERROR_FILE_NOT_FOUND;
     }
 
     std::list<HWND> AppUninstaller::CreatePage()
@@ -587,7 +585,7 @@ namespace AnyFSE
         // Delayed operations are processed in registration order, so schedule
         // the now-empty directory after its remaining executable.
         if (deleteFolder &&
-            !MoveFileExW(fs::path(path).lexically_normal().c_str(), nullptr, MOVEFILE_DELAY_UNTIL_REBOOT))
+            !MoveFileExW(path.c_str(), nullptr, MOVEFILE_DELAY_UNTIL_REBOOT))
         {
             log.Error(log.APIError(), "Unable to schedule the installation directory for deletion");
             scheduled = false;
