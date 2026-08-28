@@ -279,7 +279,7 @@ namespace AnyFSE::App
         if (Ally::CheckListener())
         {
             log.Debug("Background HID/hotkey listener is not running; starting it\n");
-            // Process::StartProtocol(Constants::AnyFseProtocolHidListener);
+            Process::StartProtocol(Constants::AnyFseProtocolHidListener);
         }
 
         AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
