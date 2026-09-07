@@ -2,6 +2,8 @@
 #include <vector>
 #include <algorithm>
 #include <filesystem>
+#include <windows.h>
+#include <shellapi.h>
 #include "Ally/Ally.hpp"
 #include "Ally/Handlers.hpp"
 #include "Logging/LogManager.hpp"
@@ -374,7 +376,30 @@ namespace Ally
             return;
         }
 
-        bEnable ? Services::EnableInjectorService() : Services::DisableInjectorService();
+        const std::wstring injectorExe = std::filesystem::path(AnyFSE::Tools::Paths::GetInstallPath()).append(Constants::InjectorExe).wstring();
+        SHELLEXECUTEINFOW execute = {};
+        execute.cbSize = sizeof(execute);
+        execute.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC;
+        execute.lpVerb = Constants::ElevationVerb;
+        execute.lpFile = injectorExe.c_str();
+        execute.lpParameters = bEnable ? Constants::CreateServiceArgument : Constants::RemoveServiceArgument;
+        execute.nShow = SW_HIDE;
+        if (!ShellExecuteExW(&execute))
+        {
+            log.Error(log.APIError(), "Could not launch injector service operation");
+            return;
+        }
+        if (!execute.hProcess)
+        {
+            log.Error("Injector service operation returned no process handle");
+            return;
+        }
+        DWORD exitCode = ERROR_GEN_FAILURE;
+        if (WaitForSingleObject(execute.hProcess, INFINITE) != WAIT_OBJECT_0 || !GetExitCodeProcess(execute.hProcess, &exitCode))
+            log.Error(log.APIError(), "Could not obtain injector service operation result");
+        else if (exitCode != ERROR_SUCCESS)
+            log.Error("Injector service operation failed: %lu", exitCode);
+        CloseHandle(execute.hProcess);
     }
 
     bool IsNativeHandlerEnabled()

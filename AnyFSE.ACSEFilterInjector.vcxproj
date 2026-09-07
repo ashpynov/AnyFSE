@@ -90,6 +90,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Ally\ACSEfilter\DebugLog.h" />
+    <ClInclude Include="src\Ally\ServiceControl.hpp" />
     <ClInclude Include="src\resource.h" />
   </ItemGroup>
   <ItemGroup>

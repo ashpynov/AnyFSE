@@ -8,6 +8,7 @@
 #include <shellapi.h>
 #include <string>
 #include "../../App/Constants.hpp"
+#include "../ServiceControl.hpp"
 #include "../../Tools/PowerEfficiency.hpp"
 #include "DebugLog.h"
 
@@ -621,7 +622,22 @@ int RunFromArgs(int argc, wchar_t **argv)
     }
 
     const std::wstring command = ToLower(argv[1]);
-    if (command == L"--service")
+    if (command == Constants::CreateServiceArgument || command == Constants::RemoveServiceArgument)
+    {
+        if (argc != 2) return ERROR_INVALID_PARAMETER;
+        const bool success = command == Constants::CreateServiceArgument
+            ? Ally::ServiceControl::CreateInjector(CurrentExecutablePath().wstring())
+            : Ally::ServiceControl::RemoveInjector();
+        if (!success)
+        {
+            const DWORD error = GetLastError();
+            LOG(L"Service operation %ls failed: %lu", command.c_str(), error);
+            return error ? static_cast<int>(error) : ERROR_GEN_FAILURE;
+        }
+        return ERROR_SUCCESS;
+    }
+
+    if (command == Constants::InjectorServiceArgument)
     {
         return RunServiceDispatcher();
     }

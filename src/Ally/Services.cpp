@@ -1,5 +1,6 @@
 #include <filesystem>
-#include "Tools/Unicode.hpp"
+#include "Services.hpp"
+#include "ServiceControl.hpp"
 #include "Tools/Paths.hpp"
 #include "Tools/Process.hpp"
 #include "App/Constants.hpp"
@@ -7,73 +8,30 @@
 
 namespace Ally::Services
 {
-    namespace fs = std::filesystem;
     namespace c = AnyFSE::App::Constants;
     namespace Tools = AnyFSE::Tools;
-
     static Logger log = LogManager::GetLogger("AllyServices");
 
     bool EnableInjectorService()
     {
-        const std::wstring injectorExe =
-            fs::path(Tools::Paths::GetInstallPath()).append(c::InjectorExe).wstring();
-
-         std::wstring commandLine = std::wstring(L"/c")
-            + L" sc create " + c::InjectorServiceName
-            + L" binPath=\"\\\"" + injectorExe + L"\\\" --service\""
-            + L" start=auto "
-            + L" DisplayName=\"" + c::InjectorServiceDisplayName + L"\""
-            + L" & sc description " + c::InjectorServiceName + L" \"" + c::InjectorServiceDescription + L"\""
-            + L" & sc failure " + c::InjectorServiceName + L" reset=0 actions=restart/5000/restart/5000/restart/5000"
-            + L" & sc start " + c::InjectorServiceName;
-
-        HINSTANCE result = ShellExecuteW(
-            nullptr,
-            L"runas",
-            L"cmd.exe",
-            commandLine.c_str(),
-            nullptr,
-            SW_HIDE);
-
-        log.Info("Starting injector as %s %s returned %d", "cmd", Unicode::to_string(commandLine).c_str(), "--install", result);
-
-        return reinterpret_cast<INT_PTR>(result) > 32;
+        const std::wstring injectorExe = std::filesystem::path(Tools::Paths::GetInstallPath()).append(c::InjectorExe).wstring();
+        const bool result = ServiceControl::CreateInjector(injectorExe);
+        if (!result) log.Error(log.APIError(), "Create injector service failed");
+        return result;
     }
 
     bool DisableInjectorService()
     {
-        const std::wstring commandLine = std::wstring(L"/c sc stop ") + c::InjectorServiceName
-                                                    + L" & sc delete " + c::InjectorServiceName;
-
-        HINSTANCE result = ShellExecuteW(
-            nullptr,
-            L"runas",
-            L"cmd.exe",
-            commandLine.c_str(),
-            nullptr,
-            SW_HIDE);
-
-        return reinterpret_cast<INT_PTR>(result) > 32;
+        const bool result = ServiceControl::RemoveInjector();
+        if (!result) log.Error(log.APIError(), "Remove injector service failed");
+        return result;
     }
 
     bool EnableAsusOptimizationService()
     {
-        if (!Process::FindFirstByExe(c::ArmouryCrateServiceProcess) || Process::FindFirstByExe(c::AsusOptimizationProcess))
-        {
-            return true;
-        }
-
-        const std::wstring commandLine = std::wstring(L"/c sc config ") + c::AsusOptimizationService +
-            L" start=auto & sc start " + c::AsusOptimizationService;
-
-        HINSTANCE result = ShellExecuteW(
-            nullptr,
-            L"open",
-            L"cmd.exe",
-            commandLine.c_str(),
-            nullptr,
-            SW_HIDE);
-
-        return reinterpret_cast<INT_PTR>(result) > 32;
+        if (!Process::FindFirstByExe(c::ArmouryCrateServiceProcess) || Process::FindFirstByExe(c::AsusOptimizationProcess)) return true;
+        const bool result = ServiceControl::EnableAsusOptimization();
+        if (!result) log.Error(log.APIError(), "Enable ASUS Optimization service failed");
+        return result;
     }
 }
