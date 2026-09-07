@@ -19,9 +19,8 @@
     <Description>$(AssemblyDescription)</Description>
     <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
     <WindowsSdkToolsPath>$(WindowsSdkDir)bin\$(WindowsTargetPlatformVersion)\x64</WindowsSdkToolsPath>
-    <AppPackageContentsDir>$(MSBuildProjectDirectory)\build\objs\Package</AppPackageContentsDir>
+    <AppPackageContentsDir>$(MSBuildProjectDirectory)\build\objs\Package\$(Configuration)\$(Platform)</AppPackageContentsDir>
     <AppPackagesDir>$(MSBuildProjectDirectory)\build\$(Configuration)</AppPackagesDir>
-    <ExternalPayloadDir>$(AppPackagesDir)\Package</ExternalPayloadDir>
     <ExternalInstallDir>C:\Program Files\AnyFSE</ExternalInstallDir>
     <PackageFileName>$(AppPackagesDir)\$(TargetName)-$(AssemblyVersion).identity.appx</PackageFileName>
     <MakeAppxExe>$(WindowsSdkToolsPath)\MakeAppx.exe</MakeAppxExe>
@@ -152,22 +151,10 @@
   <!-- Main Package target that orchestrates all steps -->
   <Target Name="Package" DependsOnTargets="SignAppPackage">
     <Message Text="Packaging complete! Package available at: $(PackageFileName)" Importance="high" />
-    <ItemGroup>
-      <PackageContent Include="$(AppPackageContentsDir)\**\*" />
-      <CertificateFile Include="$(MSBuildProjectDirectory)\*.cer" />
-    </ItemGroup>
     <PropertyGroup>
       <!-- First, calculate the incremented value -->
       <NewVersionRevision>$([MSBuild]::Add($(VersionRevision), 1))</NewVersionRevision>
     </PropertyGroup>
-    <RemoveDir Directories="$(ExternalPayloadDir)" />
-    <Copy
-      SourceFiles="@(PackageContent)"
-      DestinationFiles="@(PackageContent->'$(ExternalPayloadDir)\%(RecursiveDir)%(Filename)%(Extension)')"
-      SkipUnchangedFiles="false" />
-    <Copy
-      SourceFiles="@(CertificateFile)"
-      DestinationFolder="$(OutDir)\" />
 
     <XmlPoke
       XmlInputPath="$(MSBuildProjectDirectory)/AnyFSE.Version.props"

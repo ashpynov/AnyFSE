@@ -61,7 +61,7 @@ The certificate is now installed in the current user's personal certificate stor
 
 ## Extract the public CER file
 
-The installer copies `*.cer` files into `build\<Configuration>\` and also uses `src\App\Constants.hpp` to decide the exact certificate file name to install. Export the public certificate and place it in the repo root.
+The installer packaging target copies `Artem.Shpynov.cer` from the repo root into the payload. The installer uses `src\App\Constants.hpp` to decide the exact certificate file name to install. Export the public certificate and place it in the repo root.
 
 ```powershell
 $publisherCn = "Your Publisher Name"
@@ -79,7 +79,7 @@ if (-not $cert) {
 Export-Certificate -Cert $cert -FilePath $certFile
 ```
 
-If you keep the current file naming convention, replace `Artem.Shpynov.cer` with the exported `.cer`. Otherwise update the certificate file name in `src\App\Constants.hpp`.
+If you keep the current file naming convention, replace `Artem.Shpynov.cer` with the exported `.cer`. Otherwise update the certificate file name in both `src\App\Constants.hpp` and the `ApplicationFiles` list in `AnyFSE.Installer.vcxproj`.
 
 To trust packages signed by this self-signed certificate on the local machine, run PowerShell as Administrator and install the public certificate into Local Machine Trusted Root:
 
@@ -155,6 +155,20 @@ Expected outputs are under `build\Release\`, including:
 - `AnyFSE.Installer.Offline.<version>-<revision>.exe`
 
 Note: `AnyFSE.Package.vcxproj` increments `<VersionRevision>` in `AnyFSE.Version.props` during packaging. Review that file after every packaging build.
+
+## Installer payload isolation
+
+Use the installer tasks in `.vscode/tasks.json`; they run the package dependency before building the installer.
+Package resources are recreated in `build\objs\Package\<Configuration>\<Platform>`.
+Before compiling the installer, `CreateInstallerArchives` recreates `build\<Configuration>\staging` and archives only that directory.
+After the installer Build target succeeds, `CleanInstallerStaging` removes that directory. If compilation fails, it remains available for inspection and is recreated on the next build.
+
+The payload contains the five explicitly listed runtime binaries, the named publisher certificate, and the identity APPX for the current `AssemblyVersion`.
+Missing required files stop packaging. Localizations come directly from `localization\*.json`; assets and generated manifest/PRI files come from the fresh package resources directory.
+Old files left in `build\<Configuration>` are not used to discover payload contents.
+
+When adding or renaming a runtime binary, update the explicit `ApplicationFiles` list in `AnyFSE.Installer.vcxproj`.
+The output ZIP names and locations remain unchanged. The symbol archive is generated separately using its existing PDB selection rules.
 
 ## Scan the offline installer with VirusTotal
 

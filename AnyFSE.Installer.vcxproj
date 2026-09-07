@@ -47,11 +47,11 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <PropertyGroup>
     <OutDir>$(SolutionDir)build\$(Configuration)\</OutDir>
-    <PackageDir>$(SolutionDir)build\Package\</PackageDir>
-    <IntDir>$(SolutionDir)build\objs\$(ProjectName)\$(Configuration)\</IntDir>
+    <PackageDir>$(MSBuildProjectDirectory)\build\objs\Package\$(Configuration)\$(Platform)</PackageDir>
+    <PayloadDir>$(MSBuildProjectDirectory)\build\$(Configuration)\staging</PayloadDir>
+    <IntDir>$(SolutionDir)build\objs\$(ProjectName)\$(Configuration)\$(Platform)\</IntDir>
     <TargetName>AnyFSE.Installer</TargetName>
     <OutExe>$(OutDir)$(TargetName).exe</OutExe>
-    <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
     <OldVersionRevision>$([MSBuild]::Add($(VersionRevision), -1))</OldVersionRevision>
   </PropertyGroup>
 
@@ -61,27 +61,6 @@
     <OutExe>$(OutDir)$(TargetName).exe</OutExe>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ApplicationFiles Include="$(OutDir)*.cer" />
-    <ApplicationFiles Include="$(OutDir)*.exe" Exclude="$(OutDir)AnyFSE.Installer*.exe" />
-    <ApplicationFiles Include="$(OutDir)*.dll" />
-    <ApplicationFiles Include="$(OutDir)Assets" />
-    <ApplicationFiles Include="$(OutDir)AppxManifest.xml" />
-    <ApplicationFiles Include="$(OutDir)priconfig.xml" />
-    <ApplicationFiles Include="$(OutDir)resources.pri" />
-    <ApplicationFiles Include="$(OutDir)resources.scale-200.pri" />
-    <ApplicationFiles Include="$(OutDir)CustomCapability.SCCD" />
-    <ApplicationFiles Include="$(OutDir)Localization" />
-    <ApplicationFiles Include="$(OutDir)*.identity.appx" />
-  </ItemGroup>
-  <ItemGroup>
-    <ApplicationDumpFiles Include="$(OutDir)AnyFSE*.pdb" Exclude="$(OutDir)AnyFSE*-*.pdb" />
-  </ItemGroup>
-
-  <PropertyGroup>
-    <InstallFiles>@(ApplicationFiles->'&quot;%(RecursiveDir)%(Filename)%(Extension)&quot;', ' ')</InstallFiles>
-    <PDBFiles>@(ApplicationDumpFiles->'&quot;%(RecursiveDir)%(Filename)%(Extension)&quot;', ' ')</PDBFiles>
-  </PropertyGroup>
 
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -188,13 +167,45 @@
     </ResourceCompile>
   </ItemGroup>
 
-<ItemDefinitionGroup>
-    <CustomBuildStep>
-        <Message>Archive $(InstallFiles) and $(PDBFiles) to $(AssemblyProduct).$(AssemblyVersion).zip and $(AssemblyProduct).$(AssemblyVersion).pdb.zip </Message>
-        <Command>if exist &quot;$(OutDir)Package&quot; xcopy &quot;$(OutDir)Package&quot; &quot;$(OutDir)&quot; /E /I /Y &amp;&amp; cd &quot;$(OutDir)&quot; &amp;&amp; tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion).zip&quot; $(InstallFiles) &amp;&amp; tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion).pdb.zip&quot; $(PDBFiles)</Command>
-        <Outputs>$(AssemblyProduct).$(AssemblyVersion).zip; $(AssemblyProduct).$(AssemblyVersion).pdb.zip </Outputs>
-    </CustomBuildStep>
-</ItemDefinitionGroup>
+  <!-- Run after solution dependencies, before compiling the embedded offline archive. -->
+  <Target Name="CreateInstallerArchives" BeforeTargets="PrepareForBuild">
+    <ItemGroup>
+      <ApplicationFiles Include="$(OutDir)AnyFSE.exe" />
+      <ApplicationFiles Include="$(OutDir)AnyFSE.Settings.dll" />
+      <ApplicationFiles Include="$(OutDir)AnyFSE.ACSEFilterHook.dll" />
+      <ApplicationFiles Include="$(OutDir)AnyFSE.ACSEFilterInjector.exe" />
+      <ApplicationFiles Include="$(OutDir)unins000.exe" />
+      <ApplicationFiles Include="$(MSBuildProjectDirectory)\Artem.Shpynov.cer;$(OutDir)$(AssemblyProduct)-$(AssemblyVersion).identity.appx" />
+      <PackageContent Include="$(PackageDir)\**\*" />
+      <PayloadLocalization Include="$(MSBuildProjectDirectory)\localization\*.json" />
+      <ApplicationDumpFiles Include="$(OutDir)AnyFSE*.pdb" Exclude="$(OutDir)AnyFSE*-*.pdb" />
+    </ItemGroup>
+    <Error Condition="!Exists('%(ApplicationFiles.Identity)')" Text="Required installer file is missing: %(ApplicationFiles.Identity)" />
+    <Error Condition="!Exists('$(PackageDir)\AppxManifest.xml') Or !Exists('$(PackageDir)\resources.pri')"
+           Text="Fresh package contents are missing. Run the Package task before building the installer." />
+    <Error Condition="'@(PayloadLocalization)' == ''" Text="No source localization files were found." />
+    <RemoveDir Directories="$(PayloadDir)" />
+    <MakeDir Directories="$(PayloadDir)" />
+    <Copy SourceFiles="@(ApplicationFiles)" DestinationFolder="$(PayloadDir)" />
+    <Copy SourceFiles="@(PackageContent)"
+          DestinationFiles="@(PackageContent->'$(PayloadDir)\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(PayloadLocalization)" DestinationFolder="$(PayloadDir)\Localization" />
+    <ItemGroup>
+      <PayloadArchiveEntries Include="$(PayloadDir)\*" />
+      <PayloadArchiveEntries Include="$(PayloadDir)\Assets;$(PayloadDir)\Localization" />
+    </ItemGroup>
+    <PropertyGroup>
+      <PayloadArchive>$([System.IO.Path]::GetFullPath('$(OutDir)$(AssemblyProduct).$(AssemblyVersion).zip'))</PayloadArchive>
+      <PayloadArchiveArguments>@(PayloadArchiveEntries->'&quot;%(Filename)%(Extension)&quot;', ' ')</PayloadArchiveArguments>
+      <PDBFiles>@(ApplicationDumpFiles->'&quot;%(Filename)%(Extension)&quot;', ' ')</PDBFiles>
+    </PropertyGroup>
+    <Exec Command="tar -a -cf &quot;$(PayloadArchive)&quot; $(PayloadArchiveArguments)" WorkingDirectory="$(PayloadDir)" />
+    <Exec Command="tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion).pdb.zip&quot; $(PDBFiles)" WorkingDirectory="$(OutDir)" />
+  </Target>
+
+  <Target Name="CleanInstallerStaging" AfterTargets="Build">
+    <RemoveDir Directories="$(PayloadDir)" />
+  </Target>
 
     <!-- Target: Get certificate thumbprint by name -->
     <Target Name="GetCertificateThumbprint">
