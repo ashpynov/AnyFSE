@@ -66,7 +66,7 @@ namespace FluentDesign
         , m_chevronButton(theme)
         , m_enabled(true)
         , m_hovered(false)
-        , m_linePadding(8)
+        , m_linePadding(2)
         , m_leftMargin(16)
         , m_state(State::Normal)
         , m_frameFlags(Gdiplus::FrameFlags::CORNER_ALL | Gdiplus::FrameFlags::SIDE_ALL)

@@ -171,7 +171,7 @@ namespace FluentDesign
             m_colors[ComboDisabled] = GetGrey(50);
             m_colors[ComboHover] = GetGrey(61);
             m_colors[ComboPressed] = GetGrey(50);
-            m_colors[ComboBorder] = GetGrey(211);
+            m_colors[ComboBorder] = GetGrey(38);
             m_colors[ComboPopup] = GetGrey(38);
             m_colors[ComboPopupBorder] = GetGrey(1);
             m_colors[ComboPopupSelected] = GetGrey(61);
@@ -245,7 +245,7 @@ namespace FluentDesign
             m_colors[ComboDisabled] = GetGrey(250);
             m_colors[ComboHover] = GetGrey(248);
             m_colors[ComboPressed] = GetGrey(246);
-            m_colors[ComboBorder] = GetGrey(211);
+            m_colors[ComboBorder] = GetGrey(249);
             m_colors[ComboPopup] = GetGrey(249);
             m_colors[ComboPopupBorder] = GetGrey(222);
             m_colors[ComboPopupSelected] = GetGrey(239);
