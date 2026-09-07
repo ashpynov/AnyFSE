@@ -50,6 +50,11 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
@@ -63,6 +68,7 @@
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -80,17 +86,24 @@
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Ally\ACSEfilter\Injector.cpp" />
+    <ClCompile Include="src\Ally\Services.cpp" />
+    <ClCompile Include="src\Tools\Paths.cpp" />
+    <ClCompile Include="src\Tools\Process.cpp" />
+    <ClCompile Include="src\Tools\Unicode.cpp" />
+    <ClCompile Include="src\Logging\Logger.cpp" />
+    <ClCompile Include="src\Logging\LogManager.cpp" />
     <ClCompile Include="src\Tools\PowerEfficiency.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Ally\ACSEfilter\DebugLog.h" />
-    <ClInclude Include="src\Ally\ServiceControl.hpp" />
+    <ClInclude Include="src\Ally\Services.hpp" />
     <ClInclude Include="src\resource.h" />
   </ItemGroup>
   <ItemGroup>

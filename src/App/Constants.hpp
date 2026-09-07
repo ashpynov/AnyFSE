@@ -18,7 +18,6 @@ namespace AnyFSE::App::Constants
     inline constexpr wchar_t InjectorServiceArgument[] = L"--service";
     inline constexpr wchar_t CreateServiceArgument[] = L"--create-service";
     inline constexpr wchar_t RemoveServiceArgument[] = L"--remove-service";
-    inline constexpr wchar_t ElevationVerb[] = L"runas";
     inline constexpr wchar_t InjectorServiceDisplayName[] = L"AnyFSE ACSE Filter Injector";
     inline constexpr wchar_t InjectorServiceDescription[] = L"Injects ACSEFilterHook into ASUS Optimization process and blocks it from ASUS-specific keys processing.";
 

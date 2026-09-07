@@ -21,8 +21,7 @@
 // SOFTWARE.
 //
 
-#include <sysinfoapi.h>
-#include <debugapi.h>
+#include <windows.h>
 #include <algorithm>
 #include <iostream>
 #include <sstream>

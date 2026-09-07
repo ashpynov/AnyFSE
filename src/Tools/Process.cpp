@@ -23,6 +23,7 @@
 
 
 #include <windows.h>
+#include <shellapi.h>
 #include <tlhelp32.h>
 #include <psapi.h>
 #include <string>

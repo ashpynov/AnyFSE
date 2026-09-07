@@ -380,7 +380,6 @@ namespace Ally
         SHELLEXECUTEINFOW execute = {};
         execute.cbSize = sizeof(execute);
         execute.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC;
-        execute.lpVerb = Constants::ElevationVerb;
         execute.lpFile = injectorExe.c_str();
         execute.lpParameters = bEnable ? Constants::CreateServiceArgument : Constants::RemoveServiceArgument;
         execute.nShow = SW_HIDE;

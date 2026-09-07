@@ -8,7 +8,7 @@
 #include <shellapi.h>
 #include <string>
 #include "../../App/Constants.hpp"
-#include "../ServiceControl.hpp"
+#include "../Services.hpp"
 #include "../../Tools/PowerEfficiency.hpp"
 #include "DebugLog.h"
 
@@ -626,8 +626,8 @@ int RunFromArgs(int argc, wchar_t **argv)
     {
         if (argc != 2) return ERROR_INVALID_PARAMETER;
         const bool success = command == Constants::CreateServiceArgument
-            ? Ally::ServiceControl::CreateInjector(CurrentExecutablePath().wstring())
-            : Ally::ServiceControl::RemoveInjector();
+            ? Ally::Services::CreateInjector()
+            : Ally::Services::RemoveInjector();
         if (!success)
         {
             const DWORD error = GetLastError();

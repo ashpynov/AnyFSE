@@ -26,6 +26,10 @@
 
 namespace Ally::Services
 {
+    // The caller must already have permission to manage services.
+    bool CreateInjector();
+    bool RemoveInjector();
+    bool EnableAsusOptimization();
     bool EnableInjectorService();
     bool DisableInjectorService();
     bool EnableAsusOptimizationService();
