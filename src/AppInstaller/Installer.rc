@@ -41,3 +41,4 @@ END
 "en_US"          LOCALIZATION            "..\\..\\localization\\en_US.json"
 "ru_RU"          LOCALIZATION            "..\\..\\localization\\ru_RU.json"
 "fr_FR"          LOCALIZATION            "..\\..\\localization\\fr_FR.json"
+"pt_BR"          LOCALIZATION            "..\\..\\localization\\pt_BR.json"

@@ -518,7 +518,7 @@ namespace AnyFSE
 
         if (!items.empty())
         {
-            m_languageButton.SetMenu(items, m_theme.DpiScale(120), TPM_LEFTALIGN);
+            m_languageButton.SetMenu(items, m_theme.DpiScale(170), TPM_LEFTALIGN);
             m_languageButton.OnChanged = [this]() { m_languageButton.ShowMenu(); };
         }
         m_languageButton.SetText(Unicode::to_upper(Tools::Localization::GetCurrentLocale()).substr(0, 2));

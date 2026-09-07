@@ -38,6 +38,18 @@ Some other launchers potentially can be supported too with minor customizations
 - ASUS ROG Ally buttons "ArmouryCrate", "Command Center", and "Library" re-mapping including "Mode+" combos.
 - Gamepad friendly navigation in application Settings dialog
 
+## Supported languages
+
+The settings interface supports the following languages:
+
+- English
+- French (Français)
+- Portuguese (Brazil) — Português (Brasil)
+- Russian (Русский)
+- Turkish (Türkçe)
+
+Use the language button in Settings to select your preferred language.
+
 ## How it is works
 
 If AnyFSE is selected as home application:
