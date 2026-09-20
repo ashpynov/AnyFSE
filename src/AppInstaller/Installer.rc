@@ -35,7 +35,7 @@ END
 2                ICON                    "..\\..\\media\\AnyFSEInstaller.ico"
 
 #ifdef OFFLINE_INSTALLER
-3                ZIP                     BUILD_ARCHIVE
+3                CAB                     BUILD_ARCHIVE
 #endif
 
 "en_US"          LOCALIZATION            "..\\..\\localization\\en_US.json"

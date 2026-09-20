@@ -52,7 +52,7 @@ namespace AnyFSE
 #define VER_PRODUCT_NAME "AnyFSE"
 #endif
 
-#define IDR_EMBEDDED_ZIP 3
+#define IDR_EMBEDDED_CAB 3
 
 #ifndef APP_VERSION
 #define APP_VERSION VER_VERSION_STR
@@ -177,7 +177,7 @@ namespace AnyFSE
             bool DeleteOldFiles(const std::wstring &dir);
 
 #ifdef OFFLINE_INSTALLER
-            bool ExtractEmbeddedZip(const std::wstring &path);
+            bool ExtractEmbeddedCabinet(const std::wstring &path);
 #else
             bool DownloadFiles(const std::wstring &path);
 #endif

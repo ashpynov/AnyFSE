@@ -132,6 +132,7 @@
     <ClCompile Include="src\AppInstaller\AppInstaller_Tools.cpp" />
     <ClCompile Include="src\AppInstaller\Admin.cpp" />
     <ClCompile Include="src\AppInstaller\Certificate.cpp" />
+    <ClCompile Include="src\AppInstaller\Cabinet.cpp" />
     <ClCompile Include="src\FluentDesign\Theme.cpp" />
     <ClCompile Include="src\FluentDesign\FluentControl.cpp" />
     <ClCompile Include="src\FluentDesign\Align.cpp" />
@@ -160,7 +161,7 @@
     <ResourceCompile Include="src\AppInstaller\Installer.rc">
         <PreprocessorDefinitions Condition="'$(Offline)'=='Offline'">
             OFFLINE_INSTALLER;
-            BUILD_ARCHIVE=\"$(OutDir.Replace('\', '\\'))$(AssemblyProduct).$(AssemblyVersion).zip\";
+            BUILD_ARCHIVE=\"$(OutDir.Replace('\', '\\'))$(AssemblyProduct).$(AssemblyVersion).cab\";
             %(PreprocessorDefinitions)
         </PreprocessorDefinitions>
       <AdditionalOptions>/v /I&quot;$(ProjectDir)src\Installer&quot;/I&quot;$(ProjectDir)src&quot;</AdditionalOptions>
@@ -190,16 +191,28 @@
     <Copy SourceFiles="@(PackageContent)"
           DestinationFiles="@(PackageContent->'$(PayloadDir)\%(RecursiveDir)%(Filename)%(Extension)')" />
     <Copy SourceFiles="@(PayloadLocalization)" DestinationFolder="$(PayloadDir)\Localization" />
-    <ItemGroup>
-      <PayloadArchiveEntries Include="$(PayloadDir)\*" />
-      <PayloadArchiveEntries Include="$(PayloadDir)\Assets;$(PayloadDir)\Localization" />
-    </ItemGroup>
     <PropertyGroup>
-      <PayloadArchive>$([System.IO.Path]::GetFullPath('$(OutDir)$(AssemblyProduct).$(AssemblyVersion).zip'))</PayloadArchive>
-      <PayloadArchiveArguments>@(PayloadArchiveEntries->'&quot;%(Filename)%(Extension)&quot;', ' ')</PayloadArchiveArguments>
-      <PDBFiles>@(ApplicationDumpFiles->'&quot;%(Filename)%(Extension)&quot;', ' ')</PDBFiles>
+      <CabinetOutputDir>$([System.IO.Path]::GetFullPath('$(OutDir)'))</CabinetOutputDir>
+      <PayloadCabinetDdf>$(IntDir)payload.ddf</PayloadCabinetDdf>
+      <PDBFiles>@(ApplicationDumpFiles-&gt;'&quot;%(Filename)%(Extension)&quot;', ' ')</PDBFiles>
     </PropertyGroup>
-    <Exec Command="tar -a -cf &quot;$(PayloadArchive)&quot; $(PayloadArchiveArguments)" WorkingDirectory="$(PayloadDir)" />
+    <MakeDir Directories="$(IntDir)" />
+    <ItemGroup>
+      <PayloadArchiveEntries Include="$(PayloadDir)\**\*" />
+      <CabinetDirectives Include=".OPTION EXPLICIT" />
+      <CabinetDirectives Include=".Set Cabinet=ON" />
+      <CabinetDirectives Include=".Set Compress=ON" />
+      <CabinetDirectives Include=".Set CompressionType=LZX" />
+      <CabinetDirectives Include=".Set CompressionMemory=21" />
+      <CabinetDirectives Include=".Set MaxDiskSize=0" />
+      <CabinetDirectives Include=".Set MaxCabinetSize=0" />
+      <CabinetDirectives Include=".Set FolderSizeThreshold=0" />
+      <CabinetDirectives Include=".Set InfFileName=NUL" />
+      <CabinetDirectives Include=".Set RptFileName=NUL" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(PayloadCabinetDdf)" Overwrite="true" Encoding="ASCII"
+      Lines="@(CabinetDirectives);.Set CabinetNameTemplate=$(AssemblyProduct).$(AssemblyVersion).cab;@(PayloadArchiveEntries->'&quot;%(RecursiveDir)%(Filename)%(Extension)&quot; &quot;%(RecursiveDir)%(Filename)%(Extension)&quot;')" />
+    <Exec Command="&quot;$(SystemRoot)\System32\makecab.exe&quot; /D &quot;DiskDirectoryTemplate=$(CabinetOutputDir).&quot; /F &quot;$([System.IO.Path]::GetFullPath('$(PayloadCabinetDdf)'))&quot;" WorkingDirectory="$(PayloadDir)" />
     <Exec Command="tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion).pdb.zip&quot; $(PDBFiles)" WorkingDirectory="$(OutDir)" />
   </Target>
 

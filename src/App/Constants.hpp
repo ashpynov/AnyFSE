@@ -44,7 +44,10 @@ namespace AnyFSE::App::Constants
     // Installer / updater assets
     inline constexpr wchar_t PublisherCertFile[] = L"Artem.Shpynov.cer";
     inline constexpr wchar_t AppxFilePrefix[] = L"AnyFSE-";
-    inline constexpr wchar_t ReleaseZipPrefix[] = L"AnyFSE.";
+    inline constexpr wchar_t CabinetResourceType[] = L"CAB";
+    inline constexpr wchar_t CabinetExtension[] = L".cab";
+    inline constexpr char CabinetStreamName[] = "payload.cab";
+    inline constexpr wchar_t ReleaseCabPrefix[] = L"AnyFSE.";
     inline constexpr wchar_t TempInstallDirName[] = L"AnyFSE_install";
     inline constexpr wchar_t GitHubReleaseRoot[] = L"https://github.org/ashpynov/AnyFSE/releases/download/v";
     inline constexpr wchar_t CodebergReleaseRoot[] = L"https://codeberg.org/ashpynov/AnyFSE/releases/download/v";

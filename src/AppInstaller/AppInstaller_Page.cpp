@@ -29,7 +29,6 @@
 #include <string>
 #include <filesystem>
 
-#include <fstream>
 #include <filesystem>
 #include <ShlObj.h>
 
@@ -41,6 +40,7 @@
 #include "App/Constants.hpp"
 #include "App/GamingExperience.hpp"
 #include "AppInstaller.hpp"
+#include "AppInstaller/Cabinet.hpp"
 #include "Logging/LogManager.hpp"
 
 #pragma comment(lib, "urlmon.lib")
@@ -49,32 +49,6 @@ namespace AnyFSE
 {
     namespace fs = std::filesystem;
     static Logger log = LogManager::GetLogger("Installer");
-
-    namespace
-    {
-        bool ExtractZipArchive(const std::wstring &zipArchive, const std::wstring &path)
-        {
-            SHELLEXECUTEINFOW sei = {sizeof(sei)};
-            sei.fMask = SEE_MASK_NOCLOSEPROCESS;
-            sei.lpFile = L"tar";
-
-            std::wstring parameters = L"-xf \"" + zipArchive + L"\" -C \"" + path + L"\"";
-            sei.lpParameters = parameters.c_str();
-            sei.nShow = SW_HIDE;
-
-            BOOL success = ShellExecuteExW(&sei);
-            if (success)
-            {
-                WaitForSingleObject(sei.hProcess, INFINITE);
-                DWORD exitCode;
-                GetExitCodeProcess(sei.hProcess, &exitCode);
-                success = (exitCode == 0);
-                CloseHandle(sei.hProcess);
-            }
-
-            return success == TRUE;
-        }
-    }
 
     std::list<HWND> AppInstaller::CreatePage()
     {
@@ -408,7 +382,7 @@ namespace AnyFSE
     }
 
 #ifdef OFFLINE_INSTALLER
-    bool AppInstaller::ExtractEmbeddedZip(const std::wstring &path)
+    bool AppInstaller::ExtractEmbeddedCabinet(const std::wstring &path)
     {
         try {
             std::filesystem::create_directories(path);
@@ -418,8 +392,8 @@ namespace AnyFSE
 
         HINSTANCE hInstance = GetModuleHandle(NULL);
 
-        // Find the ZIP resource
-        HRSRC hResource = FindResource(hInstance, MAKEINTRESOURCE(IDR_EMBEDDED_ZIP), L"ZIP");
+        // Find the CAB resource
+        HRSRC hResource = FindResource(hInstance, MAKEINTRESOURCE(IDR_EMBEDDED_CAB), App::Constants::CabinetResourceType);
         if (!hResource)
         {
             throw std::exception("Instalation file is corrupted. No packed files resource.");
@@ -433,30 +407,19 @@ namespace AnyFSE
         }
 
         // Get resource data
-        LPVOID zipData = LockResource(hGlobal);
-        DWORD zipSize = SizeofResource(hInstance, hResource);
+        LPVOID cabData = LockResource(hGlobal);
+        DWORD cabSize = SizeofResource(hInstance, hResource);
 
-        if (!zipData || zipSize == 0)
+        if (!cabData || cabSize == 0)
         {
-            throw std::exception("Instalation file is corrupted. No zipped data.");
+            throw std::exception("Instalation file is corrupted. No cabinet data.");
         }
 
-        // Write resource to temporary ZIP file
-        std::wstring zipArchive = path + L"\\" + std::wstring(App::Constants::ReleaseZipPrefix) + Unicode::to_wstring(APP_VERSION) + L".zip";
-
-        std::ofstream tempStream(zipArchive, std::ios::binary);
-        tempStream.write(static_cast<const char *>(zipData), zipSize);
-        tempStream.close();
-
-
-        bool success = ExtractZipArchive(zipArchive, path);
+        bool success = ToolsEx::Cabinet::Extract(cabData, cabSize, path);
         if (!success)
         {
             throw std::exception("Instalation file is corrupted. Failed unpacking.");
         }
-
-        // Clean up temporary file
-        DeleteFile(zipArchive.c_str());
 
         return success;
     }
@@ -470,13 +433,13 @@ namespace AnyFSE
         }
         const std::wstring rootPath = std::wstring(App::Constants::GitHubReleaseRoot) + Unicode::to_wstring(APP_VERSION);
         const std::wstring rootPathAlt = std::wstring(App::Constants::CodebergReleaseRoot) + Unicode::to_wstring(APP_VERSION);
-        const std::wstring zipName = std::wstring(App::Constants::ReleaseZipPrefix) + Unicode::to_wstring(APP_VERSION) + L".zip";
-        const std::wstring zipArchive = path + L"\\" + zipName;
+        const std::wstring cabName = std::wstring(App::Constants::ReleaseCabPrefix) + Unicode::to_wstring(APP_VERSION) + App::Constants::CabinetExtension;
+        const std::wstring cabArchive = path + L"\\" + cabName;
 
         HRESULT hr = URLDownloadToFileW(
             NULL,
-            (rootPath + L"/" + zipName).c_str(),
-            zipArchive.c_str(),
+            (rootPath + L"/" + cabName).c_str(),
+            cabArchive.c_str(),
             0,
             NULL);
 
@@ -484,8 +447,8 @@ namespace AnyFSE
         {
             hr = URLDownloadToFileW(
                 NULL,
-                (rootPathAlt + L"/" + zipName).c_str(),
-                zipArchive.c_str(),
+                (rootPathAlt + L"/" + cabName).c_str(),
+                cabArchive.c_str(),
                 0,
                 NULL);
         }
@@ -495,8 +458,8 @@ namespace AnyFSE
             throw std::runtime_error("Download failed");
         }
 
-        bool success = ExtractZipArchive(zipArchive, path);
-        DeleteFile(zipArchive.c_str());
+        bool success = ToolsEx::Cabinet::Extract(cabArchive, path);
+        DeleteFile(cabArchive.c_str());
         if (!success)
         {
             throw std::runtime_error("Download failed unpacking");

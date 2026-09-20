@@ -150,7 +150,7 @@ Build the Release x64 offline installer:
 Expected outputs are under `build\Release\`, including:
 
 - `AnyFSE-<version>.identity.appx`
-- `AnyFSE.<version>.zip`
+- `AnyFSE.<version>.cab`
 - `AnyFSE.<version>.pdb.zip`
 - `AnyFSE.Installer.Offline.<version>-<revision>.exe`
 
@@ -168,7 +168,8 @@ Missing required files stop packaging. Localizations come directly from `localiz
 Old files left in `build\<Configuration>` are not used to discover payload contents.
 
 When adding or renaming a runtime binary, update the explicit `ApplicationFiles` list in `AnyFSE.Installer.vcxproj`.
-The output ZIP names and locations remain unchanged. The symbol archive is generated separately using its existing PDB selection rules.
+The payload archive uses the .cab extension. MSBuild generates payload.ddf and invokes the system MakeCab utility directly; no additional scripts are needed.
+The symbol archive remains .pdb.zip, created with tar using its existing PDB selection rules. The installer extracts CAB files through the Windows FDI API without launching an external process. Offline installation reads the embedded resource directly from memory, without writing a temporary CAB file.
 
 ## Scan the offline installer with VirusTotal
 
