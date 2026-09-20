@@ -27,6 +27,7 @@
 #include <windows.h>
 #include <list>
 #include <map>
+#include <optional>
 #include "Logging/Logger.hpp"
 #include "Tools/nlohmann/json_fwd.hpp"
 
@@ -42,6 +43,7 @@ namespace AnyFSE::Configuration
         PlayniteFullscreen,
         PlayniteDesktop,
         ArmouryCrate,
+        SteamBigPicture,
         Steam,
         BigBox,
         OneGameLauncher,
@@ -98,19 +100,19 @@ namespace AnyFSE::Configuration
             static bool IsFseOnStartupConfigured();
             static bool IsNativeConfigured();
             static bool IsAnyFSEConfigured();
-            static bool FindInstalledLaunchers(std::list<std::wstring> &found);
-            static bool FindNotInstalledLaunchers(std::list<std::wstring> &found);
+            static bool FindInstalledLaunchers(std::list<LauncherConfig> &found);
+            static bool FindNotInstalledLaunchers(std::list<LauncherConfig> &found);
             static std::wstring GetNativePath(const std::wstring &launcher);
-            static void FindPlaynite(std::list<std::wstring>& found);
-            static void FindSteam(std::list<std::wstring>& found);
-            static void FindBigBox(std::list<std::wstring>& found);
-            static void FindOneGameLauncher(std::list<std::wstring>& found);
-            static void FindNativeLaunchers(std::list<std::wstring> &found);
-            static void FindArmouryCrate(std::list<std::wstring> &found);
-            static void FindRetroBat(std::list<std::wstring>& found);
-            static void FindKodi(std::list<std::wstring> &found);
-            static void FindCortex(std::list<std::wstring> &found);
-            static void FindPocketDeck(std::list<std::wstring>& found);
+            static void FindPlaynite(std::list<LauncherConfig>& found);
+            static void FindSteam(std::list<LauncherConfig>& found);
+            static void FindBigBox(std::list<LauncherConfig>& found);
+            static void FindOneGameLauncher(std::list<LauncherConfig>& found);
+            static void FindNativeLaunchers(std::list<LauncherConfig> &found);
+            static void FindArmouryCrate(std::list<LauncherConfig> &found);
+            static void FindRetroBat(std::list<LauncherConfig>& found);
+            static void FindKodi(std::list<LauncherConfig> &found);
+            static void FindCortex(std::list<LauncherConfig> &found);
+            static void FindPocketDeck(std::list<LauncherConfig>& found);
 
             static std::wstring GetPathFromCommand(const std::wstring &uninstallCommand);
             static std::wstring SearchAppUserModel(const std::wstring &displayName);
@@ -120,12 +122,14 @@ namespace AnyFSE::Configuration
         public:
             // Unsafe
             static void UpdatePortableLauncher(LauncherConfig &out);
-            static bool FindLaunchers(std::list<std::wstring> &found);
+            static bool FindLaunchers(std::list<LauncherConfig> &found);
 
             static std::string GetConfigFileA(bool readOnly = true);
             static void Load();
-            static bool LoadLauncherSettings(const nlohmann::json &config, const std::wstring &path, LauncherConfig &out);
-            static bool LoadLauncherSettings(const std::wstring &path, LauncherConfig &out);
+            static bool LoadLauncherSettings(const nlohmann::json &config, const std::wstring &path, LauncherConfig &out,
+                std::optional<LauncherType> type = std::nullopt);
+            static bool LoadLauncherSettings(const std::wstring &path, LauncherConfig &out,
+                std::optional<LauncherType> type = std::nullopt);
             static json GetConfig();
             static void LoadExitFSEOnHomeExit();
             static void Save();
@@ -142,7 +146,11 @@ namespace AnyFSE::Configuration
             static bool IsConfigured();
 
 
-            static bool GetLauncherDefaults(const std::wstring& path, LauncherConfig& out);
+            static LauncherType GetConfiguredLauncher(const std::wstring& startCommand, const std::wstring& startArg);
+            // path is the installation directory for file presets, the full command for Custom, or the app ID for Native.
+            // An empty directory keeps the preset command; protocol commands are never prefixed.
+            static bool GetLauncherDefaults(LauncherType type, const std::wstring& path, LauncherConfig& out);
+            static LauncherConfig GetLauncherDefaults(LauncherType type, const std::wstring& path);
 
             static LauncherConfig Launcher;
 

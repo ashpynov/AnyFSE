@@ -22,7 +22,6 @@
 //
 
 #include <filesystem>
-#include <set>
 #include <windows.h>
 #include "Configuration/Config.hpp"
 #include "Tools/Registry.hpp"
@@ -56,14 +55,14 @@ namespace AnyFSE::Configuration
             return;
         }
 
-        std::list<std::wstring> installed;
+        std::list<LauncherConfig> installed;
 
         FindInstalledLaunchers(installed);
 
         if (!std::any_of(installed.begin(), installed.end(),
-            [&command = Unicode::to_lower(out.StartCommand) ](const std::wstring& p)
+            [&command = Unicode::to_lower(out.StartCommand) ](const LauncherConfig& launcher)
             {
-                return command == Unicode::to_lower(p);
+                return command == Unicode::to_lower(launcher.StartCommand);
             })
         )
         {
@@ -106,26 +105,26 @@ namespace AnyFSE::Configuration
         return launcher;
     }
 
-    void Config::FindArmouryCrate(std::list<std::wstring>& found)
+    void Config::FindArmouryCrate(std::list<LauncherConfig>& found)
     {
         std::wstring installPath =
             Packages::GetAppxInstallLocation(L"B9ECED6F.ArmouryCrateSE_qmba6cd70vzyy");
 
         if (!installPath.empty())
         {
-            found.push_back(L"asusac://");
+            found.push_back(GetLauncherDefaults(LauncherType::ArmouryCrate, L""));
         }
     }
 
-    bool Config::FindLaunchers(std::list<std::wstring> &found)
+    bool Config::FindLaunchers(std::list<LauncherConfig> &found)
     {
         size_t existed = found.size();
-        found.push_back(L"");
+        found.push_back(GetLauncherDefaults(LauncherType::None, L""));
         FindInstalledLaunchers(found);
         return found.size() > existed;
     }
 
-    bool Config::FindInstalledLaunchers(std::list<std::wstring>& found)
+    bool Config::FindInstalledLaunchers(std::list<LauncherConfig>& found)
     {
         size_t existed = found.size();
         FindPlaynite(found);
@@ -141,36 +140,25 @@ namespace AnyFSE::Configuration
         return found.size() > existed;
     }
 
-    bool Config::FindNotInstalledLaunchers(std::list<std::wstring>& found)
+    bool Config::FindNotInstalledLaunchers(std::list<LauncherConfig>& found)
     {
-        std::list<std::wstring> executables;
-        FindInstalledLaunchers(executables);
-
-        std::set<std::wstring> installed;
-
-        for (auto it : executables)
+        std::list<LauncherConfig> installed;
+        FindInstalledLaunchers(installed);
+        const auto previousSize = found.size();
+        for (const auto& preset : LauncherConfigs)
         {
-            if (fs::exists(it))
+            const bool present = std::any_of(installed.begin(), installed.end(), [&preset](const LauncherConfig& launcher)
             {
-                installed.insert(Unicode::to_lower(fs::path(it).filename().wstring()));
-            }
-            else
-            {
-                installed.insert(Unicode::to_lower(it));
-            }
+                return launcher.Type == preset.Type
+                    && (preset.Type != LauncherType::Native || launcher.AppUserModelID == preset.AppUserModelID);
+            });
+            if (!present)
+                found.push_back(preset);
         }
-
-        for (auto it = Config::LauncherConfigs.begin(); it != Config::LauncherConfigs.end(); ++it)
-        {
-            if (installed.find(Unicode::to_lower(it->StartCommand)) == installed.end())
-            {
-                found.push_back(Unicode::to_lower(it->StartCommand));
-            }
-        }
-        return found.size() > 0;
+        return found.size() > previousSize;
     }
 
-    void Config::FindPlaynite(std::list<std::wstring>& found)
+    void Config::FindPlaynite(std::list<LauncherConfig>& found)
     {
         std::wstring installPath = GetInstallPath(L"Playnite");
         if (installPath.empty())
@@ -179,89 +167,88 @@ namespace AnyFSE::Configuration
         }
         if (!installPath.empty())
         {
-            found.push_back(fs::path(installPath).append(L"Playnite.FullscreenApp.exe").wstring());
-            found.push_back(fs::path(installPath).append(L"Playnite.DesktopApp.exe").wstring());
+            found.push_back(GetLauncherDefaults(LauncherType::PlayniteFullscreen, installPath));
+            found.push_back(GetLauncherDefaults(LauncherType::PlayniteDesktop, installPath));
         }
     }
 
-    void Config::FindSteam(std::list<std::wstring>& found)
+    void Config::FindSteam(std::list<LauncherConfig>& found)
     {
         std::wstring installPath = GetInstallPath(L"Steam");
         if (!installPath.empty())
         {
-            found.push_back(fs::path(installPath).append(L"Steam.exe").wstring());
+            found.push_back(GetLauncherDefaults(LauncherType::SteamBigPicture, installPath));
+
+            found.push_back(GetLauncherDefaults(LauncherType::Steam, installPath));
         }
     }
 
-    void Config::FindBigBox(std::list<std::wstring> &found)
+    void Config::FindBigBox(std::list<LauncherConfig> &found)
     {
         std::wstring installPath = SearchAppUserModel(L"LaunchBox");
         if (!installPath.empty())
         {
-            found.push_back(fs::path(installPath).append(L"BigBox.exe").wstring());
+            found.push_back(GetLauncherDefaults(LauncherType::BigBox, installPath));
         }
     }
 
-    void Config::FindOneGameLauncher(std::list<std::wstring> &found)
+    void Config::FindOneGameLauncher(std::list<LauncherConfig> &found)
     {
         std::wstring installPath = Packages::GetAppxInstallLocation(L"62269AlexShats.OneGameLauncher_gghb1w55myjr2");
         if (!installPath.empty())
         {
-            found.push_back(L"ogl://");
+            found.push_back(GetLauncherDefaults(LauncherType::OneGameLauncher, L""));
         }
     }
 
-    void Config::FindPocketDeck(std::list<std::wstring>& found)
+    void Config::FindPocketDeck(std::list<LauncherConfig>& found)
     {
         std::wstring installPath = Packages::GetAppxInstallLocation(L"cyberdesk.PocketDeck_a94wxpzanyhhj");
-        auto config = List::find(
-            Config::LauncherConfigs,
-            [](auto& l){ return l.Type == LauncherType::PocketDeck; }
-        );
-
         if (!installPath.empty())
         {
-            found.push_back(fs::path(installPath).append(L"PocketDeck.exe").wstring());
-            config->Name = L"PocketDeck";
+            auto launcher = GetLauncherDefaults(LauncherType::PocketDeck, installPath);
+            launcher.Name = L"PocketDeck";
+            found.push_back(launcher);
         }
 
         installPath = Packages::GetAppxInstallLocation(L"cyberdesk.PocketDeckLite_a94wxpzanyhhj");
         if (!installPath.empty())
         {
-            found.push_back(fs::path(installPath).append(L"PocketDeck.exe").wstring());
-            config->Name = L"PocketDeck Lite";
+            auto launcher = GetLauncherDefaults(LauncherType::PocketDeck, installPath);
+            launcher.Name = L"PocketDeck Lite";
+            found.push_back(launcher);
         }
     }
 
-    void Config::FindRetroBat(std::list<std::wstring> &found)
+    void Config::FindRetroBat(std::list<LauncherConfig> &found)
     {
         std::wstring installPath = Registry::ReadString(L"HKCU\\Software\\RetroBat", L"LatestKnownInstallPath");
         if (!installPath.empty())
         {
-            found.push_back(fs::path(installPath).append(L"RetroBat.exe").wstring());
+            found.push_back(GetLauncherDefaults(LauncherType::RetroBat, installPath));
         }
     }
 
-    void Config::FindKodi(std::list<std::wstring> &found)
+    void Config::FindKodi(std::list<LauncherConfig> &found)
     {
         std::wstring installPath = GetInstallPath(L"Kodi");
         if (!installPath.empty())
         {
-            found.push_back(fs::path(installPath).append(L"Kodi.exe").wstring());
+            found.push_back(GetLauncherDefaults(LauncherType::Kodi, installPath));
         }
     }
 
-    void Config::FindCortex(std::list<std::wstring> &found)
+    void Config::FindCortex(std::list<LauncherConfig> &found)
     {
         std::wstring installPath = GetInstallPath(L"Razer Cortex");
         if (!installPath.empty())
         {
-            found.push_back(fs::path(installPath).append(L"RazerCortex.Shell.exe").wstring());
+            found.push_back(GetLauncherDefaults(LauncherType::Cortex, installPath));
         }
     }
 
 
-    void Config::FindNativeLaunchers(std::list<std::wstring> &found)
+    void Config::FindNativeLaunchers(std::list<LauncherConfig> &found)
     {
         auto launchers = Packages::GetNativeLaunchers();
         for (auto appUserModelId : launchers)
@@ -282,9 +269,12 @@ namespace AnyFSE::Configuration
                 Config::LauncherConfigs.push_back(Native);
             }
 
-            if (List::npos == List::index_of(found, appUserModelId))
+            if (List::npos == List::index_of_if(found, [&appUserModelId](const LauncherConfig& launcher)
+                { return launcher.AppUserModelID == appUserModelId; }))
             {
-                found.push_back(appUserModelId);
+                const auto preset = List::find(LauncherConfigs, [&appUserModelId](const LauncherConfig& item)
+                    { return item.AppUserModelID == appUserModelId; });
+                found.push_back(GetLauncherDefaults(preset->Type, preset->Type == LauncherType::Native ? appUserModelId : L""));
             }
         }
 

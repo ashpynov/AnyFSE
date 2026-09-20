@@ -166,12 +166,18 @@ namespace AnyFSE::Configuration
         CustomSettings = config.value(jp("/Launcher/CustomSettings"), Launcher.IsCustom);
     }
 
-    bool Config::LoadLauncherSettings(const json& config, const std::wstring &path, LauncherConfig& out)
+    bool Config::LoadLauncherSettings(const json& config, const std::wstring &path, LauncherConfig& out, std::optional<LauncherType> type)
     {
-        GetLauncherDefaults(path, out);
+        const bool sameLauncher = path == config.value(jp("/Launcher/StartCommand"), path);
+        const auto arguments = sameLauncher ? config.value(jp("/Launcher/StartArg"), std::wstring()) : std::wstring();
+        const auto configuredType = GetConfiguredLauncher(path, arguments);
+        const auto launcherType = type.value_or(configuredType);
+        const auto defaultsPath = launcherType == LauncherType::Custom || launcherType == LauncherType::Native
+            ? path : fs::path(path).parent_path().wstring();
+        GetLauncherDefaults(launcherType, defaultsPath, out);
 
         if ((out.Type == Custom || config.value(jp("/Launcher/CustomSettings"), out.IsCustom))
-            && path == config.value(jp("/Launcher/StartCommand"), out.StartCommand))
+            && sameLauncher && out.Type == configuredType)
         {
             out.StartCommand    = config.value(jp("/Launcher/StartCommand"),   out.StartCommand);
             out.StartArg        = config.value(jp("/Launcher/StartArg"),       out.StartArg);
@@ -190,9 +196,9 @@ namespace AnyFSE::Configuration
         return true;
     }
 
-    bool Config::LoadLauncherSettings(const std::wstring& path, LauncherConfig& out)
+    bool Config::LoadLauncherSettings(const std::wstring& path, LauncherConfig& out, std::optional<LauncherType> type)
     {
-        return LoadLauncherSettings(GetConfig(), path, out);
+        return LoadLauncherSettings(GetConfig(), path, out, type);
     }
 
     void Config::Save()

@@ -206,8 +206,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_currentLauncherPath = Config::GetNativePath(Config::Launcher.StartCommand);
         Config::FindLaunchers(m_launchersList);
         Config::FindNotInstalledLaunchers(m_notInstalledLaunchersList);
-        UpdateCombo();
         Config::LoadLauncherSettings(m_currentLauncherPath, m_config);
+        UpdateCombo();
 
         bool customSettings = Config::CustomSettings;
         m_customSettingsState = customSettings ? FluentDesign::SettingsLine::Next: FluentDesign::SettingsLine::Normal;
@@ -253,6 +253,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         std::wstring savedLauncher = Registry::ReadString(gamingConfiguration, gamingHomeApp);
         log.Debug("Saved launcher: %s", Unicode::to_string(savedLauncher).c_str());
 
+        Config::Launcher.Type = m_config.Type;
         Config::Launcher.StartCommand = m_config.StartCommand;
         Config::ExitFSEOnHomeExit = m_fseExitOnHomeExitToggle.GetCheck();
         Config::CustomSettings = m_customSettingsToggle.GetCheck();
@@ -429,7 +430,9 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
     void LauncherPage::UpdateControls()
     {
-        Config::GetLauncherDefaults(m_currentLauncherPath, m_defaultConfig);
+        const auto defaultsPath = m_config.Type == LauncherType::Custom || m_config.Type == LauncherType::Native
+            ? m_currentLauncherPath : std::filesystem::path(m_currentLauncherPath).parent_path().wstring();
+        Config::GetLauncherDefaults(m_config.Type, defaultsPath, m_defaultConfig);
 
         if (m_defaultConfig.Type == LauncherType::None)
         {
@@ -490,7 +493,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
     void LauncherPage::OnLauncherDropDown()
     {
-        std::list<std::wstring> notInstalled;
+        std::list<LauncherConfig> notInstalled;
         Config::FindNotInstalledLaunchers(notInstalled);
 
         if (notInstalled.size() != m_notInstalledLaunchersList.size())
@@ -505,18 +508,20 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
     void LauncherPage::OnLauncherChanged()
     {
-        std::wstring selected = m_launcherCombo.GetCurentValue();
-        if (List::index_of(m_notInstalledLaunchersList, selected) != List::npos)
+        const int index = m_launcherCombo.GetSelectedIndex();
+        if (index < 0 || static_cast<size_t>(index) >= m_launcherChoices.size())
+            return;
+
+        const auto selected = m_launcherChoices[index];
+        if (!selected.Installed)
         {
-            LauncherConfig conf;
-            Config::LoadLauncherSettings(selected, conf);
-            Process::StartProtocol(conf.URL);
+            Process::StartProtocol(selected.Launcher.URL);
             UpdateCombo();
             return;
         }
 
-        m_currentLauncherPath = selected;
-        Config::LoadLauncherSettings(m_currentLauncherPath, m_config);
+        m_currentLauncherPath = selected.Launcher.StartCommand;
+        Config::LoadLauncherSettings(m_currentLauncherPath, m_config, selected.Launcher.Type);
         UpdateControls();
         UpdateCustomSettings();
     }
@@ -524,36 +529,37 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     void LauncherPage::UpdateCombo()
     {
         m_launcherCombo.Reset();
-
-        for ( auto& launcher: m_launchersList)
+        m_launcherChoices.clear();
+        size_t selectedIndex = List::npos;
+        for (const auto& launcher : m_launchersList)
         {
-            LauncherConfig info;
-            Config::GetLauncherDefaults(launcher, info);
-            Config::UpdatePortableLauncher(info);
-            m_launcherCombo.AddItem(info.Name, info.IconFile, info.StartCommand);
-        }
-        size_t index = List::index_of(m_launchersList, m_currentLauncherPath);
-
-        if (index == List::npos)
-        {
-            LauncherConfig info;
-            Config::GetLauncherDefaults(m_currentLauncherPath, info);
-            Config::UpdatePortableLauncher(info);
-            m_launcherCombo.AddItem(info.Name, info.IconFile, info.StartCommand, 1);
-            index = 1;
+            if (launcher.Type == m_config.Type
+                && Unicode::to_lower(launcher.StartCommand) == Unicode::to_lower(m_currentLauncherPath))
+                selectedIndex = m_launcherChoices.size();
+            m_launcherChoices.push_back({launcher, true});
         }
 
-        if (m_notInstalledLaunchersList.size())
+        if (selectedIndex == List::npos)
         {
-            for (auto& launcher: m_notInstalledLaunchersList)
-            {
-                LauncherConfig info;
-                Config::GetLauncherDefaults(launcher, info);
-                m_launcherCombo.AddItem(info.Name, L"\xE118", info.StartCommand);
-            }
+            const auto defaultsPath = m_config.Type == LauncherType::Custom || m_config.Type == LauncherType::Native
+                ? m_currentLauncherPath
+                : std::filesystem::path(m_currentLauncherPath).parent_path().wstring();
+
+            LauncherConfig launcher = Config::GetLauncherDefaults(m_config.Type, defaultsPath);
+            Config::UpdatePortableLauncher(launcher);
+            selectedIndex = m_launcherChoices.empty() ? 0 : 1;
+            m_launcherChoices.insert(m_launcherChoices.begin() + selectedIndex, {launcher, true});
         }
 
-        m_launcherCombo.SelectItem((int)index);
+        for (const auto& launcher : m_notInstalledLaunchersList)
+            m_launcherChoices.push_back({launcher, false});
+
+        for (const auto& choice : m_launcherChoices)
+        {
+            const auto& launcher = choice.Launcher;
+            m_launcherCombo.AddItem(launcher.Name, choice.Installed ? launcher.IconFile : L"\xE118", L"");
+        }
+        m_launcherCombo.SelectItem(static_cast<int>(selectedIndex));
     }
 
     void LauncherPage::UpdateCustomSettings()

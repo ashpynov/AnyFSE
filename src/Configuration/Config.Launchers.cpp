@@ -59,14 +59,27 @@ namespace AnyFSE::Configuration
             result.push_back(PlayniteDesktop);
         }
         {
+            LauncherConfig SteamBigPicture = {};
+            SteamBigPicture.Type = LauncherType::SteamBigPicture;
+            SteamBigPicture.Name = L"Steam Big Picture";
+            SteamBigPicture.URL = L"https://store.steampowered.com/about/";
+            SteamBigPicture.StartCommand = L"Steam.exe";
+            SteamBigPicture.StartArg = L"steam://open/bigpicture";
+            SteamBigPicture.ExStyle = WS_EX_APPWINDOW;
+            SteamBigPicture.NoStyle = WS_THICKFRAME;
+            SteamBigPicture.ProcessName = L"steamwebhelper.exe";
+            SteamBigPicture.ClassName = L"SDL_app";
+            SteamBigPicture.IsTrayAggressive = true;
+            result.push_back(SteamBigPicture);
+        }
+        {
             LauncherConfig Steam = {};
             Steam.Type = LauncherType::Steam;
-            Steam.Name = L"Steam Big Picture Mode";
+            Steam.Name = L"Steam Desktop";
             Steam.URL = L"https://store.steampowered.com/about/";
             Steam.StartCommand = L"Steam.exe";
-            Steam.StartArg = L"steam://open/bigpicture";
+            Steam.StartArg = L"";
             Steam.ExStyle = WS_EX_APPWINDOW;
-            Steam.NoStyle = WS_THICKFRAME;
             Steam.ProcessName = L"steamwebhelper.exe";
             Steam.ClassName = L"SDL_app";
             Steam.IsTrayAggressive = true;
@@ -161,46 +174,74 @@ namespace AnyFSE::Configuration
 
     std::list<LauncherConfig> Config::LauncherConfigs = InitSupportedLaunchers();
 
-    bool Config::GetLauncherDefaults(const std::wstring& path, LauncherConfig& out)
+    LauncherType Config::GetConfiguredLauncher(const std::wstring& startCommand, const std::wstring& startArg)
     {
-        namespace fs = std::filesystem;
-        out = LauncherConfig();
+        if (startCommand.empty())
+            return LauncherType::None;
 
-        if (path.empty())
+        const auto command = Unicode::to_lower(startCommand);
+        const auto filename = Unicode::to_lower(std::filesystem::path(startCommand).filename().wstring());
+        const auto arguments = Unicode::to_lower(startArg);
+        LauncherType fallback = LauncherType::Custom;
+
+        for (const auto& launcher : LauncherConfigs)
         {
-            out.Type = None;
+            const auto presetCommand = Unicode::to_lower(launcher.StartCommand);
+            if (presetCommand != command && (filename.empty() || presetCommand != filename))
+                continue;
+
+            // Keep the existing preset when arguments are missing or customized.
+            if (fallback == LauncherType::Custom)
+                fallback = launcher.Type;
+            if (Unicode::to_lower(launcher.StartArg) == arguments)
+                return launcher.Type;
+        }
+        return fallback;
+    }
+
+    LauncherConfig Config::GetLauncherDefaults(LauncherType type, const std::wstring& path)
+    {
+        LauncherConfig launcher;
+        GetLauncherDefaults(type, path, launcher);
+        return launcher;
+    }
+
+    bool Config::GetLauncherDefaults(LauncherType type, const std::wstring& path, LauncherConfig& out)
+    {
+        out = LauncherConfig();
+        out.Type = type;
+        if (type == LauncherType::None)
+        {
             out.Name = L"None";
             return true;
         }
 
-        std::wstring exe = Unicode::to_lower(fs::path(path).filename().wstring());
-        if (exe.empty())
+        bool recognized = false;
+        for (const auto& launcher : LauncherConfigs)
         {
-            exe = Unicode::to_lower(path);
-        }
-        for (auto it = Config::LauncherConfigs.begin(); it != Config::LauncherConfigs.end(); ++it)
-        {
-            if (Unicode::to_lower(it->StartCommand) == exe)
+            if (launcher.Type == type && (type != LauncherType::Native
+                || Unicode::to_lower(launcher.StartCommand) == Unicode::to_lower(path)))
             {
-                out = *it;
-
-                out.StartCommand = path;
-                if (out.IconFile.empty())
-                {
-                    out.IconFile = out.AppUserModelID.empty() ? path : L"@" + out.AppUserModelID;
-                }
-                return true;
+                out = launcher;
+                recognized = true;
+                break;
             }
         }
 
-        out.Name = Config::GetApplicationName(path);
-        out.IconFile = path;
-        out.StartCommand = path;
-        out.ProcessName = fs::path(path).filename().wstring();
-        out.IsCustom = true;
-        out.Type = Custom;
+        if (type == LauncherType::Custom)
+        {
+            out.StartCommand = path;
+            out.IsCustom = true;
+            out.Name = GetApplicationName(path);
+            out.ProcessName = std::filesystem::path(path).filename().wstring();
+        }
 
-        return false;
-
+        // Only file-based presets use an installation directory. Custom commands and native IDs are already complete.
+        if (!path.empty() && recognized && type != LauncherType::Native
+            && out.StartCommand.find(L"://") == std::wstring::npos)
+            out.StartCommand = (std::filesystem::path(path) / out.StartCommand).wstring();
+        if (out.IconFile.empty())
+            out.IconFile = out.AppUserModelID.empty() ? out.StartCommand : L"@" + out.AppUserModelID;
+        return recognized;
     }
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <vector>
 #include "Configuration/Config.hpp"
 #include "FluentDesign/Theme.hpp"
 #include "FluentDesign/ComboBox.hpp"
@@ -59,8 +60,15 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         LauncherConfig m_config;
         LauncherConfig m_defaultConfig;
         std::wstring m_currentLauncherPath;
-        std::list<std::wstring> m_launchersList;
-        std::list<std::wstring> m_notInstalledLaunchersList;
+        std::list<LauncherConfig> m_launchersList;
+        std::list<LauncherConfig> m_notInstalledLaunchersList;
+
+        struct LauncherChoice
+        {
+            LauncherConfig Launcher;
+            bool Installed;
+        };
+        std::vector<LauncherChoice> m_launcherChoices;
 
 
         ComboBox m_launcherCombo;
