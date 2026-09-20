@@ -114,6 +114,7 @@
   "settingsNativeStartupSettingsDescription": "Configurar a inicialização automática pelas configurações do Windows",
   "settingsAdditionalStartupApplications": "Aplicativos adicionais de inicialização",
   "settingsAdditionalStartupApplicationsDescription": "Aplicativos iniciados pelo AnyFSE ao entrar no modo Xbox",
+  "settingsStartLauncherAsAdministratorDescription": "Executar o launcher com privilégios elevados. Isso não é seguro.",
   "addBtn": "Adicionar",
   "modifyBtn": "Editar",
   "deleteBtn": "Excluir",

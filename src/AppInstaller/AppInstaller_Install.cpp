@@ -34,6 +34,7 @@
 #include "Tools/Paths.hpp"
 #include "Tools/Packages.hpp"
 #include "AppInstaller/Certificate.hpp"
+#include "AppInstaller/ScheduledTask.hpp"
 
 namespace AnyFSE
 {
@@ -121,6 +122,7 @@ namespace AnyFSE
             ));
 
             RegisterUninstall();
+            ToolsEx::ScheduledTask::RegisterAnyFSETask(Tools::Paths::GetInstallPath());
 
             if (acseServiceWasRunning)
             {

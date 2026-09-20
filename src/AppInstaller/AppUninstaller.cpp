@@ -45,6 +45,7 @@
 #include "App/GamingExperience.hpp"
 #include "Ally/Services.hpp"
 #include "AppInstaller/Certificate.hpp"
+#include "AppInstaller/ScheduledTask.hpp"
 
 
 #pragma comment(lib, "Shell32.lib")
@@ -535,6 +536,7 @@ namespace AnyFSE
 
     void AppUninstaller::Uninstall(bool update)
     {
+        ToolsEx::ScheduledTask::DeleteAnyFSETask();
         Ally::Services::DisableInjectorService();
 
         TerminateAnyFSE();

@@ -23,11 +23,9 @@
 
 
 #include <windows.h>
-#include <string>
 
 
 namespace AnyFSE::ToolsEx::Admin
 {
     BOOL IsRunningAsAdministrator();
-    BOOL RequestAdminElevation(const std::wstring& args = L"");
 }

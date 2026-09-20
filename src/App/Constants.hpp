@@ -10,6 +10,17 @@ namespace AnyFSE::App::Constants
 
     // Product files
     inline constexpr wchar_t AnyFseSettingsDll[] = L"AnyFSE.Settings.dll";
+    inline constexpr wchar_t AnyFseExe[] = L"AnyFSE.exe";
+    inline constexpr wchar_t AnyFseTaskName[] = L"AnyFSE";
+    inline constexpr wchar_t ElevatedEventPrefix[] = L"Local\\AnyFSE.Task.Command.";
+    inline constexpr wchar_t ElevatedCallEvent[] = L"Local\\AnyFSE.Task.Call";
+    inline constexpr wchar_t ElevatedStartLauncher[] = L"StartLauncher";
+    inline constexpr wchar_t ElevatedEnableGamingHandheld[] = L"EnableGamingHandheld";
+    inline constexpr wchar_t ElevatedRestoreGamingPC[] = L"RestoreGamingPC";
+    inline constexpr wchar_t AnyFseTaskArgument[] = L"/task";
+    inline constexpr char AnyFseTaskArgumentA[] = "/task";
+    inline constexpr wchar_t TaskSchedulerRoot[] = L"\\";
+    inline constexpr wchar_t AnyFseTaskSecurityPrefix[] = L"D:P(A;;GA;;;SY)(A;;GA;;;BA)(A;;GRGX;;;";
     inline constexpr wchar_t InstallerExe[] = L"AnyFSE.Installer.exe";
     inline constexpr wchar_t UninstallerExe[] = L"unins000.exe";
     inline constexpr wchar_t UninstallerUpdateArguments[] = L"/s /u";
@@ -55,6 +66,7 @@ namespace AnyFSE::App::Constants
     inline constexpr wchar_t CodebergReleaseRoot[] = L"https://codeberg.org/ashpynov/AnyFSE/releases/download/v";
     inline constexpr wchar_t UpdaterCommandMessage[] = L"AnyFSE.Updater.Command";
     inline constexpr wchar_t AnyFseProtocolSettings[] = L"anyfse://settings";
+    inline constexpr wchar_t ProtocolSeparator[] = L"://";
     inline constexpr wchar_t AnyFseProtocolHidListener[] = L"anyfse://HidListener";
     inline constexpr wchar_t HidListenerAutorunKey[] = L"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run";
     inline constexpr wchar_t HidListenerAutorunValue[] = L"AnyFSE Hotkeys";

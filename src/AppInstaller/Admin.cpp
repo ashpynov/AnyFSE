@@ -22,8 +22,6 @@
 //
 
 #include "Admin.hpp"
-#include "Tools/Process.hpp"
-#include "Tools/Paths.hpp"
 
 namespace AnyFSE::ToolsEx::Admin
 {
@@ -51,50 +49,4 @@ namespace AnyFSE::ToolsEx::Admin
         return fRet;
     }
 
-    BOOL RequestAdminElevation(const std::wstring& args)
-    {
-        std::wstring modulePath = Tools::Paths::GetExeFileName();
-
-        SHELLEXECUTEINFO sei = { sizeof(sei) };
-        sei.lpVerb = L"runas";  // Request UAC elevation
-        sei.lpFile = modulePath.c_str();
-        sei.nShow = SW_SHOWNORMAL;
-        sei.fMask = SEE_MASK_NOCLOSEPROCESS;
-
-        if (!args.empty())
-        {
-            sei.lpParameters = args.c_str();
-        }
-
-        if (ShellExecuteEx(&sei))
-        {
-            if (sei.hProcess)
-            {
-                // Wait for the process to start (but not necessarily show window)
-                WaitForInputIdle(sei.hProcess, 5000);
-
-                HWND hWnd = 0;
-                DWORD timeout = GetTickCount() + 3000;
-                do
-                {
-                    hWnd = Tools::Process::FindAppWindow(sei.hProcess);
-                    if (hWnd)
-                    {
-                        Tools::Process::BringWindowToForeground(hWnd);
-                        break;
-                    }
-                    else
-                    {
-                        Sleep(0);
-                    }
-                } while (!hWnd && GetTickCount() < timeout );
-
-                CloseHandle(sei.hProcess);
-            }
-            exit(0);
-        }
-
-        return false;
-
-    }
 }

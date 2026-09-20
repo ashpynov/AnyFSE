@@ -28,6 +28,8 @@
 #include "Configuration/Config.hpp"
 #include "Launchers.hpp"
 #include "Tools/Process.hpp"
+#include "Tools/Elevated.hpp"
+#include "App/Constants.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/Packages.hpp"
 #include "App/GamingExperience.hpp"

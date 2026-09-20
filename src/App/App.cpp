@@ -24,6 +24,7 @@
 
 #include <windows.h>
 #include <iostream>
+#include <stdexcept>
 #include "resource.h"
 #include <tchar.h>
 #include <commctrl.h>
@@ -32,6 +33,7 @@
 #include "Logging/LogManager.hpp"
 #include "Configuration/Config.hpp"
 #include "Tools/Process.hpp"
+#include "Tools/Elevated.hpp"
 #include "Tools/Notification.hpp"
 #include "Tools/Registry.hpp"
 #include "Tools/Localization.hpp"
@@ -133,30 +135,9 @@ namespace AnyFSE::App
         return false;
     }
 
-    bool App::AsEnableGamingHandheld(LPSTR lpCmdLine)
+    bool App::AsElevated(LPSTR lpCmdLine)
     {
-        constexpr char argument[] = "/EnableGamingHandheld";
-        for (char *a = lpCmdLine; *a; a++)
-        {
-            if (_strnicmp(a, argument, sizeof(argument) - 1) == 0)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool App::AsRestoreGamingPC(LPSTR lpCmdLine)
-    {
-        constexpr char argument[] = "/RestoreGamingPC";
-        for (char *a = lpCmdLine; *a; a++)
-        {
-            if (_strnicmp(a, argument, sizeof(argument) - 1) == 0)
-            {
-                return true;
-            }
-        }
-        return false;
+        return lpCmdLine && _stricmp(lpCmdLine, Constants::AnyFseTaskArgumentA) == 0;
     }
 
 
@@ -253,14 +234,13 @@ namespace AnyFSE::App
         AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
         log.Debug("Application is started (hInstance=%08x) args: [%s]", hInstance, lpCmdLine);
 
-        if (AsEnableGamingHandheld(lpCmdLine))
+        if (AsElevated(lpCmdLine))
         {
-            return GamingExperience::EnableGamingHandheld() ? 0 : 1;
-        }
+            Elevated::Register(Constants::ElevatedStartLauncher, Launchers::StartLauncher);
+            Elevated::Register(Constants::ElevatedEnableGamingHandheld, GamingExperience::EnableGamingHandheld);
+            Elevated::Register(Constants::ElevatedRestoreGamingPC, GamingExperience::RestoreGamingPC);
 
-        if (AsRestoreGamingPC(lpCmdLine))
-        {
-            return GamingExperience::RestoreGamingPC() ? 0 : 1;
+            return Elevated::CallHandler() ? 0 : 1;
         }
 
        GamingExperience::RestoreEnterFSEConfirmation();
@@ -380,7 +360,14 @@ namespace AnyFSE::App
                 Launchers::LaunchStartupApps();
             };
             Launchers::LauncherOnBoot();
-            Launchers::StartLauncher();
+            if (Config::AsAdmin)
+            {
+                Elevated::Call(Constants::ElevatedStartLauncher);
+            }
+            else
+            {
+                Launchers::StartLauncher();
+            }
         }
         else
         {

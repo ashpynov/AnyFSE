@@ -162,6 +162,7 @@ namespace AnyFSE::Configuration
             static bool AggressiveMode;
             static bool FseOnStartup;
             static bool QuickStart;
+            static bool AsAdmin;
 
             static bool SplashShowAnimation;
             static bool SplashShowLogo;

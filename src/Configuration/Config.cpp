@@ -58,6 +58,7 @@ namespace AnyFSE::Configuration
     bool            Config::SplashVideoLoop = false;
     bool            Config::SplashVideoPause = true;
     bool            Config::QuickStart = false;
+    bool            Config::AsAdmin = false;
     bool            Config::CleanupFailedStart = true;
     DWORD           Config::RestartDelay = 1000;
     std::list<StartupApp> Config::StartupApps;
@@ -124,6 +125,7 @@ namespace AnyFSE::Configuration
         LogLevel                = (LogLevels)config.value(jp("/Log/Level"),  (int)LogLevels::Disabled);
         AggressiveMode          = config.value(jp("/AggressiveMode"),        false);
         QuickStart              = config.value(jp("/QuickStart"),            false);
+        AsAdmin                 = config.value(jp("/as_admin"),              false);
         CleanupFailedStart      = config.value(jp("/CleanupFailedStart"),    true);
         RestartDelay            = config.value(jp("/RestartDelay"),          (DWORD)1000);
 
@@ -237,6 +239,7 @@ namespace AnyFSE::Configuration
         config["Log"]["Level"]                  = (int)LogLevel;
 
         config["QuickStart"]                    = QuickStart;
+        config["as_admin"]                      = AsAdmin;
         config["CleanupFailedStart"]            = CleanupFailedStart;
         config["RestartDelay"]                  = RestartDelay;
 
