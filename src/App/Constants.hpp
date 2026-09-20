@@ -11,6 +11,8 @@ namespace AnyFSE::App::Constants
     // Product files
     inline constexpr wchar_t AnyFseSettingsDll[] = L"AnyFSE.Settings.dll";
     inline constexpr wchar_t InstallerExe[] = L"AnyFSE.Installer.exe";
+    inline constexpr wchar_t UninstallerExe[] = L"unins000.exe";
+    inline constexpr wchar_t UninstallerUpdateArguments[] = L"/s /u";
     inline constexpr wchar_t InjectorExe[] = L"AnyFSE.ACSEFilterInjector.exe";
 
     // ASUS / ACSE integration

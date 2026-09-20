@@ -111,7 +111,7 @@ namespace AnyFSE
     bool AppInstaller::RegisterUninstall()
     {
         const std::wstring installPath = Tools::Paths::GetInstallPath();
-        const std::wstring uninstallPath = Tools::Paths::GetInstallPath() + L"\\unins000.exe";
+        const std::wstring uninstallPath = (std::filesystem::path(installPath) / App::Constants::UninstallerExe).wstring();
         const DWORD estimatedSizeKb = static_cast<DWORD>((GetDirectorySize(installPath) + 1023) / 1024);
 
         return

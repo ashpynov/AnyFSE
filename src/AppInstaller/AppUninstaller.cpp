@@ -551,7 +551,10 @@ namespace AnyFSE
 
         Registry::DeleteKey(L"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AnyFSE");
 
-        AutoDeleteSelf(Tools::Paths::GetInstallPath(), removeDir);
+        // During an update the installer owns cleanup after this process exits.
+        // Never queue deletion of a path that will contain the new version.
+        if (!update)
+            AutoDeleteSelf(Tools::Paths::GetInstallPath(), removeDir);
     }
 
     void AppUninstaller::OnUninstall()

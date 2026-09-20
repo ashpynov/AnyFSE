@@ -337,21 +337,22 @@ namespace AnyFSE
 
     bool AppInstaller::DeleteOldVersion()
     {
-        std::wstring uninstaller = Registry::ReadString(registryPath, L"UninstallString");
-        if (uninstaller.empty() || !fs::exists(uninstaller))
+        const std::wstring uninstaller = Registry::ReadString(registryPath, L"UninstallString");
+        std::error_code error;
+        if (uninstaller.empty() || !fs::exists(uninstaller, error))
         {
             return true;
         }
         // Execute uninstaller
         SHELLEXECUTEINFOW sei = { sizeof(sei) };
         sei.lpFile = uninstaller.c_str();
-        sei.lpParameters = L"/s /u";
+        sei.lpParameters = App::Constants::UninstallerUpdateArguments;
         sei.nShow = SW_HIDE;
-        sei.fMask = SEE_MASK_NOCLOSEPROCESS;
+        sei.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC;
 
-        if (ShellExecuteExW(&sei))
+        if (ShellExecuteExW(&sei) && sei.hProcess)
         {
-            WaitForSingleObject(sei.hProcess, 30000);
+            WaitForSingleObject(sei.hProcess, INFINITE);
             CloseHandle(sei.hProcess);
         }
         return true;

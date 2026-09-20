@@ -73,7 +73,18 @@ namespace AnyFSE
             if (!oldPath.empty())
             {
                 SetCurrentProgress(Translate(L"progressRemoveOldVersion"));
-                CheckSuccess(DeleteOldVersion() && DeleteOldFiles(oldPath));
+                DeleteOldVersion();
+
+                try
+                {
+                    if (!DeleteOldFiles(oldPath))
+                        log.Warn("Old file cleanup failed; continuing installation");
+                }
+                catch (const std::exception& e)
+                {
+                    log.Warn(e, "Old file cleanup failed; continuing installation");
+                }
+                CheckSuccess(true);
             }
 
             if (!devModeWasEnabled)
