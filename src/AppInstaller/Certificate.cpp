@@ -1,9 +1,12 @@
 #include <windows.h>
 #include <filesystem>
 #include <string>
+#include "Certificate.hpp"
+#include "App/Constants.hpp"
 
 namespace AnyFSE::ToolsEx::Certificate
 {
+    namespace c = AnyFSE::App::Constants;
     namespace
     {
     bool IsCertificateInstalled(const std::wstring &commonName, const wchar_t *storeName)
@@ -24,6 +27,7 @@ namespace AnyFSE::ToolsEx::Certificate
         while ((pCertContext = CertFindCertificateInStore(hStore, X509_ASN_ENCODING, 0, CERT_FIND_SUBJECT_STR, commonName.c_str(), pCertContext)))
         {
             found = true; // Certificate found
+            CertFreeCertificateContext(pCertContext);
             break;
         }
 
@@ -65,17 +69,27 @@ namespace AnyFSE::ToolsEx::Certificate
 
     bool IsRootCertificateInstalled(const std::wstring &commonName)
     {
-        return IsCertificateInstalled(commonName, L"ROOT");
+        return IsCertificateInstalled(commonName, c::RootCertificateStore);
     }
 
-    bool InstallRootCertificate(const std::wstring &certFilePath)
+    bool IsTrustedPeopleCertificateInstalled(const std::wstring &commonName)
+    {
+        return IsCertificateInstalled(commonName, c::TrustedPeopleCertificateStore);
+    }
+
+    bool RemoveTrustedPeopleCertificate(const std::wstring &publisherCN)
+    {
+        return RemoveCertificate(publisherCN, c::TrustedPeopleCertificateStore);
+    }
+
+    bool InstallTrustedPeopleCertificate(const std::wstring &certFilePath)
     {
         HCERTSTORE hStore = CertOpenStore(
             CERT_STORE_PROV_SYSTEM_W,
             0,
             NULL,
             CERT_SYSTEM_STORE_LOCAL_MACHINE,
-            L"ROOT"
+            c::TrustedPeopleCertificateStore
         );
 
         if (!hStore)
@@ -113,7 +127,17 @@ namespace AnyFSE::ToolsEx::Certificate
             return false;
         }
 
-        bool result = CertAddCertificateContextToStore(hStore, pCertContext, CERT_STORE_ADD_REPLACE_EXISTING, NULL);
+        PCCERT_CONTEXT storedCert = nullptr;
+        bool result = CertAddCertificateContextToStore(hStore, pCertContext, CERT_STORE_ADD_REPLACE_EXISTING, &storedCert);
+        if (result)
+        {
+            std::wstring friendlyName(c::PublisherCertFriendlyName);
+            CRYPT_DATA_BLOB name{};
+            name.cbData = static_cast<DWORD>((friendlyName.size() + 1) * sizeof(wchar_t));
+            name.pbData = reinterpret_cast<BYTE*>(friendlyName.data());
+            result = CertSetCertificateContextProperty(storedCert, CERT_FRIENDLY_NAME_PROP_ID, 0, &name);
+            CertFreeCertificateContext(storedCert);
+        }
         CertFreeCertificateContext(pCertContext);
         CertCloseStore(hStore, 0);
 
@@ -122,6 +146,6 @@ namespace AnyFSE::ToolsEx::Certificate
 
     bool RemoveRootCertificate(const std::wstring &publisherCN)
     {
-        return RemoveCertificate(publisherCN, L"ROOT");
+        return RemoveCertificate(publisherCN, c::RootCertificateStore);
     }
 }

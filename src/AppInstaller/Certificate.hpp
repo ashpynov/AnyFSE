@@ -26,6 +26,8 @@
 namespace AnyFSE::ToolsEx::Certificate
 {
     bool IsRootCertificateInstalled(const std::wstring &commonName);
-    bool InstallRootCertificate(const std::wstring &certFilePath);
+    bool IsTrustedPeopleCertificateInstalled(const std::wstring &commonName);
+    bool RemoveTrustedPeopleCertificate(const std::wstring &publisherCN);
+    bool InstallTrustedPeopleCertificate(const std::wstring &certFilePath);
     bool RemoveRootCertificate(const std::wstring &publisherCN);
 }

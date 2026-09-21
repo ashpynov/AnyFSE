@@ -178,7 +178,7 @@
       <ApplicationFiles Include="$(OutDir)AnyFSE.ACSEFilterHook.dll" />
       <ApplicationFiles Include="$(OutDir)AnyFSE.ACSEFilterInjector.exe" />
       <ApplicationFiles Include="$(OutDir)unins000.exe" />
-      <ApplicationFiles Include="$(MSBuildProjectDirectory)\Artem.Shpynov.cer;$(OutDir)$(AssemblyProduct)-$(AssemblyVersion).identity.appx" />
+      <ApplicationFiles Include="$(MSBuildProjectDirectory)\AnyFSE.Temp.cer;$(OutDir)$(AssemblyProduct)-$(AssemblyVersion).identity.appx" />
       <PackageContent Include="$(PackageDir)\**\*" />
       <PayloadLocalization Include="$(MSBuildProjectDirectory)\localization\*.json" />
       <ApplicationDumpFiles Include="$(OutDir)AnyFSE*.pdb" Exclude="$(OutDir)AnyFSE*-*.pdb" />
@@ -224,9 +224,9 @@
 
     <!-- Target: Get certificate thumbprint by name -->
     <Target Name="GetCertificateThumbprint">
-        <Message Text="Finding certificate for: $(AssemblyCompany)" Importance="high" />
+        <Message Text="Finding binary signing certificate: CN=$(BinarySigningCN)" Importance="high" />
 
-        <Exec Command="powershell -NoProfile -Command &quot;try { $cert = Get-ChildItem -Path 'Cert:\CurrentUser\My' | Where-Object { $_.Subject -like '*$(AssemblyCompany)*' -and -not $_.Extensions.CertificateAuthority } | Select-Object -First 1; if (-not $cert) { throw 'Certificate not found' }; $cert.Thumbprint } catch { Write-Error $_.Exception.Message; exit 1 }&quot;" ContinueOnError="false" ConsoleToMSBuild="true">
+        <Exec Command="powershell -NoProfile -Command &quot;try { $cert = Get-ChildItem -Path 'Cert:\CurrentUser\My' -CodeSigningCert -ErrorAction Stop | Where-Object { $_.Subject -eq 'CN=$(BinarySigningCN)' -and $_.HasPrivateKey -and $_.NotBefore -le (Get-Date) -and $_.NotAfter -gt (Get-Date) } | Sort-Object NotAfter -Descending | Select-Object -First 1; if (-not $cert) { throw 'Valid code-signing certificate with private key not found: CN=$(BinarySigningCN)' }; $cert.Thumbprint } catch { Write-Error $_.Exception.Message; exit 1 }&quot;" ContinueOnError="false" ConsoleToMSBuild="true">
             <Output TaskParameter="ConsoleOutput" PropertyName="CertificateThumbprint" />
         </Exec>
 

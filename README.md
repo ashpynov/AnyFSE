@@ -17,12 +17,21 @@ Some other launchers potentially can be supported too with minor customizations
 - Handling of ASUS Rog Ally buttons inspired by such projects like [Handheld Companion](https://github.com/Valkirie/HandheldCompanion) and [g-helper](https://github.com/seerge/g-helper).
 - Discord users 'Marecki' and 'TwoTracks' who helped me to design and test such features like Xbox Ally support and Steam buttons mapping.
 
+## Defender flagging
+
+> [!WARNING]
+> Microsoft Defender may occasionally flag AnyFSE with a `Trojan.Wacatac!ml` detection. I believe these are false positives caused by behavior considered suspicious, such as the process enumeration during launcher start and DLL injection used for ASUS button remapping. See [ACSE Filter and antivirus detection](#acse-filter-and-antivirus-detection) for details.
+>
+> **AnyFSE does not collect or share any information (personal or not) or send any telemetry.**
+>
+> **But don't take my word for it.** If you have any doubts, don't run the prebuilt binaries. The source code is available for you to review, and you can [build it yourself](build.md).
+
 ## Features
 
 - Ability to select one of supported launchers:
     - [Playnite Fullscreen](https://playnite.link)
     - [Playnite Desktop](https://playnite.link)
-    - [Steam Big Picture Mode](https://store.steampowered.com/about/)
+    - [Steam Big Picture & Desktop](https://store.steampowered.com/about/)
     - [LaunchBox BigBox](https://www.launchbox-app.com/download)
     - [One Game Launcher](https://ogl.app/)
     - [RetroBat](https://www.retrobat.org/download/)
@@ -44,7 +53,7 @@ The settings interface supports the following languages:
 
 - English
 - French (Français)
-- Portuguese (Brazil) — Português (Brasil)
+- Portuguese (Português Brazil)
 - Russian (Русский)
 - Turkish (Türkçe)
 
@@ -92,6 +101,18 @@ This component is not in the critical path for normal input, launcher startup, o
 - What is filtered: The hook examines only six-byte HID reports from ASUS devices with vendor ID 0x0B05 and the configured product IDs. It replaces only the configured Armoury Crate, Command Center, and Library button reports with an empty report. Other reads are passed through unchanged
 
 - In the ACSE Filter source, there is no networking, downloading, credential access, keylogging, file encryption, Defender disabling, or arbitrary payload execution. The DLL path is fixed to AnyFSE.ACSEFilterHook.dll beside the injector executable.
+
+Also AnyFSE Installer itself does trick to install AnyFSE package to be registered as Home Application. This also may flag Defender:
+
+- It contain bundled archive (or download it).
+
+- It exract this archive to Program Files
+
+- It Enable developer mode to allow CustomCapability 'Microsoft.appCategory.gamingHome'
+
+- It install temp certificate to Trusted People to install package
+
+- After installation it remove temp certificate and turn off developer mode.
 
 
 ## Install, Configure and Uninstall

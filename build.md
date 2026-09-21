@@ -23,9 +23,9 @@ Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin' -Directory |
 
 ## Create a self-signed code-signing certificate
 
-The current MSBuild targets sign with a non-CA certificate from `Cert:\CurrentUser\My`. `AnyFSE.Package.vcxproj` searches for a subject containing `PublisherCN`; `AnyFSE.Installer.vcxproj` and `AnyFSE.Uninstaller.vcxproj` search for a subject containing `AssemblyCompany`. The simplest working setup is to keep `AssemblyCompany` and `PublisherCN` aligned and use a certificate with subject `CN=<PublisherCN>`.
+Signing uses two separate certificates in `Cert:\CurrentUser\My`. EXE/DLL projects, including the installer and uninstaller, select an exact subject `CN=$(BinarySigningCN)` (currently `CN=Artem Shpynov`), with Code Signing usage, a private key, and a current validity period. If several qualify, the certificate with the latest expiry is selected. APPX signing remains separate and uses `PublisherCN` (currently `DDCC7751-898D-4BC9-B80C-4AA73E5D5762`).
 
-With the current project targets, use one self-signed code-signing certificate. It signs the binaries/packages and also acts as the trust anchor when its public `.cer` is imported into Trusted Root. A separate root CA plus leaf signer can also work, but then the MSBuild certificate lookup and installer certificate handling should be reviewed together.
+For local testing, create the two certificates separately using the example below with the appropriate CN for each. Export only the package signing certificate to `AnyFSE.Temp.cer`. The installer temporarily imports that public certificate into `LocalMachine\TrustedPeople`; the binary signing certificate is independent of it.
 
 Run PowerShell as the build user:
 
@@ -61,11 +61,11 @@ The certificate is now installed in the current user's personal certificate stor
 
 ## Extract the public CER file
 
-The installer packaging target copies `Artem.Shpynov.cer` from the repo root into the payload. The installer uses `src\App\Constants.hpp` to decide the exact certificate file name to install. Export the public certificate and place it in the repo root.
+The installer packaging target copies `AnyFSE.Temp.cer` from the repo root into the payload. The installer uses `src\App\Constants.hpp` to decide the exact certificate file name to install. Export the public certificate and place it in the repo root.
 
 ```powershell
-$publisherCn = "Your Publisher Name"
-$certFile = ".\Your.Publisher.cer"
+$publisherCn = "DDCC7751-898D-4BC9-B80C-4AA73E5D5762"
+$certFile = ".\AnyFSE.Temp.cer"
 
 $cert = Get-ChildItem Cert:\CurrentUser\My |
     Where-Object { $_.Subject -eq "CN=$publisherCn" -and $_.HasPrivateKey } |
@@ -79,14 +79,14 @@ if (-not $cert) {
 Export-Certificate -Cert $cert -FilePath $certFile
 ```
 
-If you keep the current file naming convention, replace `Artem.Shpynov.cer` with the exported `.cer`. Otherwise update the certificate file name in both `src\App\Constants.hpp` and the `ApplicationFiles` list in `AnyFSE.Installer.vcxproj`.
+If you keep the current file naming convention, replace `AnyFSE.Temp.cer` with the exported `.cer`. Otherwise update the certificate file name in both `src\App\Constants.hpp` and the `ApplicationFiles` list in `AnyFSE.Installer.vcxproj`.
 
-To trust packages signed by this self-signed certificate on the local machine, run PowerShell as Administrator and install the public certificate into Local Machine Trusted Root:
+To trust packages signed by this self-signed certificate on the local machine, run PowerShell as Administrator and install the public certificate into Local Machine Trusted People:
 
 ```powershell
 Import-Certificate `
-    -FilePath ".\Your.Publisher.cer" `
-    -CertStoreLocation "Cert:\LocalMachine\Root"
+    -FilePath ".\AnyFSE.Temp.cer" `
+    -CertStoreLocation "Cert:\LocalMachine\TrustedPeople"
 ```
 
 ## Replace publisher, CN, and certificate references
@@ -96,7 +96,8 @@ Update these files together. Do not change only one of them.
 1. `AnyFSE.Version.props`
    - Change `<AssemblyCompany>`.
    - Change `<AssemblyCopyright>`.
-   - Change `<PublisherCN>`.
+   - Set `<BinarySigningCN>` to the EXE/DLL signing certificate CN, independently of `<AssemblyCompany>`.
+   - Change `<PublisherCN>` only for the separate package signing certificate.
    - For the current signing targets, set `PublisherCN` to the same text as the certificate common name.
 
 2. `AppxManifest.xml`

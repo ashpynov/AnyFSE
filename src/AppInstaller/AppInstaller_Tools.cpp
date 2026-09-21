@@ -151,22 +151,11 @@ namespace AnyFSE
         return Ally::Services::EnableAsusOptimizationService();
     }
 
-    bool AppInstaller::IsCertificatesWasInstalled()
-    {
-        return ToolsEx::Certificate::IsRootCertificateInstalled(Unicode::to_wstring(VER_COMPANY_NAME))
-            || ToolsEx::Certificate::IsRootCertificateInstalled(Unicode::to_wstring(VER_PUBLISHER_CN));
-    }
-
     bool AppInstaller::RemoveOldCertificates()
     {
-        if (ToolsEx::Certificate::IsRootCertificateInstalled(Unicode::to_wstring(VER_COMPANY_NAME)))
-        {
-            ToolsEx::Certificate::RemoveRootCertificate(Unicode::to_wstring(VER_COMPANY_NAME));
-        }
-        if (ToolsEx::Certificate::IsRootCertificateInstalled(Unicode::to_wstring(VER_PUBLISHER_CN)))
-        {
-            ToolsEx::Certificate::RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
-        }
+        ToolsEx::Certificate::RemoveTrustedPeopleCertificate(Unicode::to_wstring(VER_COMPANY_NAME));
+        ToolsEx::Certificate::RemoveTrustedPeopleCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
+        ToolsEx::Certificate::RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
         return true;
     }
 };

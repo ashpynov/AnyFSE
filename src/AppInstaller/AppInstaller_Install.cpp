@@ -53,7 +53,6 @@ namespace AnyFSE
         log.Info("Starting Installation AnyFSE v%s to %s", APP_VERSION, path.string().c_str());
 
         bool acseServiceWasRunning = IsInjectorServiceRun();
-        bool certificateWasInstalled = IsCertificatesWasInstalled();
         bool devModeWasEnabled = IsDeveloperModeEnabled();
 
         try
@@ -95,15 +94,12 @@ namespace AnyFSE
                 CheckSuccess(true);
             }
 
-            if (certificateWasInstalled)
-            {
-                RemoveOldCertificates();
-            }
+            RemoveOldCertificates();
 
             if (true)
             {
                 SetCurrentProgress(Translate(L"progressInstallPublisherCertificate"));
-                CheckSuccess(ToolsEx::Certificate::InstallRootCertificate(path.wstring() + L"/" + App::Constants::PublisherCertFile));
+                CheckSuccess(ToolsEx::Certificate::InstallTrustedPeopleCertificate(path.wstring() + L"/" + App::Constants::TempCertFile));
             }
 
             if (IsNeedEnableAsusOptimization())
@@ -120,6 +116,8 @@ namespace AnyFSE
                 App::Constants::PackageFamilyName,
                 Tools::Paths::GetInstallPath()
             ));
+
+            ToolsEx::Certificate::RemoveTrustedPeopleCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
 
             RegisterUninstall();
             ToolsEx::ScheduledTask::RegisterAnyFSETask(Tools::Paths::GetInstallPath());
@@ -153,6 +151,8 @@ namespace AnyFSE
         }
         catch (const std::exception& e)
         {
+            ToolsEx::Certificate::RemoveTrustedPeopleCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
+
             log.Error(e, "Installation fail:");
             ShowErrorPage(Translate(L"installationErrorCaption"), GetProgressText(4) + Unicode::to_wstring(e.what()));
 
@@ -160,11 +160,6 @@ namespace AnyFSE
             if (acseServiceWasRunning)
             {
                 EnableInjectorService();
-            }
-
-            if (!certificateWasInstalled)
-            {
-                ToolsEx::Certificate::RemoveRootCertificate(Unicode::to_wstring(VER_COMPANY_NAME));
             }
 
             if (!devModeWasEnabled)

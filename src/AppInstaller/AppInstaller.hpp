@@ -193,7 +193,6 @@ namespace AnyFSE
             bool EnableInjectorService();
             bool IsNeedEnableAsusOptimization();
             bool EnableAsusOptimization();
-            bool IsCertificatesWasInstalled();
             bool RemoveOldCertificates();
             void StopAnyFSE();
     };

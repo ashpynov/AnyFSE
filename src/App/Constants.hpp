@@ -56,7 +56,10 @@ namespace AnyFSE::App::Constants
     inline constexpr wchar_t EnterGamingPostureConfirmationRestoreRegValue[] = L"EnterGamingPostureConfirmation_Restore";
 
     // Installer / updater assets
-    inline constexpr wchar_t PublisherCertFile[] = L"Artem.Shpynov.cer";
+    inline constexpr wchar_t RootCertificateStore[] = L"ROOT";
+    inline constexpr wchar_t TrustedPeopleCertificateStore[] = L"TrustedPeople";
+    inline constexpr wchar_t PublisherCertFriendlyName[] = L"AnyFSE package temp certificate";
+    inline constexpr wchar_t TempCertFile[] = L"AnyFSE.Temp.cer";
     inline constexpr wchar_t AppxFilePrefix[] = L"AnyFSE-";
     inline constexpr wchar_t CabinetResourceType[] = L"CAB";
     inline constexpr wchar_t CabinetExtension[] = L".cab";
