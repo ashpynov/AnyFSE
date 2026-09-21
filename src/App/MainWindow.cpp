@@ -132,6 +132,7 @@ namespace AnyFSE::App::Window
             }
             AnimateWindow(m_hWnd, 0, AW_BLEND);
             ShowWindow(m_hWnd, SW_MAXIMIZE);
+            SetTimer(m_hWnd, m_launcherTimeoutTimerId, LAUNCHER_TIMEOUT_MS, NULL);
             SetActiveWindow(m_hWnd);
             SetForegroundWindow(m_hWnd);
         }

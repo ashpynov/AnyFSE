@@ -119,6 +119,11 @@ namespace AnyFSE::App::Window
 
     void MainWindow::OnTimer(UINT_PTR timerId)
     {
+        if (timerId == m_launcherTimeoutTimerId)
+        {
+            DestroyWindow(m_hWnd);
+            return;
+        }
         if (timerId == m_animationTimerId)
         {
             m_currentZoom += (m_zoomStep > 0 ? m_zoomStep * 5 : m_zoomStep);

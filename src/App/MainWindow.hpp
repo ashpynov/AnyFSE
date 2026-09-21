@@ -88,12 +88,14 @@ namespace AnyFSE::App::Window
         UINT_PTR m_animationTimerId = 1;
         UINT_PTR m_updateTimerId = 2;
         UINT_PTR m_launcherCheckTimerId = 3;
+        UINT_PTR m_launcherTimeoutTimerId = 4;
         UINT_PTR m_hAnimationTimer = NULL;
         UINT_PTR m_hUpdateTimer = NULL;
         UINT_PTR m_hLauncherCheckTimer = NULL;
         bool m_bLauncherWasActive = false;
 
         const int CHECK_INTERVAL_MS = 500;
+        const int LAUNCHER_TIMEOUT_MS = 60000;
         const int ZOOM_INTERVAL_MS = 20;
 
         float m_currentZoom = 0.96f;

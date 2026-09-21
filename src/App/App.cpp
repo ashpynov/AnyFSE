@@ -25,6 +25,7 @@
 #include <windows.h>
 #include <iostream>
 #include <stdexcept>
+#include <filesystem>
 #include "resource.h"
 #include <tchar.h>
 #include <commctrl.h>
@@ -218,7 +219,15 @@ namespace AnyFSE::App
             return true;
         }
 
-        // TODO check launcher is available
+        if (Config::Launcher.StartCommand.find(L"://") == std::wstring::npos)
+        {
+            namespace fs = std::filesystem;
+            if (!fs::exists(Config::Launcher.StartCommand))
+            {
+                log.Warn("Launcher file is unavailable; opening settings");
+                return true;
+            }
+        }
 
         return false;
     }
