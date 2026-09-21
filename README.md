@@ -39,10 +39,11 @@ Some other launchers potentially can be supported too with minor customizations
     - [Kodi](https://kodi.tv/)
     - [Razer Cortex](https://www.razer.com/cortex)
 - Ability to use a custom executable or other installed native Gaming Home application.
+- Option to run the selected launcher as administrator.
 - Maximized performance during minimal runtime memory and perfomance footprint due to C++ sorce code.
 - Ability to navigate to download pages of supported launchers.
 - User defined video splash during launchers start.
-- Custom startup application launch in Fullscreen Experience mode.
+- Custom startup applications in Fullscreen Experience mode, with an option to run each application as administrator.
 - Proper handling of Playnite restart in Fullscreen / Desktop modes.
 - ASUS ROG Ally buttons "ArmouryCrate", "Command Center", and "Library" re-mapping including "Mode+" combos.
 - Gamepad friendly navigation in application Settings dialog
