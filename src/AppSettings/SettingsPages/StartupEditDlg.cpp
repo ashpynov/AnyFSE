@@ -8,6 +8,7 @@ namespace AnyFSE::App::AppSettings::Settings
     {
         m_refPath = m_pathEdit.GetText();
         m_refArgs = m_argsEdit.GetText();
+        m_refAsAdmin = m_asAdminCheckBox.GetCheck();
         FluentDesign::Dialog::OnOK();
     }
 
@@ -44,9 +45,9 @@ namespace AnyFSE::App::AppSettings::Settings
         m_okButton.Enable(fs::exists(fs::path(m_pathEdit.GetText())));
     }
 
-    INT_PTR StartupEditDlg::EditApp(HWND hParent, std::wstring &refPath, std::wstring &refArgs)
+    INT_PTR StartupEditDlg::EditApp(HWND hParent, std::wstring &refPath, std::wstring &refArgs, bool &refAsAdmin)
     {
-        StartupEditDlg dialog(refPath, refArgs);
+        StartupEditDlg dialog(refPath, refArgs, refAsAdmin);
         return dialog.Show(hParent);
     }
 
@@ -89,6 +90,11 @@ namespace AnyFSE::App::AppSettings::Settings
 
         top += m_theme.DpiScale(Layout_TextHeight);
         m_argsEdit.Create(m_hDialog, rc.left, top, width, m_theme.DpiScale(Layout_EditHeight));
+
+        top += m_theme.DpiScale(Layout_EditHeight + Layout_ButtonPadding);
+        m_asAdminCheckBox.Create(m_hDialog, rc.left, top, width, m_theme.DpiScale(Layout_CheckBoxHeight))
+            .SetText(Translate(L"settingsStartupAsAdministrator"))
+            .SetCheck(m_refAsAdmin);
 
         m_okButton.Create(m_hDialog, Translate(L"okBtn"), delegate(OnOk),
             rc.right - m_theme.DpiScale(Layout_ButtonWidth *2 + Layout_ButtonPadding),

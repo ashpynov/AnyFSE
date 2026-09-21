@@ -85,6 +85,7 @@ namespace AnyFSE::Configuration
         std::wstring Path;
         std::wstring Args;
         bool Enabled = false;
+        bool AsAdmin = false;
     };
 
     class Config

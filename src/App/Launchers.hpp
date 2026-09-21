@@ -42,6 +42,7 @@ namespace AnyFSE::App::Launchers
     HWND GetLauncherWindow(bool includeMinimized);
     bool HasLauncherProcess();
     HANDLE GetLauncherProcess();
-    void LaunchStartupApps();
-    bool HasStartupApps();
+    // Only enabled applications with the requested AsAdmin value are selected.
+    void LaunchStartupApps(bool asAdmin);
+    bool HasStartupApps(bool asAdmin);
 }

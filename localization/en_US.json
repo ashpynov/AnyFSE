@@ -70,6 +70,7 @@
   "settingsSelectAppToExecute": "Select app to execute",
   "browseBtn": "Browse",
   "settingsAdditionalStartupArguments": "Additional startup arguments",
+  "settingsStartupAsAdministrator": "Run as Administrator",
   "okBtn": "OK",
   "settingsChooseHomeApp": "Choose home app",
   "settingsChooseHomeAppDescription": "Choose home application for full screen experience",

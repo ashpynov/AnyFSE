@@ -70,6 +70,7 @@
   "settingsSelectAppToExecute": "Sélectionnez l'application à lancer",
   "browseBtn": "Parcourir",
   "settingsAdditionalStartupArguments": "Arguments de démarrage supplémentaires",
+  "settingsStartupAsAdministrator": "En tant qu’administrateur",
   "okBtn": "OK",
   "settingsChooseHomeApp": "Choisir l'application d'accueil",
   "settingsChooseHomeAppDescription": "Choisir l'app d'accueil du mode Xbox",

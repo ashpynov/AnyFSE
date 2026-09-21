@@ -105,6 +105,11 @@ namespace FluentDesign
 
     SettingsLine::~SettingsLine()
     {
+        if (m_hOverlayIcon)
+        {
+            DestroyIcon(m_hOverlayIcon);
+            m_hOverlayIcon = nullptr;
+        }
         if (m_hIcon)
         {
             DestroyIcon(m_hIcon);
@@ -469,13 +474,13 @@ namespace FluentDesign
         rect.bottom = rect.top + m_theme.GetSize_Icon();
 
 
-        if (m_hIcon)
+        const auto drawIconImage = [this, hdc](HICON icon, int x, int y, int size)
         {
             Gdiplus::Graphics graphics(hdc);
             graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBilinear);
             graphics.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
 
-            Gdiplus::Bitmap* pImage = Gdiplus::Bitmap::FromHICON(m_hIcon);
+            Gdiplus::Bitmap* pImage = Gdiplus::Bitmap::FromHICON(icon);
 
             if (pImage)
             {
@@ -493,13 +498,17 @@ namespace FluentDesign
                 }
 
                 graphics.DrawImage(pImage,
-                    Gdiplus::Rect(rect.left, rect.top, m_theme.GetSize_Icon(), m_theme.GetSize_Icon()),
+                    Gdiplus::Rect(x, y, size, size),
                     0, 0, pImage->GetWidth(), pImage->GetHeight(),
                     Gdiplus::UnitPixel, &imageAttributes);
 
                 delete pImage;
             }
-            //::DrawIconEx(hdc, rect.left, rect.top, m_hIcon, m_theme.GetSize_Icon(), m_theme.GetSize_Icon(), 0, nullptr, DI_NORMAL);
+        };
+
+        if (m_hIcon)
+        {
+            drawIconImage(m_hIcon, rect.left, rect.top, m_theme.GetSize_Icon());
         }
         else
         {
@@ -511,6 +520,12 @@ namespace FluentDesign
             ::DrawText(hdc, &m_icon, 1, &rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
         }
 
+        if (m_hOverlayIcon)
+        {
+            const int iconSize = m_theme.GetSize_Icon();
+            const int overlaySize = max(1, (iconSize + 1) / 2);
+            drawIconImage(m_hOverlayIcon, rect.left + iconSize - overlaySize, rect.bottom - overlaySize, overlaySize);
+        }
     }
 
     void SettingsLine::OnSize(int width, int height)
@@ -740,6 +755,20 @@ namespace FluentDesign
         }
         m_hIcon = Icon::LoadIcon(path);
         UpdateLayout();
+    }
+
+    void SettingsLine::SetOverlayIcon(const std::wstring &path)
+    {
+        HICON icon = Icon::LoadIcon(path);
+        if (m_hOverlayIcon)
+        {
+            DestroyIcon(m_hOverlayIcon);
+        }
+        m_hOverlayIcon = icon;
+        if (m_hWnd)
+        {
+            Invalidate();
+        }
     }
 
     void SettingsLine::SetMenu(const std::vector<Popup::PopupItem> &items)

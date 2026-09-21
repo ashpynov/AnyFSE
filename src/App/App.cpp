@@ -246,6 +246,7 @@ namespace AnyFSE::App
         if (AsElevated(lpCmdLine))
         {
             Elevated::Register(Constants::ElevatedStartLauncher, Launchers::StartLauncher);
+            Elevated::Register(Constants::ElevatedStartupApps, []() { Launchers::LaunchStartupApps(true); });
             Elevated::Register(Constants::ElevatedEnableGamingHandheld, GamingExperience::EnableGamingHandheld);
             Elevated::Register(Constants::ElevatedRestoreGamingPC, GamingExperience::RestoreGamingPC);
 
@@ -366,7 +367,14 @@ namespace AnyFSE::App
         {
             if (GamingExperience::IsFullscreenMode() && bFirstLaunch)
             {
-                Launchers::LaunchStartupApps();
+                if (Launchers::HasStartupApps(true))
+                {
+                    if (!Elevated::ElevatedStartupApps())
+                    {
+                        log.Error("Failed to launch elevated startup applications");
+                    }
+                }
+                Launchers::LaunchStartupApps(false);
             };
             Launchers::LauncherOnBoot();
             if (Config::AsAdmin)

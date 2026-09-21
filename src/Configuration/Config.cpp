@@ -39,7 +39,18 @@ namespace AnyFSE::Configuration
     namespace fs = std::filesystem;
     using jp = json::json_pointer;
 
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(StartupApp, Path, Args, Enabled)
+    void to_json(json& value, const StartupApp& app)
+    {
+        value = json{ {"Path", app.Path}, {"Args", app.Args}, {"Enabled", app.Enabled}, {"AsAdmin", app.AsAdmin} };
+    }
+
+    void from_json(const json& value, StartupApp& app)
+    {
+        value.at("Path").get_to(app.Path);
+        value.at("Args").get_to(app.Args);
+        value.at("Enabled").get_to(app.Enabled);
+        app.AsAdmin = value.value("AsAdmin", false);
+    }
 
     LogLevels       Config::LogLevel = LogLevels::Disabled;
     std::wstring    Config::LogPath = L"";

@@ -70,6 +70,7 @@
   "settingsSelectAppToExecute": "Yürütülecek uygulamayı seç",
   "browseBtn": "Gözat",
   "settingsAdditionalStartupArguments": "Ek başlangıç komutları",
+  "settingsStartupAsAdministrator": "Yönetici olarak",
   "okBtn": "OK",
   "settingsChooseHomeApp": "Ev uygulamasını seç",
   "settingsChooseHomeAppDescription": "Tam ekran deneyimi için ev uygulamasını seç",

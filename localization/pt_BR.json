@@ -76,6 +76,7 @@
   "settingsSelectAppToExecute": "Selecione o aplicativo a ser executado",
   "browseBtn": "Procurar",
   "settingsAdditionalStartupArguments": "Argumentos adicionais de inicialização",
+  "settingsStartupAsAdministrator": "Como administrador",
   "okBtn": "OK",
   "settingsChooseHomeApp": "Escolher aplicativo inicial",
   "settingsChooseHomeAppDescription": "Selecione o aplicativo inicial para o modo Xbox",

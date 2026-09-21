@@ -70,6 +70,7 @@
   "settingsSelectAppToExecute": "Выберите приложение для запуска",
   "browseBtn": "Обзор",
   "settingsAdditionalStartupArguments": "Дополнительные аргументы запуска",
+  "settingsStartupAsAdministrator": "Запуск от имени администратора",
   "okBtn": "ОК",
   "settingsChooseHomeApp": "Выбор домашнего приложения",
   "settingsChooseHomeAppDescription": "Выберите домашнее приложение для режима Xbox",

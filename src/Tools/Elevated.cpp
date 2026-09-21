@@ -101,6 +101,11 @@ namespace AnyFSE::Tools::Elevated
         return false;
     }
 
+    bool ElevatedStartupApps()
+    {
+        return Call(c::ElevatedStartupApps);
+    }
+
     bool Call(const std::wstring &name)
     {
         try

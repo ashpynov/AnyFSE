@@ -5,6 +5,7 @@
 #include "FluentDesign/Dialog.hpp"
 #include "FluentDesign/Static.hpp"
 #include "FluentDesign/Button.hpp"
+#include "FluentDesign/CheckBox.hpp"
 #include "FluentDesign/TextBox.hpp"
 
 namespace AnyFSE::App::AppSettings::Settings
@@ -14,7 +15,7 @@ namespace AnyFSE::App::AppSettings::Settings
     {
         private:
             const int Layout_DialogWidth = 480;
-            const int Layout_DialogHeight = 280;
+            const int Layout_DialogHeight = 328;
             const int Layout_Margins = 16;
             const int Layout_CaptionHeight = 56;
             const int Layout_TextHeight = 30;
@@ -22,10 +23,12 @@ namespace AnyFSE::App::AppSettings::Settings
             const int Layout_BrowseButtonWidth = 80;
             const int Layout_ButtonHeight = 32;
             const int Layout_EditHeight = 36;
+            const int Layout_CheckBoxHeight = 32;
             const int Layout_ButtonPadding = 16;
 
             std::wstring &m_refPath;
             std::wstring &m_refArgs;
+            bool &m_refAsAdmin;
 
             Button m_okButton;
             Button m_cancelButton;
@@ -33,20 +36,23 @@ namespace AnyFSE::App::AppSettings::Settings
 
             TextBox m_pathEdit;
             TextBox m_argsEdit;
+            FluentDesign::CheckBox m_asAdminCheckBox;
 
             Static m_captionStatic;
             Static m_pathStatic;
             Static m_argsStatic;
 
-            StartupEditDlg(std::wstring& refPath, std::wstring &refArgs )
+            StartupEditDlg(std::wstring& refPath, std::wstring &refArgs, bool &refAsAdmin)
                 : Dialog()
                 , m_refPath(refPath)
                 , m_refArgs(refArgs)
+                , m_refAsAdmin(refAsAdmin)
                 , m_okButton(m_theme)
                 , m_cancelButton(m_theme)
                 , m_browseButton(m_theme)
                 , m_pathEdit(m_theme)
                 , m_argsEdit(m_theme)
+                , m_asAdminCheckBox(m_theme)
                 , m_captionStatic(m_theme)
                 , m_pathStatic(m_theme)
                 , m_argsStatic(m_theme)
@@ -59,7 +65,7 @@ namespace AnyFSE::App::AppSettings::Settings
             void ValidatePath();
 
         public:
-            static INT_PTR EditApp(HWND hParent, std::wstring &refPath, std::wstring &refArgs);
+            static INT_PTR EditApp(HWND hParent, std::wstring &refPath, std::wstring &refArgs, bool &refAsAdmin);
 
             /** Interface **/
             void Create();

@@ -278,12 +278,12 @@ namespace AnyFSE::App::Launchers
         );
     }
 
-    void LaunchStartupApps()
+    void LaunchStartupApps(bool asAdmin)
     {
-        log.Debug("Launching Startup Applications" );
-        for (auto app : Config::StartupApps)
+        log.Debug("Launching Startup Applications (AsAdmin=%d)", asAdmin);
+        for (const auto &app : Config::StartupApps)
         {
-            if (app.Enabled)
+            if (app.Enabled && app.AsAdmin == asAdmin)
             {
                 log.Debug("Launching: %s %s", Unicode::to_string(app.Path).c_str(), Unicode::to_string(app.Args).c_str() );
                 Process::StartProcess(app.Path, app.Args);
@@ -291,11 +291,11 @@ namespace AnyFSE::App::Launchers
         }
     }
 
-    bool HasStartupApps()
+    bool HasStartupApps(bool asAdmin)
     {
-        for (auto app : Config::StartupApps)
+        for (const auto &app : Config::StartupApps)
         {
-            if (app.Enabled)
+            if (app.Enabled && app.AsAdmin == asAdmin)
             {
                 return true;
             }

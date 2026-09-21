@@ -76,10 +76,13 @@ namespace FluentDesign
                                                    UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
         void HandleMouse(HWND hWnd, UINT uMsg);
-        void HandleClick();
-        void DrawButton(HWND hWnd, HDC hdc, RECT rc);
 
         void UpdateLayout();
+
+    protected:
+        virtual void HandleClick();
+        virtual void DrawButton(HWND hWnd, HDC hdc, RECT rc);
+        bool IsMouseOver() const { return m_buttonMouseOver; }
 
     public:
         Button(Theme &theme, Align::Anchor align = Align::None, GetParentRectFunc getParentRect = GetParentRect);
@@ -95,10 +98,10 @@ namespace FluentDesign
             return *this;
         }
 
-        Button& Create(HWND hParent, int x, int y, int width, int height);
+        virtual Button& Create(HWND hParent, int x, int y, int width, int height);
         Button& Create(HWND hParent, const std::wstring& text, const std::function<void()>& callback, int x, int y, int width, int height);
 
-        Button& SetText(const std::wstring& text);
+        virtual Button& SetText(const std::wstring& text);
         Button &SetIcon(const std::wstring &glyph, bool bSmall = false);
         Button& Enable(bool bEnable);
         Button& SetTabStop(bool bTabStop);
@@ -119,7 +122,7 @@ namespace FluentDesign
 
         void SetMenu(const std::vector<Popup::PopupItem> &items, int nMenuWidth = 300, int nAlignment = TPM_RIGHTALIGN);
         void ShowMenu();
-        SIZE GetMinSize();
+        virtual SIZE GetMinSize();
         ~Button();
 
         void Animate(int startAngle, int stopAngle, int duration, bool bInfinite);

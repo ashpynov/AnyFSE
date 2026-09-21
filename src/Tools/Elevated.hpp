@@ -10,6 +10,7 @@ namespace AnyFSE::Tools::Elevated
     bool CallHandler();
     // Synchronous: returns after the scheduled task exits. Concurrent calls are rejected.
     bool Call(const std::wstring &name);
+    bool ElevatedStartupApps();
 }
 
 namespace Elevated = AnyFSE::Tools::Elevated;

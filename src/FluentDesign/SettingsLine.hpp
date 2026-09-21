@@ -67,6 +67,7 @@ namespace FluentDesign
         wchar_t m_icon;
 
         HICON m_hIcon;
+        HICON m_hOverlayIcon = nullptr;
 
         int m_left = 0, m_top = 0;
         int m_width = 0, m_height = 0;
@@ -174,6 +175,8 @@ namespace FluentDesign
 
         void SetIcon(wchar_t icon);
         void SetIcon(const std::wstring& path);
+        // Draw over the main icon at its bottom-right corner. Empty path clears the overlay.
+        void SetOverlayIcon(const std::wstring& path);
 
         void SetMenu(const std::vector<Popup::PopupItem> &items);
         void SetData(int index, const std::wstring &data) { m_data[index] = data; }

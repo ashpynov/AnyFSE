@@ -4,6 +4,7 @@
 #include "AppSettings/SettingsPages/StartupEditDlg.hpp"
 #include "StartupPage.hpp"
 #include "Tools/Localization.hpp"
+#include <shellapi.h>
 
 
 namespace AnyFSE::App::AppSettings::Settings::Page
@@ -45,7 +46,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     {
         for (auto app : Config::StartupApps)
         {
-            AddStartupAppLine(app.Path, app.Args, app.Enabled);
+            AddStartupAppLine(app.Path, app.Args, app.Enabled, app.AsAdmin);
         }
     }
 
@@ -61,7 +62,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
                 StartupApp {
                     pLine->GetData(0),
                     pLine->GetData(1),
-                    toggle ? toggle->GetCheck() : true
+                    toggle ? toggle->GetCheck() : true,
+                    pLine->GetData(2) == L"1"
                 }
             );
         }
@@ -72,7 +74,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         Process::StartProtocol(L"ms-settings:startupapps");
     }
 
-    void StartupPage::AddStartupAppLine(const std::wstring& path, const std::wstring& args, bool enabled )
+    void StartupPage::AddStartupAppLine(const std::wstring& path, const std::wstring& args, bool enabled, bool asAdmin)
     {
         ULONG top = 0;
         m_startupToggles.emplace_back(m_theme);
@@ -86,7 +88,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             Layout::StartupMenuButtonWidth, Layout::StartupMenuButtonHeight
         );
 
-        SetStartupAppLine(&line, path, args);
+        SetStartupAppLine(&line, path, args, asAdmin);
 
         line.SetMenu(
             std::vector<FluentDesign::Popup::PopupItem>
@@ -113,10 +115,11 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         return it != m_startupToggles.end() ? &(*it) : nullptr;
     }
 
-    void StartupPage::SetStartupAppLine(SettingsLine *pLine, const std::wstring& path, const std::wstring& args)
+    void StartupPage::SetStartupAppLine(SettingsLine *pLine, const std::wstring& path, const std::wstring& args, bool asAdmin)
     {
         pLine->SetData(0, path);
         pLine->SetData(1, args);
+        pLine->SetData(2, asAdmin ? L"1" : L"0");
 
 
         pLine->SetName(Config::GetApplicationName(path));
@@ -126,6 +129,18 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         {
             pLine->SetIcon(path);
         }
+
+        std::wstring overlayPath;
+        if (asAdmin)
+        {
+            SHSTOCKICONINFO iconInfo{};
+            iconInfo.cbSize = sizeof(iconInfo);
+            if (SUCCEEDED(SHGetStockIconInfo(SIID_SHIELD, SHGSI_ICONLOCATION, &iconInfo)))
+            {
+                overlayPath = std::wstring(iconInfo.szPath) + L"," + std::to_wstring(iconInfo.iIcon);
+            }
+        }
+        pLine->SetOverlayIcon(overlayPath);
     }
 
     void StartupPage::OnStartupAdd()
@@ -137,9 +152,10 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     {
         std::wstring path = pLine ? pLine->GetData(0) : L"";
         std::wstring args = pLine ? pLine->GetData(1) : L"";
-        if (IDOK == StartupEditDlg::EditApp(m_dialog.GetHwnd(), path, args))
+        bool asAdmin = pLine && pLine->GetData(2) == L"1";
+        if (IDOK == StartupEditDlg::EditApp(m_dialog.GetHwnd(), path, args, asAdmin))
         {
-            pLine ? SetStartupAppLine(pLine, path, args) : AddStartupAppLine(path, args, true);
+            pLine ? SetStartupAppLine(pLine, path, args, asAdmin) : AddStartupAppLine(path, args, true, asAdmin);
             m_dialog.UpdateLayout();
         }
     }

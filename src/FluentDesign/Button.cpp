@@ -145,7 +145,7 @@ namespace FluentDesign
 
     Button& Button::SetTabStop(bool bTabStop)
     {
-        SetWindowLong(m_hWnd, GWL_STYLE, GetWindowLong(m_hWnd, GWL_STYLE) & ~WS_TABSTOP );
+        SetWindowLong(m_hWnd, GWL_STYLE, (GetWindowLong(m_hWnd, GWL_STYLE) & ~WS_TABSTOP) | (bTabStop ? WS_TABSTOP : 0));
         return *this;
     }
 

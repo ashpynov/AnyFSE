@@ -40,9 +40,9 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         void OpenMSSettingsStartupApps();
 
-        void AddStartupAppLine(const std::wstring &path, const std::wstring &args, bool enabled);
+        void AddStartupAppLine(const std::wstring &path, const std::wstring &args, bool enabled, bool asAdmin);
         Toggle *GetStartupLineToggle(SettingsLine *pLine);
-        void SetStartupAppLine(SettingsLine *pLine, const std::wstring &path, const std::wstring &args);
+        void SetStartupAppLine(SettingsLine *pLine, const std::wstring &path, const std::wstring &args, bool asAdmin);
         void OnStartupAdd();
         void OnStartupModify(SettingsLine *pLine);
         void OnStartupDelete(SettingsLine *pLine);
