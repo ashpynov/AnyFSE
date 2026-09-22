@@ -215,7 +215,7 @@
     <WriteLinesToFile File="$(PayloadCabinetDdf)" Overwrite="true" Encoding="ASCII"
       Lines="@(CabinetDirectives);.Set CabinetNameTemplate=$(AssemblyProduct).$(AssemblyVersion).cab;@(PayloadArchiveEntries->'&quot;%(RecursiveDir)%(Filename)%(Extension)&quot; &quot;%(RecursiveDir)%(Filename)%(Extension)&quot;')" />
     <Exec Command="&quot;$(SystemRoot)\System32\makecab.exe&quot; /D &quot;DiskDirectoryTemplate=$(CabinetOutputDir).&quot; /F &quot;$([System.IO.Path]::GetFullPath('$(PayloadCabinetDdf)'))&quot;" WorkingDirectory="$(PayloadDir)" />
-    <Exec Command="tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion).pdb.zip&quot; $(PDBFiles)" WorkingDirectory="$(OutDir)" />
+    <Exec Command="tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion)-$(OldVersionRevision).pdb.zip&quot; $(PDBFiles)" WorkingDirectory="$(OutDir)" />
   </Target>
 
   <Target Name="CleanInstallerStaging" AfterTargets="Build">

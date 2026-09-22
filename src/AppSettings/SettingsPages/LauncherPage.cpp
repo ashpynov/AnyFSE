@@ -68,7 +68,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             Translate(L"settingsStartLauncherAsAdministratorDescription"),
             m_asAdminToggle,
             Layout::LineHeight, Layout::LinePadding, 0);
-        m_pAsAdminLine->SetIcon(L'\xEA18');
+        m_pAsAdminLine->SetIcon(L'\xE7EF');
 
         m_dialog.AddPage((new ConfirmationsPage(m_theme, m_dialog))->AddLine(settingPageList, top));
 

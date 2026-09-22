@@ -319,7 +319,6 @@ namespace FluentDesign
         if (releaseIndex >= 0)
         {
             HandleListClick(releaseIndex);
-            Hide();
             return;
         }
 
@@ -363,7 +362,6 @@ namespace FluentDesign
             case VK_SPACE:
             case VK_GAMEPAD_A:
                 HandleListClick(m_selectedIndex);
-                Hide();
                 return;
             case VK_UP:
             case VK_GAMEPAD_DPAD_UP:
@@ -432,21 +430,19 @@ namespace FluentDesign
             break;
 
         case WM_MOUSEWHEEL:
-        {
-            // Typically, WHEEL_DELTA is 120, scroll 3 lines per wheel click
-            if (This->m_nPopupContentHeight <= This->m_nPopupViewHeight)
             {
-                return 0; // No scrolling needed if content fits
+                // Typically, WHEEL_DELTA is 120, scroll 3 lines per wheel click
+                if (This->m_nPopupContentHeight <= This->m_nPopupViewHeight)
+                {
+                    return 0; // No scrolling needed if content fits
+                }
+
+                int scrollAmount = -GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA * 16 * 3;
+                This->m_itemPressed = -1;
+                This->ScrollTo(This->m_nPopupScrollPos + scrollAmount);
+
+                return 0;
             }
-
-            int scrollAmount = -GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA * 16 * 3;
-            This->m_itemPressed = -1;
-            This->ScrollTo(This->m_nPopupScrollPos + scrollAmount);
-
-            return 0;
-        }
-        return 0;
-
         }
 
         return DefSubclassProc(hWnd, uMsg, wParam, lParam);
@@ -543,12 +539,17 @@ namespace FluentDesign
     {
         if (index >= 0 && index < (int)SendMessage(m_hWnd, LB_GETCOUNT, 0, 0))
         {
+            HWND hwnd = m_hWnd;
             m_selectedIndex = index;
             OnSelectionChanged.Notify();
             PopupItem *pItem = (PopupItem*)SendMessage(m_hWnd, LB_GETITEMDATA, index, 0);
             if (pItem && pItem->callback)
             {
                 pItem->callback();
+            }
+            if (IsWindow(hwnd))
+            {
+                Hide();
             }
         }
     }

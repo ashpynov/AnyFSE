@@ -152,7 +152,7 @@ Expected outputs are under `build\Release\`, including:
 
 - `AnyFSE-<version>.identity.appx`
 - `AnyFSE.<version>.cab`
-- `AnyFSE.<version>.pdb.zip`
+- `AnyFSE.<version>-<revision>.pdb.zip`
 - `AnyFSE.Installer.Offline.<version>-<revision>.exe`
 
 Note: `AnyFSE.Package.vcxproj` increments `<VersionRevision>` in `AnyFSE.Version.props` during packaging. Review that file after every packaging build.

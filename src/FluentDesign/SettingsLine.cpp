@@ -36,6 +36,8 @@
 #include <dwmapi.h>
 #include <vssym32.h>
 
+#pragma comment(lib, "Msimg32.lib")
+
 namespace FluentDesign
 {
     static Logger log = LogManager::GetLogger("SettingsLine");
@@ -43,6 +45,102 @@ namespace FluentDesign
     // Window class registration
     static const wchar_t *SETTINGS_LINE_CLASS = Constants::SettingsLineClass;
     static bool IsSelfVisible(HWND hwnd);
+
+    static std::wstring WrapPathText(HDC hdc, const std::wstring &text, int width)
+    {
+        if (width <= 0 || text.find(L'\\') == std::wstring::npos)
+            return text;
+
+        std::wstring wrapped;
+        size_t start = 0;
+        while (start < text.size())
+        {
+            size_t end = text.find_first_of(L"\r\n", start);
+            if (end == std::wstring::npos)
+                end = text.size();
+
+            if (text.find(L'\\', start) >= end)
+            {
+                wrapped.append(text, start, end - start);
+                start = end;
+            }
+
+            while (start < end)
+            {
+                int fit = 0;
+                SIZE extent{};
+                if (!GetTextExtentExPointW(hdc, text.data() + start, (int)(end - start), width, &fit, nullptr, &extent)
+                    || fit >= (int)(end - start))
+                {
+                    wrapped.append(text, start, end - start);
+                    start = end;
+                    break;
+                }
+
+                size_t split = std::wstring::npos;
+                size_t next = start;
+                for (size_t i = start; i < end && i <= start + fit; ++i)
+                {
+                    if (text[i] == L' ' || text[i] == L'\t')
+                    {
+                        split = i;
+                        next = i + 1;
+                    }
+                    else if (text[i] == L'\\' && i < start + fit)
+                    {
+                        split = i + 1;
+                        next = split;
+                    }
+                }
+
+                // Keep an individual word/path component intact if it exceeds the available width.
+                if (split == std::wstring::npos)
+                {
+                    size_t separator = text.find_first_of(L" \t\\", start);
+                    if (separator == std::wstring::npos || separator >= end)
+                    {
+                        wrapped.append(text, start, end - start);
+                        start = end;
+                        break;
+                    }
+                    split = separator + (text[separator] == L'\\' ? 1 : 0);
+                    next = separator + 1;
+                }
+
+                wrapped.append(text, start, split - start);
+                while (next < end && (text[next] == L' ' || text[next] == L'\t'))
+                    ++next;
+                if (next < end)
+                    wrapped.append(L"\r\n");
+                start = next;
+            }
+
+            // Preserve explicit line endings, including empty lines.
+            if (start < text.size())
+            {
+                wrapped += text[start++];
+                if (wrapped.back() == L'\r' && start < text.size() && text[start] == L'\n')
+                    wrapped += text[start++];
+            }
+        }
+        return wrapped;
+    }
+
+    static int MeasureSettingsTextHeight(const std::wstring &text, HFONT font, int width)
+    {
+        if (text.empty() || !font || width <= 0)
+            return 0;
+        HDC hdc = GetDC(nullptr);
+        if (!hdc)
+            return 0;
+        HGDIOBJ oldFont = SelectObject(hdc, font);
+        const std::wstring wrapped = WrapPathText(hdc, text, width);
+        RECT rect{ 0, 0, width, 0 };
+        DrawTextW(hdc, wrapped.c_str(), -1, &rect, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX | DT_CALCRECT);
+        SelectObject(hdc, oldFont);
+        ReleaseDC(nullptr, hdc);
+        return rect.bottom - rect.top;
+    }
 
     static std::wstring NormalizeLineFeeds(const std::wstring &text)
     {
@@ -348,14 +446,14 @@ namespace FluentDesign
         }
 
         HFONT nameFont = (m_state != State::Caption) ? m_theme.GetFont_Text() : m_theme.GetFont_TextBold();
-        int height = max(m_theme.GetSize_Text(), Gdiplus::MeasureTextHeight(m_name, nameFont, maximumWidth));
+        int height = max(m_theme.GetSize_Text(), MeasureSettingsTextHeight(m_name, nameFont, maximumWidth));
 
         if (!m_description.empty())
         {
             height += m_theme.DpiScale(m_linePadding);
             height += max(
                 m_theme.GetSize_TextSecondary(),
-                Gdiplus::MeasureTextHeight(m_description, m_theme.GetFont_TextSecondary(), maximumWidth)
+                MeasureSettingsTextHeight(m_description, m_theme.GetFont_TextSecondary(), maximumWidth)
             );
         }
 
@@ -424,14 +522,15 @@ namespace FluentDesign
 
         nameRect.bottom = nameRect.top + max(
             m_theme.GetSize_Text(),
-            Gdiplus::MeasureTextHeight(
+            MeasureSettingsTextHeight(
                 m_name,
                 (m_state != State::Caption) ? m_theme.GetFont_Text() : m_theme.GetFont_TextBold(),
                 textWidth
             )
         );
 
-        ::DrawText(hdc, m_name.c_str(), -1, &nameRect, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX | DT_NOCLIP);
+        const std::wstring wrappedName = WrapPathText(hdc, m_name, textWidth);
+        ::DrawText(hdc, wrappedName.c_str(), -1, &nameRect, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX | DT_NOCLIP);
 
         if ( !m_description.empty())
         {
@@ -446,10 +545,11 @@ namespace FluentDesign
             descRect.top = nameRect.bottom + m_theme.DpiScale(m_linePadding);
             descRect.bottom = descRect.top + max(
                 m_theme.GetSize_TextSecondary(),
-                Gdiplus::MeasureTextHeight(m_description, m_theme.GetFont_TextSecondary(), textWidth)
+                MeasureSettingsTextHeight(m_description, m_theme.GetFont_TextSecondary(), textWidth)
             );
 
-            ::DrawText(hdc, m_description.c_str(), -1, &descRect, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX | DT_NOCLIP);
+            const std::wstring wrappedDescription = WrapPathText(hdc, m_description, textWidth);
+            ::DrawText(hdc, wrappedDescription.c_str(), -1, &descRect, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX | DT_NOCLIP);
 
             m_secondaryTextRect = descRect;
         }
@@ -476,34 +576,37 @@ namespace FluentDesign
 
         const auto drawIconImage = [this, hdc](HICON icon, int x, int y, int size)
         {
-            Gdiplus::Graphics graphics(hdc);
-            graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBilinear);
-            graphics.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-
-            Gdiplus::Bitmap* pImage = Gdiplus::Bitmap::FromHICON(icon);
-
-            if (pImage)
+            if (m_enabled)
             {
-                Gdiplus::ImageAttributes imageAttributes;
-                Gdiplus::ColorMatrix colorMatrix = {
-                    1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-                    0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-                    0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-                    0.0f, 0.0f, 0.0f, 0.5f, 0.0f,
-                    0.0f, 0.0f, 0.0f, 0.0f, 1.0f
-                };
-                if (!m_enabled)
-                {
-                    imageAttributes.SetColorMatrix(&colorMatrix, Gdiplus::ColorMatrixFlagsDefault, Gdiplus::ColorAdjustTypeBitmap);
-                }
-
-                graphics.DrawImage(pImage,
-                    Gdiplus::Rect(x, y, size, size),
-                    0, 0, pImage->GetWidth(), pImage->GetHeight(),
-                    Gdiplus::UnitPixel, &imageAttributes);
-
-                delete pImage;
+                ::DrawIconEx(hdc, x, y, icon, size, size, 0, nullptr, DI_NORMAL);
+                return;
             }
+
+            HDC iconDC = CreateCompatibleDC(hdc);
+            if (!iconDC)
+                return;
+
+            HBITMAP bitmap = CreateCompatibleBitmap(hdc, size, size);
+            if (!bitmap)
+            {
+                DeleteDC(iconDC);
+                return;
+            }
+
+            HGDIOBJ oldBitmap = SelectObject(iconDC, bitmap);
+            if (oldBitmap && oldBitmap != HGDI_ERROR)
+            {
+                // Draw over the existing background so both alpha and mask icons can be faded uniformly.
+                if (BitBlt(iconDC, 0, 0, size, size, hdc, x, y, SRCCOPY)
+                    && ::DrawIconEx(iconDC, 0, 0, icon, size, size, 0, nullptr, DI_NORMAL))
+                {
+                    BLENDFUNCTION blend = { AC_SRC_OVER, 0, 128, 0 };
+                    AlphaBlend(hdc, x, y, size, size, iconDC, 0, 0, size, size, blend);
+                }
+                SelectObject(iconDC, oldBitmap);
+            }
+            DeleteObject(bitmap);
+            DeleteDC(iconDC);
         };
 
         if (m_hIcon)
