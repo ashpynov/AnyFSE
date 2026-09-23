@@ -72,6 +72,7 @@
         VER_PRODUCT_NAME="$(AssemblyProduct)";
         VER_COMPANY_NAME="$(AssemblyCompany)";
         VER_PUBLISHER_CN="$(PublisherCN)";
+        MINIZ_NO_DEFLATE_APIS;MINIZ_NO_ZLIB_APIS;
         %(PreprocessorDefinitions)
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)src</AdditionalIncludeDirectories>
@@ -100,6 +101,7 @@
         VER_PRODUCT_NAME="$(AssemblyProduct)";
         VER_COMPANY_NAME="$(AssemblyCompany)";
         VER_PUBLISHER_CN="$(PublisherCN)";
+        MINIZ_NO_DEFLATE_APIS;MINIZ_NO_ZLIB_APIS;
         %(PreprocessorDefinitions)
       </PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)src</AdditionalIncludeDirectories>
@@ -132,7 +134,8 @@
     <ClCompile Include="src\AppInstaller\AppInstaller_Tools.cpp" />
     <ClCompile Include="src\AppInstaller\Admin.cpp" />
     <ClCompile Include="src\AppInstaller\Certificate.cpp" />
-    <ClCompile Include="src\AppInstaller\Cabinet.cpp" />
+    <ClCompile Include="src\AppInstaller\Zip.cpp" />
+    <ClCompile Include="src\Tools\miniz\miniz.c" />
     <ClCompile Include="src\FluentDesign\Theme.cpp" />
     <ClCompile Include="src\FluentDesign\FluentControl.cpp" />
     <ClCompile Include="src\FluentDesign\Align.cpp" />
@@ -163,7 +166,7 @@
     <ResourceCompile Include="src\AppInstaller\Installer.rc">
         <PreprocessorDefinitions Condition="'$(Offline)'=='Offline'">
             OFFLINE_INSTALLER;
-            BUILD_ARCHIVE=\"$(OutDir.Replace('\', '\\'))$(AssemblyProduct).$(AssemblyVersion).cab\";
+            BUILD_ARCHIVE=\"$(OutDir.Replace('\', '\\'))$(AssemblyProduct).$(AssemblyVersion).zip\";
             %(PreprocessorDefinitions)
         </PreprocessorDefinitions>
       <AdditionalOptions>/v /I&quot;$(ProjectDir)src\Installer&quot;/I&quot;$(ProjectDir)src&quot;</AdditionalOptions>
@@ -194,27 +197,11 @@
           DestinationFiles="@(PackageContent->'$(PayloadDir)\%(RecursiveDir)%(Filename)%(Extension)')" />
     <Copy SourceFiles="@(PayloadLocalization)" DestinationFolder="$(PayloadDir)\Localization" />
     <PropertyGroup>
-      <CabinetOutputDir>$([System.IO.Path]::GetFullPath('$(OutDir)'))</CabinetOutputDir>
-      <PayloadCabinetDdf>$(IntDir)payload.ddf</PayloadCabinetDdf>
+      <PayloadZip>$([System.IO.Path]::GetFullPath('$(OutDir)$(AssemblyProduct).$(AssemblyVersion).zip'))</PayloadZip>
       <PDBFiles>@(ApplicationDumpFiles-&gt;'&quot;%(Filename)%(Extension)&quot;', ' ')</PDBFiles>
     </PropertyGroup>
     <MakeDir Directories="$(IntDir)" />
-    <ItemGroup>
-      <PayloadArchiveEntries Include="$(PayloadDir)\**\*" />
-      <CabinetDirectives Include=".OPTION EXPLICIT" />
-      <CabinetDirectives Include=".Set Cabinet=ON" />
-      <CabinetDirectives Include=".Set Compress=ON" />
-      <CabinetDirectives Include=".Set CompressionType=LZX" />
-      <CabinetDirectives Include=".Set CompressionMemory=21" />
-      <CabinetDirectives Include=".Set MaxDiskSize=0" />
-      <CabinetDirectives Include=".Set MaxCabinetSize=0" />
-      <CabinetDirectives Include=".Set FolderSizeThreshold=0" />
-      <CabinetDirectives Include=".Set InfFileName=NUL" />
-      <CabinetDirectives Include=".Set RptFileName=NUL" />
-    </ItemGroup>
-    <WriteLinesToFile File="$(PayloadCabinetDdf)" Overwrite="true" Encoding="ASCII"
-      Lines="@(CabinetDirectives);.Set CabinetNameTemplate=$(AssemblyProduct).$(AssemblyVersion).cab;@(PayloadArchiveEntries->'&quot;%(RecursiveDir)%(Filename)%(Extension)&quot; &quot;%(RecursiveDir)%(Filename)%(Extension)&quot;')" />
-    <Exec Command="&quot;$(SystemRoot)\System32\makecab.exe&quot; /D &quot;DiskDirectoryTemplate=$(CabinetOutputDir).&quot; /F &quot;$([System.IO.Path]::GetFullPath('$(PayloadCabinetDdf)'))&quot;" WorkingDirectory="$(PayloadDir)" />
+    <ZipDirectory SourceDirectory="$(PayloadDir)" DestinationFile="$(PayloadZip)" Overwrite="true" />
     <Exec Command="tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion)-$(OldVersionRevision).pdb.zip&quot; $(PDBFiles)" WorkingDirectory="$(OutDir)" />
   </Target>
 

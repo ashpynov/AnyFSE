@@ -151,7 +151,7 @@ Build the Release x64 offline installer:
 Expected outputs are under `build\Release\`, including:
 
 - `AnyFSE-<version>.identity.appx`
-- `AnyFSE.<version>.cab`
+- `AnyFSE.<version>.zip`
 - `AnyFSE.<version>-<revision>.pdb.zip`
 - `AnyFSE.Installer.Offline.<version>-<revision>.exe`
 
@@ -169,8 +169,11 @@ Missing required files stop packaging. Localizations come directly from `localiz
 Old files left in `build\<Configuration>` are not used to discover payload contents.
 
 When adding or renaming a runtime binary, update the explicit `ApplicationFiles` list in `AnyFSE.Installer.vcxproj`.
-The payload archive uses the .cab extension. MSBuild generates payload.ddf and invokes the system MakeCab utility directly; no additional scripts are needed.
-The symbol archive remains .pdb.zip, created with tar using its existing PDB selection rules. The installer extracts CAB files through the Windows FDI API without launching an external process. Offline installation reads the embedded resource directly from memory, without writing a temporary CAB file.
+The payload archive uses the .zip extension. MSBuild's ZipDirectory task compresses the staging directory contents without adding a staging folder to the archive.
+The symbol archive remains .pdb.zip, created with tar using its existing PDB selection rules. The installer extracts ZIP files with the vendored miniz 3.1.2 library through AnyFSE::ToolsEx::Zip. Offline installation reads the embedded RCDATA resource directly from memory, without writing a temporary ZIP file.
+Both Zip::Extract overloads are synchronous, create destination directories, and overwrite existing files. Entry names use Tools::Unicode UTF-8 conversion; absolute paths, parent traversal, colons, and embedded NUL characters are rejected. Links and reparse points receive no special handling.
+The payload includes the miniz license at `Licenses\miniz.txt`. The library sources and upstream version information are in `src\Tools\miniz`.
+Run the `Test ZIP extraction` task to verify extraction from files and memory, Unicode names, malformed archives, and MSBuild ZIP compatibility without packaging or signing.
 
 ## Scan the offline installer with VirusTotal
 

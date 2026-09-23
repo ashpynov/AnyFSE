@@ -45,7 +45,6 @@ namespace AnyFSE
 #endif
 
 
-#define IDR_EMBEDDED_CAB 3
 
 #ifndef APP_VERSION
 #define APP_VERSION VER_VERSION_STR

@@ -63,7 +63,7 @@ namespace AnyFSE
 #ifdef OFFLINE_INSTALLER
             // Extract resource file
             SetCurrentProgress(Translate(L"progressUnpackFiles"));
-            CheckSuccess(ExtractEmbeddedCabinet(path));
+            CheckSuccess(ExtractEmbeddedZip(path));
 #else
             SetCurrentProgress(Translate(L"progressDownloadFiles"));
             CheckSuccess(DownloadFiles(path));
