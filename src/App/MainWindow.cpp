@@ -133,8 +133,7 @@ namespace AnyFSE::App::Window
             AnimateWindow(m_hWnd, 0, AW_BLEND);
             ShowWindow(m_hWnd, SW_MAXIMIZE);
             SetTimer(m_hWnd, m_launcherTimeoutTimerId, LAUNCHER_TIMEOUT_MS, NULL);
-            SetActiveWindow(m_hWnd);
-            SetForegroundWindow(m_hWnd);
+            Process::BringWindowToForeground(m_hWnd, SW_SHOWMAXIMIZED);
         }
         return true;
     }
@@ -175,7 +174,8 @@ namespace AnyFSE::App::Window
         DWORD error = GetLastError();
         if (error)
         {
-            PostMessage(m_hWnd, WM_DESTROY, (WPARAM)error, 0);
+            m_result = static_cast<int>(error);
+            PostMessage(m_hWnd, WM_CLOSE, 0, 0);
         }
         return error;
     }
@@ -238,8 +238,15 @@ namespace AnyFSE::App::Window
         case WM_ERASEBKGND:
             return 1;
         case WM_DESTROY:
-            m_result = (int)wParam;
             OnDestroy();
+            break;
+        case WM_KEYDOWN:
+            if (wParam == VK_ESCAPE)
+            {
+                m_result = ERROR_CANCELLED;
+                DestroyWindow(m_hWnd);
+                return 0;
+            }
             break;
         case WM_TIMER:
             OnTimer(wParam);
@@ -292,6 +299,10 @@ namespace AnyFSE::App::Window
 
     void MainWindow::OnDestroy()
     {
+        KillTimer(m_hWnd, m_launcherCheckTimerId);
+        KillTimer(m_hWnd, m_launcherTimeoutTimerId);
+        StopAnimation();
+        m_videoPlayer.Close();
         FreeAnimationResources();
         PostQuitMessage(m_result);
     }

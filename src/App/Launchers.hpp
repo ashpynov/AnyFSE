@@ -33,7 +33,8 @@ namespace AnyFSE::App::Launchers
 
     bool WaitLauncherExit();
 
-    void StartLauncher();
+    bool StartLauncher();
+    void ShowLaunchError(bool timedOut = false);
     bool IsLauncherActive();
     bool IsLauncherActiveOrMinimized();
     bool IsLauncherMinimized();

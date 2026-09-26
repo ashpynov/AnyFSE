@@ -1,4 +1,7 @@
 {
+  "launcherErrorTitle": "AnyFSE - Launcher could not open",
+  "launcherStartFailedMessage": "Could not start %ls.\n\nCheck the executable path and whether the application is installed. The loading screen will not remain open.",
+  "launcherTimeoutMessage": "%ls did not display a detectable window within 60 seconds.\n\nThe loading screen was closed. Check whether the launcher is showing a dialog, is still starting, or whether its window detection settings need adjusting.",
   "language": "English",
   "updaterWelcomeCaption": "Welcome to AnyFSE Updater",
   "updaterWelcomeDescription": "This will update AnyFSE to version %ls on your system.\n\nClick Update to proceed or Cancel to exit.",
@@ -85,8 +88,6 @@
   "settingsSplashScreenSettings": "Splash screen settings",
   "settingsSplashScreenSettingsDescription": "Configure Look'n'Feel of splash screen during home app loading",
   "settingsStartup": "Startup",
-  "settingsStartLauncherAsAdministrator": "Start Launcher as Administrator",
-  "settingsStartLauncherAsAdministratorDescription": "Execute launcher with escalated privileges. Running the launcher with elevated privileges is unsafe.",
   "settingsStartupDescription": "Apps that start automatically when you sign in full screen experience",
   "settingsAdditionalArguments": "Additional arguments",
   "settingsAdditionalArgumentsDescription": "Command line arguments passed to application",

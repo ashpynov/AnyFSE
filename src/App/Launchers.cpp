@@ -32,6 +32,7 @@
 #include "App/Constants.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/Packages.hpp"
+#include "Tools/Localization.hpp"
 #include "App/GamingExperience.hpp"
 
 
@@ -143,7 +144,7 @@ namespace AnyFSE::App::Launchers
         FocusLauncher();  // Attempt to fix activation of playnite
     }
 
-    void StartLauncher()
+    bool StartLauncher()
     {
         log.Debug("Start Launcher: %s params: %s",
             Unicode::to_string(Config::Launcher.StartCommand).c_str(),
@@ -152,7 +153,15 @@ namespace AnyFSE::App::Launchers
         if (0 == Process::StartProcess(Config::Launcher.StartCommand, Config::Launcher.StartArg))
         {
             log.Error(log.APIError(), "Can't start launcher:" );
+            return false;
         }
+        return true;
+    }
+
+    void ShowLaunchError(bool timedOut)
+    {
+        const auto message = TranslateF(timedOut ? L"launcherTimeoutMessage" : L"launcherStartFailedMessage", Config::Launcher.Name.c_str());
+        MessageBoxW(nullptr, message.c_str(), Translate(L"launcherErrorTitle").c_str(), MB_OK | MB_ICONERROR | MB_TOPMOST | MB_SETFOREGROUND);
     }
 
     bool IsLauncherActive()
@@ -171,11 +180,21 @@ namespace AnyFSE::App::Launchers
     {
         const LauncherConfig& launcher = Config::Launcher;
         HWND hWnd = GetLauncherWindow(true);
-        return GetWindowLong(hWnd, GWL_STYLE) | WS_MINIMIZE;
+        return hWnd && IsIconic(hWnd);
     }
 
     void FocusLauncher()
     {
+        // Prefer the existing window: restarting Playnite here can cross elevation
+        // boundaries and leave the splash on top of the actual launcher.
+        if (HWND window = GetLauncherWindow(true))
+        {
+            DWORD processId = 0;
+            GetWindowThreadProcessId(window, &processId);
+            AllowSetForegroundWindow(processId);
+            Process::BringWindowToForeground(window, SW_SHOWMAXIMIZED);
+            return;
+        }
         if (!Config::Launcher.ActivationProtocol.empty())
         {
             if (Config::Launcher.ActivationProtocol[0]==L'@')

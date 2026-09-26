@@ -43,6 +43,7 @@
 #include "App/App.hpp"
 #include "App/Constants.hpp"
 #include "App/GamingExperience.hpp"
+#include "App/GameOptimization.hpp"
 #include "App/ExitFSE.hpp"
 #include "App/MainWindow.hpp"
 #include "App/Launchers.hpp"
@@ -245,15 +246,19 @@ namespace AnyFSE::App
 
         if (AsElevated(lpCmdLine))
         {
-            Elevated::Register(Constants::ElevatedStartLauncher, Launchers::StartLauncher);
             Elevated::Register(Constants::ElevatedStartupApps, []() { Launchers::LaunchStartupApps(true); });
             Elevated::Register(Constants::ElevatedEnableGamingHandheld, GamingExperience::EnableGamingHandheld);
             Elevated::Register(Constants::ElevatedRestoreGamingPC, GamingExperience::RestoreGamingPC);
+            Elevated::Register(Constants::ElevatedOptimizeServices, GameOptimization::Synchronize);
 
             return Elevated::CallHandler() ? 0 : 1;
         }
 
-       GamingExperience::RestoreEnterFSEConfirmation();
+        if (lpCmdLine && _stricmp(lpCmdLine, Constants::OptimizationMonitorArgumentA) == 0)
+            return GameOptimization::Monitor();
+
+        GameOptimization::StartMonitor();
+        GamingExperience::RestoreEnterFSEConfirmation();
 
         if (AsHidListener(lpCmdLine))
         {
@@ -377,13 +382,10 @@ namespace AnyFSE::App
                 Launchers::LaunchStartupApps(false);
             };
             Launchers::LauncherOnBoot();
-            if (Config::AsAdmin)
+            if (!Launchers::StartLauncher())
             {
-                Elevated::Call(Constants::ElevatedStartLauncher);
-            }
-            else
-            {
-                Launchers::StartLauncher();
+                Launchers::ShowLaunchError();
+                return ERROR_PROCESS_ABORTED;
             }
         }
         else
@@ -406,7 +408,7 @@ namespace AnyFSE::App
 
         log.Debug("Splash window loop finished.");
 
-        ExitFSE::WaitHomeAppExit();
+        if (exitCode == 0) ExitFSE::WaitHomeAppExit();
 
         log.Debug("Loop finished. Time to exit");
 

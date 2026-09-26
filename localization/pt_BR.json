@@ -1,4 +1,7 @@
-{
+﻿{
+  "launcherErrorTitle": "AnyFSE - Falha ao abrir o aplicativo",
+  "launcherStartFailedMessage": "Não foi possível iniciar %ls.\n\nVerifique o caminho do executável e se o aplicativo está instalado. A tela de carregamento não ficará aberta.",
+  "launcherTimeoutMessage": "%ls não exibiu uma janela detectável em 60 segundos.\n\nA tela de carregamento foi fechada. Verifique se o aplicativo está mostrando algum diálogo, ainda está iniciando ou se a detecção da janela precisa ser ajustada.",
   "language": "Português (Brasil)",
   "xboxModeCheckDescription": "A seleção de um aplicativo inicial personalizado está desativada. O AnyFSE requer que o modo de dispositivo portátil para jogos esteja ativado.",
   "enableBtn": "Ativar",
@@ -115,7 +118,6 @@
   "settingsNativeStartupSettingsDescription": "Configurar a inicialização automática pelas configurações do Windows",
   "settingsAdditionalStartupApplications": "Aplicativos adicionais de inicialização",
   "settingsAdditionalStartupApplicationsDescription": "Aplicativos iniciados pelo AnyFSE ao entrar no modo Xbox",
-  "settingsStartLauncherAsAdministratorDescription": "Executar o launcher com privilégios elevados. Isso não é seguro.",
   "addBtn": "Adicionar",
   "modifyBtn": "Editar",
   "deleteBtn": "Excluir",
@@ -195,3 +197,4 @@
   "toggleOn": "Ativado",
   "toggleOff": "Desativado"
 }
+

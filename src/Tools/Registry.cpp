@@ -29,6 +29,58 @@
 
 namespace AnyFSE::Tools::Registry
 {
+    bool ReadValue(const std::wstring& key, const std::wstring& name, Value& value)
+    {
+        value = {};
+        std::wstring path;
+        const HKEY root = GetRootKey(key, path);
+        HKEY opened = nullptr;
+        LSTATUS result = RegOpenKeyExW(root, path.c_str(), 0, KEY_QUERY_VALUE, &opened);
+        if (result == ERROR_FILE_NOT_FOUND || result == ERROR_PATH_NOT_FOUND) return true;
+        if (result != ERROR_SUCCESS) return false;
+        DWORD size = 0;
+        result = RegQueryValueExW(opened, name.c_str(), nullptr, &value.type, nullptr, &size);
+        if (result == ERROR_SUCCESS && size <= 1024 * 1024)
+        {
+            // Keep a non-null buffer for zero-length values so a concurrent growth is
+            // reported as ERROR_MORE_DATA instead of being mistaken for a size-only query.
+            value.data.resize(size ? size : 1);
+            result = RegQueryValueExW(opened, name.c_str(), nullptr, &value.type, value.data.data(), &size);
+            if (result == ERROR_SUCCESS) { value.data.resize(size); value.exists = true; }
+        }
+        else if (result == ERROR_SUCCESS) result = ERROR_MORE_DATA;
+        RegCloseKey(opened);
+        return result == ERROR_SUCCESS || result == ERROR_FILE_NOT_FOUND;
+    }
+
+    bool RestoreValue(const std::wstring& key, const std::wstring& name, const Value& value)
+    {
+        std::wstring path;
+        const HKEY root = GetRootKey(key, path);
+        HKEY opened = nullptr;
+        LSTATUS result = value.exists
+            ? RegCreateKeyExW(root, path.c_str(), 0, nullptr, 0, KEY_SET_VALUE, nullptr, &opened, nullptr)
+            : RegOpenKeyExW(root, path.c_str(), 0, KEY_SET_VALUE, &opened);
+        if (!value.exists && (result == ERROR_FILE_NOT_FOUND || result == ERROR_PATH_NOT_FOUND)) return true;
+        if (result != ERROR_SUCCESS) return false;
+        result = value.exists
+            ? RegSetValueExW(opened, name.c_str(), 0, value.type, value.data.data(), static_cast<DWORD>(value.data.size()))
+            : RegDeleteValueW(opened, name.c_str());
+        RegCloseKey(opened);
+        return result == ERROR_SUCCESS || (!value.exists && result == ERROR_FILE_NOT_FOUND);
+    }
+
+    bool Flush(const std::wstring& key)
+    {
+        std::wstring path;
+        const HKEY root = GetRootKey(key, path);
+        HKEY opened = nullptr;
+        if (RegOpenKeyExW(root, path.c_str(), 0, KEY_QUERY_VALUE, &opened) != ERROR_SUCCESS) return false;
+        const LSTATUS result = RegFlushKey(opened);
+        RegCloseKey(opened);
+        return result == ERROR_SUCCESS;
+    }
+
     HKEY GetRootKey(const std::wstring &subKey, std::wstring &actualPath)
     {
         // Extract root key from subKey (e.g., "HKEY_CURRENT_USER\\Software\\MyApp" -> HKEY_CURRENT_USER)

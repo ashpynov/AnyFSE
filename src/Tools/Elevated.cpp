@@ -1,4 +1,5 @@
 #include "Elevated.hpp"
+#include "ElevatedReservation.hpp"
 
 #include <windows.h>
 #include <taskschd.h>
@@ -112,12 +113,9 @@ namespace AnyFSE::Tools::Elevated
         {
             const std::wstring eventName = EventName(name);
             // Holding this object reserves the single request slot, including across threads/processes.
-            Handle call(CreateEventW(nullptr, TRUE, FALSE, c::ElevatedCallEvent));
-            const DWORD callError = GetLastError();
-            if (!call)
-                Check(HRESULT_FROM_WIN32(callError));
-            if (callError == ERROR_ALREADY_EXISTS)
-                throw std::runtime_error("An elevated call is already in progress");
+            const ULONGLONG reserveDeadline = GetTickCount64() + 60000;
+            Handle call(ReserveCall(c::ElevatedCallEvent, 60000));
+            if (!call) Check(HRESULT_FROM_WIN32(GetLastError()));
 
             ComScope com;
             wrl::ComPtr<ITaskService> service;
@@ -129,8 +127,14 @@ namespace AnyFSE::Tools::Elevated
             Check(folder->GetTask(_bstr_t(c::AnyFseTaskName), &task));
             TASK_STATE state;
             Check(task->get_State(&state));
-            if (state != TASK_STATE_READY)
-                throw std::runtime_error("Elevated scheduled task is not ready");
+            while (state == TASK_STATE_RUNNING || state == TASK_STATE_QUEUED)
+            {
+                if (GetTickCount64() >= reserveDeadline)
+                    throw std::runtime_error("Timed out waiting for elevated task readiness");
+                Sleep(100);
+                Check(task->get_State(&state));
+            }
+            if (state != TASK_STATE_READY) throw std::runtime_error("Elevated scheduled task is disabled or unavailable");
 
             Handle event(CreateEventW(nullptr, TRUE, TRUE, eventName.c_str()));
             const DWORD eventError = GetLastError();
@@ -147,6 +151,7 @@ namespace AnyFSE::Tools::Elevated
             if (!running)
                 throw std::runtime_error("Elevated scheduled task did not start");
 
+            const ULONGLONG completionDeadline = GetTickCount64() + 120000;
             for (;;)
             {
                 const HRESULT result = running->Refresh();
@@ -156,6 +161,8 @@ namespace AnyFSE::Tools::Elevated
                 Check(running->get_State(&state));
                 if (state != TASK_STATE_RUNNING && state != TASK_STATE_QUEUED)
                     break;
+                if (GetTickCount64() >= completionDeadline)
+                    throw std::runtime_error("Elevated command timed out; task was not forcibly terminated");
                 Sleep(100);
             }
 

@@ -121,7 +121,11 @@ namespace AnyFSE::App::Window
     {
         if (timerId == m_launcherTimeoutTimerId)
         {
+            const bool available = Launchers::IsLauncherActiveOrMinimized();
+            m_result = available ? 0 : ERROR_TIMEOUT;
             DestroyWindow(m_hWnd);
+            if (available) Launchers::FocusLauncher();
+            else Launchers::ShowLaunchError(true);
             return;
         }
         if (timerId == m_animationTimerId)
@@ -145,11 +149,8 @@ namespace AnyFSE::App::Window
                 {
                     KillTimer(m_hWnd, m_launcherCheckTimerId);
                     m_hLauncherCheckTimer = NULL;
-                    if (Launchers::IsLauncherMinimized())
-                    {
-                        Launchers::FocusLauncher();
-                    }
                     DestroyWindow(m_hWnd);
+                    if (isActive) Launchers::FocusLauncher();
                 }
                 if (!m_bLauncherWasActive && isActive)
                 {

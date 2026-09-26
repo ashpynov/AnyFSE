@@ -2,6 +2,15 @@
 
 namespace AnyFSE::App::Constants
 {
+    // Reversible gaming optimization. Never include drivers, security or gaming dependencies.
+    inline constexpr wchar_t OptimizationMonitorArgument[] = L"/OptimizationMonitor";
+    inline constexpr char OptimizationMonitorArgumentA[] = "/OptimizationMonitor";
+    inline constexpr wchar_t OptimizationMonitorMutex[] = L"Local\\AnyFSE.OptimizationMonitor";
+    inline constexpr wchar_t ElevatedOptimizeServices[] = L"OptimizeServices";
+    inline constexpr wchar_t OptimizationStateKey[] = L"HKEY_LOCAL_MACHINE\\SOFTWARE\\AnyFSE\\ServiceRestore";
+    inline constexpr const wchar_t* OptimizationServices[] = {
+        L"WSearch", L"SysMain", L"DiagTrack", L"MapsBroker"
+    };
     // Package / identity
     inline constexpr wchar_t PackageFamilyName[] = L"ArtemShpynov.AnyFSE_by4wjhxmygwn4";
     inline constexpr wchar_t AppUserModelId[] = L"ArtemShpynov.AnyFSE_by4wjhxmygwn4!App";
@@ -14,7 +23,6 @@ namespace AnyFSE::App::Constants
     inline constexpr wchar_t AnyFseTaskName[] = L"AnyFSE";
     inline constexpr wchar_t ElevatedEventPrefix[] = L"Local\\AnyFSE.Task.Command.";
     inline constexpr wchar_t ElevatedCallEvent[] = L"Local\\AnyFSE.Task.Call";
-    inline constexpr wchar_t ElevatedStartLauncher[] = L"StartLauncher";
     inline constexpr wchar_t ElevatedStartupApps[] = L"StartupApps";
     inline constexpr wchar_t ElevatedEnableGamingHandheld[] = L"EnableGamingHandheld";
     inline constexpr wchar_t ElevatedRestoreGamingPC[] = L"RestoreGamingPC";

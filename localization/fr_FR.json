@@ -113,7 +113,6 @@
   "settingsNativeStartupSettingsDescription": "Configurer le démarrage via Windows",
   "settingsAdditionalStartupApplications": "Applications de démarrage supplémentaires",
   "settingsAdditionalStartupApplicationsDescription": "Apps lancées par AnyFSE en mode Xbox",
-  "settingsStartLauncherAsAdministratorDescription": "Exécuter le lanceur avec des privilèges élevés. Cela présente un risque de sécurité.",
   "addBtn": "Ajouter",
   "modifyBtn": "Modifier",
   "deleteBtn": "Supprimer",

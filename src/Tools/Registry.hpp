@@ -22,11 +22,18 @@
 //
 
 
+#pragma once
 #include <windows.h>
+#include <vector>
 #include <string>
 
 namespace AnyFSE::Tools::Registry
 {
+    // Missing values are successful reads with exists=false; access errors are failures.
+    struct Value { bool exists = false; DWORD type = REG_NONE; std::vector<BYTE> data; };
+    bool ReadValue(const std::wstring& key, const std::wstring& name, Value& value);
+    bool RestoreValue(const std::wstring& key, const std::wstring& name, const Value& value);
+    bool Flush(const std::wstring& key);
     std::wstring ReadString(const std::wstring &subKey, const std::wstring &valueName, const std::wstring &defaultValue = L"");
     DWORD ReadDWORD(const std::wstring &subKey, const std::wstring &valueName, DWORD defaultValue = 0);
     bool ReadBool(const std::wstring &subKey, const std::wstring &valueName, bool defaultValue = false);

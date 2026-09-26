@@ -1,182 +1,249 @@
-# AnyFSE Home Application
-![DownloadCountTotal](https://img.shields.io/github/downloads/ashpynov/AnyFSE/AnyFSE.Installer.exe?displayAssetName=false&style=plastic) [![DownloadCountLatest](https://img.shields.io/github/downloads/ashpynov/AnyFSE/latest/AnyFSE.Installer.exe?displayAssetName=false&style=plastic)](https://github.com/ashpynov/AnyFSE/releases/latest) [![LatestVersion](https://img.shields.io/github/v/tag/ashpynov/AnyFSE?label=Latest%20version&style=plastic)](https://github.com/ashpynov/AnyFSE/releases/latest) [![License](https://img.shields.io/github/license/ashpynov/AnyFSE?style=plastic)](LICENCE)
+﻿# AnyFSE — modo Xbox com launcher personalizado
 
-The AnyFSE Home application aims to give users the ability to use their favorite launchers as Home applications for Gaming Full Screen Experience mode on modern Windows.
+O AnyFSE permite usar Playnite, Steam Big Picture e outros launchers como aplicativo inicial da experiência de jogos em tela cheia do Windows (modo Xbox).
 
-[Latest Release](https://github.com/ashpynov/AnyFSE/releases/latest)
+Esta versão modificada acrescenta otimização reversível do Windows, uma adaptação compatível do OpenGameBoost, recuperação persistente de configurações e correções na abertura dos launchers. As alterações são locais a este projeto; não correspondem necessariamente às versões publicadas pelo autor original.
 
-[Help and Discussions](https://discord.gg/hnVwuTzDmk)
+- [Projeto original](https://github.com/ashpynov/AnyFSE)
+- [Versões do projeto original](https://github.com/ashpynov/AnyFSE/releases/latest)
+- [Comunidade do projeto original](https://discord.gg/hnVwuTzDmk)
+- [Licença MIT](LICENSE)
 
-AnyFSE can be selected as Home application for full screen experience and will execute users favourite launchers like Playnite, Steam Big Picture mode, LaunchBox, etc. in full screen experience mode (Xbox mode).
+## Requisitos
 
-Some other launchers potentially can be supported too with minor customizations
+- Windows com as APIs de Gaming Full Screen Experience disponíveis. O AnyFSE verifica essa disponibilidade ao iniciar.
+- Um launcher instalado separadamente.
+- AnyFSE registrado como aplicativo inicial em **Configurações do Windows → Jogos → Experiência em tela cheia**, quando essa opção estiver disponível.
+- Para otimizar serviços e configurações do sistema, tarefa administrativa `AnyFSE` registrada para o usuário da sessão.
 
-## Kudos
+O AnyFSE não implementa as APIs ausentes do modo Xbox. A opção que identifica o dispositivo como portátil de jogos permite a seleção de launcher em cenários suportados, mas não substitui os requisitos do Windows.
 
-- Way how to create home app was inspired by @driver1998 work [FullScreenExperienceShell](https://github.com/driver1998/FullScreenExperienceShell). Also thanks to discord user 'silicon' who show me that project.
-- Handling of ASUS Rog Ally buttons inspired by such projects like [Handheld Companion](https://github.com/Valkirie/HandheldCompanion) and [g-helper](https://github.com/seerge/g-helper).
-- Discord users 'Marecki' and 'TwoTracks' who helped me to design and test such features like Xbox Ally support and Steam buttons mapping.
+## Configuração recomendada
 
-## Defender flagging
+1. Abra as configurações do AnyFSE.
+2. Escolha o launcher, por exemplo **Playnite Fullscreen**, e confira o caminho do executável.
+3. O launcher abre sem elevação solicitada pelo AnyFSE. A opção **Start Launcher as Administrator** foi removida; configurações antigas de `as_admin` são ignoradas.
+4. Para o Playnite, o argumento `--hidesplashscreen` evita sobrepor a tela de abertura nativa à do AnyFSE.
+5. Entre no modo Xbox pela opção de entrada imediata, sem reinicialização.
 
-> [!WARNING]
-> Microsoft Defender may occasionally flag AnyFSE with a `Trojan.Wacatac!ml` detection. I believe these are false positives caused by behavior considered suspicious, such as the process enumeration during launcher start and DLL injection used for ASUS button remapping. See [ACSE Filter and antivirus detection](#acse-filter-and-antivirus-detection) for details.
->
-> **AnyFSE does not collect or share any information (personal or not) or send any telemetry.**
->
-> **But don't take my word for it.** If you have any doubts, don't run the prebuilt binaries. The source code is available for you to review, and you can [build it yourself](build.md).
+Executar o launcher como administrador não é um requisito para otimizar o Windows. O launcher e a otimização têm fluxos separados: as alterações administrativas são executadas pela tarefa agendada. A elevação do launcher, sozinha, não aumenta o desempenho.
 
-## Features
+### “Restaurar o modo Xbox para PC”
 
-- Ability to select one of supported launchers:
-    - [Playnite Fullscreen](https://playnite.link)
-    - [Playnite Desktop](https://playnite.link)
-    - [Steam Big Picture & Desktop](https://store.steampowered.com/about/)
-    - [LaunchBox BigBox](https://www.launchbox-app.com/download)
-    - [One Game Launcher](https://ogl.app/)
-    - [RetroBat](https://www.retrobat.org/download/)
-    - [Armoury Crate SE](https://armoury-crate.com/#download)
-    - [Kodi](https://kodi.tv/)
-    - [Razer Cortex](https://www.razer.com/cortex)
-- Ability to use a custom executable or other installed native Gaming Home application.
-- Option to run the selected launcher as administrator.
-- Maximized performance during minimal runtime memory and perfomance footprint due to C++ sorce code.
-- Ability to navigate to download pages of supported launchers.
-- User defined video splash during launchers start.
-- Custom startup applications in Fullscreen Experience mode, with an option to run each application as administrator.
-- Proper handling of Playnite restart in Fullscreen / Desktop modes.
-- ASUS ROG Ally buttons "ArmouryCrate", "Command Center", and "Library" re-mapping including "Mode+" combos.
-- Gamepad friendly navigation in application Settings dialog
+Esse link restaura o valor original de identificação do dispositivo (`DeviceForm`) salvo pelo AnyFSE. Ele desfaz a alteração usada para permitir o aplicativo inicial personalizado. A seleção de launcher pode deixar de estar disponível após essa restauração.
 
-## Supported languages
+Não é o comando de saída para o desktop nem o mecanismo de restauração dos serviços. Para preservar o Playnite como aplicativo inicial, mantenha a identificação necessária à seleção personalizada.
 
-The settings interface supports the following languages:
+## O que acontece ao entrar e sair do modo Xbox
 
-- English
-- French (Français)
-- Portuguese (Português Brazil)
-- Russian (Русский)
-- Turkish (Türkçe)
+1. O Windows abre o AnyFSE como aplicativo inicial, ou o usuário inicia o AnyFSE quando o modo Xbox já está ativo.
+2. O AnyFSE abre o launcher configurado e apresenta a tela de carregamento.
+3. Um processo separado, `/OptimizationMonitor`, consulta o modo real do Windows aproximadamente a cada segundo.
+4. Quando o modo Xbox está ativo, o monitor solicita as otimizações à tarefa administrativa.
+5. A tela de carregamento fecha quando a janela do launcher é detectada. O monitor continua ativo independentemente dessa janela.
+6. Ao voltar ao desktop, o monitor solicita a restauração dos estados anteriores.
 
-Use the language button in Settings to select your preferred language.
+Não há solicitação de reboot pela otimização. As opções antigas de entrar no modo Xbox com reinicialização continuam existindo e têm finalidade separada. O monitor precisa estar em execução; este mecanismo não é um serviço de inicialização automática do Windows.
 
-## How it is works
+## Otimizações implementadas
 
-If AnyFSE is selected as home application:
+O perfil é seletivo e reversível. Não desliga indiscriminadamente todos os serviços e não promete aumento de FPS.
 
-1. Windows starts AnyFSE as fullscreen home application (Fullscreen experience or Xbox mode).
-2. AnyFSE read configuration and start launcher selected by user.
-3. Show splash screen (text or video).
-4. Wait till launcher executed (try to detect it main window).
-5. Close splash screen and exit
+| Componente | Durante o modo Xbox | Ao voltar ao desktop |
+| --- | --- | --- |
+| Windows Search (`WSearch`) | Tenta interromper a indexação, se estiver ativa | Reinicia se estava ativo antes |
+| SysMain | Tenta interromper o pré-carregamento | Reinicia se estava ativo antes |
+| Telemetria (`DiagTrack`) | Tenta interromper o serviço | Reinicia se estava ativo antes |
+| Mapas offline (`MapsBroker`) | Tenta interromper o serviço | Reinicia se estava ativo antes |
+| Plano de energia | Seleciona Ultimate Performance existente; senão, Alto Desempenho existente; senão, mantém o atual | Restaura o plano original |
+| Estado mínimo da CPU na tomada | Define 100% no plano selecionado, quando suportado | Restaura o índice AC anterior |
+| Suspensão seletiva USB na tomada | Desativa no plano selecionado, quando suportado | Restaura o índice AC anterior |
+| Economia de energia PCIe na tomada | Desativa no plano selecionado, quando suportado | Restaura o índice AC anterior |
+| Game Mode / Game Bar | Define `AutoGameModeEnabled`, `AllowAutoGameMode` e `AppCaptureEnabled` como 1 | Restaura tipo e conteúdo originais; remove valores que não existiam |
+| Perfil MMCSS Games | Define `Priority=6` e `Scheduling Category=High` na chave HKLM correta | Restaura os valores originais |
+| Aceleração do mouse | Desativa na sessão com `SPI_SETMOUSE`, sem gravar a preferência permanente | Restaura os três parâmetros anteriores |
 
-Same for cases when AnyFSE executed from gamebar.
+Os tipos de inicialização dos serviços não são alterados. Serviços originalmente parados permanecem parados; dependentes ativos não são interrompidos em cascata. O monitor não combate uma reinicialização por demanda feita pelo Windows ou por outro aplicativo.
 
-In case if ASUS ROG Ally buttons remaping is configured it will start second instance as background app that listen such buttons and execute handlers on keypress.
+Os ajustes de energia podem aumentar consumo e temperatura. Os índices de bateria (DC) não são reescritos, mas trocar o plano ativo também seleciona os valores DC daquele plano. Nenhum plano novo é criado.
 
-## ASUS ROG Ally buttons
+MMCSS depende de o aplicativo usar esse mecanismo; não aumenta a prioridade de todos os jogos. Habilitar captura da Game Bar não significa iniciar gravação contínua. Valores de Registro podem ser consumidos apenas quando o componente ou jogo abre uma nova sessão.
 
-On ASUS ROG Ally devices AnyFSE can redefine the dedicated system buttons:
+### Adaptação do OpenGameBoost
 
-- Armoury Crate
-- Command Center / Library
+A integração é nativa em C++, a partir do ZIP fornecido, sem instalar Python ou executar o projeto externo. A licença foi preservada em [OpenGameBoost-LICENSE.txt](docs/OpenGameBoost-LICENSE.txt).
 
-Each button can be assigned to a custom action. AnyFSE also supports combinations with the Mode button, the usual back paddle on ROG Ally devices, so the same physical buttons can have an additional `Mode + button` action.
+A rotina original de restauração do Registro estava incompleta, e a restauração de rede aplicava valores padrão em vez de recuperar os valores anteriores. Essas rotinas não foram reaproveitadas: o AnyFSE registra o estado anterior antes de modificar cada opção.
 
-Armoury Crate SE and the ASUS Optimization service normally receive these button events too. If both AnyFSE and ASUS software handle the same input, the native ASUS action can still be triggered. To avoid this, either uninstall Armoury Crate SE or let AnyFSE filter these inputs before ASUS Optimization handles them.
+Por escolha do perfil compatível, ficaram fora da aplicação automática:
 
-For this purpose AnyFSE includes the `AnyFSE ACSE Filter Injector` service. The service monitors the ASUS Optimization process and injects a small filter into the device-read path used by that process. The filter only targets the ASUS-specific button reports required for Armoury Crate, Command Center, and Library buttons handling. Other input processing is left untouched.
+- Limpeza de memória com `EmptyWorkingSet`, que não permite recompor o conjunto de páginas anterior.
+- Suspensão do Explorer, navegadores, launchers, Discord, sincronizadores e utilitários de hardware.
+- HAGS e outras alterações dependentes de reinicialização.
+- Ajustes de Nagle/TCP ACK, NetBIOS e LLMNR, que alteram o comportamento da rede e não têm aplicação imediata garantida pela simples escrita no Registro.
+- `GPU Priority` e `SFIO Priority`, valores descritos como não utilizados na documentação do MMCSS.
+- Desativação da recuperação do Explorer, do serviço `xbgm` e o perfil agressivo de efeitos visuais.
 
-This component is not in the critical path for normal input, launcher startup, or Full Screen Experience operation. It is enabled only when ASUS ROG Ally button remapping is enabled, and it is designed to make the smallest practical change: suppress the conflicting ASUS button events while allowing the rest of the system and device input stack to continue normally.
+Rede, áudio, Bluetooth, controles, drivers, segurança, Windows Update, serviços Xbox, licenciamento e anti-cheat não são alvos da lista de serviços interrompidos.
 
-### ACSE Filter and antivirus detection
+Consulte o [mapeamento completo da integração](docs/opengameboost-integration.md) e os [detalhes da otimização de serviços](docs/game-optimization.md).
 
-- ACSE Filter prevents ASUS Optimization from handling selected ROG Ally buttons when AnyFSE remaps them. It monitors `AsusOptimization.exe` and injects `AnyFSE.ACSEFilterHook.dll` into that process.
+## Backups e recuperação
 
-- Injection uses the traditional `VirtualAllocEx` → `WriteProcessMemory` → `CreateRemoteThread` → `LoadLibraryW` technique. This is legitimate DLL injection, but the same API sequence is widely used by malware and is the most likely reason for an antivirus alert.
+Os registros de recuperação ficam em:
 
-- For the short injection window, it enables `SeDebugPrivilege` and opens the target with process-memory and remote-thread permissions. These are strong behavioral indicators for antivirus products even though the privilege is disabled immediately afterward.
+- `HKEY_LOCAL_MACHINE\SOFTWARE\AnyFSE\ServiceRestore`: serviços anteriormente ativos.
+- `HKEY_LOCAL_MACHINE\SOFTWARE\AnyFSE\GameBoost`, valor `JournalV1`: snapshots de energia, Registro e mouse, identificação do usuário e fase da operação.
 
-- The injector is installed as an automatically started Windows service, watches for ASUS Optimization restarts, and reinjects the DLL when necessary. Service persistence combined with process monitoring and injection can appear suspicious to Defender.
+O backup é gravado antes da alteração. Repetir a entrada não sobrescreve os valores originais. Falhas de captura ou persistência impedem a alteração correspondente; falhas de restauração preservam os snapshots e provocam nova tentativa, normalmente após 30 segundos.
 
-- What is filtered: The hook examines only six-byte HID reports from ASUS devices with vendor ID 0x0B05 and the configured product IDs. It replaces only the configured Armoury Crate, Command Center, and Library button reports with an empty report. Other reads are passed through unchanged
+Uma nova sessão aguarda a conclusão de uma recuperação pendente do perfil GameBoost. Valores originalmente ausentes são removidos na restauração; chaves vazias eventualmente criadas podem permanecer. Chaves compartilhadas não são apagadas recursivamente.
 
-- In the ACSE Filter source, there is no networking, downloading, credential access, keylogging, file encryption, Defender disabling, or arbitrary payload execution. The DLL path is fixed to AnyFSE.ACSEFilterHook.dll beside the injector executable.
+Se o monitor for encerrado à força, a máquina desligar ou a tarefa ficar indisponível, a restauração imediata não é garantida. Reabra o AnyFSE no desktop, com o mesmo usuário, para tentar a recuperação. Não apague os registros de backup para “resolver” uma falha. Alterações manuais nos mesmos ajustes durante o modo Xbox serão substituídas pelos valores salvos ao restaurar.
 
-Also AnyFSE Installer itself does trick to install AnyFSE package to be registered as Home Application. This also may flag Defender:
+O uso simultâneo em várias sessões interativas ainda não foi validado. Benchmarks e testes reais de todas as transições continuam necessários.
 
-- It contain bundled archive (or download it).
+## Correções de inicialização e foco
 
-- It exract this archive to Program Files
+Esta versão inclui:
 
-- It Enable developer mode to allow CustomCapability 'Microsoft.appCategory.gamingHome'
+- Retorno de sucesso/falha ao criar o processo do launcher.
+- Falhas ao iniciar o launcher encerram a abertura com uma mensagem de erro.
+- Mensagens de erro em português e inglês para falha de abertura ou ausência de janela detectável em 60 segundos.
+- Fechamento da tela de carregamento com **Esc**. Isso não encerra o jogo nem solicita saída do modo Xbox.
+- Encerramento da espera pelo launcher após cancelamento ou erro.
+- Correção da detecção de janela minimizada com `IsIconic`.
+- Preferência por ativar a janela existente, sem relançar o Playnite apenas para tentar obter foco.
+- Tentativa de trazer a tela inicial para frente e transferência de foco ao launcher depois de fechar a tela de carregamento.
+- Limpeza dos temporizadores e recursos de vídeo ao destruir a janela.
+- Serialização das chamadas administrativas: uma chamada aguarda a anterior, em vez de ser descartada imediatamente.
+- Limites de espera de 60 segundos para disponibilidade e 120 segundos para conclusão administrativa, sem encerrar à força uma tarefa que possa estar restaurando configurações.
 
-- It install temp certificate to Trusted People to install package
+As regras de foco do Windows ainda se aplicam. A compilação e os testes automatizados não comprovam, sozinhos, o comportamento visual em todas as transições.
 
-- After installation it remove temp certificate and turn off developer mode.
+## Tarefa administrativa e reparo da instalação
 
+A tarefa `AnyFSE` é executada sob demanda, com privilégios elevados, na sessão interativa do usuário. Não possui gatilho de horário nem senha armazenada. Ela chama:
 
-## Install, Configure and Uninstall
-
-> [!NOTE]
-> AnyFSE is not implement enabling FSE mode support in windows. It is require either supported Handheld device like ASUS ROG Ally or enabling this mode on other devices using "Enabler" tool e.g. [XboxFullscreenExperienceTool](https://github.com/8bit2qubit/XboxFullscreenExperienceTool).
-
-### How to install
-
-Launch `AnyFSE.Installer.exe`, wait for it to finish, then configure AnyFSE from the Start menu entry.
-
-Your launcher should be installed additionally.
-
-Please note: that AnyFSE work only when it is selected as home application in Settings->Gaming->Full screen experience.
-
-
-### How to launch and configure
-
-In start menu find AnyFSE application. Press right mouse key and choose 'Configure' task.
-
-### Cleanup if uninstall was broken
-
-If uninstall failed or left files behind, clean up the remaining pieces manually.
-Run these commands from an elevated Command Prompt.
-
-Remove the identity package:
-
-```cmd
-powershell -Command "Get-AppxPackage *AnyFSE* | Remove-AppxPackage"
+```text
+C:\Program Files\AnyFSE\AnyFSE.exe /task
 ```
 
-Remove the ACSE Filter injector service:
+A tarefa é necessária para a otimização administrativa. O launcher abre normalmente sem depender dela.
 
-```cmd
-sc stop ACSEFilterInjector
-sc delete ACSEFilterInjector
+Para uma instalação já registrada no Windows, depois de compilar a Release, execute em PowerShell como administrador, a partir da raiz do repositório:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Repair-AnyFSEInstallation.ps1 -Configuration Release
 ```
 
-Delete the installation folder:
+O script:
 
-```cmd
-rmdir /s /q "%ProgramFiles%\AnyFSE"
-```
+1. Verifica os artefatos e recusa a substituição do monitor se há recuperação pendente.
+2. Exige que janelas de configurações/carregamento estejam fechadas.
+3. Faz backup dos binários e traduções substituídos em `build/InstalledBackup-<data-hora>`.
+4. Encerra somente o monitor identificado da instalação, se não houver recuperação pendente.
+5. Copia os quatro binários e as traduções pt-BR/en-US e compara seus hashes.
+6. Registra a tarefa administrativa com permissão de leitura/execução para o usuário e alteração restrita a administradores/SYSTEM.
+7. Registra o resultado em `build/installation-repair-result.txt` e tenta restaurar os arquivos anteriores se ocorrer falha.
 
-Remove the uninstall registration from the registry:
+Depois, abra novamente o AnyFSE para iniciar o monitor. O script também aceita `-Configuration Debug-Isolated`, mas usa Release por padrão. O launcher não possui mais a opção de elevação.
 
-```cmd
-reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\AnyFSE" /f
-```
+Esse reparo não instala o pacote de identidade do zero e não substitui o instalador original. Para uma primeira instalação, use um instalador compatível e registre o AnyFSE como aplicativo inicial. Arquivos compilados localmente precisam ser usados tanto pelo monitor quanto pela tarefa administrativa; misturar versões pode impedir o reconhecimento dos comandos.
 
+## Compilar e depurar no VS Code
 
-## Splash Videos
-AnyFSE may show shuffled video as splash during your launcher is loading.
+### Compilar pelo menu
 
-To do this, Create folder 'splash' in data folder (c:\ProgramData\AnyFSE) and put there you favourite mp4 or webm videos. Files will be shuffled each time splash screen is shown.
+Execute [Compilar.bat](Compilar.bat) na raiz e escolha **1 — Release**, **2 — Debug** ou **3 — Sair**. A janela permanece aberta ao terminar para mostrar o resultado. A Release sem assinatura fica em `build/Release`; a Debug fica em `build/Debug`. O script não instala os binários automaticamente.
 
-For sure it will be good idea to suppress native splash screens of launchers, to do so enable custom settings and add startup argument to prevent native splash (for Playnite it is ```--hidesplashscreen``` option).
+No terminal, use `Compilar.bat Release` ou `Compilar.bat Debug` para executar sem menu nem pausa. O auxiliar [scripts/Build-AnyFSE.ps1](scripts/Build-AnyFSE.ps1) lê as tarefas do VS Code, ativa o ambiente configurado e retorna erro se a compilação falhar. São necessários os pré-requisitos abaixo; não é necessário executar como administrador.
 
 
-### Filename control
-You can specify custom position of loop via filename. To do this - name should contain additional part before extension like:
+Requisitos de desenvolvimento:
 
-```splash.m4000.mp4``` or ```other_splash.5000.webm``` here is ***m4000*** and ***5000*** instructions to
-- 'm' or 'M' - mute video during loop
-- '4000' and '5000' position in milliseconds from start of video to rewind to during loop.
+- Extensão oficial Microsoft C/C++ (`ms-vscode.cpptools`), recomendada em `.vscode/extensions.json`.
+- Visual Studio Build Tools 2022 ou Visual Studio 2022 com ferramentas C++ x64.
+- MSVC v143 e Windows SDK `10.0.26100.0`.
+- Os componentes necessários estão listados em `.vsconfig`.
+
+`.vscode/tasks.json` é a fonte dos comandos de compilação. O script `scripts/Enter-VSDeveloperEnvironment.cmd` usa `vswhere` para localizar o Visual Studio 2022 e ativar o ambiente x64, incluindo a edição Build Tools. Não depende do caminho fixo da edição Community.
+
+| Tarefa | Finalidade / saída |
+| --- | --- |
+| `Build AnyFSE Debug` | Compilação padrão com **Ctrl+Shift+B**; `build/Debug` |
+| `Build AnyFSE Debug Isolated` | Binários em `build/Debug-Isolated`, úteis quando o executável Debug está em uso |
+| `Build AnyFSE Release Unsigned` | Release local sem certificado; `build/Release` |
+| `Build AnyFSE Release` | Release com assinatura, exige certificado privado configurado no projeto |
+| `Test Optimization Recovery` | Compila e executa testes de recuperação e concorrência administrativa |
+
+As tarefas de testes executam primeiro suas dependências de preparação e compilação. A tarefa sem assinatura usa `SignBinaries=false`; o comportamento padrão das tarefas assinadas foi preservado. Não é criado um certificado em nome do autor original. A Release sem assinatura não é um instalador nem um AppX assinado.
+
+As configurações de depuração usam o executável Debug da pasta do projeto. A entrada imediata usa `/FSENow`. O IntelliSense está configurado para C++17 e MSVC x64; se a versão/localização do compilador mudar, atualize `compilerPath` em `.vscode/c_cpp_properties.json`.
+
+Há tarefas adicionais de pacote e instalador, com seus próprios requisitos de assinatura. OpenCppCoverage é opcional e necessário apenas para cobertura. Detalhes em [Compilação no VS Code](docs/vscode-build.md).
+
+## Funcionalidades preservadas do projeto original
+
+- Launchers predefinidos: Playnite Fullscreen/Desktop, Steam Big Picture/Desktop, LaunchBox BigBox, One Game Launcher, RetroBat, Armoury Crate SE, Kodi e Razer Cortex.
+- Executável personalizado ou outro aplicativo Gaming Home instalado.
+- Aplicativos adicionais na inicialização, com opção individual de elevação.
+- Configurações navegáveis por controle.
+- Vídeo, texto e imagem personalizados na tela de carregamento.
+- Suporte ao remapeamento de botões ASUS ROG Ally e combinações com o botão Mode.
+- Interface em inglês, francês, português brasileiro, russo e turco.
+
+### Vídeos de abertura
+
+Adicione arquivos MP4 ou WebM à pasta `C:\ProgramData\AnyFSE\splash`, ou selecione outro caminho nas configurações. O aplicativo escolhe vídeos dessa pasta para a abertura.
+
+Nomes como `splash.m4000.mp4` ou `outro.5000.webm` permitem indicar a posição, em milissegundos, para repetição. O prefixo `m`/`M` dessa indicação silencia o vídeo durante o loop.
+
+### ASUS ROG Ally e ACSE Filter
+
+O componente ACSE Filter evita que o ASUS Optimization trate simultaneamente os botões remapeados. Ele usa um serviço e injeta `AnyFSE.ACSEFilterHook.dll` no processo `AsusOptimization.exe`, filtrando relatórios HID específicos dos botões ASUS.
+
+Esse componente é separado do monitor de otimização e não é necessário para abrir o Playnite. O remapeamento e a injeção de DLL podem chamar a atenção de antivírus; analise uma detecção em vez de presumir que todo alerta seja falso ou desativar a proteção do Windows.
+
+## Solução de problemas
+
+| Sintoma | Verificação |
+| --- | --- |
+| Otimização administrativa não executa | Verifique/repare a tarefa `AnyFSE`; o launcher não depende dela para abrir |
+| Otimização não é aplicada | Confira se a tarefa existe, está habilitada e aponta para a mesma versão do monitor |
+| Tela de carregamento sem launcher | Verifique caminho, argumentos e configuração de detecção da janela; aguarde a mensagem de prazo excedido ou pressione Esc |
+| Erro LNK1168 ao compilar | O executável de saída pode estar em uso; utilize a tarefa Debug Isolated ou feche a instância após restaurar os ajustes |
+| Falha procurando certificado na Release | Use `Build AnyFSE Release Unsigned` para compilação local ou configure seu certificado para a distribuição assinada |
+| Restauração pendente | Reabra o AnyFSE no desktop com o usuário original e a tarefa disponível; preserve os snapshots |
+
+Quando o log está habilitado nas configurações, os arquivos ficam normalmente em `%LOCALAPPDATA%\Packages\ArtemShpynov.AnyFSE_by4wjhxmygwn4\LocalCache\logs`. Consulte as entradas `Elevated`, `Launchers`, `GameBoost` e `GameOptimization`. Log desativado não produz evidência detalhada de execução.
+
+## Validação desta modificação
+
+Na validação local de 26/09/2026:
+
+- Release sem assinatura compilada com zero erros e quatro avisos em código preexistente.
+- Oito cenários simulados de recuperação aprovados, incluindo falhas de captura, aplicação, persistência, restauração, reentrada e interrupções.
+- Testes de concorrência administrativa aprovados: exclusividade, espera, limite de tempo e liberação da reserva.
+- Release instalada com comparação de hashes dos quatro binários.
+- Configuração local do launcher ajustada para `as_admin: false`.
+- Tarefa administrativa registrada; o executável instalado confirmou um comando no desktop e o Agendador retornou resultado `0`.
+- Monitor da versão instalada reiniciado.
+
+O teste administrativo no desktop valida comunicação e execução, mas não exercita a aplicação completa do perfil no modo Xbox. Ainda faltam testes reais de entrada/saída, foco do Playnite, restauração de todos os ajustes, diferentes dispositivos e benchmarks. Não há medição comprovando ganho de FPS.
+
+## Desinstalação
+
+Volte ao desktop, permita a restauração e feche o monitor antes de remover os componentes. Use o desinstalador da instalação. Não remova os backups de recuperação enquanto houver ajustes pendentes.
+
+Em instalações quebradas, os componentes a verificar são o pacote de identidade AnyFSE, a tarefa agendada `AnyFSE`, o serviço `ACSEFilterInjector` quando instalado e os arquivos em `Program Files\AnyFSE`. A remoção manual exige privilégios administrativos e deve considerar separadamente as configurações do usuário e os snapshots de restauração.
+
+## Créditos e licenças
+
+O AnyFSE original é de Artem Shpynov e colaboradores, sob [licença MIT](LICENSE).
+
+- A integração como aplicativo inicial foi inspirada em [FullScreenExperienceShell](https://github.com/driver1998/FullScreenExperienceShell), de driver1998, apresentado à comunidade pelo usuário silicon.
+- O tratamento dos botões ASUS foi inspirado em [Handheld Companion](https://github.com/Valkirie/HandheldCompanion) e [G-Helper](https://github.com/seerge/g-helper).
+- Marecki e TwoTracks contribuíram com o projeto e os testes de suporte ao Xbox Ally e mapeamento de botões Steam no projeto original.
+- As adaptações do OpenGameBoost preservam seu aviso de copyright de 2025 e sua [licença MIT](docs/OpenGameBoost-LICENSE.txt).
 

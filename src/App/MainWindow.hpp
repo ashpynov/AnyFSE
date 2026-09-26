@@ -44,7 +44,7 @@ namespace AnyFSE::App::Window
         SimpleVideoPlayer m_videoPlayer;
         std::wstring m_currentVideo;
 
-        int m_result = ERROR_RESTART_APPLICATION;
+        int m_result = 0;
         bool m_empty = false;
         bool m_successChecked = false;
         bool m_suspended = false;

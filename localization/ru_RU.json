@@ -85,8 +85,6 @@
   "settingsSplashScreenSettings": "Заставка",
   "settingsSplashScreenSettingsDescription": "Настройка внешнего вида заставки при запуске домашнего приложения",
   "settingsStartup": "Автозагрузка приложений",
-  "settingsStartLauncherAsAdministrator": "Запускать лаунчер от имени администратора",
-  "settingsStartLauncherAsAdministratorDescription": "Запуск лаунчера с повышенными привилегиями. Это небезопасно.",
   "settingsStartupDescription": "Приложения, запускаемые при входе в режим Xbox",
   "settingsAdditionalArguments": "Дополнительные аргументы",
   "settingsAdditionalArgumentsDescription": "Аргументы командной строки для приложения",

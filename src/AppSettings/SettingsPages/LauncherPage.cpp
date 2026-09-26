@@ -63,13 +63,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             Layout::LineHeight, Layout::LinePadding, 0);
         m_pExitOnHomeExitLine->SetIcon(L'\xEE47');
 
-        m_pAsAdminLine = &m_dialog.AddSettingsLine(settingPageList, top,
-            Translate(L"settingsStartLauncherAsAdministrator"),
-            Translate(L"settingsStartLauncherAsAdministratorDescription"),
-            m_asAdminToggle,
-            Layout::LineHeight, Layout::LinePadding, 0);
-        m_pAsAdminLine->SetIcon(L'\xE7EF');
-
         m_dialog.AddPage((new ConfirmationsPage(m_theme, m_dialog))->AddLine(settingPageList, top));
 
         m_pCustomSettingsLine = &m_dialog.AddSettingsLine(settingPageList, top,
@@ -209,7 +202,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
     void LauncherPage::LoadControls()
     {
-        m_asAdminToggle.SetCheck(Config::AsAdmin);
         m_currentLauncherPath = Config::GetNativePath(Config::Launcher.StartCommand);
         Config::FindLaunchers(m_launchersList);
         Config::FindNotInstalledLaunchers(m_notInstalledLaunchersList);
@@ -233,7 +225,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
     void LauncherPage::SaveControls()
     {
-        Config::AsAdmin = m_pAsAdminLine->IsEnabled() && m_asAdminToggle.GetCheck();
         const std::wstring gamingConfiguration = L"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GamingConfiguration";
         const std::wstring gamingHomeApp = c::GamingHomeAppRegValue;
         //const std::wstring xboxApp = L"Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App";
@@ -458,13 +449,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         {
             m_config = m_defaultConfig;
             UpdateCustomSettings();
-        }
-
-        m_pAsAdminLine->Enable(enabledAnyFSE && !m_config.StartCommand.empty()
-            && m_config.StartCommand.find(c::ProtocolSeparator) == std::wstring::npos);
-        if (!m_pAsAdminLine->IsEnabled())
-        {
-            m_asAdminToggle.SetCheck(false);
         }
 
         UpdateRestoreGamingPC();
