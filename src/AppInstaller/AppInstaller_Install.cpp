@@ -108,6 +108,9 @@ namespace AnyFSE
                 CheckSuccess(EnableAsusOptimization());
             }
 
+            DisableInjectorService();
+            StopAnyFSE();
+
             SetCurrentProgress(Translate(L"progressInstallPackage"));
             CopyFiles(path, Tools::Paths::GetInstallPath());
 
