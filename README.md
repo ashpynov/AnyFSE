@@ -16,6 +16,7 @@ Some other launchers potentially can be supported too with minor customizations
 - Way how to create home app was inspired by @driver1998 work [FullScreenExperienceShell](https://github.com/driver1998/FullScreenExperienceShell). Also thanks to discord user 'silicon' who show me that project.
 - Handling of ASUS Rog Ally buttons inspired by such projects like [Handheld Companion](https://github.com/Valkirie/HandheldCompanion) and [g-helper](https://github.com/seerge/g-helper).
 - Discord users 'Marecki' and 'TwoTracks' who helped me to design and test such features like Xbox Ally support and Steam buttons mapping.
+- All users submitted me Localization files.
 
 ## Defender flagging
 
@@ -54,6 +55,7 @@ The settings interface supports the following languages:
 
 - English
 - French (Français)
+- Italian (Italiano)
 - Portuguese (Português Brazil)
 - Russian (Русский)
 - Turkish (Türkçe)

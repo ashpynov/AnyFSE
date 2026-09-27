@@ -160,7 +160,7 @@
     <ClCompile Include="src\Ally\Services.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\localization\*.json" />
+    <None Include="Localization\*.json" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\AppInstaller\Installer.rc">
