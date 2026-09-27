@@ -68,6 +68,7 @@ namespace AnyFSE::App::Window
         bool m_mutedLoop;
 
         int m_playCount;
+        bool m_waitForEnd = false;
 
         std::wstring m_loadedVideo;
 
@@ -95,6 +96,7 @@ namespace AnyFSE::App::Window
         void Close();
         void Resize();
         int GetPlayCount();
+        bool ShouldWaitForEnd();
 
 
         ULONG AddRef();

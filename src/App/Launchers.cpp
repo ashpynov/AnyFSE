@@ -178,7 +178,7 @@ namespace AnyFSE::App::Launchers
     {
         const LauncherConfig& launcher = Config::Launcher;
         HWND hWnd = GetLauncherWindow(true);
-        return GetWindowLong(hWnd, GWL_STYLE) | WS_MINIMIZE;
+        return hWnd && IsIconic(hWnd);
     }
 
     void FocusLauncher()

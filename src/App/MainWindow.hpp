@@ -50,6 +50,7 @@ namespace AnyFSE::App::Window
         bool m_empty = false;
         bool m_successChecked = false;
         bool m_suspended = false;
+        bool m_closing = false;
 
         static WNDCLASS WC;
         static LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

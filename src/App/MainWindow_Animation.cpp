@@ -121,8 +121,11 @@ namespace AnyFSE::App::Window
 
     void MainWindow::OnTimer(UINT_PTR timerId)
     {
+        if (m_closing)
+            return;
         if (timerId == m_launcherTimeoutTimerId)
         {
+            m_closing = true;
             DestroyWindow(m_hWnd);
             return;
         }
@@ -143,21 +146,30 @@ namespace AnyFSE::App::Window
             bool isActive = Launchers::IsLauncherActiveOrMinimized();
             if (isActive || m_bLauncherWasActive)
             {
-                if ((!isActive && m_bLauncherWasActive) || !Config::SplashShowVideo || !Config::SplashTillEnd || m_videoPlayer.GetPlayCount() > 0)
+                const bool notifyStarted = !m_bLauncherWasActive && isActive;
+                m_bLauncherWasActive = true;
+                if (!isActive || !Config::SplashShowVideo || !Config::SplashTillEnd || !m_videoPlayer.ShouldWaitForEnd())
                 {
+                    const bool focusLauncher = isActive && Launchers::IsLauncherMinimized();
+                    m_closing = true;
                     KillTimer(m_hWnd, m_launcherCheckTimerId);
                     m_hLauncherCheckTimer = NULL;
-                    if (Launchers::IsLauncherMinimized())
+                    DestroyWindow(m_hWnd);
+
+                    if (notifyStarted)
+                    {
+                        Launchers::LauncherOnStarted();
+                    }
+                    if (focusLauncher)
                     {
                         Launchers::FocusLauncher();
                     }
-                    DestroyWindow(m_hWnd);
+                    return;
                 }
-                if (!m_bLauncherWasActive && isActive)
+                if (notifyStarted)
                 {
                     Launchers::LauncherOnStarted();
                 }
-                m_bLauncherWasActive = true;
             }
         }
     }

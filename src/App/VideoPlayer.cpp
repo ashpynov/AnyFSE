@@ -89,7 +89,7 @@ namespace AnyFSE::App::Window
         RECT rect;
         GetClientRect(hwnd, &rect);
         IMFPMediaPlayer* player = nullptr;
-        // A callback can send window messages while holding m_cs. Do not block the UI on that callback.
+        // Take a local reference before calling into the renderer.
         if (TryEnterCriticalSection(&m_cs))
         {
             if (m_pPlayer && m_bInitialized && !printClient)
@@ -159,6 +159,17 @@ namespace AnyFSE::App::Window
     {
         CriticalSectionLock lock(&m_cs);
 
+        // Ignore queued notifications from a player that has already been closed or replaced.
+        if (pEventHeader->pMediaPlayer != m_pPlayer || !m_bInitialized)
+            return;
+        if (FAILED(pEventHeader->hrEvent))
+        {
+            log.Error("Video event failed: 0x%08x", pEventHeader->hrEvent);
+            m_waitForEnd = false;
+            ShowVideo(false);
+            return;
+        }
+
         switch (pEventHeader->eEventType)
         {
             case MFP_EVENT_TYPE_MEDIAITEM_CREATED:
@@ -169,6 +180,7 @@ namespace AnyFSE::App::Window
                     HRESULT hr = pEventHeader->pMediaPlayer->SetMediaItem(pEvent->pMediaItem);
                     if (FAILED(hr))
                     {
+                        m_waitForEnd = false;
                         log.Error(log.APIError(), "Cant set media data:");
                     }
                 }
@@ -177,9 +189,16 @@ namespace AnyFSE::App::Window
             case MFP_EVENT_TYPE_MEDIAITEM_SET:
             {
                 log.Debug("Video is loaded and ready to play");
-                SIZE screenSize, videoSize;
-                pEventHeader->pMediaPlayer->GetIdealVideoSize(nullptr, &screenSize);
-                pEventHeader->pMediaPlayer->GetNativeVideoSize(&videoSize, nullptr);
+                SIZE screenSize = {}, videoSize = {};
+                HRESULT idealResult = m_pPlayer->GetIdealVideoSize(nullptr, &screenSize);
+                HRESULT nativeResult = m_pPlayer->GetNativeVideoSize(&videoSize, nullptr);
+                if (FAILED(idealResult) || FAILED(nativeResult) || screenSize.cx <= 0 || screenSize.cy <= 0
+                    || videoSize.cx <= 0 || videoSize.cy <= 0)
+                {
+                    m_waitForEnd = false;
+                    ShowVideo(false);
+                    return;
+                }
 
                 float zx = (float)screenSize.cx / videoSize.cx;
                 float zy = (float)screenSize.cy / videoSize.cy;
@@ -202,7 +221,11 @@ namespace AnyFSE::App::Window
                 HWND mediaHwnd = NULL;
                 if (m_desiredState == MFP_MEDIAPLAYER_STATE_PLAYING)
                 {
-                    pEventHeader->pMediaPlayer->Play();
+                    if (FAILED(pEventHeader->pMediaPlayer->Play()))
+                    {
+                        m_waitForEnd = false;
+                        return;
+                    }
                     log.Debug("Show in MFP_EVENT_TYPE_MEDIAITEM_SET");
                     ShowVideo(true);
                 }
@@ -216,6 +239,7 @@ namespace AnyFSE::App::Window
             case MFP_EVENT_TYPE_PLAYBACK_ENDED:
             {
                 log.Debug("Video Completed");
+                m_waitForEnd = false;
                 m_playCount++;
                 if (m_loop)
                 {
@@ -237,7 +261,7 @@ namespace AnyFSE::App::Window
             case MFP_EVENT_TYPE_STOP:
             {
                 log.Debug("Video Stopped");
-                m_playCount++;
+                m_waitForEnd = false;
                 if (m_desiredState == MFP_MEDIAPLAYER_STATE_EMPTY)
                 {
                     log.Debug("Clearing Media item");
@@ -305,17 +329,24 @@ namespace AnyFSE::App::Window
         return m_playCount;
     }
 
+    bool SimpleVideoPlayer::ShouldWaitForEnd()
+    {
+        CriticalSectionLock lock(&m_cs);
+        return m_bInitialized && m_waitForEnd && m_playCount == 0 && m_desiredState == MFP_MEDIAPLAYER_STATE_PLAYING;
+    }
+
     HRESULT SimpleVideoPlayer::Load(const WCHAR *videoFile, bool mute, bool loop, bool pause, HWND hwndParent)
     {
         CriticalSectionLock lock(&m_cs);
-
-        m_playCount = 0;
 
         if (m_bInitialized && videoFile && videoFile[0] && m_loadedVideo == videoFile)
         {
             log.Debug("Video: %s is preloaded already", Unicode::to_string(videoFile).c_str());
             return S_OK;
         }
+
+        m_playCount = 0;
+        m_waitForEnd = false;
 
         log.Debug("Load Video: %s", Unicode::to_string(videoFile ? videoFile : L"").c_str());
 
@@ -340,6 +371,8 @@ namespace AnyFSE::App::Window
         if (!m_pPlayer)
         {
             hr = MFStartup(MF_VERSION);
+            if (FAILED(hr))
+                return hr;
 
             log.Trace("Creating Media Player");
 
@@ -372,7 +405,7 @@ namespace AnyFSE::App::Window
             hr = MFPCreateMediaPlayer(
                 NULL,
                 FALSE,
-                MFP_OPTION_FREE_THREADED_CALLBACK,
+                0, // Deliver callbacks on this UI thread, which owns the video window and runs the message loop.
                 this,
                 m_hwndVideo,
                 &m_pPlayer);
@@ -396,6 +429,7 @@ namespace AnyFSE::App::Window
         ShowVideo(false);
 
         hr = m_pPlayer->CreateMediaItemFromURL(videoFile, FALSE, 0, NULL);
+        m_waitForEnd = SUCCEEDED(hr);
         if (FAILED(hr))
         {
             log.Error(log.APIError(), "Cant create media item");
@@ -417,8 +451,13 @@ namespace AnyFSE::App::Window
             return E_FAIL;
         }
 
-        MFP_MEDIAPLAYER_STATE state;
+        MFP_MEDIAPLAYER_STATE state = MFP_MEDIAPLAYER_STATE_EMPTY;
         HRESULT hr = m_pPlayer->GetState(&state);
+        if (FAILED(hr))
+        {
+            m_waitForEnd = false;
+            return hr;
+        }
         if (state == MFP_MEDIAPLAYER_STATE_EMPTY)
         {
             log.Debug("Play called while not loaded");
@@ -431,6 +470,7 @@ namespace AnyFSE::App::Window
 
         if (FAILED(hr))
         {
+            m_waitForEnd = false;
             log.Error(log.APIError(), "Cannot play:");
         }
         return hr;
@@ -459,6 +499,7 @@ namespace AnyFSE::App::Window
         CriticalSectionLock lock(&m_cs);
 
         m_desiredState = MFP_MEDIAPLAYER_STATE_STOPPED;
+        m_waitForEnd = false;
 
         if (!m_pPlayer || !m_bInitialized)
         {
@@ -482,6 +523,7 @@ namespace AnyFSE::App::Window
     {
         CriticalSectionLock lock(&m_cs);
         m_desiredState = MFP_MEDIAPLAYER_STATE_EMPTY;
+        m_waitForEnd = false;
         if (!m_pPlayer || !m_bInitialized)
         {
             return;

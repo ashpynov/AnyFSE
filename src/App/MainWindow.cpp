@@ -103,12 +103,16 @@ namespace AnyFSE::App::Window
             0, 0,
             NULL, NULL, hInstance, this);
 
-        m_bLauncherWasActive = Launchers::IsLauncherActiveOrMinimized();
-        m_hLauncherCheckTimer = SetTimer(m_hWnd, m_launcherCheckTimerId, CHECK_INTERVAL_MS, NULL);
-
         if (!IsWindow(m_hWnd))
         {
             log.Debug(Logger::APIError(), "Can not create window");
+            return false;
+        }
+
+        m_hLauncherCheckTimer = SetTimer(m_hWnd, m_launcherCheckTimerId, CHECK_INTERVAL_MS, NULL);
+        if (!m_hLauncherCheckTimer)
+        {
+            log.Error(Logger::APIError(), "Cannot create launcher check timer");
             return false;
         }
 
@@ -134,7 +138,13 @@ namespace AnyFSE::App::Window
             }
             AnimateWindow(m_hWnd, 0, AW_BLEND);
             ShowWindow(m_hWnd, SW_MAXIMIZE);
-            SetTimer(m_hWnd, m_launcherTimeoutTimerId, LAUNCHER_TIMEOUT_MS, NULL);
+            if (!SetTimer(m_hWnd, m_launcherTimeoutTimerId, LAUNCHER_TIMEOUT_MS, NULL))
+            {
+                log.Error(Logger::APIError(), "Cannot create launcher timeout timer");
+                m_closing = true;
+                DestroyWindow(m_hWnd);
+                return false;
+            }
             SetActiveWindow(m_hWnd);
             SetForegroundWindow(m_hWnd);
         }
@@ -253,11 +263,11 @@ namespace AnyFSE::App::Window
             m_videoPlayer.Resize();
             break;
         case WM_ACTIVATE:
-            if (wParam == 0
+            if (!m_closing && LOWORD(wParam) == WA_INACTIVE
                 && GamingExperience::IsFullscreenMode()
                 && Config::SplashShowVideo
                 && Config::SplashTillEnd
-                && !m_videoPlayer.GetPlayCount())
+                && m_videoPlayer.ShouldWaitForEnd())
             {
                 Process::BringWindowToForeground(m_hWnd, SW_SHOWMAXIMIZED);
                 return 0;
