@@ -104,6 +104,8 @@
     <ItemGroup>
         <ClCompile Include="src\Ally\*.cpp" />
         <ClCompile Include="src\App\*.cpp" />
+        <ClCompile Include="src\FluentDesign\Theme.cpp" />
+        <ClCompile Include="src\FluentDesign\Theme_Colors.cpp" />
         <ClCompile Include="src\Configuration\*.cpp" />
         <ClCompile Include="src\Logging\*.cpp" />
         <ClCompile Include="src\Tools\*.cpp" />
