@@ -80,11 +80,18 @@ namespace AnyFSE::App::Launchers
                 {
                     return true;
                 }
+
+                hProcess = Launchers::GetLauncherProcess();
+                if (hProcess)
+                {
+                    continue;
+                }
+
             } while (waitResult == WAIT_TIMEOUT);
 
             CloseHandle(hProcess);
         };
-        return !Launchers::GetLauncherProcess();
+        return false;
     }
 
     void PlayniteOnBoot()
@@ -257,17 +264,28 @@ namespace AnyFSE::App::Launchers
 
     HANDLE GetLauncherProcess()
     {
+        DWORD processId = 0;
+
         HWND hWnd = GetLauncherWindow(true);
-        if (!hWnd)
+        if (hWnd)
         {
-            return NULL;
+            GetWindowThreadProcessId(hWnd, &processId);
+        }
+        else
+        {
+            if ( !Config::Launcher.ProcessName.empty())
+            {
+                processId = Process::FindFirstByName(Config::Launcher.ProcessName);
+            }
+            if (!processId && !Config::Launcher.ProcessName.empty())
+            {
+                processId = Process::FindFirstByName(Config::Launcher.ProcessNameAlt);
+            }
         }
 
-        DWORD processId;
-        GetWindowThreadProcessId(hWnd, &processId);
         if (processId == 0)
         {
-            return false;
+            return NULL;
         }
 
         // Open process with desired access
