@@ -88,7 +88,7 @@ namespace AnyFSE::App::Window
     {
         // At EOS the session is stopped: UpdateVideo can replace the retained image with its background.
         // Leave the last presented image untouched when the splash is configured to hold it.
-        if (!printClient && m_pause && !m_loop && m_startLoop == 0 && m_playCount > 0)
+        if (!printClient && m_holdLastFrame)
             return;
 
         RECT rect;
@@ -257,7 +257,11 @@ namespace AnyFSE::App::Window
                     pEventHeader->pMediaPlayer->SetMute(m_mutedLoop);
                     Rewind(pEventHeader->pMediaPlayer, m_startLoop);
                 }
-                else if (!m_pause)
+                else if (m_pause)
+                {
+                    m_holdLastFrame = true;
+                }
+                else
                 {
                     Close();
                 }
@@ -352,6 +356,7 @@ namespace AnyFSE::App::Window
 
         m_playCount = 0;
         m_waitForEnd = false;
+        m_holdLastFrame = false;
 
         log.Debug("Load Video: %s", Unicode::to_string(videoFile ? videoFile : L"").c_str());
 
@@ -447,6 +452,7 @@ namespace AnyFSE::App::Window
     HRESULT SimpleVideoPlayer::Play()
     {
         CriticalSectionLock lock(&m_cs);
+        m_holdLastFrame = false;
 
         m_desiredState = MFP_MEDIAPLAYER_STATE_PLAYING;
 
@@ -502,6 +508,7 @@ namespace AnyFSE::App::Window
     HRESULT SimpleVideoPlayer::Stop()
     {
         CriticalSectionLock lock(&m_cs);
+        m_holdLastFrame = false;
 
         m_desiredState = MFP_MEDIAPLAYER_STATE_STOPPED;
         m_waitForEnd = false;
@@ -527,6 +534,7 @@ namespace AnyFSE::App::Window
     void SimpleVideoPlayer::Close()
     {
         CriticalSectionLock lock(&m_cs);
+        m_holdLastFrame = false;
         m_desiredState = MFP_MEDIAPLAYER_STATE_EMPTY;
         m_waitForEnd = false;
         if (!m_pPlayer || !m_bInitialized)
