@@ -28,6 +28,7 @@
 #include <string>
 #include "VideoPlayer.hpp"
 #include "Tools/Event.hpp"
+#include "FluentDesign/Theme.hpp"
 
 namespace Gdiplus { class Image; }
 
@@ -41,6 +42,7 @@ namespace AnyFSE::App::Window
         HICON m_hIcon = NULL;
         HWND m_hWnd;
         ATOM m_aClass;
+        FluentDesign::Theme m_theme;
         SimpleVideoPlayer m_videoPlayer;
         std::wstring m_currentVideo;
 
@@ -55,6 +57,7 @@ namespace AnyFSE::App::Window
         void OnCreate();
 
         void OnPaint();
+        void OnPrintClient(HDC hdc);
 
         void OnDestroy();
 
@@ -105,12 +108,11 @@ namespace AnyFSE::App::Window
         ULONG_PTR m_gdiplusToken;
 
         Gdiplus::Image * m_pLogoImage;
-        const COLORREF THEME_BACKGROUND_COLOR = RGB(22,22,22);
 
 
         bool InitAnimationResources();
         BOOL LoadLogoImage();
-        void OnPaintAnimated();
+        void DrawClient(HDC hdc, const RECT& clientRect);
         void OnTimer(UINT_PTR timerId);
         BOOL FreeAnimationResources();
         BOOL StartAnimation();

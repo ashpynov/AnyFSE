@@ -54,6 +54,10 @@ namespace AnyFSE::App::Window
     private:
         IMFPMediaPlayer *m_pPlayer;
         HWND m_hwndVideo;
+        COLORREF m_backgroundColor;
+        static LRESULT CALLBACK VideoWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+        void PaintVideo(HWND hwnd, HDC hdc, bool printClient);
+        void OnPrintClient(HWND hwnd, HDC hdc);
         BOOL m_bInitialized;
         bool m_loop;
         bool m_pause;
@@ -79,7 +83,7 @@ namespace AnyFSE::App::Window
         BOOL ShowVideo(bool bShow=true);
 
         public:
-        SimpleVideoPlayer();
+        explicit SimpleVideoPlayer(COLORREF backgroundColor);
         ~SimpleVideoPlayer();
 
 

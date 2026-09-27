@@ -40,6 +40,7 @@
 #include "Tools/Notification.hpp"
 #include "Tools/Paths.hpp"
 #include "Tools/Process.hpp"
+#include "Tools/DoubleBufferedPaint.hpp"
 #include "GamingExperience.hpp"
 
 #pragma comment(lib, "mpr.lib")
@@ -52,6 +53,7 @@ namespace AnyFSE::App::Window
     MainWindow::MainWindow()
         : m_hWnd(NULL)
         , m_aClass(NULL)
+        , m_videoPlayer(m_theme.GetColorRef(FluentDesign::Theme::Dialog))
         , m_pLogoImage(nullptr)
         , m_gdiplusToken(0ll)
         , WM_TASKBARCREATED(RegisterWindowMessage(L"TaskbarCreated"))
@@ -83,7 +85,7 @@ namespace AnyFSE::App::Window
         WC.hInstance = hInstance;
         WC.lpfnWndProc = MainWndProc;
         WC.hIcon = Icon::LoadIcon(Config::Launcher.IconFile, 16);
-        //stWC.hbrBackground = NULL_BRUSH;
+        WC.hbrBackground = nullptr;
         WC.style = CS_HREDRAW | CS_VREDRAW;
 
         m_aClass = RegisterClass(&WC);
@@ -96,7 +98,7 @@ namespace AnyFSE::App::Window
         m_hWnd = CreateWindowEx(
             WS_EX_TOPMOST,
             (LPCTSTR)m_aClass, windowName,
-            WS_POPUP,
+            WS_POPUP | WS_CLIPCHILDREN,
             CW_USEDEFAULT, CW_USEDEFAULT,
             0, 0,
             NULL, NULL, hInstance, this);
@@ -234,7 +236,10 @@ namespace AnyFSE::App::Window
             return 0;
         case WM_PAINT:
             OnPaint();
-            break;
+            return 0;
+        case WM_PRINTCLIENT:
+            OnPrintClient(reinterpret_cast<HDC>(wParam));
+            return 0;
         case WM_ERASEBKGND:
             return 1;
         case WM_DESTROY:
@@ -278,16 +283,15 @@ namespace AnyFSE::App::Window
 
     void MainWindow::OnPaint()
     {
-        if (!m_empty && (Config::SplashShowAnimation || Config::SplashShowLogo || Config::SplashShowText))
-        {
-            OnPaintAnimated();
-        }
-        else
-        {
-            PAINTSTRUCT ps;
-            BeginPaint(m_hWnd, &ps);
-            EndPaint(m_hWnd, &ps);
-        }
+        FluentDesign::DoubleBuferedPaint paint(m_hWnd);
+        DrawClient(paint.MemDC(), paint.ClientRect());
+    }
+
+    void MainWindow::OnPrintClient(HDC hdc)
+    {
+        RECT rect;
+        GetClientRect(m_hWnd, &rect);
+        DrawClient(hdc, rect);
     }
 
     void MainWindow::OnDestroy()

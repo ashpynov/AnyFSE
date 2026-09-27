@@ -23,6 +23,7 @@
 
 #include "Logging/LogManager.hpp"
 #include "VideoPlayer.hpp"
+#include "App/Constants.hpp"
 #include "Tools/Unicode.hpp"
 
 #include <filesystem>
@@ -40,6 +41,86 @@
 namespace AnyFSE::App::Window
 {
     Logger log = LogManager::GetLogger("VideoPlayer");
+
+    LRESULT CALLBACK SimpleVideoPlayer::VideoWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+    {
+        auto player = reinterpret_cast<SimpleVideoPlayer*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+        if (message == WM_NCCREATE)
+        {
+            auto create = reinterpret_cast<CREATESTRUCT*>(lParam);
+            player = static_cast<SimpleVideoPlayer*>(create->lpCreateParams);
+            SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(player));
+        }
+        if (player)
+        {
+            switch (message)
+            {
+            case WM_ERASEBKGND:
+                return 1;
+            case WM_PAINT:
+                {
+                    PAINTSTRUCT ps;
+                    HDC hdc = BeginPaint(hwnd, &ps);
+                    player->PaintVideo(hwnd, hdc, false);
+                    EndPaint(hwnd, &ps);
+                }
+                return 0;
+            case WM_PRINTCLIENT:
+                player->OnPrintClient(hwnd, reinterpret_cast<HDC>(wParam));
+                return 0;
+            case WM_SIZE:
+                InvalidateRect(hwnd, nullptr, FALSE);
+                return 0;
+            case WM_NCDESTROY:
+                SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);
+                break;
+            }
+        }
+        return DefWindowProc(hwnd, message, wParam, lParam);
+    }
+
+    void SimpleVideoPlayer::OnPrintClient(HWND hwnd, HDC hdc)
+    {
+        PaintVideo(hwnd, hdc, true);
+    }
+
+    void SimpleVideoPlayer::PaintVideo(HWND hwnd, HDC hdc, bool printClient)
+    {
+        RECT rect;
+        GetClientRect(hwnd, &rect);
+        IMFPMediaPlayer* player = nullptr;
+        // A callback can send window messages while holding m_cs. Do not block the UI on that callback.
+        if (TryEnterCriticalSection(&m_cs))
+        {
+            if (m_pPlayer && m_bInitialized && !printClient)
+            {
+                player = m_pPlayer;
+                player->AddRef();
+            }
+            LeaveCriticalSection(&m_cs);
+        }
+        if (player)
+        {
+            HRESULT result = player->UpdateVideo();
+            player->Release();
+            if (SUCCEEDED(result))
+                return;
+        }
+
+        COLORREF previousColor = SetDCBrushColor(hdc, m_backgroundColor);
+        FillRect(hdc, &rect, static_cast<HBRUSH>(GetStockObject(DC_BRUSH)));
+        SetDCBrushColor(hdc, previousColor);
+        if (printClient && IsWindowVisible(hwnd))
+        {
+            // UpdateVideo targets the HWND, not the print DC. Copy the displayed surface when available.
+            HDC source = GetDC(hwnd);
+            if (source)
+            {
+                BitBlt(hdc, 0, 0, rect.right, rect.bottom, source, 0, 0, SRCCOPY);
+                ReleaseDC(hwnd, source);
+            }
+        }
+    }
 
     // IUnknown methods
     HRESULT SimpleVideoPlayer::QueryInterface(REFIID riid, void **ppv)
@@ -170,10 +251,11 @@ namespace AnyFSE::App::Window
         }
     }
 
-    SimpleVideoPlayer::SimpleVideoPlayer()
+    SimpleVideoPlayer::SimpleVideoPlayer(COLORREF backgroundColor)
         : m_pPlayer(nullptr)
         , m_refCount(1)
         , m_hwndVideo(nullptr)
+        , m_backgroundColor(backgroundColor)
         , m_bInitialized(FALSE)
         , m_loop(false)
         , m_pause(true)
@@ -181,6 +263,7 @@ namespace AnyFSE::App::Window
         , m_duration(0)
         , m_endLoop(0)
         , m_startLoop(0)
+        , m_playCount(0)
         , m_desiredState(MFP_MEDIAPLAYER_STATE_EMPTY)
     {
         CoInitializeEx(NULL, COINIT_MULTITHREADED);
@@ -264,17 +347,27 @@ namespace AnyFSE::App::Window
             GetClientRect(hwndParent, &parentRect);
 
 
+            WNDCLASSW wc = {};
+            wc.lpfnWndProc = VideoWndProc;
+            wc.hInstance = GetModuleHandle(NULL);
+            wc.lpszClassName = Constants::VideoWindowClass;
+            if (!RegisterClassW(&wc) && GetLastError() != ERROR_CLASS_ALREADY_EXISTS)
+                return HRESULT_FROM_WIN32(GetLastError());
+
             m_hwndVideo = CreateWindowExW(
                 0,
-                L"STATIC",
+                Constants::VideoWindowClass,
                 L"",
-                WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN,
+                WS_CHILD | WS_CLIPCHILDREN,
                 0, 0,
                 parentRect.right, parentRect.bottom,
                 hwndParent,
                 NULL,
                 GetModuleHandle(NULL),
                 this);
+
+            if (!m_hwndVideo)
+                return HRESULT_FROM_WIN32(GetLastError());
 
             hr = MFPCreateMediaPlayer(
                 NULL,
@@ -287,12 +380,15 @@ namespace AnyFSE::App::Window
             if (FAILED(hr))
             {
                 log.Error(log.APIError(), "Creating Media Player Failed");
+                DestroyWindow(m_hwndVideo);
+                m_hwndVideo = nullptr;
                 return hr;
             }
 
             if (m_pPlayer)
             {
                 m_pPlayer->SetMute(mute);
+                m_pPlayer->SetBorderColor(m_backgroundColor);
             }
 
             m_bInitialized = TRUE;
@@ -514,7 +610,6 @@ namespace AnyFSE::App::Window
             else
             {
                 log.Debug("Hide Video Window");
-                MoveWindow(hVideoWin, 0, 0, 0, 0, TRUE);
                 ShowWindow(hVideoWin, SW_HIDE);
                 UpdateWindow(GetParent(hVideoWin));
             }

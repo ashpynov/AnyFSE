@@ -73,6 +73,7 @@ namespace AnyFSE::App::Constants
     inline constexpr wchar_t HidListenerAutorunKey[] = L"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run";
     inline constexpr wchar_t HidListenerAutorunValue[] = L"AnyFSE Hotkeys";
     inline constexpr wchar_t MainWindowClass[] = L"AnyFSE";
+    inline constexpr wchar_t VideoWindowClass[] = L"AnyFSE.VideoWindow";
     inline constexpr wchar_t SettingsDialogClass[] = L"AnyFSESettingsDialogClass";
     inline constexpr wchar_t SettingsLineClass[] = L"AnyFSE_SettingsLineClass";
     inline constexpr wchar_t UpdaterNotifyWindowClass[] = L"AnyFSE_Updater_NotifyWnd";

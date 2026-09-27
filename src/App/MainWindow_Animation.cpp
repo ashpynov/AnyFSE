@@ -68,20 +68,22 @@ namespace AnyFSE::App::Window
         return (m_pLogoImage && m_pLogoImage->GetLastStatus() == Gdiplus::Status::Ok);
     }
 
-    void MainWindow::OnPaintAnimated()
+    void MainWindow::DrawClient(HDC hdc, const RECT& clientRect)
     {
         using namespace Gdiplus;
-        FluentDesign::DoubleBuferedPaint paint(m_hWnd);
-        Graphics graphics(paint.MemDC());
+        Graphics graphics(hdc);
 
         graphics.SetSmoothingMode(SmoothingModeAntiAlias);
         // Fill background
         Color backgroundColor;
-        backgroundColor.SetFromCOLORREF(THEME_BACKGROUND_COLOR);
-        SolidBrush backgroundBrush(THEME_BACKGROUND_COLOR);
+        backgroundColor.SetFromCOLORREF(m_theme.GetColorRef(FluentDesign::Theme::Dialog));
+        SolidBrush backgroundBrush(backgroundColor);
 
-        RectF rect = ToRectF(paint.ClientRect());
+        RectF rect = ToRectF(clientRect);
         graphics.FillRectangle(&backgroundBrush, 0.0f, 0.0f, rect.Width, rect.Height);
+
+        if (m_empty)
+            return;
 
         float dpi = (float)GetDpiForWindow(m_hWnd);
 
@@ -100,7 +102,7 @@ namespace AnyFSE::App::Window
         {
             // Display text
             Font font(L"Segoe UI", 14 * dpi / 96);
-            SolidBrush textBrush(Gdiplus::Color::White);
+            SolidBrush textBrush(m_theme.GetColor(FluentDesign::Theme::Text));
             std::wstring name = Config::SplashCustomText.empty()
                 ? std::wstring(L"Launching ") + Config::Launcher.Name
                 : Config::SplashCustomText;
