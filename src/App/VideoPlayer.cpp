@@ -86,6 +86,11 @@ namespace AnyFSE::App::Window
 
     void SimpleVideoPlayer::PaintVideo(HWND hwnd, HDC hdc, bool printClient)
     {
+        // At EOS the session is stopped: UpdateVideo can replace the retained image with its background.
+        // Leave the last presented image untouched when the splash is configured to hold it.
+        if (!printClient && m_pause && !m_loop && m_startLoop == 0 && m_playCount > 0)
+            return;
+
         RECT rect;
         GetClientRect(hwnd, &rect);
         IMFPMediaPlayer* player = nullptr;
