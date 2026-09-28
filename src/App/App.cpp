@@ -136,6 +136,18 @@ namespace AnyFSE::App
         return false;
     }
 
+    bool App::AsHidListenerJob(LPSTR lpCmdLine)
+    {
+        for (char *a = lpCmdLine; *a; a++)
+        {
+            if (_strnicmp(a, "/HidListenerJob", 15) == 0)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool App::AsElevated(LPSTR lpCmdLine)
     {
         return lpCmdLine && _stricmp(lpCmdLine, Constants::AnyFseTaskArgumentA) == 0;
@@ -249,19 +261,29 @@ namespace AnyFSE::App
             Elevated::Register(Constants::ElevatedStartupApps, []() { Launchers::LaunchStartupApps(true); });
             Elevated::Register(Constants::ElevatedEnableGamingHandheld, GamingExperience::EnableGamingHandheld);
             Elevated::Register(Constants::ElevatedRestoreGamingPC, GamingExperience::RestoreGamingPC);
+            Elevated::Register(Constants::ElevatedHidListener, []() { Process::StartProcess(Tools::Paths::GetExeFileName(), L"/HidListenerJob"); });
 
             return Elevated::CallHandler() ? 0 : 1;
         }
 
        GamingExperience::RestoreEnterFSEConfirmation();
 
-        if (AsHidListener(lpCmdLine))
+        if (AsHidListenerJob(lpCmdLine))
         {
             if (Config::HotkeysEnable || (Config::AllyHidEnable && Ally::IsSupported()))
             {
                 log.Debug("Starting background HID/hotkey listener\n");
                 AnyFSE::Logging::LogManager::Initialize("AnyFSE/BackgroundListener", Config::LogLevel, Config::LogPath);
                 return Ally::HIDListener(NULL);
+            }
+            return 0;
+        }
+
+        if (AsHidListener(lpCmdLine))
+        {
+            if (Config::HotkeysEnable || (Config::AllyHidEnable && Ally::IsSupported()))
+            {
+                Elevated::Call(Constants::ElevatedHidListener);
             }
             return 0;
         }

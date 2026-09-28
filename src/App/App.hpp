@@ -40,6 +40,7 @@ namespace AnyFSE::App
         static int ShowSettings();
         static void InitCustomControls();
         static bool AsHidListener(LPSTR lpCmdLine);
+        static bool AsHidListenerJob(LPSTR lpCmdLine);
         static bool AsElevated(LPSTR lpCmdLine);
         static bool AsFSE(LPSTR lpCmdLine);
         static bool AsFSENow(LPSTR lpCmdLine);

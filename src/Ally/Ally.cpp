@@ -188,6 +188,18 @@ namespace Ally
             ButtonBind[Ally::EventCode::ShowKeyboard] =     Handlers::ShowKeyboard;
             ButtonBind[Ally::EventCode::ToggleRecord] =     Handlers::ToggleRecord;
         }
+
+        log.Trace("Bind Mode is %s", IsXBoxRogAlly() ? "XBoxRoxAlly" : "RogAlly");
+
+        log.Trace("Bind ACPress to %s", IsXBoxRogAlly() ? Config::AllyHidLibraryPress : Config::AllyHidACPress );
+        log.Trace("Bind ACHold to %s", Config::AllyHidACHold);
+        log.Trace("Bind CCPress to %s", IsXBoxRogAlly() ? Config::AllyHidACPress : Config::AllyHidCCPress );
+        log.Trace("Bind LibraryPress to %s", Config::AllyHidLibraryPress );
+
+        log.Trace("Bind Mode + ACPress to %s", IsXBoxRogAlly() ? Config::AllyHidModeLibraryPress : Config::AllyHidModeACPress );
+        log.Trace("Bind Mode + ACHold to %s", Config::AllyHidModeACHold);
+        log.Trace("Bind Mode + CCPress to %s", IsXBoxRogAlly() ? Config::AllyHidModeACPress : Config::AllyHidModeCCPress );
+        log.Trace("Bind Mode + LibraryPress to %s", Config::AllyHidModeLibraryPress );
     }
 
     void OnInput(bool allyEnabled, HANDLE hDevice, HRAWINPUT rawInput, bool * pbModePressed)

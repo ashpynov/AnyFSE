@@ -18,6 +18,8 @@ namespace AnyFSE::App::Constants
     inline constexpr wchar_t ElevatedStartupApps[] = L"StartupApps";
     inline constexpr wchar_t ElevatedEnableGamingHandheld[] = L"EnableGamingHandheld";
     inline constexpr wchar_t ElevatedRestoreGamingPC[] = L"RestoreGamingPC";
+    inline constexpr wchar_t ElevatedHidListener[] = L"ElevatedHidListener";
+
     inline constexpr wchar_t AnyFseTaskArgument[] = L"/task";
     inline constexpr char AnyFseTaskArgumentA[] = "/task";
     inline constexpr wchar_t TaskSchedulerRoot[] = L"\\";
