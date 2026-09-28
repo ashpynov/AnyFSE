@@ -1,4 +1,6 @@
 {
+  "settingsSplashDelayHide": "Adiar a ocultação da tela de abertura",
+  "settingsSplashDelayHideDescription": "Manter a tela de abertura visível por mais 2 segundos para ajudar a encobrir um possível clarão branco ao iniciar o launcher.",
   "language": "Português (Brasil)",
   "xboxModeCheckDescription": "A seleção de um aplicativo inicial personalizado está desativada. O AnyFSE requer que o modo de dispositivo portátil para jogos esteja ativado.",
   "enableBtn": "Ativar",

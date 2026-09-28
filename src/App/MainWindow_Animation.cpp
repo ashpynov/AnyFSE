@@ -141,20 +141,34 @@ namespace AnyFSE::App::Window
             // Force repaint
             InvalidateRect(m_hWnd, NULL, FALSE);
         }
-        else if (timerId == m_launcherCheckTimerId)
+        if (timerId == m_launcherCheckTimerId)
         {
             bool isActive = Launchers::IsLauncherActiveOrMinimized();
             if (isActive || m_bLauncherWasActive)
             {
                 const bool notifyStarted = !m_bLauncherWasActive && isActive;
                 m_bLauncherWasActive = true;
+                if (!m_launcherStartedTime)
+                {
+                    m_launcherStartedTime = GetTickCount64();
+                }
                 if (!isActive || !Config::SplashShowVideo || !Config::SplashTillEnd || !m_videoPlayer.ShouldWaitForEnd())
                 {
                     const bool focusLauncher = isActive && Launchers::IsLauncherMinimized();
-                    m_closing = true;
                     KillTimer(m_hWnd, m_launcherCheckTimerId);
                     m_hLauncherCheckTimer = NULL;
-                    DestroyWindow(m_hWnd);
+
+                    UINT_PTR now = GetTickCount64();
+                    if (!Config::SplashDelayHide || now > m_launcherStartedTime + HIDE_DELAY_MS )
+                    {
+                        m_closing = true;
+                        DestroyWindow(m_hWnd);
+                    }
+                    else
+                    {
+                        KillTimer(m_hWnd, m_launcherTimeoutTimerId);
+                        SetTimer(m_hWnd, m_launcherTimeoutTimerId, HIDE_DELAY_MS - (int)(now - m_launcherStartedTime) + 1, NULL);
+                    }
 
                     if (notifyStarted)
                     {

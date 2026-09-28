@@ -25,6 +25,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             , m_videoLoopToggle(m_theme)
             , m_videoMuteToggle(m_theme)
             , m_videoPauseToggle(m_theme)
+            , m_delayHideToggle(m_theme)
             , m_customTextEdit(m_theme)
             , m_splashCustomVideoEdit(m_theme)
         {}
@@ -46,6 +47,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         Toggle m_videoLoopToggle;
         Toggle m_videoMuteToggle;
         Toggle m_videoPauseToggle;
+        Toggle m_delayHideToggle;
 
         TextBox m_customTextEdit;
         TextBox m_splashCustomVideoEdit;

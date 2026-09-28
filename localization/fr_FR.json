@@ -1,4 +1,6 @@
 {
+  "settingsSplashDelayHide": "Retarder le masquage de l’écran de démarrage",
+  "settingsSplashDelayHideDescription": "Garder l’écran de démarrage visible 2 secondes de plus pour aider à masquer un éventuel flash blanc au lancement du lanceur.",
   "language": "Français",
   "updaterWelcomeCaption": "Mise à jour AnyFSE",
   "updaterWelcomeDescription": "Mise à jour d'AnyFSE vers %ls.\n\nCliquez sur Mettre à jour, ou Annuler pour quitter.",

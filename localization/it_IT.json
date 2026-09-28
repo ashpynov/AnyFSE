@@ -1,4 +1,6 @@
 {
+  "settingsSplashDelayHide": "Ritarda la chiusura della schermata iniziale",
+  "settingsSplashDelayHideDescription": "Mantiene visibile la schermata iniziale per altri 2 secondi per aiutare a coprire un eventuale lampo bianco all'avvio del launcher.",
   "language": "Italiano",
   "updaterWelcomeCaption": "Benvenuto nell'Updater di AnyFSE",
   "updaterWelcomeDescription": "Questo aggiornerà AnyFSE alla versione %ls sul tuo sistema.\n\nFai clic su Aggiorna per procedere o su Annulla per uscire.",

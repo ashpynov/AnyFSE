@@ -1,4 +1,6 @@
 {
+  "settingsSplashDelayHide": "Скрывать заставку с задержкой",
+  "settingsSplashDelayHideDescription": "Оставлять заставку ещё на 2 секунды, чтобы скрыть возможную белую вспышку при запуске лаунчера.",
   "language": "Русский",
   "updaterWelcomeCaption": "Программа обновления AnyFSE",
   "updaterWelcomeDescription": "Программа обновит AnyFSE до версии %ls на этом компьютере.\n\nНажмите \"Обновить\", чтобы продолжить, или \"Отмена\" для выхода.",

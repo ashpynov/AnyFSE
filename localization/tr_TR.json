@@ -1,4 +1,6 @@
 {
+  "settingsSplashDelayHide": "Açılış ekranını gecikmeli gizle",
+  "settingsSplashDelayHideDescription": "Başlatıcı açılırken oluşabilecek beyaz parlamayı örtmek için açılış ekranını 2 saniye daha görünür tut.",
   "language": "Türkçe",
   "updaterWelcomeCaption": "AnyFSE güncelleme yardımcısına hoş geldiniz",
   "updaterWelcomeDescription": "Bu sizin AnyFSE sürümünüzü %ls’na güncelleyecek. \n\nDevam etmek için güncelle butonuna basın yada çıkmak için iptal’e basın.",

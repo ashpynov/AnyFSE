@@ -1,4 +1,6 @@
 {
+  "settingsSplashDelayHide": "Delay hiding the splash screen",
+  "settingsSplashDelayHideDescription": "Keep the splash screen visible for 2 more seconds to help cover a white flash when the launcher starts.",
   "language": "English",
   "updaterWelcomeCaption": "Welcome to AnyFSE Updater",
   "updaterWelcomeDescription": "This will update AnyFSE to version %ls on your system.\n\nClick Update to proceed or Cancel to exit.",
