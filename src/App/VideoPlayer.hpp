@@ -69,7 +69,6 @@ namespace AnyFSE::App::Window
 
         int m_playCount;
         bool m_waitForEnd = false;
-        bool m_holdLastFrame = false;
 
         std::wstring m_loadedVideo;
 

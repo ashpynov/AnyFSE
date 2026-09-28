@@ -86,32 +86,19 @@ namespace AnyFSE::App::Window
 
     void SimpleVideoPlayer::PaintVideo(HWND hwnd, HDC hdc, bool printClient)
     {
-        // At EOS the session is stopped: UpdateVideo can replace the retained image with its background.
-        // Leave the last presented image untouched when the splash is configured to hold it.
-        if (!printClient && m_holdLastFrame)
-            return;
-
-        RECT rect;
-        GetClientRect(hwnd, &rect);
-        IMFPMediaPlayer* player = nullptr;
-        // Take a local reference before calling into the renderer.
-        if (TryEnterCriticalSection(&m_cs))
+        // MFPlay presents video frames itself. Do not request a repaint at EOS through UpdateVideo.
+        if (!printClient)
         {
-            if (m_pPlayer && m_bInitialized && !printClient)
-            {
-                player = m_pPlayer;
-                player->AddRef();
-            }
+            if (!TryEnterCriticalSection(&m_cs))
+                return;
+            const bool hasPlayer = m_pPlayer && m_bInitialized;
             LeaveCriticalSection(&m_cs);
-        }
-        if (player)
-        {
-            HRESULT result = player->UpdateVideo();
-            player->Release();
-            if (SUCCEEDED(result))
+            if (hasPlayer)
                 return;
         }
 
+        RECT rect;
+        GetClientRect(hwnd, &rect);
         COLORREF previousColor = SetDCBrushColor(hdc, m_backgroundColor);
         FillRect(hdc, &rect, static_cast<HBRUSH>(GetStockObject(DC_BRUSH)));
         SetDCBrushColor(hdc, previousColor);
@@ -223,7 +210,6 @@ namespace AnyFSE::App::Window
                 m_duration = GetDuration(pEventHeader->pMediaPlayer);
                 log.Debug("Video duration: %.3f s", (float)m_duration/1000);
 
-                HWND mediaHwnd = NULL;
                 if (m_desiredState == MFP_MEDIAPLAYER_STATE_PLAYING)
                 {
                     if (FAILED(pEventHeader->pMediaPlayer->Play()))
@@ -257,11 +243,7 @@ namespace AnyFSE::App::Window
                     pEventHeader->pMediaPlayer->SetMute(m_mutedLoop);
                     Rewind(pEventHeader->pMediaPlayer, m_startLoop);
                 }
-                else if (m_pause)
-                {
-                    m_holdLastFrame = true;
-                }
-                else
+                else if (!m_pause)
                 {
                     Close();
                 }
@@ -279,7 +261,6 @@ namespace AnyFSE::App::Window
             }
             break;
             default:
-                //log.Debug("Event recieved: %d", pEventHeader->eEventType);
                 break;
         }
     }
@@ -356,7 +337,6 @@ namespace AnyFSE::App::Window
 
         m_playCount = 0;
         m_waitForEnd = false;
-        m_holdLastFrame = false;
 
         log.Debug("Load Video: %s", Unicode::to_string(videoFile ? videoFile : L"").c_str());
 
@@ -452,7 +432,6 @@ namespace AnyFSE::App::Window
     HRESULT SimpleVideoPlayer::Play()
     {
         CriticalSectionLock lock(&m_cs);
-        m_holdLastFrame = false;
 
         m_desiredState = MFP_MEDIAPLAYER_STATE_PLAYING;
 
@@ -508,7 +487,6 @@ namespace AnyFSE::App::Window
     HRESULT SimpleVideoPlayer::Stop()
     {
         CriticalSectionLock lock(&m_cs);
-        m_holdLastFrame = false;
 
         m_desiredState = MFP_MEDIAPLAYER_STATE_STOPPED;
         m_waitForEnd = false;
@@ -534,7 +512,6 @@ namespace AnyFSE::App::Window
     void SimpleVideoPlayer::Close()
     {
         CriticalSectionLock lock(&m_cs);
-        m_holdLastFrame = false;
         m_desiredState = MFP_MEDIAPLAYER_STATE_EMPTY;
         m_waitForEnd = false;
         if (!m_pPlayer || !m_bInitialized)
