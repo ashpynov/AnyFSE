@@ -41,6 +41,7 @@
 #include "Tools/Unicode.hpp"
 
 #include "App/App.hpp"
+#include "App/CmdLine.hpp"
 #include "App/Constants.hpp"
 #include "App/GamingExperience.hpp"
 #include "App/ExitFSE.hpp"
@@ -53,19 +54,12 @@
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #include "Tools/Minidump.hpp"
-#include "App.hpp"
-
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-{
-    AnyFSE::Tools::InstallUnhandledExceptionHandler();
-    return AnyFSE::App::App::WinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
-}
 
 namespace AnyFSE::App
 {
-    static Logger log = LogManager::GetLogger("Application");
+    static Logger log = LogManager::GetLogger("App");
 
-    int App::CallLibrary(const WCHAR * library, HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+    int CallLibrary(const WCHAR * library, HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
     {
         HMODULE hModuleDll = NULL;
         static MainFunc *Main = nullptr;
@@ -111,12 +105,13 @@ namespace AnyFSE::App
         return result;
     }
 
-    int App::ShowSettings()
+    int ShowSettings()
     {
+        SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
         return CallLibrary(Constants::AnyFseSettingsDll, GetModuleHandle(NULL), NULL, NULL, 0);;
     }
 
-    void App::InitCustomControls()
+    void InitCustomControls()
     {
         INITCOMMONCONTROLSEX icex;
         icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
@@ -124,255 +119,31 @@ namespace AnyFSE::App
         ::InitCommonControlsEx(&icex);
     }
 
-    bool App::AsHidListener(LPSTR lpCmdLine)
+    bool IsFirstLaunch()
     {
-        for (char *a = lpCmdLine; *a; a++)
+        static int isFirstLaunch = -1;
+
+        if (isFirstLaunch == -1)
         {
-            if (_strnicmp(a, "/HidListener", 12) == 0)
+            if (!GlobalFindAtom(Constants::PackageAtomName))
             {
-                return true;
+                GlobalAddAtom(Constants::PackageAtomName);
+                log.Debug("First launch registered at %s experience mode", GamingExperience::IsFullscreenMode() ? "Fullscreen" : "Desktop");
+                isFirstLaunch = 1;
+            }
+            else
+            {
+                log.Debug("Subsequence launch at %s experience mode", GamingExperience::IsFullscreenMode() ? "Fullscreen" : "Desktop");
+                isFirstLaunch = 0;
             }
         }
-        return false;
+        return isFirstLaunch == 1;
     }
 
-    bool App::AsHidListenerJob(LPSTR lpCmdLine)
+    bool IsRestarted()
     {
-        for (char *a = lpCmdLine; *a; a++)
-        {
-            if (_strnicmp(a, "/HidListenerJob", 15) == 0)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool App::AsElevated(LPSTR lpCmdLine)
-    {
-        return lpCmdLine && _stricmp(lpCmdLine, Constants::AnyFseTaskArgumentA) == 0;
-    }
-
-
-    bool App::AsFSE(LPSTR lpCmdLine)
-    {
-        for (char *a = lpCmdLine; *a; a++)
-        {
-            if (_strnicmp(a, "/FSE", 4) == 0)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool App::AsFSENow(LPSTR lpCmdLine)
-    {
-        for (char *a = lpCmdLine; *a; a++)
-        {
-            if (_strnicmp(a, "/FSENow", 7) == 0)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool App::AsFSEReboot(LPSTR lpCmdLine)
-    {
-        for (char *a = lpCmdLine; *a; a++)
-        {
-            if (_strnicmp(a, "/FSEReboot", 10) == 0)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-
-    bool App::AsSettings(LPSTR lpCmdLine)
-    {
-        // no gamingapp:/// protocol specified
-        if (strlen(lpCmdLine) == 0)
-        {
-            return true;
-        }
-        // Settings or Config is not exists
-        //
-        if (!Config::IsConfigured())
-        {
-            return true;
-        }
-
-        for (char *a = lpCmdLine; *a; a++)
-        {
-            if (_strnicmp(a, "/Settings", 9) == 0)
-            {
-                return true;
-            }
-        }
-
-        // or Launcher == None or Launcher == Xbox
-        if (Config::Launcher.Type == LauncherType::None
-         || Config::Launcher.Type == LauncherType::Native)
-        {
-            return true;
-        }
-
-        // Registry != AnyFSE
-        const std::wstring AnyFSEApp = Constants::AppUserModelId;
-        const std::wstring selectedApp = Registry::ReadString(
-            Constants::GamingHomeAppRegKey,
-            Constants::GamingHomeAppRegValue);
-
-        if (_wcsicmp(selectedApp.c_str(), AnyFSEApp.c_str() ) != 0)
-        {
-            return true;
-        }
-
-        if (Config::Launcher.StartCommand.find(L"://") == std::wstring::npos)
-        {
-            namespace fs = std::filesystem;
-            if (!fs::exists(Config::Launcher.StartCommand))
-            {
-                log.Warn("Launcher file is unavailable; opening settings");
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    int WINAPI App::WinMain(HINSTANCE hInstance,
-                    HINSTANCE hPrevInstance,
-                    LPSTR lpCmdLine,
-                    int nCmdShow)
-    {
-        Config::Load();
-        AnyFSE::Tools::Localization::Initialize(Config::Locale);
-
-        AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
-        log.Debug("Application is started (hInstance=%08x) args: [%s]", hInstance, lpCmdLine);
-
-        if (AsElevated(lpCmdLine))
-        {
-            Elevated::Register(Constants::ElevatedStartLauncher, Launchers::StartLauncher);
-            Elevated::Register(Constants::ElevatedStartupApps, []() { Launchers::LaunchStartupApps(true); });
-            Elevated::Register(Constants::ElevatedEnableGamingHandheld, GamingExperience::EnableGamingHandheld);
-            Elevated::Register(Constants::ElevatedRestoreGamingPC, GamingExperience::RestoreGamingPC);
-            Elevated::Register(Constants::ElevatedHidListener, []() { Process::StartProcess(Tools::Paths::GetExeFileName(), L"/HidListenerJob"); });
-
-            return Elevated::CallHandler() ? 0 : 1;
-        }
-
-       GamingExperience::RestoreEnterFSEConfirmation();
-
-        if (AsHidListenerJob(lpCmdLine))
-        {
-            if (Config::HotkeysEnable || (Config::AllyHidEnable && Ally::IsSupported()))
-            {
-                log.Debug("Starting background HID/hotkey listener\n");
-                AnyFSE::Logging::LogManager::Initialize("AnyFSE/BackgroundListener", Config::LogLevel, Config::LogPath);
-                return Ally::HIDListener(NULL);
-            }
-            return 0;
-        }
-
-        if (AsHidListener(lpCmdLine))
-        {
-            if (Config::HotkeysEnable || (Config::AllyHidEnable && Ally::IsSupported()))
-            {
-                Elevated::Call(Constants::ElevatedHidListener);
-            }
-            return 0;
-        }
-
-        if (Ally::CheckListener())
-        {
-            log.Debug("Background HID/hotkey listener is not running; starting it\n");
-            Process::StartProtocol(Constants::AnyFseProtocolHidListener);
-        }
-
-        AnyFSE::Logging::LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
-
-        if (FindWindow(Constants::MainWindowClass, NULL))
-        {
-            log.Debug("Application control is executed already, exiting\n");
-            return 0;
-        }
-
-        AnyFSE::App::JumpList::RegisterJumpList();
-
-        int exitCode = -1;
-        SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-
-
-        if (!GamingExperience::ApiIsAvailable)
-        {
-            log.Critical("Fullscreen Gaming API is not detected, exiting\n");
-            InitCustomControls();
-            TaskDialog(NULL, hInstance,
-                       L"Error",
-                       L"Gaming Fullscreen Experiense API is not detected",
-                       L"Fullscreen experiense is not available on your version of windows.\n"
-                       L"It is supported since Windows 25H2 version for Handheld Devices",
-                       TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
-            return -1;
-        }
-
-        log.Debug("Compatibility checks passed");
-
-        bool bFirstLaunch = false;
-
-        if (!GlobalFindAtom(Constants::PackageAtomName))
-        {
-            GlobalAddAtom(Constants::PackageAtomName);
-            log.Debug("First launch at fullscreen experience mode");
-            bFirstLaunch = true;
-        }
-        else
-        {
-            log.Debug("Subsequence launch at %s experience mode", GamingExperience::IsFullscreenMode() ? "Fullscreen" : "Desktop");
-        }
-
-        if (AsFSE(lpCmdLine))
-        {
-            if (GamingExperience::IsFullscreenMode())
-            {
-                return 0;
-            }
-
-            return GamingExperience::EnterFSEMode(
-                    AsFSEReboot(lpCmdLine) ? GamingExperience::Reboot
-                    : AsFSENow(lpCmdLine) ? GamingExperience::Now
-                    : GamingExperience::Ask
-            );
-        }
-
-        if (AsSettings(lpCmdLine))
-        {
-            ShowSettings();
-            return 0;
-        }
-
-        if (Launchers::IsLauncherActiveOrMinimized())
-        {
-            Launchers::FocusLauncher();
-            ExitFSE::WaitHomeAppExit();
-            return 0;
-        }
-
-        if (ExitFSE::WaitExitFSEMode())
-        {
-            return 0;
-        }
-
         bool restartDetected = false;
-
-        if ((Config::Launcher.Type == LauncherType::PlayniteDesktop
-            || Config::Launcher.Type == LauncherType::PlayniteFullscreen)
-            && GamingExperience::IsFullscreenMode() && !bFirstLaunch)
+        if (Launchers::IsPlaynite(Config::Launcher.Type) && GamingExperience::IsFullscreenMode() && !IsFirstLaunch())
         {
             log.Debug("Looking for Playnite process");
 
@@ -384,63 +155,46 @@ namespace AnyFSE::App
                 restartDetected = Launchers::HasLauncherProcess();
             }
         }
-
-        if (!restartDetected)
+        if (restartDetected)
         {
-            if (GamingExperience::IsFullscreenMode() && bFirstLaunch)
-            {
-                if (Launchers::HasStartupApps(true))
-                {
-                    if (!Elevated::ElevatedStartupApps())
-                    {
-                        log.Error("Failed to launch elevated startup applications");
-                    }
-                }
-                Launchers::LaunchStartupApps(false);
-            };
-            Launchers::LauncherOnBoot();
-            if (Config::AsAdmin)
-            {
-                Elevated::Call(Constants::ElevatedStartLauncher);
-            }
-            else
-            {
-                Launchers::StartLauncher();
-            }
-        }
-        else
-        {
-            log.Debug("Restart Playnite is detected");
+            log.Debug("Restarting Playnite is detected");
         }
 
-        {
-            Window::MainWindow mainWindow;
-
-            if (!mainWindow.Create(Constants::MainWindowClass, hInstance, (Config::Launcher.Name + L" is launching").c_str()))
-            {
-                return (int)GetLastError();
-            }
-
-            mainWindow.Show();
-
-            exitCode = Window::MainWindow::RunLoop();
-        }
-
-        log.Debug("Splash window loop finished.");
-
-        ExitFSE::WaitHomeAppExit();
-
-        log.Debug("Loop finished. Time to exit");
-
-        if (exitCode)
-        {
-            log.Warn(log.APIError(exitCode),"Exiting with code: (%d) error", exitCode);
-        }
-        else
-        {
-            log.Debug("Job is done!");
-        }
-
-        return (int)exitCode;
+        return restartDetected;
     }
-};
+
+    bool RunStartupApps()
+    {
+        log.Trace("Run startup apps");
+
+        if (Launchers::HasStartupApps(true))
+        {
+            log.Trace("Trigger elevated startup apps");
+            if (!Elevated::ElevatedStartupApps())
+            {
+                log.Error("Failed to launch elevated startup applications");
+            }
+        }
+        Launchers::LaunchStartupApps(false);
+        return false;
+    }
+
+    bool ApiIsAvailable(HINSTANCE hInstance)
+    {
+        if (!GamingExperience::ApiIsAvailable)
+        {
+            log.Critical("Fullscreen Gaming API is not detected, exiting\n");
+            InitCustomControls();
+            TaskDialog(NULL, hInstance,
+                       L"Error",
+                       L"Gaming Fullscreen Experiense API is not detected",
+                       L"Fullscreen experiense is not available on your version of windows.\n"
+                       L"It is supported since Windows 25H2 version for Handheld Devices",
+                       TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, NULL);
+            return false;
+        }
+        log.Debug("Compatibility checks passed");
+        return true;
+    }
+
+}

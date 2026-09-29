@@ -8,7 +8,7 @@
 
 namespace AnyFSE::App::JumpList
 {
-    void RegisterJumpList()
+    bool RegisterJumpList()
     {
         winrt::init_apartment();  // WinRT initialization required
 
@@ -27,5 +27,6 @@ namespace AnyFSE::App::JumpList
         jumpList.Items().Append(fseItem);
         jumpList.Items().Append(settingsItem);
         jumpList.SaveAsync().get();
+        return false;
     }
 }

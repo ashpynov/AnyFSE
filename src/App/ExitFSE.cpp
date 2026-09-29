@@ -51,7 +51,12 @@ namespace AnyFSE::App::ExitFSE
     {
         if (!Config::ExitFSEOnHomeExit || !GamingExperience::IsFullscreenMode() || IsMutexExists() || !Launchers::IsLauncherActiveOrMinimized() )
         {
-            log.Trace("Skip WaitHomeAppExit");
+            log.Trace("Skip WaitHomeAppExit: ExitFSEOnHomeExit: %s, IsFullscreenMode: %s,  IsMutexExists: %s, IsLauncherActiveOrMinimized: %s",
+                Config::ExitFSEOnHomeExit ? "True" : "False",
+                GamingExperience::IsFullscreenMode() ? "True" : "False",
+                IsMutexExists() ? "True" : "False",
+                Launchers::IsLauncherActiveOrMinimized() ? "True" : "False"
+            );
             return false;
         }
 
@@ -62,10 +67,13 @@ namespace AnyFSE::App::ExitFSE
             return false;
         }
 
-        log.Debug("Option to monitor home app finish");
+        log.Debug("Waiting Launcher To Exit");
 
-        Launchers::WaitLauncherExit();
-        if (Config::ExitFSEOnHomeExit)
+        bool restarted = Launchers::WaitLauncherExit()
+            && App::GamingExperience::IsFullscreenMode()
+            && Launchers::HasLauncherProcess();
+
+        if (Config::ExitFSEOnHomeExit && !restarted)
         {
             DWORD start = GetTickCount();
             GamingExperience::ExitFSEMode();
@@ -93,7 +101,7 @@ namespace AnyFSE::App::ExitFSE
             log.Trace("Waiting ExitFSE: Complete, mode is %s", GamingExperience::IsFullscreenMode() ? "FSE" : "Desktop");
         }
         CloseHandle(hMutex);
-        return true;
+        return restarted;
     }
 
     bool WaitExitFSEMode()

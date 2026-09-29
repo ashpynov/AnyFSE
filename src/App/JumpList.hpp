@@ -1,5 +1,5 @@
 
 namespace AnyFSE::App::JumpList
 {
-    void RegisterJumpList();
+    bool RegisterJumpList();
 }

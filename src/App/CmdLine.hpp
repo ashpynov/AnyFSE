@@ -25,19 +25,19 @@
 
 #include <windows.h>
 
-namespace AnyFSE::App
+namespace AnyFSE::App::CmdLine
 {
-    namespace Window { class MainWindow; }
-    namespace StateLoop { class AppControlStateLoop; }
+    bool AsHidListener(LPSTR lpCmdLine);
+    bool AsHidListenerJob(LPSTR lpCmdLine);
+    bool AsElevated(LPSTR lpCmdLine);
+    bool AsFSE(LPSTR lpCmdLine);
+    bool AsFSENow(LPSTR lpCmdLine);
+    bool AsFSEReboot(LPSTR lpCmdLine);
+    bool AsSettings(LPSTR lpCmdLine);
 
-    typedef INT_PTR (*MainFunc)(HINSTANCE, HINSTANCE, LPSTR, int);
-
-    int CallLibrary(const WCHAR *library, HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow);
-
-    int ShowSettings();
-    void InitCustomControls();
-    bool IsFirstLaunch();
-    bool IsRestarted();
-    bool RunStartupApps();
-    bool ApiIsAvailable(HINSTANCE hInstance);
-}
+    bool Elevated(LPSTR lpCmdLine, int &result);
+    bool HidListenerJob(LPSTR lpCmdLine, int &result);
+    bool HidListener(LPSTR lpCmdLine, int &result);
+    bool FSE(LPSTR lpCmdLine, int &result);
+    bool Settings(LPSTR lpCmdLine, int &result);
+};

@@ -36,6 +36,7 @@
 #include "App/App.hpp"
 #include "App/MainWindow.hpp"
 #include "App/Launchers.hpp"
+#include "App/Constants.hpp"
 #include "MainWindow.hpp"
 #include "Tools/Notification.hpp"
 #include "Tools/Paths.hpp"
@@ -50,7 +51,18 @@ namespace AnyFSE::App::Window
     static Logger log = LogManager::GetLogger("MainWindow");
     WNDCLASS MainWindow::WC;
 
-    MainWindow::MainWindow()
+
+    bool IsRegistered()
+    {
+        if (FindWindow(Constants::MainWindowClass, NULL))
+        {
+            log.Debug("Application control is executed already, exiting\n");
+            return true;
+        }
+        return false;
+    }
+
+    MainWindow::MainWindow(LPCWSTR className, HINSTANCE hInstance)
         : m_hWnd(NULL)
         , m_aClass(NULL)
         , m_videoPlayer(m_theme.GetColorRef(FluentDesign::Theme::Dialog))
@@ -59,6 +71,22 @@ namespace AnyFSE::App::Window
         , WM_TASKBARCREATED(RegisterWindowMessage(L"TaskbarCreated"))
     {
         ZeroMemory(&WC, sizeof(WC));
+        SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+
+        WC.lpszClassName = className;
+        WC.hInstance = hInstance;
+        WC.lpfnWndProc = MainWndProc;
+        WC.hIcon = nullptr;
+        WC.hbrBackground = nullptr;
+        WC.style = CS_HREDRAW | CS_VREDRAW;
+        WC.hCursor = LoadCursor(NULL, IDC_ARROW);
+
+        m_aClass = RegisterClass(&WC);
+        if (!m_aClass)
+        {
+            log.Debug(Logger::APIError(), "Can not register class name");
+            return;
+        }
     }
     MainWindow::~MainWindow()
     {
@@ -79,21 +107,47 @@ namespace AnyFSE::App::Window
         }
     }
 
-    bool MainWindow::Create(LPCWSTR className, HINSTANCE hInstance, LPCTSTR windowName)
+    bool MainWindow::UpdateIcon()
     {
-        WC.lpszClassName = className;
-        WC.hInstance = hInstance;
-        WC.lpfnWndProc = MainWndProc;
-        WC.hIcon = Icon::LoadIcon(Config::Launcher.IconFile, 16);
-        WC.hbrBackground = nullptr;
-        WC.style = CS_HREDRAW | CS_VREDRAW;
-
-        m_aClass = RegisterClass(&WC);
-        if (!m_aClass)
-        {
-            log.Debug(Logger::APIError(), "Can not register class name");
+        if (!IsWindow(m_hWnd))
             return false;
+
+        if (WC.hIcon)
+        {
+            DestroyIcon(WC.hIcon);
+            WC.hIcon = nullptr;
         }
+
+        WC.hIcon = Icon::LoadIcon(Config::Launcher.IconFile, 16);
+
+        SetClassLongPtrW(m_hWnd, GCLP_HICON, (LONG_PTR)WC.hIcon);
+        SetClassLongPtrW(m_hWnd, GCLP_HICON, (LONG_PTR)WC.hIcon);
+
+        return true;
+    }
+
+    void MainWindow::Reset()
+    {
+        m_result = ERROR_RESTART_APPLICATION;
+        m_empty = false;
+        m_successChecked = false;
+        m_suspended = false;
+        m_closing = false;
+        m_bLauncherWasActive = false;
+        m_launcherStartedTime = 0;
+        m_hAnimationTimer = NULL;
+        m_hUpdateTimer = NULL;
+        m_hLauncherCheckTimer = NULL;
+
+        if (IsWindow(m_hWnd))
+        {
+            DestroyWindow(m_hWnd);
+            m_hWnd = NULL;
+        }
+    }
+    bool MainWindow::Create(LPCTSTR windowName)
+    {
+        Reset();
 
         m_hWnd = CreateWindowEx(
             WS_EX_TOPMOST,
@@ -101,13 +155,15 @@ namespace AnyFSE::App::Window
             WS_POPUP | WS_CLIPCHILDREN,
             CW_USEDEFAULT, CW_USEDEFAULT,
             0, 0,
-            NULL, NULL, hInstance, this);
+            NULL, NULL, WC.hInstance, this);
 
         if (!IsWindow(m_hWnd))
         {
             log.Debug(Logger::APIError(), "Can not create window");
             return false;
         }
+
+        UpdateIcon();
 
         m_hLauncherCheckTimer = SetTimer(m_hWnd, m_launcherCheckTimerId, CHECK_INTERVAL_MS, NULL);
         if (!m_hLauncherCheckTimer)
@@ -118,22 +174,47 @@ namespace AnyFSE::App::Window
 
         log.Debug("Window is created (hWnd=%08x)", m_hWnd);
 
-        SelectNextVideo();
-        m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, Config::SplashVideoPause, m_hWnd);
+        if (Config::SplashShowVideo)
+        {
+            SelectNextVideo();
+            m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, Config::SplashVideoPause, m_hWnd);
+        }
 
         return true;
     };
+
+    int MainWindow::Run(const std::wstring& name)
+    {
+        log.Debug("Create splash window");
+
+        if (!Create(name.c_str()))
+        {
+            return (int)GetLastError();
+        }
+
+        Show();
+
+        int exitCode = MainWindow::RunLoop();
+        log.Debug("Splash window loop finished.");
+        return exitCode;
+    }
 
     bool MainWindow::Show(bool empty)
     {
         m_empty = empty;
         if (IsWindow(m_hWnd))
         {
-            m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, Config::SplashVideoPause, m_hWnd);
+            if (Config::SplashShowVideo)
+            {
+                m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, Config::SplashVideoPause, m_hWnd);
+            }
 
             if (!m_empty && !m_suspended)
             {
-                m_videoPlayer.Play();
+                if (Config::SplashShowVideo)
+                {
+                    m_videoPlayer.Play();
+                }
                 StartAnimation();
             }
             AnimateWindow(m_hWnd, 0, AW_BLEND);
@@ -157,8 +238,11 @@ namespace AnyFSE::App::Window
         if (IsWindowVisible(m_hWnd))
         {
             log.Debug("Start animation");
-            m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, Config::SplashVideoPause, m_hWnd);
-            m_videoPlayer.Play();
+            if (Config::SplashShowVideo)
+            {
+                m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, Config::SplashVideoPause, m_hWnd);
+                m_videoPlayer.Play();
+            }
             StartAnimation();
         }
         return true;
@@ -169,8 +253,11 @@ namespace AnyFSE::App::Window
         if (IsWindowVisible(m_hWnd))
         {
             AnimateWindow(m_hWnd, 200, AW_BLEND | AW_HIDE);
-            m_videoPlayer.Close();
-            SelectNextVideo();
+            if (Config::SplashShowVideo)
+            {
+                m_videoPlayer.Close();
+                SelectNextVideo();
+            }
             StopAnimation();
         }
 
@@ -306,6 +393,7 @@ namespace AnyFSE::App::Window
 
     void MainWindow::OnDestroy()
     {
+        m_videoPlayer.Close();
         FreeAnimationResources();
         PostQuitMessage(m_result);
     }

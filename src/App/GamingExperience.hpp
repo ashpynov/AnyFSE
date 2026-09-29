@@ -54,7 +54,7 @@ namespace AnyFSE::App
         static bool EnterFSEMode(ConfirmationMode mode = ConfirmationMode::Ask);
         static bool EnterFSEModeWithReboot() { return ApiIsAvailable && EnterFSEMode(ConfirmationMode::Reboot); }
         static bool EnterFSEModeNow() { return ApiIsAvailable && EnterFSEMode(ConfirmationMode::Now); }
-        static void RestoreEnterFSEConfirmation();
+        static bool RestoreEnterFSEConfirmation();
         GamingExperience();
         ~GamingExperience();
 

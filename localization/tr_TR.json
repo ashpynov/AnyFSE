@@ -152,6 +152,8 @@
   "settingsSplashMuteVideo": "Video sesini kapat",
   "settingsSplashPauseCompleted": "Tamamlandığında durdur",
   "settingsSplashPauseCompletedDescription": "Video ev uygulaması başlamadan önce biterse son kareyi göster",
+  "settingsSplashSimplifiedSwitch": "Basitleştirilmiş mod geçişi",
+  "settingsSplashSimplifiedSwitchDescription": "Mod değiştirirken yalnızca animasyonlu logoyu göster",
   "settingsAllyFeatures": "ASUS ROG Ally özellikleri",
   "settingsAllyFeaturesDescription": "ASUS taşınabilir cihazları için deneysel özelleştirme",
   "settingsAllyEnableAlternativeButtons": "ASUS ROG Ally alternatif tuş atama özelliğini etkinleştir",

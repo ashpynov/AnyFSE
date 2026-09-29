@@ -25,15 +25,12 @@
 
 namespace AnyFSE::App::Launchers
 {
-    void LauncherOnBoot();
     void PlayniteOnBoot();
-
-    void LauncherOnStarted();
     void PlayniteOnStarted();
 
     bool WaitLauncherExit();
 
-    void StartLauncher();
+    void StartLauncher(bool elevated = false);
     bool IsLauncherActive();
     bool IsLauncherActiveOrMinimized();
     bool IsLauncherMinimized();
@@ -45,4 +42,7 @@ namespace AnyFSE::App::Launchers
     // Only enabled applications with the requested AsAdmin value are selected.
     void LaunchStartupApps(bool asAdmin);
     bool HasStartupApps(bool asAdmin);
+
+    bool IsPlaynite(LauncherType type);
+    bool PlayniteSwapLauncher();
 }

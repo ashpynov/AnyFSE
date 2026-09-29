@@ -39,57 +39,31 @@ namespace AnyFSE::App::Launchers
 {
     static Logger log = LogManager::GetLogger("Launchers");
 
-    void LauncherOnBoot()
-    {
-        switch (Config::Launcher.Type)
-        {
-            case LauncherType::PlayniteDesktop:
-            case LauncherType::PlayniteFullscreen:
-                return PlayniteOnBoot();
-        };
-    }
-
-    void LauncherOnStarted()
-    {
-        switch (Config::Launcher.Type)
-        {
-            case LauncherType::PlayniteDesktop:
-            case LauncherType::PlayniteFullscreen:
-                return PlayniteOnStarted();
-            case LauncherType::RetroBat:
-                return FocusLauncher();
-        };
-    }
-
     bool WaitLauncherExit()
     {
         while (HANDLE hProcess = Launchers::GetLauncherProcess())
         {
-            log.Debug("Start waiting %x for %s", hProcess, Unicode::to_string(Config::Launcher.Name).c_str());
+            log.Debug("Start waiting process %#08x for %s", hProcess, Unicode::to_string(Config::Launcher.Name).c_str());
 
             DWORD waitResult = WAIT_TIMEOUT;
             do
             {
                 waitResult = WaitForSingleObject(hProcess, 10000);
-                log.Debug("Wait Result %u", waitResult);
+                log.Trace("Wait Result: %s", waitResult == WAIT_TIMEOUT ? "Timeout" : "Process completed");
 
                 Config::LoadExitFSEOnHomeExit();
 
                 if (!Config::ExitFSEOnHomeExit
                     || !App::GamingExperience::IsFullscreenMode())
                 {
-                    return true;
-                }
-
-                hProcess = Launchers::GetLauncherProcess();
-                if (hProcess)
-                {
-                    continue;
+                    return false;
                 }
 
             } while (waitResult == WAIT_TIMEOUT);
 
             CloseHandle(hProcess);
+
+            return HasLauncherProcess();
         };
         return false;
     }
@@ -150,8 +124,14 @@ namespace AnyFSE::App::Launchers
         FocusLauncher();  // Attempt to fix activation of playnite
     }
 
-    void StartLauncher()
+    void StartLauncher(bool elevated)
     {
+        if (elevated)
+        {
+            Elevated::Call(Constants::ElevatedStartLauncher);
+            return;
+        }
+
         log.Debug("Start Launcher: %s params: %s",
             Unicode::to_string(Config::Launcher.StartCommand).c_str(),
             Unicode::to_string(Config::Launcher.StartArg).c_str()
@@ -164,25 +144,24 @@ namespace AnyFSE::App::Launchers
 
     bool IsLauncherActive()
     {
-        const LauncherConfig& launcher = Config::Launcher;
         return GetLauncherWindow(true);
     }
 
     bool IsLauncherActiveOrMinimized()
     {
-        const LauncherConfig& launcher = Config::Launcher;
-        return GetLauncherWindow(true);
+        return GetLauncherWindow(true) != NULL;
     }
 
     bool IsLauncherMinimized()
     {
-        const LauncherConfig& launcher = Config::Launcher;
         HWND hWnd = GetLauncherWindow(true);
         return hWnd && IsIconic(hWnd);
     }
 
     void FocusLauncher()
     {
+        log.Debug("Focusing Launcher");
+
         if (!Config::Launcher.ActivationProtocol.empty())
         {
             if (Config::Launcher.ActivationProtocol[0]==L'@')
@@ -271,17 +250,6 @@ namespace AnyFSE::App::Launchers
         {
             GetWindowThreadProcessId(hWnd, &processId);
         }
-        else
-        {
-            if ( !Config::Launcher.ProcessName.empty())
-            {
-                processId = Process::FindFirstByName(Config::Launcher.ProcessName);
-            }
-            if (!processId && !Config::Launcher.ProcessName.empty())
-            {
-                processId = Process::FindFirstByName(Config::Launcher.ProcessNameAlt);
-            }
-        }
 
         if (processId == 0)
         {
@@ -317,6 +285,27 @@ namespace AnyFSE::App::Launchers
             {
                 return true;
             }
+        }
+        return false;
+    }
+
+    bool IsPlaynite(LauncherType type)
+    {
+        return type == LauncherType::PlayniteFullscreen || type == LauncherType::PlayniteDesktop ;
+    }
+
+    bool PlayniteSwapLauncher()
+    {
+        if (Process::FindFirstByName(Config::Launcher.ProcessNameAlt) != 0)
+        {
+            std::wstring path = std::filesystem::path(Config::Launcher.StartCommand).parent_path().wstring();
+            Config::GetLauncherDefaults(
+                Config::Launcher.Type == LauncherType::PlayniteFullscreen
+                    ? LauncherType::PlayniteDesktop
+                    : LauncherType::PlayniteFullscreen,
+                path,
+                Config::Launcher
+            );
         }
         return false;
     }

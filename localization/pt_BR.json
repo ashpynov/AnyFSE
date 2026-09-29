@@ -154,6 +154,8 @@
   "settingsSplashMuteVideo": "Sem som",
   "settingsSplashPauseCompleted": "Pausar ao concluir",
   "settingsSplashPauseCompletedDescription": "Mostrar o último quadro se o vídeo terminar antes da inicialização do aplicativo",
+  "settingsSplashSimplifiedSwitch": "Troca de modo simplificada",
+  "settingsSplashSimplifiedSwitchDescription": "Mostrar apenas o logotipo animado ao trocar de modo",
   "settingsAllyFeatures": "ASUS ROG Ally",
   "settingsAllyFeaturesDescription": "Configurações experimentais para consoles ASUS",
   "settingsAllyEnableAlternativeButtons": "Remapeamento dos botões do ASUS ROG Ally",

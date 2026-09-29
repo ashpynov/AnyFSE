@@ -153,6 +153,8 @@
   "settingsSplashMuteVideo": "Disattiva audio del video",
   "settingsSplashPauseCompleted": "Metti in pausa al termine",
   "settingsSplashPauseCompletedDescription": "Mostra l'ultimo fotogramma se il video finisce prima dell'avvio dell'app principale",
+  "settingsSplashSimplifiedSwitch": "Cambio di modalità semplificato",
+  "settingsSplashSimplifiedSwitchDescription": "Mostra solo il logo animato durante il cambio di modalità",
   "settingsAllyFeatures": "Funzionalità ASUS ROG Ally",
   "settingsAllyFeaturesDescription": "Personalizzazione sperimentale per console portatili ASUS",
   "settingsAllyEnableAlternativeButtons": "Abilita la gestione alternativa dei pulsanti per ASUS ROG Ally",

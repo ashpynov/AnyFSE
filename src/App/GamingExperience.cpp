@@ -154,7 +154,7 @@ namespace AnyFSE::App
         return false;
     }
 
-    void GamingExperience::RestoreEnterFSEConfirmation()
+    bool GamingExperience::RestoreEnterFSEConfirmation()
     {
         const auto homeKey = c::GamingHomeAppRegKey;
         const auto startup = c::StartupToGamingHomeRegValue;
@@ -172,14 +172,14 @@ namespace AnyFSE::App
         const auto confirmationRestore = c::EnterGamingPostureConfirmationRestoreRegValue;
 
         DWORD restoreValue = Registry::ReadDWORD(dialogKey, confirmationRestore, 0);
-        if (!restoreValue)
+        if (restoreValue)
         {
-            return;
+            Registry::WriteDWORD(dialogKey, confirmationConfig, restoreValue);
+            Registry::WriteDWORD(dialogKey, confirmation, restoreValue);
+            Registry::DeleteValue(dialogKey, confirmationRestore);
         }
 
-        Registry::WriteDWORD(dialogKey, confirmationConfig, restoreValue);
-        Registry::WriteDWORD(dialogKey, confirmation, restoreValue);
-        Registry::DeleteValue(dialogKey, confirmationRestore);
+        return false;
     }
 
 

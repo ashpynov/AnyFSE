@@ -26,5 +26,7 @@ namespace AnyFSE::Tools::Localization
     std::wstring VTranslateF(const wchar_t *key, va_list args);
 }
 
+namespace Localization = AnyFSE::Tools::Localization;
+
 using AnyFSE::Tools::Localization::Translate;
 using AnyFSE::Tools::Localization::TranslateF;

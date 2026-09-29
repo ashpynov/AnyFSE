@@ -67,6 +67,12 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             Translate(L"settingsSplashPauseCompleted"),
             Translate(L"settingsSplashPauseCompletedDescription"),
             m_videoPauseToggle,
+            Layout::LineHeightSmall, 0, Layout::LineSmallMargin));
+
+        m_pSplashVideoLine->AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+            Translate(L"settingsSplashSimplifiedSwitch"),
+            Translate(L"settingsSplashSimplifiedSwitchDescription"),
+            m_simplifiedSwitchToggle,
             Layout::LineHeightSmall, Layout::LinePadding, Layout::LineSmallMargin));
 
         m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
@@ -98,6 +104,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_videoLoopToggle.SetCheck(Config::SplashVideoLoop);
         m_videoMuteToggle.SetCheck(Config::SplashVideoMute);
         m_videoPauseToggle.SetCheck(Config::SplashVideoPause);
+        m_simplifiedSwitchToggle.SetCheck(Config::SplashSimplifiedSwitch);
         m_delayHideToggle.SetCheck(Config::SplashDelayHide);
     }
 
@@ -114,6 +121,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         Config::SplashVideoLoop = m_videoLoopToggle.GetCheck();
         Config::SplashVideoMute = m_videoMuteToggle.GetCheck();
         Config::SplashVideoPause = m_videoPauseToggle.GetCheck();
+        Config::SplashSimplifiedSwitch = m_simplifiedSwitchToggle.GetCheck();
         Config::SplashDelayHide = m_delayHideToggle.GetCheck();
     }
 

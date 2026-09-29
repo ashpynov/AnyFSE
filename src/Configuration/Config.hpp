@@ -30,6 +30,7 @@
 #include <optional>
 #include "Logging/Logger.hpp"
 #include "Tools/nlohmann/json_fwd.hpp"
+#include "Tools/Event.hpp"
 
 using json = nlohmann::json;
 
@@ -78,6 +79,10 @@ namespace AnyFSE::Configuration
         bool IsCustom = false;
         bool IsPortable = false;
         std::wstring AppUserModelID;
+
+        Event OnBoot;
+        Event OnStarted;
+        Event OnRestating;
     };
 
     struct StartupApp
@@ -176,6 +181,7 @@ namespace AnyFSE::Configuration
             static bool SplashVideoMute;
             static bool SplashVideoLoop;
             static bool SplashVideoPause;
+            static bool SplashSimplifiedSwitch;
             static bool SplashDelayHide;
 
             static bool CleanupFailedStart;

@@ -153,6 +153,8 @@
   "settingsSplashMuteVideo": "Без звука",
   "settingsSplashPauseCompleted": "Пауза по завершении",
   "settingsSplashPauseCompletedDescription": "Показывать последний кадр, если видео закончилось раньше старта приложения",
+  "settingsSplashSimplifiedSwitch": "Упрощённое переключение",
+  "settingsSplashSimplifiedSwitchDescription": "Показывать только анимированный логотип при переключении режима",
   "settingsAllyFeatures": "ASUS ROG Ally",
   "settingsAllyFeaturesDescription": "Экспериментальные настройки для консолей ASUS",
   "settingsAllyEnableAlternativeButtons": "Переназначение кнопок ASUS ROG Ally",

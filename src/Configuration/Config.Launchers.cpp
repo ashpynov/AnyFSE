@@ -24,6 +24,7 @@
 #include <filesystem>
 #include "Config.hpp"
 #include "Tools/Unicode.hpp"
+#include "App/Launchers.hpp"
 
 namespace AnyFSE::Configuration
 {
@@ -42,6 +43,11 @@ namespace AnyFSE::Configuration
             PlayniteFullscreen.ExStyleAlt = WS_EX_APPWINDOW;
             PlayniteFullscreen.ProcessNameAlt = L"Playnite.DesktopApp.exe"; // ProcessNameAlt
             PlayniteFullscreen.ActivationProtocol = L"@";
+
+            PlayniteFullscreen.OnBoot = App::Launchers::PlayniteOnBoot;
+            PlayniteFullscreen.OnStarted = App::Launchers::PlayniteOnStarted;
+            PlayniteFullscreen.OnRestating = App::Launchers::PlayniteSwapLauncher;
+
             result.push_back(PlayniteFullscreen);
         }
         {
@@ -56,6 +62,11 @@ namespace AnyFSE::Configuration
             PlayniteDesktop.ExStyleAlt = WS_EX_APPWINDOW;
             PlayniteDesktop.ProcessNameAlt = L"Playnite.FullscreenApp.exe"; // ProcessNameAlt
             PlayniteDesktop.ActivationProtocol = L"@";
+
+            PlayniteDesktop.OnBoot = App::Launchers::PlayniteOnBoot;
+            PlayniteDesktop.OnStarted = App::Launchers::PlayniteOnStarted;
+            PlayniteDesktop.OnRestating = App::Launchers::PlayniteSwapLauncher;
+
             result.push_back(PlayniteDesktop);
         }
         {
@@ -126,6 +137,9 @@ namespace AnyFSE::Configuration
             RetroBat.ProcessName = L"emulationstation.exe";
             RetroBat.ClassName = L"SDL_app";
             RetroBat.ProcessNameAlt = L"retrobat.exe";
+
+            RetroBat.OnStarted = App::Launchers::FocusLauncher;
+
             result.push_back(RetroBat);
         }
         {

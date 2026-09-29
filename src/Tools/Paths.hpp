@@ -15,3 +15,5 @@ namespace AnyFSE::Tools::Paths
     std::wstring GetAppPath();
     std::wstring GetDataPath();
 }
+
+namespace Paths = AnyFSE::Tools::Paths;

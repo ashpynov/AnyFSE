@@ -50,6 +50,8 @@ namespace Ally
     bool IsNativeHandlerEnabled();
     bool IsInjectorEnabled();
     bool UpdateHidListener();
+
+    bool EnsureListener();
     bool CheckListener();
     bool SetupListener();
     bool WaitListener();
@@ -59,5 +61,5 @@ namespace Ally
 
     void OnInput(bool allyEnabled, HANDLE hDevice, HRAWINPUT rawInput, bool *pbModePressed);
     void OnHotkey(int id);
-    
+
 }

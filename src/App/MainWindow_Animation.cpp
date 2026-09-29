@@ -37,6 +37,8 @@
 
 namespace AnyFSE::App::Window
 {
+    static Logger log = LogManager::GetLogger("Window/Animation");
+
     bool MainWindow::InitAnimationResources()
     {
         m_pLogoImage = nullptr;
@@ -122,11 +124,24 @@ namespace AnyFSE::App::Window
     void MainWindow::OnTimer(UINT_PTR timerId)
     {
         if (m_closing)
+        {
+            log.Trace("Exit from Timer on m_closing");
             return;
+        }
+
         if (timerId == m_launcherTimeoutTimerId)
         {
+            log.Trace("Destroy Window by launcherTimeout");
+
             m_closing = true;
             DestroyWindow(m_hWnd);
+
+            if (!m_bLauncherWasActive && Launchers::IsLauncherActiveOrMinimized())
+            {
+                log.Trace("Notify started");
+                Config::Launcher.OnStarted.Notify();
+            }
+            Launchers::FocusLauncher();
             return;
         }
         if (timerId == m_animationTimerId)
@@ -162,27 +177,25 @@ namespace AnyFSE::App::Window
                     if (!Config::SplashDelayHide || now > m_launcherStartedTime + HIDE_DELAY_MS )
                     {
                         m_closing = true;
+                        log.Trace("Destroy Window by launcherCheckTimer");
                         DestroyWindow(m_hWnd);
+
+                        if (notifyStarted)
+                        {
+                            log.Trace("Notify started");
+                            Config::Launcher.OnStarted.Notify();
+                        }
+                        Launchers::FocusLauncher();
                     }
                     else
                     {
+                        log.Trace("Set Timeout timer to DestroyWindow");
                         KillTimer(m_hWnd, m_launcherTimeoutTimerId);
                         SetTimer(m_hWnd, m_launcherTimeoutTimerId, HIDE_DELAY_MS - (int)(now - m_launcherStartedTime) + 1, NULL);
+                        return;
                     }
 
-                    if (notifyStarted)
-                    {
-                        Launchers::LauncherOnStarted();
-                    }
-                    if (focusLauncher)
-                    {
-                        Launchers::FocusLauncher();
-                    }
                     return;
-                }
-                if (notifyStarted)
-                {
-                    Launchers::LauncherOnStarted();
                 }
             }
         }

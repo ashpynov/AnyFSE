@@ -34,6 +34,10 @@ namespace Gdiplus { class Image; }
 
 namespace AnyFSE::App::Window
 {
+
+    int Show(HINSTANCE hInstance);
+    bool IsRegistered();
+
     class MainWindow
     {
     private:
@@ -55,6 +59,8 @@ namespace AnyFSE::App::Window
         static WNDCLASS WC;
         static LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
         static void LoadStringSafe(UINT nStrID, LPTSTR szBuf, UINT nBufLen);
+
+        void Reset();
         void OnCreate();
 
         void OnPaint();
@@ -66,17 +72,21 @@ namespace AnyFSE::App::Window
         void OnUpdateCheck();
         void ScheduleCheck(int delay = 60);
         void SelectNextVideo();
+        bool UpdateIcon();
 
         LRESULT CALLBACK HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     public:
-        MainWindow();
+
+        MainWindow(LPCWSTR className, HINSTANCE hInstance);
         ~MainWindow();
         bool Show(bool empty = false);
         bool Start();
         bool Hide();
         void Suspend(bool bSuspend);
-        bool Create(LPCWSTR className, HINSTANCE hInstance, LPCTSTR windowName);
+        bool Create(LPCTSTR windowName);
+
+        int Run(const std::wstring &name);
         static int RunLoop();
 
         bool IsVisible();

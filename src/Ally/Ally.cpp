@@ -434,6 +434,16 @@ namespace Ally
         return false;
     }
 
+    bool EnsureListener()
+    {
+        if (Ally::CheckListener())
+        {
+            log.Debug("Background HID/hotkey listener is not running; starting it\n");
+            Process::StartProtocol(Constants::AnyFseProtocolHidListener);
+        }
+        return false;
+    }
+
     bool CheckListener()
     {
         return (Config::HotkeysEnable || (Config::AllyHidEnable && Ally::IsSupported()))
