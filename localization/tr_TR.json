@@ -1,4 +1,5 @@
 {
+  "splashIsLaunchingFmt": "%s başlatılıyor",
   "settingsSplashDelayHide": "Açılış ekranını gecikmeli gizle",
   "settingsSplashDelayHideDescription": "Başlatıcı açılırken oluşabilecek beyaz parlamayı örtmek için açılış ekranını 2 saniye daha görünür tut.",
   "language": "Türkçe",
@@ -153,6 +154,7 @@
   "settingsSplashPauseCompleted": "Tamamlandığında durdur",
   "settingsSplashPauseCompletedDescription": "Video ev uygulaması başlamadan önce biterse son kareyi göster",
   "settingsSplashSimplifiedSwitch": "Basitleştirilmiş mod geçişi",
+  "settingsSplashSimplifiedSwitchText": "Metni göster",
   "settingsSplashSimplifiedSwitchDescription": "Mod değiştirirken yalnızca animasyonlu logoyu göster",
   "settingsAllyFeatures": "ASUS ROG Ally özellikleri",
   "settingsAllyFeaturesDescription": "ASUS taşınabilir cihazları için deneysel özelleştirme",

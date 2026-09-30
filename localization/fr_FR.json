@@ -1,4 +1,5 @@
 {
+  "splashIsLaunchingFmt": "Démarrage de %s",
   "settingsSplashDelayHide": "Retarder le masquage de l’écran de démarrage",
   "settingsSplashDelayHideDescription": "Garder l’écran de démarrage visible 2 secondes de plus pour aider à masquer un éventuel flash blanc au lancement du lanceur.",
   "language": "Français",
@@ -153,6 +154,7 @@
   "settingsSplashPauseCompleted": "Pause à la fin",
   "settingsSplashPauseCompletedDescription": "Afficher la dernière image si la vidéo finit avant l'app",
   "settingsSplashSimplifiedSwitch": "Changement de mode simplifié",
+  "settingsSplashSimplifiedSwitchText": "Afficher le texte",
   "settingsSplashSimplifiedSwitchDescription": "Afficher uniquement le logo animé lors du changement de mode",
   "settingsAllyFeatures": "Fonctions ASUS ROG Ally",
   "settingsAllyFeaturesDescription": "Personnalisation expérimentale ASUS",

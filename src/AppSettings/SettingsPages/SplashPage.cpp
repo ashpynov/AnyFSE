@@ -73,7 +73,14 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             Translate(L"settingsSplashSimplifiedSwitch"),
             Translate(L"settingsSplashSimplifiedSwitchDescription"),
             m_simplifiedSwitchToggle,
-            Layout::LineHeightSmall, Layout::LinePadding, Layout::LineSmallMargin));
+            Layout::LineHeightSmall, 0, Layout::LineSmallMargin));
+
+        m_pSimplifiedSwitchTextLine = &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+            Translate(L"settingsSplashSimplifiedSwitchText"),
+            L"",
+            m_simplifiedSwitchTextToggle,
+            Layout::LineHeightSmall, Layout::LinePadding, (int)(Layout::LineSmallMargin * 1.5));
+        m_pSplashVideoLine->AddGroupItem(m_pSimplifiedSwitchTextLine);
 
         m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
             Translate(L"settingsSplashDelayHide"),
@@ -89,6 +96,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         m_showVideoToggle.OnChanged += delegate(OnShowVideoChanged);
         m_pSplashVideoLine->OnChanged += delegate(m_dialog.UpdateLayout);
+        m_simplifiedSwitchToggle.OnChanged += delegate(OnSimplifiedSwitchChanged);
     }
 
     void SplashPage::LoadControls()
@@ -105,6 +113,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_videoMuteToggle.SetCheck(Config::SplashVideoMute);
         m_videoPauseToggle.SetCheck(Config::SplashVideoPause);
         m_simplifiedSwitchToggle.SetCheck(Config::SplashSimplifiedSwitch);
+        m_simplifiedSwitchTextToggle.SetCheck(Config::SplashSimplifiedSwitchText);
+        OnSimplifiedSwitchChanged();
         m_delayHideToggle.SetCheck(Config::SplashDelayHide);
     }
 
@@ -122,6 +132,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         Config::SplashVideoMute = m_videoMuteToggle.GetCheck();
         Config::SplashVideoPause = m_videoPauseToggle.GetCheck();
         Config::SplashSimplifiedSwitch = m_simplifiedSwitchToggle.GetCheck();
+        Config::SplashSimplifiedSwitchText = m_simplifiedSwitchTextToggle.GetCheck();
         Config::SplashDelayHide = m_delayHideToggle.GetCheck();
     }
 
@@ -158,5 +169,10 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             : SettingsLine::Normal);
 
         m_dialog.UpdateLayout();
+    }
+
+    void SplashPage::OnSimplifiedSwitchChanged()
+    {
+        m_pSimplifiedSwitchTextLine->Enable(m_simplifiedSwitchToggle.GetCheck());
     }
 };

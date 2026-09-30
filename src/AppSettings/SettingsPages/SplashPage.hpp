@@ -26,6 +26,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             , m_videoMuteToggle(m_theme)
             , m_videoPauseToggle(m_theme)
             , m_simplifiedSwitchToggle(m_theme)
+            , m_simplifiedSwitchTextToggle(m_theme)
             , m_delayHideToggle(m_theme)
             , m_customTextEdit(m_theme)
             , m_splashCustomVideoEdit(m_theme)
@@ -49,6 +50,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         Toggle m_videoMuteToggle;
         Toggle m_videoPauseToggle;
         Toggle m_simplifiedSwitchToggle;
+        Toggle m_simplifiedSwitchTextToggle;
         Toggle m_delayHideToggle;
 
         TextBox m_customTextEdit;
@@ -57,10 +59,12 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         SettingsLine * m_pSplashTextLine = nullptr;
         SettingsLine * m_pSplashLogoLine = nullptr;
         SettingsLine * m_pSplashVideoLine = nullptr;
+        SettingsLine * m_pSimplifiedSwitchTextLine = nullptr;
 
         void OnGotoSplashFolder();
         void OnShowTextChanged();
         void OnShowLogoChanged();
         void OnShowVideoChanged();
+        void OnSimplifiedSwitchChanged();
     };
 };

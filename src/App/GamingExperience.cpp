@@ -28,6 +28,7 @@
 #include "Logging/LogManager.hpp"
 #include "Constants.hpp"
 #include "GamingExperience.hpp"
+#include "Tools/Process.hpp"
 #include "Tools/Registry.hpp"
 
 
@@ -109,8 +110,30 @@ namespace AnyFSE::App
             || (IsGamingFullScreenExperienceSupported() && !IsGamingFullScreenExperienceActive());
     }
 
+    void GamingExperience::PreventPopuppers()
+    {
+        for (const auto processName : c::PopupperProcessNames)
+        {
+            const HWND hwnd = Process::GetWindow(processName, 0, L"", L"");
+
+            if (!hwnd || !IsWindow(hwnd) || (GetWindowLong(hwnd, GWL_STYLE) & WS_VISIBLE))
+                continue;
+
+            DWORD processId = 0;
+            GetWindowThreadProcessId(hwnd, &processId);
+
+            log.Debug("PreventPopuppers: found hidden window for %ls (HWND=%p, processId=%#x)", processName, (void*)hwnd, processId);
+
+            if (processId)
+            {
+                Process::Kill(processId);
+            }
+        }
+    }
+
     bool GamingExperience::ExitFSEMode()
     {
+        PreventPopuppers();
         HRESULT hres = SetGamingFullScreenExperience(FALSE);
         log.Debug("Set FSE off return %u", hres);
         return false;

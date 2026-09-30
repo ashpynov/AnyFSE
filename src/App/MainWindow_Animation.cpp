@@ -31,6 +31,7 @@
 #include "Tools/Icon.hpp"
 #include "Tools/GdiPlus.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
+#include "Tools/Localization.hpp"
 #include "App/Launchers.hpp"
 
 #pragma comment(lib, "Gdiplus.lib")
@@ -106,7 +107,7 @@ namespace AnyFSE::App::Window
             Font font(L"Segoe UI", 14 * dpi / 96);
             SolidBrush textBrush(m_theme.GetColor(FluentDesign::Theme::Text));
             std::wstring name = Config::SplashCustomText.empty()
-                ? std::wstring(L"Launching ") + Config::Launcher.Name
+                ? TranslateF(L"splashIsLaunchingFmt", Config::Launcher.Name.c_str())
                 : Config::SplashCustomText;
 
             // Use StringFormat for precise centering

@@ -45,6 +45,7 @@ namespace AnyFSE::Logging
     std::mutex LogManager::WriteLock;
     LogLevels LogManager::Level;
     std::string LogManager::ApplicationName;
+    std::string LogManager::ProcessId;
     bool LogManager::LogToConsole;
     std::wstring LogManager::FilePath;
 
@@ -63,6 +64,10 @@ namespace AnyFSE::Logging
     }
     void LogManager::Initialize(const string &appName, LogLevels level, const std::wstring& filePath)
     {
+        char processId[20];
+        snprintf(processId, sizeof(processId), " (%08lx) ", GetCurrentProcessId());
+        ProcessId = processId;
+
         LogToConsole = IsDebuggerPresent() != 0;
         ApplicationName = appName;
         Level = LogToConsole ? LogLevels::Trace : level;
@@ -156,8 +161,8 @@ namespace AnyFSE::Logging
         string levelText = LogLevelToString(level);
         transform(levelText.begin(), levelText.end(), levelText.begin(), ::tolower);
 
-        string prefix = string(timestamp) + " [" + levelText + "] [" + loggerName + "]";
-        string consolePrefix = string(consoleTime) + " [" + levelText + "] [" + ApplicationName + "/" + loggerName + "]";
+        string prefix = string(timestamp) + ProcessId + "[" + levelText + "] [" + loggerName + "]";
+        string consolePrefix = string(consoleTime) + ProcessId + "[" + levelText + "] [" + ApplicationName + "/" + loggerName + "]";
 
         string message = FormatString(format, args);
 
@@ -168,11 +173,6 @@ namespace AnyFSE::Logging
             lock_guard<mutex> lock(WriteLock);
             LogWriter << fullLogMessage << endl;
             LogWriter.flush();
-        }
-
-        {
-            string fullLogMessage = prefix + " " + message;
-            OutputDebugStringA(fullLogMessage.c_str());
         }
 
         // Write to console if debugger attached
@@ -187,9 +187,9 @@ namespace AnyFSE::Logging
                 lines.push_back(line);
             }
 
-            for (const auto &line : lines)
+            for (const auto &l : lines)
             {
-                cout << left << setw(58) << consolePrefix << "| " << line << endl;
+                cout << left << setw(58) << consolePrefix << "| " << l << endl;
             }
             std::cout.flush();
         }

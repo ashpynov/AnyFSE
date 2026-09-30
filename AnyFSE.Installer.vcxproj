@@ -53,6 +53,7 @@
     <TargetName>AnyFSE.Installer</TargetName>
     <OutExe>$(OutDir)$(TargetName).exe</OutExe>
     <OldVersionRevision>$([MSBuild]::Add($(VersionRevision), -1))</OldVersionRevision>
+    <BinaryVersionRevision>$(OldVersionRevision)</BinaryVersionRevision>
   </PropertyGroup>
 
 

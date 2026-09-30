@@ -9,8 +9,8 @@
 #define byte ::byte
 
 
-#ifndef VER_VERSION_STR
-#define VER_VERSION_STR "0.0.0"
+#ifndef VER_VERSION_FULL_STR
+#define VER_VERSION_FULL_STR "0.0.0-0"
 #endif
 #include <gdiplusenums.h>
 #include <string>
@@ -77,7 +77,7 @@ namespace AnyFSE::App::AppSettings::Settings
         bool hasVersion = !version.empty();
         std::wstring cVersion = TranslateF(
             hasVersion ? L"settingsCurrentVersionFmt" : L"settingsVersionFmt",
-            Unicode::to_wstring(VER_VERSION_STR).c_str());
+            Unicode::to_wstring(VER_VERSION_FULL_STR).c_str());
         std::wstring aVersion = hasVersion ? TranslateF(L"settingsAvailableVersionFmt", version.c_str()) : L"";
 
         bool delayed = (LONGLONG)GetTickCount64() > uiInfo.lCommandAge + 1000;
@@ -91,7 +91,7 @@ namespace AnyFSE::App::AppSettings::Settings
                 || uiInfo.uiState == UpdaterState::CheckingUpdate)
         {
             icon = L"\xE895";
-            cVersion = TranslateF(L"settingsCurrentVersionFmt", Unicode::to_wstring(VER_VERSION_STR).c_str());
+            cVersion = TranslateF(L"settingsCurrentVersionFmt", Unicode::to_wstring(VER_VERSION_FULL_STR).c_str());
             aVersion =   (uiInfo.uiState == UpdaterState::CheckingUpdate)   ? Translate(L"settingsCheckingNewVersion")
                        : (command == UpdaterState::NetworkFailed)           ? Translate(L"settingsNetworkFailed")
                        : (uiInfo.uiState == UpdaterState::NetworkFailed)    ? Translate(L"settingsNetworkFailed")

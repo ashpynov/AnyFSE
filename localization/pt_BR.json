@@ -1,4 +1,5 @@
 {
+  "splashIsLaunchingFmt": "Iniciando %s",
   "settingsSplashDelayHide": "Adiar a ocultação da tela de abertura",
   "settingsSplashDelayHideDescription": "Manter a tela de abertura visível por mais 2 segundos para ajudar a encobrir um possível clarão branco ao iniciar o launcher.",
   "language": "Português (Brasil)",
@@ -155,6 +156,7 @@
   "settingsSplashPauseCompleted": "Pausar ao concluir",
   "settingsSplashPauseCompletedDescription": "Mostrar o último quadro se o vídeo terminar antes da inicialização do aplicativo",
   "settingsSplashSimplifiedSwitch": "Troca de modo simplificada",
+  "settingsSplashSimplifiedSwitchText": "Mostrar texto",
   "settingsSplashSimplifiedSwitchDescription": "Mostrar apenas o logotipo animado ao trocar de modo",
   "settingsAllyFeatures": "ASUS ROG Ally",
   "settingsAllyFeaturesDescription": "Configurações experimentais para consoles ASUS",

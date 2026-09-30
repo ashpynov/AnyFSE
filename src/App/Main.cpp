@@ -64,7 +64,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     Config::Load();
 
     LogManager::Initialize("AnyFSE", Config::LogLevel, Config::LogPath);
-    log.Debug("\nApplication is started (hInstance=%08x) args: [%s]\n", hInstance, lpCmdLine);
+    log.Debug("\nApplication is started args: [%s]\n", lpCmdLine);
 
     int exitCode = 0;
 
@@ -82,6 +82,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         || Window::IsRegistered()
     )
     {
+        log.Debug("Early exit args: [%s] with exit code %d", lpCmdLine, exitCode);
         return exitCode;
     }
 
@@ -124,10 +125,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                     Config::SplashShowVideo = false;
                     Config::SplashShowLogo = true;
                     Config::SplashShowAnimation = true;
+                    Config::SplashShowText = Config::SplashSimplifiedSwitchText;
                 }
             }
 
-            exitCode = mainWindow.Run(Config::Launcher.Name + L" is launching");
+            exitCode = mainWindow.Run(TranslateF(L"splashIsLaunchingFmt", Config::Launcher.Name.c_str()));
 
             isRestarting = ExitFSE::WaitHomeAppExit();
 
@@ -149,5 +151,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         log.Debug("AnyFSE Job is done! \n\n");
     }
 
+    GamingExperience::PreventPopuppers();
     return (int)exitCode;
 }

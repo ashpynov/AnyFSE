@@ -1,4 +1,5 @@
 {
+  "splashIsLaunchingFmt" : "Launching %s",
   "settingsSplashDelayHide": "Delay hiding the splash screen",
   "settingsSplashDelayHideDescription": "Keep the splash screen visible for 2 more seconds to help cover a white flash when the launcher starts.",
   "language": "English",
@@ -154,6 +155,7 @@
   "settingsSplashPauseCompleted": "Pause on complete",
   "settingsSplashPauseCompletedDescription": "Show last frame if video ends before home app starts",
   "settingsSplashSimplifiedSwitch": "Simplified switch",
+  "settingsSplashSimplifiedSwitchText": "Show text",
   "settingsSplashSimplifiedSwitchDescription": "Show only the animated logo when switching modes",
   "settingsAllyFeatures": "ASUS ROG Ally features",
   "settingsAllyFeaturesDescription": "Experimental customization for ASUS handhelds",

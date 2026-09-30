@@ -203,6 +203,6 @@
             "problemMatcher": [
                 "$msCompile"
             ]
-        },
+        }
     ]
 }

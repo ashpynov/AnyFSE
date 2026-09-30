@@ -1,4 +1,5 @@
 {
+  "splashIsLaunchingFmt": "Avvio di %s",
   "settingsSplashDelayHide": "Ritarda la chiusura della schermata iniziale",
   "settingsSplashDelayHideDescription": "Mantiene visibile la schermata iniziale per altri 2 secondi per aiutare a coprire un eventuale lampo bianco all'avvio del launcher.",
   "language": "Italiano",
@@ -154,6 +155,7 @@
   "settingsSplashPauseCompleted": "Metti in pausa al termine",
   "settingsSplashPauseCompletedDescription": "Mostra l'ultimo fotogramma se il video finisce prima dell'avvio dell'app principale",
   "settingsSplashSimplifiedSwitch": "Cambio di modalità semplificato",
+  "settingsSplashSimplifiedSwitchText": "Mostra testo",
   "settingsSplashSimplifiedSwitchDescription": "Mostra solo il logo animato durante il cambio di modalità",
   "settingsAllyFeatures": "Funzionalità ASUS ROG Ally",
   "settingsAllyFeaturesDescription": "Personalizzazione sperimentale per console portatili ASUS",

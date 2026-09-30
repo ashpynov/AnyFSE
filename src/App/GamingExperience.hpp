@@ -50,6 +50,7 @@ namespace AnyFSE::App
         static bool RestoreGamingPC();
         static bool IsFullscreenMode();
         static bool IsDesktopMode();
+        static void PreventPopuppers();
         static bool ExitFSEMode();
         static bool EnterFSEMode(ConfirmationMode mode = ConfirmationMode::Ask);
         static bool EnterFSEModeWithReboot() { return ApiIsAvailable && EnterFSEMode(ConfirmationMode::Reboot); }

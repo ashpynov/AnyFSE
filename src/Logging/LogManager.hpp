@@ -40,6 +40,7 @@ namespace AnyFSE::Logging
         static std::mutex WriteLock;
         static LogLevels Level;
         static std::string ApplicationName;
+        static std::string ProcessId;
         static bool LogToConsole;
         static std::wstring FilePath;
 

@@ -30,6 +30,7 @@
 #include "Logging/LogManager.hpp"
 #include "Unicode.hpp"
 #include <algorithm>
+#include <cctype>
 
 namespace AnyFSE::Tools::Unicode
 {
@@ -63,7 +64,7 @@ namespace AnyFSE::Tools::Unicode
     std::string to_lower(const std::string &str)
     {
         std::string sstr = str;
-        std::transform(sstr.begin(), sstr.end(), sstr.begin(), ::tolower);
+        std::transform(sstr.begin(), sstr.end(), sstr.begin(), [](unsigned char ch) { return (char)(std::tolower(ch)); });
         return sstr;
     }
 
@@ -77,7 +78,7 @@ namespace AnyFSE::Tools::Unicode
     std::string to_upper(const std::string &str)
     {
         std::string sstr = str;
-        std::transform(sstr.begin(), sstr.end(), sstr.begin(), ::toupper);
+        std::transform(sstr.begin(), sstr.end(), sstr.begin(), [](unsigned char ch) { return static_cast<char>(std::toupper(ch)); });
         return sstr;
     }
 }

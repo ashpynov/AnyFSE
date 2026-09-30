@@ -73,7 +73,9 @@ namespace AnyFSE::App::ExitFSE
             && App::GamingExperience::IsFullscreenMode()
             && Launchers::HasLauncherProcess();
 
-        if (Config::ExitFSEOnHomeExit && !restarted)
+        if (Config::ExitFSEOnHomeExit
+            && !restarted
+            &&  App::GamingExperience::IsFullscreenMode())
         {
             DWORD start = GetTickCount();
             GamingExperience::ExitFSEMode();

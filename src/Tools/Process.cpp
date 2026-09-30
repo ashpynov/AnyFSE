@@ -125,7 +125,6 @@ namespace AnyFSE::Tools::Process
             return 0;
         }
 
-        DWORD processId = 0;
         std::wstring targetName = processName;
 
         // Convert to lowercase for case-insensitive comparison

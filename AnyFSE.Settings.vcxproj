@@ -52,6 +52,7 @@
             <PreprocessorDefinitions>
                 _STATIC_CPPLIB;_DISABLE_DEPRECATE_STATIC_CPPLIB;WIN32;WIN64;_WIN64;_AMD64_;_DEBUG;_WINDOWS;
                 VER_VERSION_STR="$(AssemblyVersion)";
+                VER_VERSION_FULL_STR="$(AssemblyVersion)-$(VersionRevision)";
                 VER_PRODUCT_NAME="$(AssemblyProduct)";
                 VER_COMPANY_NAME="$(AssemblyCompany)";
                 VER_PUBLISHER_CN="$(PublisherCN)";
@@ -73,6 +74,7 @@
             <PreprocessorDefinitions>
                 _STATIC_CPPLIB;_DISABLE_DEPRECATE_STATIC_CPPLIB;WIN32;WIN64;_WIN64;_AMD64_;_WINDOWS;
                 VER_VERSION_STR="$(AssemblyVersion)";
+                VER_VERSION_FULL_STR="$(AssemblyVersion)-$(VersionRevision)";
                 VER_PRODUCT_NAME="$(AssemblyProduct)";
                 VER_COMPANY_NAME="$(AssemblyCompany)";
                 VER_PUBLISHER_CN="$(PublisherCN)";
