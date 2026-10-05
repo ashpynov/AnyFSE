@@ -26,6 +26,9 @@
 
 #include <windows.h>
 #include <string>
+#include <chrono>
+#include <thread>
+#include <atomic>
 #include "VideoPlayer.hpp"
 #include "Tools/Event.hpp"
 #include "FluentDesign/Theme.hpp"
@@ -99,11 +102,9 @@ namespace AnyFSE::App::Window
 
     private: // Animation
 
-        UINT_PTR m_animationTimerId = 1;
         UINT_PTR m_updateTimerId = 2;
         UINT_PTR m_launcherCheckTimerId = 3;
         UINT_PTR m_launcherTimeoutTimerId = 4;
-        UINT_PTR m_hAnimationTimer = NULL;
         UINT_PTR m_hUpdateTimer = NULL;
         UINT_PTR m_hLauncherCheckTimer = NULL;
         bool m_bLauncherWasActive = false;
@@ -115,9 +116,15 @@ namespace AnyFSE::App::Window
         const int ZOOM_INTERVAL_MS = 20;
         const int HIDE_DELAY_MS = 2000;
 
-        float m_currentZoom = 0.96f;
-        float m_zoomStep = 0.002f;
-        float m_zoomDelta = 0.06f;
+        const float LOGO_SIZE = 195.0f;
+        const float ZOOM_DELTA = 0.06f;
+        const float ZOOM_GROW_MS = 400.0f;
+        const float ZOOM_SHRINK_MS = 1600.0f;
+
+        float m_currentZoom = 1.0f - ZOOM_DELTA;
+        std::chrono::steady_clock::time_point m_animationStart;
+        std::thread m_animationThread;
+        std::atomic<bool> m_animating{false};
 
         ULONG_PTR m_gdiplusToken;
 
@@ -126,6 +133,7 @@ namespace AnyFSE::App::Window
 
         bool InitAnimationResources();
         BOOL LoadLogoImage();
+        RECT LogoRect();
         void DrawClient(HDC hdc, const RECT& clientRect);
         void OnTimer(UINT_PTR timerId);
         BOOL FreeAnimationResources();

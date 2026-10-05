@@ -69,6 +69,11 @@ namespace FluentDesign
             return m_rect;
         }
 
+        const RECT& PaintRect()
+        {
+            return m_ps.rcPaint;
+        }
+
         ~DoubleBuferedPaint()
         {
             // === DOUBLE BUFFERING - COPY TO SCREEN ===

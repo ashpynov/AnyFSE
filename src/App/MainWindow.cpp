@@ -135,7 +135,6 @@ namespace AnyFSE::App::Window
         m_closing = false;
         m_bLauncherWasActive = false;
         m_launcherStartedTime = 0;
-        m_hAnimationTimer = NULL;
         m_hUpdateTimer = NULL;
         m_hLauncherCheckTimer = NULL;
 
@@ -381,6 +380,9 @@ namespace AnyFSE::App::Window
     void MainWindow::OnPaint()
     {
         FluentDesign::DoubleBuferedPaint paint(m_hWnd);
+        // Animation frames invalidate only the logo box: do not fill the rest of the full-screen buffer
+        const RECT& dirty = paint.PaintRect();
+        IntersectClipRect(paint.MemDC(), dirty.left, dirty.top, dirty.right, dirty.bottom);
         DrawClient(paint.MemDC(), paint.ClientRect());
     }
 

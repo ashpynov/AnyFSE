@@ -168,34 +168,47 @@ namespace AnyFSE::Tools::Icon
     Gdiplus::Bitmap * LoadBitmapFromIcon(const std::wstring &icon, int iconSize)
     {
         HICON hIcon = Icon::LoadIcon(icon, iconSize);
-        if (!hIcon)
+        ICONINFO ii{};
+        if (!hIcon || !GetIconInfo(hIcon, &ii))
         {
+            if (hIcon) DestroyIcon(hIcon);
             return nullptr;
         }
 
-        //get the icon info
-        ICONINFO ii;
-        GetIconInfo(hIcon, &ii);
-
         using namespace Gdiplus;
 
-        //create a bitmap from the ICONINFO so we can access the bitmapData
-        Bitmap bmpIcon(ii.hbmColor, NULL);
-        Rect rectBounds(0, 0, bmpIcon.GetWidth(), bmpIcon.GetHeight() );
+        // Bitmap(HICON) keeps only the 1-bit mask (jagged edges); read the color bitmap to keep the per-pixel alpha
+        Bitmap * result = nullptr;
+        if (ii.hbmColor)
+        {
+            Bitmap bmpIcon(ii.hbmColor, NULL);
+            Rect rectBounds(0, 0, bmpIcon.GetWidth(), bmpIcon.GetHeight());
+            BitmapData bmData;
+            if (GetPixelFormatSize(bmpIcon.GetPixelFormat()) == 32
+                && bmpIcon.LockBits(&rectBounds, ImageLockModeRead, bmpIcon.GetPixelFormat(), &bmData) == Ok)
+            {
+                bool hasAlpha = false;
+                for (UINT y = 0; y < bmData.Height && !hasAlpha; ++y)
+                {
+                    const UINT32 * row = (const UINT32 *)((const BYTE *)bmData.Scan0 + (INT_PTR)y * bmData.Stride);
+                    for (UINT x = 0; x < bmData.Width && !hasAlpha; ++x) hasAlpha = (row[x] >> 24) != 0;
+                }
+                if (hasAlpha)
+                {
+                    // Premultiplied is GDI+'s native blend format: faster scaled draws without dark fringes on the edges
+                    Bitmap source(bmData.Width, bmData.Height, bmData.Stride, PixelFormat32bppARGB, (BYTE *)bmData.Scan0);
+                    result = new Bitmap(bmData.Width, bmData.Height, PixelFormat32bppPARGB);
+                    Graphics graphics(result);
+                    graphics.DrawImage(&source, 0, 0, (INT)bmData.Width, (INT)bmData.Height);
+                }
+                bmpIcon.UnlockBits(&bmData);
+            }
+        }
 
-        //get the BitmapData
-        BitmapData bmData;
-        bmpIcon.LockBits(&rectBounds, ImageLockModeRead, bmpIcon.GetPixelFormat(), &bmData);
-
-        Bitmap * tmp = new Bitmap(bmData.Width, bmData.Height, bmData.Stride, PixelFormat32bppARGB, (BYTE*)bmData.Scan0);
-
-        Bitmap * result = new Bitmap(bmpIcon.GetWidth(), bmpIcon.GetHeight(), PixelFormat32bppARGB);
-        Graphics graphics(result);
-        graphics.DrawImage(tmp, 0, 0, bmpIcon.GetWidth(), bmpIcon.GetHeight());
-
-        delete tmp;
-
-        bmpIcon.UnlockBits(&bmData);
+        if (!result)
+        {
+            result = new Bitmap(hIcon); // legacy icon without alpha channel: mask transparency is all it has
+        }
 
         DestroyIcon(hIcon);
         DeleteObject(ii.hbmColor);
