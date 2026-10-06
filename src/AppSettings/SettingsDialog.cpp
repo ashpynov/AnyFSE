@@ -287,20 +287,17 @@ namespace AnyFSE::App::AppSettings::Settings
         case WM_NCACTIVATE:
             {
                 BOOL bActive = (BOOL)wParam;
-                BOOL skipDefault = FALSE;
-                if (!bActive)
+                if (!bActive && lParam != -1)
                 {
-
-                    bool child = IsChild(m_hDialog, (HWND)lParam);
-                    HWND own = GetWindowOwner((HWND)lParam);
-                    bool ownchild = IsChild(m_hDialog, own);
-                    bActive |= child || ownchild || own == m_hDialog;
+                    HWND nextActive = (HWND)lParam;
+                    bActive = nextActive && (IsChild(m_hDialog, nextActive) || GetAncestor(nextActive, GA_ROOTOWNER) == m_hDialog);
                 }
                 m_captionMinimizeButton.SetColors(bActive ? Theme::Colors::Text : Theme::Colors::TextInactiveHeader);
                 m_captionMaximizeButton.SetColors(bActive ? Theme::Colors::Text : Theme::Colors::TextInactiveHeader);
                 m_captionCloseButton.SetColors(bActive ? Theme::Colors::Text : Theme::Colors::TextInactiveHeader);
+                SetWindowLongPtr(hwnd, DWLP_MSGRESULT, DefWindowProc(hwnd, msg, bActive, lParam));
             }
-            return FALSE;
+            return TRUE;
 
         case WM_UPDATE_NOTIFICATION:
             OnUpdateNotification();
