@@ -22,6 +22,7 @@
 //
 
 #include "SettingsDialog.hpp"
+#include "Resource.h"
 #include <windows.h>
 #include <Windows.h>
 #include <algorithm>
@@ -61,6 +62,9 @@ namespace AnyFSE::App::AppSettings::Settings
         wc.cbSize = sizeof(WNDCLASSEX);
         wc.lpfnWndProc = DefDlgProc;  // Use DefDlgProc for dialog classes!
         wc.hInstance = hInstance;
+        wc.hIcon = ::LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON));
+        wc.hIconSm = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON,
+            GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
         wc.hCursor = LoadCursor(NULL, IDC_ARROW);
         wc.hbrBackground = NULL;
         wc.lpszClassName = DialogClassName;
@@ -186,6 +190,8 @@ namespace AnyFSE::App::AppSettings::Settings
             {   // To enable immersive dark mode (for a dark title bar)
 
                 m_theme.AttachDlg(hwnd);
+                SendMessage(hwnd, WM_SETICON, ICON_BIG, GetClassLongPtr(hwnd, GCLP_HICON));
+                SendMessage(hwnd, WM_SETICON, ICON_SMALL, GetClassLongPtr(hwnd, GCLP_HICONSM));
                 SetWindowText(hwnd, Translate(L"settingsMainWindowTitle").c_str());
                 OnInitDialog(hwnd);
                 RestoreWindowPlacement();
