@@ -133,7 +133,7 @@ namespace AnyFSE
             void UpdateDialogTitle();
 
             void OnInitDialog(HWND hwnd);
-            void OnPaint(HWND hwnd);
+            void OnPaint(HWND hwnd, HDC targetDC = nullptr);
             void OnErase(HDC hdc, HWND child);
 
             void DrawDialog(HDC hdc, RECT clientRect);

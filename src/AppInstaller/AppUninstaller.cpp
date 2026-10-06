@@ -32,6 +32,7 @@
 #include <filesystem>
 
 #include "AppUninstaller.hpp"
+#include "Resource.h"
 #include "Logging/LogManager.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/Unicode.hpp"
@@ -108,6 +109,7 @@ namespace AnyFSE
 
     INT_PTR AppUninstaller::Show(HINSTANCE hInstance)
     {
+        m_hInstance = hInstance;
         LogManager::Initialize("AnyFSE/Uninstaller");
 
         Tools::Localization::InitializeFromLocales();
@@ -119,7 +121,7 @@ namespace AnyFSE
         LPDLGTEMPLATE dlgTemplate = (LPDLGTEMPLATE)GlobalLock(hGlobal);
 
         dlgTemplate->style = DS_MODALFRAME | WS_POPUP | WS_CLIPCHILDREN | WS_CAPTION | WS_MINIMIZEBOX;
-        dlgTemplate->dwExtendedStyle = WS_EX_WINDOWEDGE | WS_EX_APPWINDOW;
+        dlgTemplate->dwExtendedStyle = WS_EX_WINDOWEDGE | WS_EX_APPWINDOW | WS_EX_COMPOSITED;
         dlgTemplate->cdit = 0;  // No controls
         dlgTemplate->x = 0;
         dlgTemplate->y = 0;
@@ -192,9 +194,13 @@ namespace AnyFSE
         case WM_INITDIALOG:
             {
                 m_theme.AttachDlg(hwnd);
+                SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)::LoadIcon(m_hInstance, MAKEINTRESOURCE(IDI_INSTALLER_ICON)));
+                SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)LoadImage(m_hInstance, MAKEINTRESOURCE(IDI_INSTALLER_ICON), IMAGE_ICON,
+                    GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED));
                 CenterDialog(hwnd);
                 OnInitDialog(hwnd);
                 m_theme.DpiUnscaleChilds(hwnd, m_designedPositions);
+                RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
             }
             return TRUE;
 
@@ -207,11 +213,37 @@ namespace AnyFSE
             }
             break;
         case WM_DPICHANGED:
-            m_theme.DpiScaleChilds(hwnd, m_designedPositions);
-            RedrawWindow(m_hDialog, NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE);
-            break;
+            {
+                const bool suspendRedraw = (GetWindowLongPtr(hwnd, GWL_STYLE) & WS_VISIBLE) != 0;
+                if (suspendRedraw)
+                    SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
+                m_theme.DpiScaleChilds(hwnd, m_designedPositions);
+                if (suspendRedraw)
+                    SendMessage(hwnd, WM_SETREDRAW, TRUE, 0);
+                RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+            }
+            return TRUE;
+        case WM_SIZE:
+            if (wParam != SIZE_MINIMIZED && !m_designedPositions.empty())
+                RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+            return TRUE;
+        case WM_NCACTIVATE:
+            {
+                BOOL active = (BOOL)wParam;
+                if (!active && lParam != -1)
+                {
+                    HWND nextActive = (HWND)lParam;
+                    active = nextActive && (IsChild(hwnd, nextActive) || GetAncestor(nextActive, GA_ROOTOWNER) == hwnd);
+                }
+                SetWindowLongPtr(hwnd, DWLP_MSGRESULT, DefWindowProc(hwnd, msg, active, lParam));
+            }
+            return TRUE;
         case WM_PAINT:
-            OnPaint(hwnd);
+        case WM_PRINTCLIENT:
+            OnPaint(hwnd, msg == WM_PRINTCLIENT ? (HDC)wParam : nullptr);
+            return TRUE;
+        case WM_PRINT:
+            SetWindowLongPtr(hwnd, DWLP_MSGRESULT, DefWindowProc(hwnd, msg, wParam, lParam));
             return TRUE;
         case WM_ERASEBKGND:
             OnErase((HDC)wParam, (HWND)lParam);
@@ -228,9 +260,9 @@ namespace AnyFSE
         ShowWelcomePage();
     }
 
-    void AppUninstaller::OnPaint(HWND hwnd)
+    void AppUninstaller::OnPaint(HWND hwnd, HDC targetDC)
     {
-        FluentDesign::DoubleBuferedPaint paint(hwnd);
+        FluentDesign::DoubleBuferedPaint paint(hwnd, targetDC);
         DrawDialog(paint.MemDC(), paint.ClientRect());
     }
 
@@ -261,7 +293,11 @@ namespace AnyFSE
                 m_theme.DrawChildFocus(hdc, child, child);
             }
         }
-        SetWindowLong(m_hDialog, DWLP_MSGRESULT, 1);
+        else
+        {
+            DrawDialog(hdc, dialogRect);
+        }
+        SetWindowLongPtr(m_hDialog, DWLP_MSGRESULT, 1);
     }
 
     void AppUninstaller::DrawDialog(HDC hdc, RECT clientRect)
@@ -415,6 +451,10 @@ namespace AnyFSE
         const std::wstring &buttonLeft,
         const std::function<void()> &callbackLeft)
     {
+        const bool suspendRedraw = (GetWindowLongPtr(m_hDialog, GWL_STYLE) & WS_VISIBLE) != 0;
+        if (suspendRedraw)
+            SendMessage(m_hDialog, WM_SETREDRAW, FALSE, 0);
+
         m_imageStatic.LoadIcon(icon.empty() ? Tools::Paths::GetExeFileName() : icon, 128);
 
         m_captionStatic.SetText(caption);
@@ -433,6 +473,8 @@ namespace AnyFSE
             m_leftButton.Show(false);
         }
 
+        if (suspendRedraw)
+            SendMessage(m_hDialog, WM_SETREDRAW, TRUE, 0);
         RedrawWindow(m_hDialog, NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE | RDW_UPDATENOW);
     }
 

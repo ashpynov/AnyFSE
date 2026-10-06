@@ -1,4 +1,4 @@
-
+#include "Resource.h"
 1 VERSIONINFO
  FILEVERSION VER_VERSION
  PRODUCTVERSION VER_VERSION
@@ -32,7 +32,7 @@ BEGIN
     END
 END
 
-2                ICON                    "..\\..\\media\\AnyFSEInstaller.ico"
+IDI_INSTALLER_ICON ICON                  "..\\..\\media\\AnyFSEInstaller.ico"
 
 #ifdef OFFLINE_INSTALLER
 3                RCDATA                  BUILD_ARCHIVE

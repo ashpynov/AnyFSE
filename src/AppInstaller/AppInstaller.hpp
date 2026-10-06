@@ -159,7 +159,7 @@ namespace AnyFSE
             void ShowErrorPage(const std::wstring &caption, const std::wstring &text, const std::wstring &icon = L"");
 
             void OnInitDialog(HWND hwnd);
-            void OnPaint(HWND hwnd);
+            void OnPaint(HWND hwnd, HDC targetDC = nullptr);
             void OnErase(HDC hdc, HWND child);
 
             void DrawDialog(HDC hdc, RECT clientRect);

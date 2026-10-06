@@ -127,7 +127,9 @@ namespace AnyFSE
         const std::function<void()> &callbackLeft,
         bool showBrowse)
     {
-
+        const bool suspendRedraw = (GetWindowLongPtr(m_hDialog, GWL_STYLE) & WS_VISIBLE) != 0;
+        if (suspendRedraw)
+            SendMessage(m_hDialog, WM_SETREDRAW, FALSE, 0);
         m_imageStatic.LoadIcon(icon.empty() ? Tools::Paths::GetExeFileName() : icon, 128);
 
         m_captionStatic.SetText(caption);
@@ -156,6 +158,8 @@ namespace AnyFSE
             m_leftButton.Show(false);
         }
 
+        if (suspendRedraw)
+            SendMessage(m_hDialog, WM_SETREDRAW, TRUE, 0);
         RedrawWindow(m_hDialog, NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE | RDW_UPDATENOW);
     }
 
