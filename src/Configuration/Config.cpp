@@ -60,6 +60,7 @@ namespace AnyFSE::Configuration
     bool            Config::FseOnStartup = false;
     bool            Config::SplashShowAnimation = true;
     bool            Config::SplashShowLogo = true;
+    bool            Config::SplashLargeLogo = false;
     bool            Config::SplashShowText = true;
     std::wstring    Config::SplashCustomText = L"";
     bool            Config::SplashShowVideo = true;
@@ -145,6 +146,7 @@ namespace AnyFSE::Configuration
 
         SplashShowAnimation     = config.value(jp("/Splash/ShowAnimation"),  true);
         SplashShowLogo          = config.value(jp("/Splash/ShowLogo"),       true);
+        SplashLargeLogo         = config.value(jp("/Splash/LargeLogo"),      false);
         SplashShowText          = config.value(jp("/Splash/ShowText"),       true);
         SplashCustomText        = config.value(jp("/Splash/CustomText"),     std::wstring());
 
@@ -242,6 +244,7 @@ namespace AnyFSE::Configuration
 
         config["Splash"]["ShowAnimation"]       = SplashShowAnimation;
         config["Splash"]["ShowLogo"]            = SplashShowLogo;
+        config["Splash"]["LargeLogo"]           = SplashLargeLogo;
         config["Splash"]["ShowText"]            = SplashShowText;
         config["Splash"]["ShowVideo"]           = SplashShowVideo;
         config["Splash"]["TillEnd"]             = SplashTillEnd;

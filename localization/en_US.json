@@ -146,6 +146,7 @@
   "settingsSplashUseCustomText": "Use custom text",
   "settingsSplashShowHomeLogo": "Show home app logo",
   "settingsSplashAnimateLogo": "Animate logo",
+  "settingsSplashLargeLogo": "Use large logo",
   "settingsSplashShowVideo": "Show video",
   "settingsSplashShowVideoDescription": "Play random video from \"splash\" folder",
   "settingsSplashPlayVideoAtLeastOnce": "Play video at least once",

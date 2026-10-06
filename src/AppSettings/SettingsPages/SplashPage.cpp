@@ -34,6 +34,12 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             Translate(L"settingsSplashAnimateLogo"),
             L"",
             m_showAnimationToggle,
+            Layout::LineHeightSmall, 0, Layout::LineSmallMargin));
+
+        m_pSplashLogoLine->AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+            Translate(L"settingsSplashLargeLogo"),
+            L"",
+            m_largeLogoToggle,
             Layout::LineHeightSmall, Layout::LinePadding, Layout::LineSmallMargin));
 
 
@@ -105,6 +111,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_customTextEdit.SetText(Config::SplashCustomText);
 
         m_showLogoToggle.SetCheck(Config::SplashShowLogo);
+        m_largeLogoToggle.SetCheck(Config::SplashLargeLogo);
         m_showAnimationToggle.SetCheck(Config::SplashShowAnimation);
 
         m_showVideoToggle.SetCheck(Config::SplashShowVideo);
@@ -124,6 +131,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         Config::SplashCustomText = m_customTextEdit.GetText();
 
         Config::SplashShowLogo = m_showLogoToggle.GetCheck();
+        Config::SplashLargeLogo = m_largeLogoToggle.GetCheck();
         Config::SplashShowAnimation = m_showAnimationToggle.GetCheck();
 
         Config::SplashShowVideo = m_showVideoToggle.GetCheck();

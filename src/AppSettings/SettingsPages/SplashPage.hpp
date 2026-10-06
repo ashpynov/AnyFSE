@@ -19,6 +19,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             , m_dialog(dialog)
             , m_showAnimationToggle(m_theme)
             , m_showLogoToggle(m_theme)
+            , m_largeLogoToggle(m_theme)
             , m_showTextToggle(m_theme)
             , m_showVideoToggle(m_theme)
             ,m_videoTillEndToggle(m_theme)
@@ -43,6 +44,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         Toggle m_showAnimationToggle;
         Toggle m_showLogoToggle;
+        Toggle m_largeLogoToggle;
         Toggle m_showTextToggle;
         Toggle m_showVideoToggle;
         Toggle m_videoTillEndToggle;

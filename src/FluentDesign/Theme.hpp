@@ -167,6 +167,7 @@ namespace FluentDesign
         public:
         Theme(HWND hParentWnd = NULL);
         void AttachWindow(HWND hHostWnd);
+        void UpdateDpi(ULONG dpi);
         void AttachDlg(HWND hParentWnd);
 
         void RegisterChild(HWND hChild);

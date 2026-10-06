@@ -172,6 +172,7 @@ namespace AnyFSE::Configuration
 
             static bool SplashShowAnimation;
             static bool SplashShowLogo;
+            static bool SplashLargeLogo;
             static bool SplashShowText;
             static std::wstring SplashCustomText;
 

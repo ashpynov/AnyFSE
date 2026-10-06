@@ -66,6 +66,7 @@ namespace AnyFSE::App::Window
         : m_hWnd(NULL)
         , m_aClass(NULL)
         , m_videoPlayer(m_theme.GetColorRef(FluentDesign::Theme::Dialog))
+        , LOGO_SIZE(Config::SplashLargeLogo ? LARGE_LOGO_SIZE : NORMAL_LOGO_SIZE)
         , m_pLogoImage(nullptr)
         , m_gdiplusToken(0ll)
         , WM_TASKBARCREATED(RegisterWindowMessage(L"TaskbarCreated"))
@@ -135,7 +136,6 @@ namespace AnyFSE::App::Window
         m_closing = false;
         m_bLauncherWasActive = false;
         m_launcherStartedTime = 0;
-        m_hAnimationTimer = NULL;
         m_hUpdateTimer = NULL;
         m_hLauncherCheckTimer = NULL;
 
@@ -334,6 +334,13 @@ namespace AnyFSE::App::Window
         case WM_PAINT:
             OnPaint();
             return 0;
+        case WM_ANIMATION_FRAME:
+            if (m_animating)
+            {
+                RECT box = LogoRect();
+                InvalidateRect(m_hWnd, &box, FALSE);
+            }
+            return 0;
         case WM_PRINTCLIENT:
             OnPrintClient(reinterpret_cast<HDC>(wParam));
             return 0;
@@ -349,6 +356,15 @@ namespace AnyFSE::App::Window
         case WM_SIZE:
             m_videoPlayer.Resize();
             break;
+        case WM_DPICHANGED:
+        {
+            m_theme.UpdateDpi(HIWORD(wParam));
+            const RECT* suggested = reinterpret_cast<const RECT*>(lParam);
+            SetWindowPos(m_hWnd, NULL, suggested->left, suggested->top,
+                suggested->right - suggested->left, suggested->bottom - suggested->top, SWP_NOZORDER | SWP_NOACTIVATE);
+            InvalidateRect(m_hWnd, NULL, FALSE);
+            return 0;
+        }
         case WM_ACTIVATE:
             if (!m_closing && LOWORD(wParam) == WA_INACTIVE
                 && GamingExperience::IsFullscreenMode()
@@ -375,12 +391,16 @@ namespace AnyFSE::App::Window
 
     void MainWindow::OnCreate()
     {
+        m_theme.AttachWindow(m_hWnd);
         InitAnimationResources();
     }
 
     void MainWindow::OnPaint()
     {
         FluentDesign::DoubleBuferedPaint paint(m_hWnd);
+        // Animation frames invalidate only the logo box: do not fill the rest of the full-screen buffer
+        const RECT& dirty = paint.PaintRect();
+        IntersectClipRect(paint.MemDC(), dirty.left, dirty.top, dirty.right, dirty.bottom);
         DrawClient(paint.MemDC(), paint.ClientRect());
     }
 

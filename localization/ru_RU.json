@@ -146,6 +146,7 @@
   "settingsSplashUseCustomText": "Свой текст",
   "settingsSplashShowHomeLogo": "Показывать логотип",
   "settingsSplashAnimateLogo": "Анимировать логотип",
+  "settingsSplashLargeLogo": "Увеличенный размер логотипа",
   "settingsSplashShowVideo": "Показывать видео",
   "settingsSplashShowVideoDescription": "Случайное видео из папки \"splash\"",
   "settingsSplashPlayVideoAtLeastOnce": "Показать видео как минимум раз",

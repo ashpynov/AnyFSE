@@ -23,9 +23,21 @@
 
 #include <string>
 #include <vector>
+#include <windows.h>
+#include <appmodel.h>
 
 namespace AnyFSE::Tools::Packages
 {
+    inline bool HasPackageIdentity()
+    {
+        static const bool hasIdentity = []
+        {
+            UINT32 length = 0;
+            return GetCurrentPackageFullName(&length, nullptr) == ERROR_INSUFFICIENT_BUFFER;
+        }();
+        return hasIdentity;
+    }
+
     std::wstring GetPackageFamilyName(const std::wstring &appUserModelID);
     std::wstring GetAppxInstallLocation(const std::wstring &appUserModelID);
     std::wstring GetAppDisplayName(const std::wstring &appUserModelID);

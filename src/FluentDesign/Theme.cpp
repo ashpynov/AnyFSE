@@ -76,6 +76,16 @@ namespace FluentDesign
         SetWindowSubclass(hHostWnd, DialogSubclassProc, 0, (DWORD_PTR)this);
     }
 
+    void Theme::UpdateDpi(ULONG dpi)
+    {
+        if (!dpi || m_dpi == dpi)
+            return;
+
+        m_dpi = dpi;
+        CreateFonts();
+        OnDPIChanged.Notify();
+    }
+
     void Theme::RegisterChild(HWND hChild)
     {
         m_childsList.push_back(hChild);
@@ -239,9 +249,7 @@ namespace FluentDesign
             }
             case WM_DPICHANGED:
             {
-                ULONG oldDPI = This->m_dpi;
-                This->m_dpi = HIWORD(wParam);
-                This->CreateFonts();
+                This->UpdateDpi(HIWORD(wParam));
                 RECT* const prcNewWindow = (RECT*)lParam;
                 SetWindowPos(hWnd,
                     NULL,
@@ -250,8 +258,6 @@ namespace FluentDesign
                     prcNewWindow->right - prcNewWindow->left,
                     prcNewWindow->bottom - prcNewWindow->top,
                     SWP_NOZORDER | SWP_NOACTIVATE);
-
-                This->OnDPIChanged.Notify();
             }
             break;
 

@@ -11,6 +11,9 @@ namespace AnyFSE::App::Constants
     // Product files
     inline constexpr wchar_t AnyFseSettingsDll[] = L"AnyFSE.Settings.dll";
     inline constexpr wchar_t AnyFseExe[] = L"AnyFSE.exe";
+    inline constexpr wchar_t AppLocalStateDirectory[] = L"LocalState";
+    inline constexpr wchar_t AppLocalCacheDirectory[] = L"LocalCache";
+    inline constexpr wchar_t AppTempStateDirectory[] = L"TempState";
     inline constexpr const wchar_t* PopupperProcessNames[] = { L"SystemSettings.exe" };
     inline constexpr wchar_t AnyFseTaskName[] = L"AnyFSE";
     inline constexpr wchar_t ElevatedEventPrefix[] = L"Local\\AnyFSE.Task.Command.";

@@ -145,6 +145,7 @@
   "settingsSplashUseCustomText": "Özel yazı kullan",
   "settingsSplashShowHomeLogo": "Ev uygulamasının logosunu göster",
   "settingsSplashAnimateLogo": "Logoya animasyon ekle",
+  "settingsSplashLargeLogo": "Büyük logo kullan",
   "settingsSplashShowVideo": "Video göster",
   "settingsSplashShowVideoDescription": "Uygulama açılış ekranı klasöründen rastgele bir video oynat",
   "settingsSplashPlayVideoAtLeastOnce": "Video’yu en az bir kere oynat",

@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <filesystem>
 #include "Paths.hpp"
+#include "Packages.hpp"
 
 #include <winrt/Windows.Storage.h>
 #pragma comment(lib, "windowsapp.lib")      // WinRT runtime
@@ -11,23 +12,26 @@
 
 namespace AnyFSE::Tools::Paths
 {
-    using namespace winrt;
-    using namespace Windows::Storage;
+    namespace storage = winrt::Windows::Storage;
+    namespace c = AnyFSE::App::Constants;
 
     std::wstring GetAppLocalPath()
     {
         static std::wstring path = L"";
         if (path.empty())
         {
-            init_apartment();
-
-            try
+            winrt::init_apartment();
+            path = (std::filesystem::path(GetAppPath()) / c::AppLocalStateDirectory).wstring();
+            if (Packages::HasPackageIdentity())
             {
-                path = ApplicationData::Current().LocalFolder().Path();
-            }
-            catch(const winrt::hresult_error&)
-            {
-                path = GetAppPath() + L"\\LocalState";
+                try
+                {
+                    path = storage::ApplicationData::Current().LocalFolder().Path();
+                }
+                catch (const winrt::hresult_error&)
+                {
+                    // Keep the fallback path if the package data store is unavailable.
+                }
             }
         }
         return path;
@@ -38,14 +42,18 @@ namespace AnyFSE::Tools::Paths
         static std::wstring path = L"";
         if (path.empty())
         {
-            init_apartment();
-            try
+            winrt::init_apartment();
+            path = (std::filesystem::path(GetAppPath()) / c::AppLocalCacheDirectory).wstring();
+            if (Packages::HasPackageIdentity())
             {
-                path = ApplicationData::Current().LocalCacheFolder().Path();
-            }
-            catch(const winrt::hresult_error&)
-            {
-                path = GetAppPath() + L"\\LocalCache";
+                try
+                {
+                    path = storage::ApplicationData::Current().LocalCacheFolder().Path();
+                }
+                catch (const winrt::hresult_error&)
+                {
+                    // Keep the fallback path if the package data store is unavailable.
+                }
             }
         }
         return path;
@@ -56,14 +64,18 @@ namespace AnyFSE::Tools::Paths
         static std::wstring path = L"";
         if (path.empty())
         {
-            init_apartment();
-            try
+            winrt::init_apartment();
+            path = (std::filesystem::path(GetAppPath()) / c::AppTempStateDirectory).wstring();
+            if (Packages::HasPackageIdentity())
             {
-                path = ApplicationData::Current().TemporaryFolder().Path();
-            }
-            catch(const winrt::hresult_error&)
-            {
-                path = GetAppPath() + L"\\TempState";
+                try
+                {
+                    path = storage::ApplicationData::Current().TemporaryFolder().Path();
+                }
+                catch (const winrt::hresult_error&)
+                {
+                    // Keep the fallback path if the package data store is unavailable.
+                }
             }
         }
         return path;

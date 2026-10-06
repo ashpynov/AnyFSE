@@ -3,6 +3,7 @@
 #include <winrt/Windows.Foundation.Collections.h>
 
 #include "Tools/Localization.hpp"
+#include "Tools/Packages.hpp"
 
 #pragma comment(lib, "windowsapp.lib")      // WinRT runtime
 
@@ -10,6 +11,9 @@ namespace AnyFSE::App::JumpList
 {
     bool RegisterJumpList()
     {
+        if (!Packages::HasPackageIdentity())
+            return false;
+
         winrt::init_apartment();  // WinRT initialization required
 
         auto jumpList = winrt::Windows::UI::StartScreen::JumpList::LoadCurrentAsync().get();

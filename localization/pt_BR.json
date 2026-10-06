@@ -147,6 +147,7 @@
   "settingsSplashUseCustomText": "Texto personalizado",
   "settingsSplashShowHomeLogo": "Mostrar logotipo",
   "settingsSplashAnimateLogo": "Animar logotipo",
+  "settingsSplashLargeLogo": "Usar logotipo grande",
   "settingsSplashShowVideo": "Mostrar vídeo",
   "settingsSplashShowVideoDescription": "Vídeo aleatório da pasta \"splash\"",
   "settingsSplashPlayVideoAtLeastOnce": "Reproduzir o vídeo pelo menos uma vez",

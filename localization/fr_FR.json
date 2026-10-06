@@ -145,6 +145,7 @@
   "settingsSplashUseCustomText": "Texte personnalisé",
   "settingsSplashShowHomeLogo": "Afficher le logo de l'app d'accueil",
   "settingsSplashAnimateLogo": "Animer le logo",
+  "settingsSplashLargeLogo": "Utiliser un grand logo",
   "settingsSplashShowVideo": "Afficher la vidéo",
   "settingsSplashShowVideoDescription": "Lire une vidéo aléatoire du dossier \"splash\"",
   "settingsSplashPlayVideoAtLeastOnce": "Lire la vidéo au moins une fois",
