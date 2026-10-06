@@ -28,7 +28,7 @@ namespace FluentDesign
 {
     class DoubleBuferedPaint
     {
-        PAINTSTRUCT m_ps;
+        PAINTSTRUCT m_ps{};
         RECT m_rect;
         HDC m_hdc;
         HDC m_hdcMem;
@@ -37,12 +37,14 @@ namespace FluentDesign
         int m_width;
         int m_height;
         HWND m_hWnd;
+        bool m_externalDC;
 
     public:
-        DoubleBuferedPaint(HWND hwnd)
+        DoubleBuferedPaint(HWND hwnd, HDC targetDC = nullptr)
             : m_hWnd(hwnd)
+            , m_externalDC(targetDC != nullptr)
         {
-            m_hdc = BeginPaint(m_hWnd, &m_ps);
+            m_hdc = m_externalDC ? targetDC : BeginPaint(m_hWnd, &m_ps);
             GetClientRect(m_hWnd, &m_rect);
             m_width = m_rect.right - m_rect.left;
             m_height = m_rect.bottom - m_rect.top;
@@ -81,11 +83,13 @@ namespace FluentDesign
 
             // === CLEANUP DOUBLE BUFFERING ===
             SelectObject(m_hdcMem, m_hOldBitmap);
-            SelectClipRgn(m_hdc, NULL);
+            if (!m_externalDC)
+                SelectClipRgn(m_hdc, NULL);
             DeleteObject(m_hbmMem);
             DeleteDC(m_hdcMem);
 
-            EndPaint(m_hWnd, &m_ps);
+            if (!m_externalDC)
+                EndPaint(m_hWnd, &m_ps);
         }
     };
 }

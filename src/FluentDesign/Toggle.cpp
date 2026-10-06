@@ -133,13 +133,16 @@ namespace FluentDesign
             break;
 
         case WM_PAINT:
+        case WM_PRINTCLIENT:
             {
-                FluentDesign::DoubleBuferedPaint paint(hWnd);
+                FluentDesign::DoubleBuferedPaint paint(hWnd, uMsg == WM_PRINTCLIENT ? (HDC)wParam : nullptr);
 
                 RECT rect = paint.ClientRect();
                 This->DrawButton(hWnd, paint.MemDC(), rect);
             }
             return 0;
+        case WM_PRINT:
+            return DefWindowProc(hWnd, uMsg, wParam, lParam);
         case WM_ERASEBKGND:
             return 1;
         case WM_NCDESTROY:

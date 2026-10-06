@@ -26,6 +26,8 @@
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/GdiPlus.hpp"
 #include "Tools/Window.hpp"
+#include <utility>
+#include <vector>
 
 namespace FluentDesign
 {
@@ -65,6 +67,10 @@ namespace FluentDesign
 
             case WM_PAINT:
                 return This->OnPaint(hWnd);
+            case WM_PRINT:
+                return DefWindowProc(hWnd, uMsg, wParam, lParam);
+            case WM_PRINTCLIENT:
+                return This->OnPaint(hWnd, (HDC)wParam);
 
             case WM_ERASEBKGND:
                 return This->OnEraseBkgnd((HDC)wParam, (HWND)lParam);
@@ -81,13 +87,10 @@ namespace FluentDesign
 
     LRESULT ScrollView::OnEraseBkgnd(HDC hdc, HWND child)
     {
-        if(child)
+        HWND parent = GetParent(m_hWnd);
+        if (parent)
         {
-            HWND parent = GetParent(m_hWnd);
-            if (parent)
-            {
-                SendMessage(parent, WM_ERASEBKGND, (WPARAM)hdc, (LPARAM)m_hWnd);
-            }
+            SendMessage(parent, WM_ERASEBKGND, (WPARAM)hdc, (LPARAM)(child ? child : m_hWnd));
         }
         return 1;
     }
@@ -173,10 +176,10 @@ namespace FluentDesign
         return 0;
     };
 
-    LRESULT ScrollView::OnPaint(HWND hWnd)
+    LRESULT ScrollView::OnPaint(HWND hWnd, HDC targetDC)
     {
         using namespace Gdiplus;
-        FluentDesign::DoubleBuferedPaint paint(hWnd);
+        FluentDesign::DoubleBuferedPaint paint(hWnd, targetDC);
         Graphics graphics(paint.MemDC());
         graphics.SetSmoothingMode(SmoothingModeAntiAlias);
 
@@ -320,10 +323,32 @@ namespace FluentDesign
             int delta = m_scrollPos - newPos;
             m_scrollPos = newPos;
 
-            // Scroll the window content
-            ScrollWindowEx(m_hWnd, 0, delta, NULL, NULL, NULL, NULL, SW_INVALIDATE | SW_SCROLLCHILDREN );
-            UpdateScrollBar();
-            RedrawWindow(m_hWnd, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
+            // SW_SCROLLCHILDREN cannot reliably repaint rows clipped by the viewport.
+            // Move every row, including offscreen rows, before repainting the new layout.
+            std::vector<std::pair<HWND, RECT>> rows;
+            for (HWND child = GetWindow(m_hWnd, GW_CHILD); child; child = GetWindow(child, GW_HWNDNEXT))
+            {
+                RECT rect;
+                Window::GetChildRect(child, &rect);
+                rows.emplace_back(child, rect);
+            }
+
+            constexpr UINT flags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREDRAW | SWP_NOCOPYBITS;
+            HDWP positions = rows.empty() ? NULL : BeginDeferWindowPos((int)rows.size());
+            for (const auto& row : rows)
+            {
+                if (!positions)
+                    break;
+                positions = DeferWindowPos(positions, row.first, NULL, row.second.left, row.second.top + delta, 0, 0, flags);
+            }
+            if (!positions || !EndDeferWindowPos(positions))
+            {
+                for (const auto& row : rows)
+                    SetWindowPos(row.first, NULL, row.second.left, row.second.top + delta, 0, 0, flags);
+            }
+
+            CalculateRects();
+            RedrawWindow(m_hWnd, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
         }
     }
 
@@ -378,14 +403,6 @@ namespace FluentDesign
     // Call this when the window is resized
     void ScrollView::OnResize(int newWidth, int newHeight)
     {
-        HWND hChild = GetWindow(m_hWnd, GW_CHILD);
-        while (hChild)
-        {
-            RECT rc;
-            GetClientRect(hChild, &rc);
-            SendMessage(hChild, WM_SIZE, 0, MAKELONG(rc.right - rc.left, rc.bottom - rc.top));
-            hChild = GetWindow(hChild, GW_HWNDNEXT);
-        }
         m_viewHeight = newHeight;
         UpdateScrollBar();
     }

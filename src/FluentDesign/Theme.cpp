@@ -271,20 +271,20 @@ namespace FluentDesign
             case WM_ERASEBKGND:
             {
                 HWND child = (HWND)lParam;
-                if(child && !DefSubclassProc(hWnd, msg, wParam, lParam))
+                if (!DefSubclassProc(hWnd, msg, wParam, lParam))
                 {
                     RECT childRect;
-                    GetClientRect(child, &childRect);
+                    GetClientRect(child ? child : hWnd, &childRect);
                     HBRUSH hBrush = CreateSolidBrush(This->GetColorRef(Theme::Colors::Dialog));
                     FillRect((HDC)wParam, &childRect, hBrush);
                     DeleteObject(hBrush);
 
                     HWND focused = GetFocus();
-                    if (child == focused)
+                    if (child && child == focused)
                     {
                         This->DrawChildFocus((HDC)wParam, child, child);
                     }
-                    else if (GetParent(focused) == hWnd)
+                    else if (child && GetParent(focused) == hWnd)
                     {
                         This->DrawChildFocus((HDC)wParam, child, focused);
                     }

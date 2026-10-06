@@ -178,6 +178,7 @@ namespace AnyFSE::App::AppSettings::Settings
         Button m_closeButton;
 
         HWND m_hScrollView = nullptr;
+        bool m_updatingLayout = false;
 
         std::list<SettingsLine> m_settingPageList;
         std::list<SettingsLine> *m_pActivePageList = nullptr;

@@ -25,6 +25,8 @@
 #include <windows.h>
 #include <Windows.h>
 #include <algorithm>
+#include <chrono>
+#include <utility>
 #include "Logging/LogManager.hpp"
 #include "SettingsDialog.hpp"
 #include "Configuration/Config.hpp"
@@ -60,7 +62,7 @@ namespace AnyFSE::App::AppSettings::Settings
         wc.lpfnWndProc = DefDlgProc;  // Use DefDlgProc for dialog classes!
         wc.hInstance = hInstance;
         wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-        wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+        wc.hbrBackground = NULL;
         wc.lpszClassName = DialogClassName;
         wc.cbWndExtra = DLGWINDOWEXTRA;  // CRITICAL for dialogs!
 
@@ -80,7 +82,7 @@ namespace AnyFSE::App::AppSettings::Settings
         }
 
         dlgTemplate->style = WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME;
-        dlgTemplate->dwExtendedStyle = WS_EX_WINDOWEDGE;
+        dlgTemplate->dwExtendedStyle = WS_EX_WINDOWEDGE | WS_EX_COMPOSITED;
         dlgTemplate->cdit = 0;  // No controls
         dlgTemplate->x = 0;
         dlgTemplate->y = 0;
@@ -187,6 +189,7 @@ namespace AnyFSE::App::AppSettings::Settings
                 SetWindowText(hwnd, Translate(L"settingsMainWindowTitle").c_str());
                 OnInitDialog(hwnd);
                 RestoreWindowPlacement();
+                RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
                 Process::BringWindowToForeground(m_hDialog);
             }
             return TRUE;
@@ -309,6 +312,7 @@ namespace AnyFSE::App::AppSettings::Settings
             {
                 UpdateMaximizeButtonIcon();
             }
+            RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
             return TRUE;
 
         case WM_GETMINMAXINFO:
@@ -353,8 +357,9 @@ namespace AnyFSE::App::AppSettings::Settings
             return FALSE;
 
         case WM_PAINT:
+        case WM_PRINTCLIENT:
             {
-                FluentDesign::DoubleBuferedPaint paint(hwnd);
+                FluentDesign::DoubleBuferedPaint paint(hwnd, msg == WM_PRINTCLIENT ? (HDC)wParam : nullptr);
                 HBRUSH back = CreateSolidBrush(m_theme.GetColorRef(FluentDesign::Theme::Colors::Dialog));
                 RECT r = paint.ClientRect();
                 FillRect(paint.MemDC(), &r, back);
@@ -410,8 +415,11 @@ namespace AnyFSE::App::AppSettings::Settings
 
                 SelectObject(paint.MemDC(), oldFont);
             }
-            return FALSE;
+            return msg == WM_PRINTCLIENT ? TRUE : FALSE;
 
+        case WM_PRINT:
+            SetWindowLongPtr(hwnd, DWLP_MSGRESULT, DefWindowProc(hwnd, msg, wParam, lParam));
+            return TRUE;
         case WM_DPICHANGED:
             UpdateDpiLayout();
             break;
@@ -541,8 +549,6 @@ namespace AnyFSE::App::AppSettings::Settings
         RECT scrollRect;
         GetClientRect(m_hScrollView, &scrollRect);
         int width = scrollRect.right - scrollRect.left;
-        int steps = 10;
-        int delta = width / steps;
 
         for (auto& line: *pPageList)
         {
@@ -556,20 +562,50 @@ namespace AnyFSE::App::AppSettings::Settings
 
         RedrawWindow(m_hDialog, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
 
-        for (int i = 0; i < steps; i++)
+        std::vector<std::pair<HWND, RECT>> rows;
+        for (auto* page : {m_pActivePageList, pPageList})
         {
-            if (m_pActivePageList)
+            if (!page)
+                continue;
+            for (auto& line : *page)
             {
-                for (auto &line : *m_pActivePageList)
+                RECT rect;
+                Window::GetChildRect(line.GetHWnd(), &rect);
+                rows.emplace_back(line.GetHWnd(), rect);
+            }
+        }
+
+        constexpr auto transitionDuration = std::chrono::milliseconds(150);
+        constexpr UINT moveFlags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE;
+        const auto start = std::chrono::steady_clock::now();
+        int previousOffset = 0;
+        for (;;)
+        {
+            const auto elapsed = std::chrono::steady_clock::now() - start;
+            const float elapsedMs = std::chrono::duration<float, std::milli>(elapsed).count();
+            const float progress = min(1.0f, elapsedMs / transitionDuration.count());
+            const int offset = -(int)(width * progress) * invert;
+            if (offset != previousOffset)
+            {
+                HDWP positions = rows.empty() ? NULL : BeginDeferWindowPos((int)rows.size());
+                for (const auto& row : rows)
                 {
-                    Window::MoveWindow(line.GetHWnd(), -delta * invert, 0, TRUE);
+                    if (!positions)
+                        break;
+                    positions = DeferWindowPos(positions, row.first, NULL, row.second.left + offset, row.second.top, 0, 0, moveFlags);
                 }
+                if (!positions || !EndDeferWindowPos(positions))
+                {
+                    for (const auto& row : rows)
+                        SetWindowPos(row.first, NULL, row.second.left + offset, row.second.top, 0, 0, moveFlags);
+                }
+
+                // Preserve valid pixels while moving; repaint only areas invalidated by Windows.
+                RedrawWindow(m_hScrollView, NULL, NULL, RDW_UPDATENOW | RDW_ALLCHILDREN);
+                previousOffset = offset;
             }
-            for (auto &line : *pPageList)
-            {
-                Window::MoveWindow(line.GetHWnd(), -delta * invert, 0, TRUE);
-            }
-            RedrawWindow(m_hScrollView, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+            if (progress >= 1.0f)
+                break;
             Sleep(5);
         }
         if (m_pActivePageList)
@@ -605,6 +641,16 @@ namespace AnyFSE::App::AppSettings::Settings
 
     void SettingsDialog::UpdateLayout()
     {
+        if (m_updatingLayout)
+            return;
+        m_updatingLayout = true;
+
+        // Keep the previous composed frame until all controls have their final bounds.
+        // WM_SETREDRAW also changes WS_VISIBLE, so leave an initially hidden dialog hidden.
+        const bool suspendRedraw = (GetWindowLong(m_hDialog, GWL_STYLE) & WS_VISIBLE) != 0;
+        if (suspendRedraw)
+            SendMessage(m_hDialog, WM_SETREDRAW, FALSE, 0);
+
         m_theme.ReflowChilds(m_hDialog);
 
         for (auto &page: m_pages)
@@ -643,6 +689,9 @@ namespace AnyFSE::App::AppSettings::Settings
 
         m_scrollView.SetContentHeight(top + m_scrollView.GetScrollPos());
 
+        if (suspendRedraw)
+            SendMessage(m_hDialog, WM_SETREDRAW, TRUE, 0);
+        m_updatingLayout = false;
         RedrawWindow(m_hDialog, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
     }
 

@@ -212,8 +212,9 @@ namespace FluentDesign
 
 
             case WM_PAINT:
+            case WM_PRINTCLIENT:
                 {
-                    FluentDesign::DoubleBuferedPaint paint(hWnd);
+                    FluentDesign::DoubleBuferedPaint paint(hWnd, uMsg == WM_PRINTCLIENT ? (HDC)wParam : nullptr);
 
                     RECT rect = paint.ClientRect();
                     This->DrawComboBackground(hWnd, paint.MemDC(), rect);
@@ -224,6 +225,8 @@ namespace FluentDesign
                 }
                 return 0;
 
+            case WM_PRINT:
+                return DefWindowProc(hWnd, uMsg, wParam, lParam);
             case WM_ERASEBKGND:
                 return 1;
             case WM_NCDESTROY:

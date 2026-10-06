@@ -57,7 +57,7 @@ namespace FluentDesign
         void SetOffset(int newOffset);
 
         void CalculateRects();
-        LRESULT OnPaint(HWND hWnd);
+        LRESULT OnPaint(HWND hWnd, HDC targetDC = nullptr);
         LRESULT OnGesture(HGESTUREINFO hGestureInfo);
 
     public:

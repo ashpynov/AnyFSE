@@ -198,7 +198,7 @@ namespace FluentDesign
         int ReflowLinkButtons(int width);
 
         // Message handlers
-        void OnPaint();
+        void OnPaint(HDC targetDC = nullptr);
 
         void DrawBackground(HDC hdc, const RECT &rect, bool frame=true);
 

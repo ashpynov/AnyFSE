@@ -224,12 +224,15 @@ namespace FluentDesign
             switch (msg)
             {
             case WM_PAINT:
+            case WM_PRINTCLIENT:
             {
-                DoubleBuferedPaint paint(hWnd);
+                DoubleBuferedPaint paint(hWnd, msg == WM_PRINTCLIENT ? (HDC)wParam : nullptr);
                 This->DrawContainer(paint.MemDC());
                 return 0;
             }
 
+            case WM_PRINT:
+                return DefWindowProc(hWnd, msg, wParam, lParam);
             case WM_ERASEBKGND:
                 return 1; // We handle background in WM_PAINT
 

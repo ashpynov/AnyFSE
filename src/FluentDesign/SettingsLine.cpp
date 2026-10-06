@@ -289,6 +289,11 @@ namespace FluentDesign
         case WM_PAINT:
             OnPaint();
             return 0;
+        case WM_PRINT:
+            return DefWindowProc(m_hWnd, message, wParam, lParam);
+        case WM_PRINTCLIENT:
+            OnPaint((HDC)wParam);
+            return 0;
 
         case WM_SIZE:
             OnSize(LOWORD(lParam), HIWORD(lParam));
@@ -354,12 +359,12 @@ namespace FluentDesign
 
     void SettingsLine::Invalidate(BOOL bErase)
     {
-        RedrawWindow(m_hWnd, NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE | RDW_UPDATENOW);
+        RedrawWindow(m_hWnd, NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE);
     }
 
-    void SettingsLine::OnPaint()
+    void SettingsLine::OnPaint(HDC targetDC)
     {
-        FluentDesign::DoubleBuferedPaint paint(m_hWnd);
+        FluentDesign::DoubleBuferedPaint paint(m_hWnd, targetDC);
         // Draw background
 
         DrawBackground(paint.MemDC(), paint.ClientRect());
