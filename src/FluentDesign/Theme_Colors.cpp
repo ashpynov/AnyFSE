@@ -123,11 +123,14 @@ namespace FluentDesign
         m_isDark = IsDarkThemeEnabled();
         m_accentColor = GetAccentColor();
 
-        BOOL useDarkMode = IsDark() ? TRUE : FALSE;
-        DwmSetWindowAttribute(m_hParentWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &useDarkMode, sizeof(useDarkMode));
+        if (IsWindow(m_hParentWnd))
+        {
+            BOOL useDarkMode = IsDark() ? TRUE : FALSE;
+            DwmSetWindowAttribute(m_hParentWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &useDarkMode, sizeof(useDarkMode));
 
-        COLORREF captionColor = GetColorRef(FluentDesign::Theme::Colors::Dialog);
-        DwmSetWindowAttribute(m_hParentWnd, DWMWA_CAPTION_COLOR, &captionColor, sizeof(captionColor));
+            COLORREF captionColor = GetColorRef(FluentDesign::Theme::Colors::Dialog);
+            DwmSetWindowAttribute(m_hParentWnd, DWMWA_CAPTION_COLOR, &captionColor, sizeof(captionColor));
+        }
 
         bool colorHeader = Registry::ReadBool(L"HKCU\\Software\\Microsoft\\Windows\\DWM", L"ColorPrevalence", false);
 

@@ -91,7 +91,6 @@ namespace AnyFSE::App::Window
         // Combined load and play
         HRESULT Load(const WCHAR *videoFile, bool mute, bool loop, bool pause, HWND hwndParent);
         HRESULT Play();
-        HRESULT Pause();
         HRESULT Stop();
         void Close();
         void Resize();

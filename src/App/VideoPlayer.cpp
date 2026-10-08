@@ -220,11 +220,6 @@ namespace AnyFSE::App::Window
                     log.Debug("Show in MFP_EVENT_TYPE_MEDIAITEM_SET");
                     ShowVideo(true);
                 }
-                else if (m_desiredState == MFP_MEDIAPLAYER_STATE_PAUSED)
-                {
-                    pEventHeader->pMediaPlayer->Pause();
-                    ShowVideo(false);
-                }
             }
             break;
             case MFP_EVENT_TYPE_PLAYBACK_ENDED:
@@ -465,25 +460,6 @@ namespace AnyFSE::App::Window
         }
         return hr;
     }
-    HRESULT SimpleVideoPlayer::Pause()
-    {
-        CriticalSectionLock lock(&m_cs);
-        m_desiredState = MFP_MEDIAPLAYER_STATE_PAUSED;
-        if (!m_pPlayer || !m_bInitialized)
-        {
-            return E_FAIL;
-        }
-        MFP_MEDIAPLAYER_STATE state;
-        HRESULT hr = m_pPlayer->GetState(&state);
-        if (state == MFP_MEDIAPLAYER_STATE_EMPTY)
-        {
-            log.Debug("Pause called while not loaded");
-            return S_OK;
-        }
-        log.Debug("Pause");
-        return m_pPlayer->Pause();
-    }
-
     HRESULT SimpleVideoPlayer::Stop()
     {
         CriticalSectionLock lock(&m_cs);

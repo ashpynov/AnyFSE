@@ -132,7 +132,6 @@ namespace AnyFSE::App::Window
         m_result = ERROR_RESTART_APPLICATION;
         m_empty = false;
         m_successChecked = false;
-        m_suspended = false;
         m_closing = false;
         m_bLauncherWasActive = false;
         m_launcherStartedTime = 0;
@@ -209,7 +208,7 @@ namespace AnyFSE::App::Window
                 m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, Config::SplashVideoPause, m_hWnd);
             }
 
-            if (!m_empty && !m_suspended)
+            if (!m_empty)
             {
                 if (Config::SplashShowVideo)
                 {
@@ -229,38 +228,6 @@ namespace AnyFSE::App::Window
             SetActiveWindow(m_hWnd);
             SetForegroundWindow(m_hWnd);
         }
-        return true;
-    }
-
-    bool MainWindow::Start()
-    {
-        m_empty = false;
-        if (IsWindowVisible(m_hWnd))
-        {
-            log.Debug("Start animation");
-            if (Config::SplashShowVideo)
-            {
-                m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, Config::SplashVideoPause, m_hWnd);
-                m_videoPlayer.Play();
-            }
-            StartAnimation();
-        }
-        return true;
-    }
-
-    bool MainWindow::Hide()
-    {
-        if (IsWindowVisible(m_hWnd))
-        {
-            AnimateWindow(m_hWnd, 200, AW_BLEND | AW_HIDE);
-            if (Config::SplashShowVideo)
-            {
-                m_videoPlayer.Close();
-                SelectNextVideo();
-            }
-            StopAnimation();
-        }
-
         return true;
     }
 
@@ -395,22 +362,6 @@ namespace AnyFSE::App::Window
         InitAnimationResources();
     }
 
-    void MainWindow::OnPaint()
-    {
-        FluentDesign::DoubleBuferedPaint paint(m_hWnd);
-        // Animation frames invalidate only the logo box: do not fill the rest of the full-screen buffer
-        const RECT& dirty = paint.PaintRect();
-        IntersectClipRect(paint.MemDC(), dirty.left, dirty.top, dirty.right, dirty.bottom);
-        DrawClient(paint.MemDC(), paint.ClientRect());
-    }
-
-    void MainWindow::OnPrintClient(HDC hdc)
-    {
-        RECT rect;
-        GetClientRect(m_hWnd, &rect);
-        DrawClient(hdc, rect);
-    }
-
     void MainWindow::OnDestroy()
     {
         m_videoPlayer.Close();
@@ -484,33 +435,5 @@ namespace AnyFSE::App::Window
         }
 
         m_currentVideo = videoFiles[GetTickCount64() % videoFiles.size()].wstring().c_str();
-    }
-
-    void MainWindow::Suspend(bool bSuspend)
-    {
-        if (m_suspended == bSuspend)
-        {
-            log.Debug(">>> Resuspend");
-            return;
-        }
-
-        m_suspended = bSuspend;
-
-        if (IsWindowVisible(m_hWnd))
-        {
-            if (bSuspend)
-            {
-                m_videoPlayer.Pause();
-                StopAnimation();
-            }
-            else
-            {
-                Start();
-            }
-        }
-        else
-        {
-            log.Debug("Splash is not visible");
-        }
     }
 }

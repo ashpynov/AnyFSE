@@ -34,7 +34,6 @@
 #include "Tools/GdiPlus.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/Localization.hpp"
-#include "App/Launchers.hpp"
 
 #pragma comment(lib, "Gdiplus.lib")
 #pragma comment(lib, "dwmapi.lib")
@@ -42,6 +41,22 @@
 namespace AnyFSE::App::Window
 {
     static Logger log = LogManager::GetLogger("Window/Animation");
+    
+    void MainWindow::OnPaint()
+    {
+        FluentDesign::DoubleBuferedPaint paint(m_hWnd);
+        // Animation frames invalidate only the logo box: do not fill the rest of the full-screen buffer
+        const RECT& dirty = paint.PaintRect();
+        IntersectClipRect(paint.MemDC(), dirty.left, dirty.top, dirty.right, dirty.bottom);
+        DrawClient(paint.MemDC(), paint.ClientRect());
+    }
+
+    void MainWindow::OnPrintClient(HDC hdc)
+    {
+        RECT rect;
+        GetClientRect(m_hWnd, &rect);
+        DrawClient(hdc, rect);
+    }
 
     bool MainWindow::InitAnimationResources()
     {
@@ -146,74 +161,6 @@ namespace AnyFSE::App::Window
             textArea.Y = textArea.Height * 0.8f;
             textArea.Height = m_theme.DpiScaleF(50);
             graphics.DrawString(name.c_str(), -1, &font, textArea, &format, &textBrush);
-        }
-    }
-
-    void MainWindow::OnTimer(UINT_PTR timerId)
-    {
-        if (m_closing)
-        {
-            log.Trace("Exit from Timer on m_closing");
-            return;
-        }
-
-        if (timerId == m_launcherTimeoutTimerId)
-        {
-            log.Trace("Destroy Window by launcherTimeout");
-
-            m_closing = true;
-            DestroyWindow(m_hWnd);
-
-            if (!m_bLauncherWasActive && Launchers::IsLauncherActiveOrMinimized())
-            {
-                log.Trace("Notify started");
-                Config::Launcher.OnStarted.Notify();
-            }
-            Launchers::FocusLauncher();
-            return;
-        }
-        if (timerId == m_launcherCheckTimerId)
-        {
-            bool isActive = Launchers::IsLauncherActiveOrMinimized();
-            if (isActive || m_bLauncherWasActive)
-            {
-                const bool notifyStarted = !m_bLauncherWasActive && isActive;
-                m_bLauncherWasActive = true;
-                if (!m_launcherStartedTime)
-                {
-                    m_launcherStartedTime = GetTickCount64();
-                }
-                if (!isActive || !Config::SplashShowVideo || !Config::SplashTillEnd || !m_videoPlayer.ShouldWaitForEnd())
-                {
-                    const bool focusLauncher = isActive && Launchers::IsLauncherMinimized();
-                    KillTimer(m_hWnd, m_launcherCheckTimerId);
-                    m_hLauncherCheckTimer = NULL;
-
-                    UINT_PTR now = GetTickCount64();
-                    if (!Config::SplashDelayHide || now > m_launcherStartedTime + HIDE_DELAY_MS )
-                    {
-                        m_closing = true;
-                        log.Trace("Destroy Window by launcherCheckTimer");
-                        DestroyWindow(m_hWnd);
-
-                        if (notifyStarted)
-                        {
-                            log.Trace("Notify started");
-                            Config::Launcher.OnStarted.Notify();
-                        }
-                        Launchers::FocusLauncher();
-                    }
-                    else
-                    {
-                        log.Trace("Set Timeout timer to DestroyWindow");
-                        KillTimer(m_hWnd, m_launcherTimeoutTimerId);
-                        SetTimer(m_hWnd, m_launcherTimeoutTimerId, HIDE_DELAY_MS - (int)(now - m_launcherStartedTime) + 1, NULL);
-                        return;
-                    }
-
-                    return;
-                }
-            }
         }
     }
 

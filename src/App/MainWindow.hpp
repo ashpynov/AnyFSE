@@ -56,7 +56,6 @@ namespace AnyFSE::App::Window
         int m_result = ERROR_RESTART_APPLICATION;
         bool m_empty = false;
         bool m_successChecked = false;
-        bool m_suspended = false;
         bool m_closing = false;
 
         static WNDCLASS WC;
@@ -71,9 +70,6 @@ namespace AnyFSE::App::Window
 
         void OnDestroy();
 
-        void OnUpdateNotification();
-        void OnUpdateCheck();
-        void ScheduleCheck(int delay = 60);
         void SelectNextVideo();
         bool UpdateIcon();
 
@@ -84,9 +80,6 @@ namespace AnyFSE::App::Window
         MainWindow(LPCWSTR className, HINSTANCE hInstance);
         ~MainWindow();
         bool Show(bool empty = false);
-        bool Start();
-        bool Hide();
-        void Suspend(bool bSuspend);
         bool Create(LPCTSTR windowName);
 
         int Run(const std::wstring &name);
@@ -139,7 +132,10 @@ namespace AnyFSE::App::Window
         BOOL LoadLogoImage();
         RECT LogoRect();
         void DrawClient(HDC hdc, const RECT& clientRect);
+        BOOL FreeTimer(UINT_PTR &refTimer);
         void OnTimer(UINT_PTR timerId);
+        void OnLauncherTimeoutTimer();
+        void OnLauncherCheckTimer();
         BOOL FreeAnimationResources();
         BOOL StartAnimation();
         BOOL StopAnimation();
