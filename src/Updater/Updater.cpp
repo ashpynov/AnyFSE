@@ -498,17 +498,13 @@ namespace AnyFSE::Updater
 
         // do not wait; return true when launched
 
+        if (!MoveFileExW(localPath.c_str(), nullptr, MOVEFILE_DELAY_UNTIL_REBOOT))
+            log.Error(log.APIError(), "Unable to schedule the downloaded installer for deletion");
 
         if (sei.hProcess)
         {
-            WaitForSingleObject(sei.hProcess, INFINITE);
             CloseHandle(sei.hProcess);
         }
-
-        // The updater owns the downloaded installer and is still alive after
-        // waiting for it. Delete it here instead of making the installer
-        // schedule deletion of its own executable.
-        DeleteFileW(localPath.c_str());
 
         return true;
     }
@@ -591,8 +587,7 @@ namespace AnyFSE::Updater
         {
             try
             {
-                 Update(tag, silentUpdate);
-                 m_lastUpdateInfo.uiState = UpdaterState::Idle;
+                 m_lastUpdateInfo.uiState = Update(tag, silentUpdate) ? UpdaterState::UpdateExecuted : UpdaterState::Idle;
             }
             catch (...)
             {

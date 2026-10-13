@@ -170,6 +170,12 @@ namespace AnyFSE::App::AppSettings::Settings
     {
         Updater::UpdateInfo info = Updater::GetLastUpdateInfo();
 
+        if (info.uiState == Updater::UpdaterState::UpdateExecuted)
+        {
+            OnClose();
+            return;
+        }
+
         if (SetVersionStatus(Updater::GetLastUpdateInfo()))
         {
             UpdateVersionStatusDelay(100);

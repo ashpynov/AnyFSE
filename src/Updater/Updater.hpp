@@ -21,7 +21,8 @@ namespace AnyFSE::Updater
         NetworkFailed,
         CheckingUpdate,
         Downloading,
-        ReadyForUpdate
+        ReadyForUpdate,
+        UpdateExecuted
     };
 
     struct UpdateInfo
