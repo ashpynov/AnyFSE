@@ -32,6 +32,8 @@ namespace AnyFSE::Updater
         std::wstring downloadPath = L"\0";
         long long lCommandAge = 0;
         UpdaterState uiCommand = UpdaterState::Idle;
+        ULONGLONG downloadedBytes = 0;
+        ULONGLONG totalBytes = 0;
     };
 
     struct SUBSCRIPTION

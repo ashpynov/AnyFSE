@@ -49,6 +49,11 @@ namespace FluentDesign
         UINT_PTR m_animationTimer;
         bool m_animationLoop;
 
+        bool m_showProgress = false;
+        double m_progress = -1.0;
+        UINT_PTR m_progressTimer = 0;
+        ULONGLONG m_progressStarted = 0;
+
         bool m_buttonMouseOver;
         bool m_bFlat;
         bool m_bSquare;
@@ -102,6 +107,7 @@ namespace FluentDesign
         Button& Create(HWND hParent, const std::wstring& text, const std::function<void()>& callback, int x, int y, int width, int height);
 
         virtual Button& SetText(const std::wstring& text);
+        // Multiple glyphs are drawn as layers in the same icon cell.
         Button &SetIcon(const std::wstring &glyph, bool bSmall = false);
         Button& Enable(bool bEnable);
         Button& SetTabStop(bool bTabStop);
@@ -128,6 +134,10 @@ namespace FluentDesign
         void Animate(int startAngle, int stopAngle, int duration, bool bInfinite);
         void CompleteAnimation();
         void CancelAnimation(int endAngle = 0);
+
+        Button& SetProgress(double progress);
+        Button& SetIndeterminateProgress() { return SetProgress(-1.0); }
+        Button& ClearProgress();
 
         std::wstring& GetText();
 

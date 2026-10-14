@@ -55,7 +55,7 @@ namespace AnyFSE::App::AppSettings::Settings
                 std::vector<Popup::PopupItem>
                 {
                     Popup::PopupItem(L"\xE2B4", Translate(L"settingsUpdateViewRelease"), delegate(OnShowVersion)),
-                    Popup::PopupItem(L"\xEDAB", Translate(L"settingsUpdateDownloadAndUpdate"), delegate(OnUpdate))
+                    Popup::PopupItem(L"\xE118", Translate(L"settingsUpdateDownloadAndUpdate"), delegate(OnUpdate))
                 }, 400, TPM_LEFTALIGN
             );
 
@@ -101,16 +101,16 @@ namespace AnyFSE::App::AppSettings::Settings
         }
         else if (command == UpdaterState::NetworkFailed && !enableAnimation)
         {
-            icon = L"\xF305\xE871";
+            icon = L"\xF305\xEB5B";
         }
         else if (uiInfo.uiState == UpdaterState::Downloading || command == UpdaterState::Downloading || command == UpdaterState::ReadyForUpdate)
         {
-            icon = L"\xF16A";
-            aVersion = (uiInfo.uiState == UpdaterState::NetworkFailed)  ? Translate(L"settingsFailedToDownload") : L"";
+            icon = (uiInfo.uiState == UpdaterState::NetworkFailed) ? L"\xF305\xEB5B" : L"\xE118";
+            aVersion = (uiInfo.uiState == UpdaterState::NetworkFailed) ? Translate(L"settingsFailedToDownload") : L"";
             cVersion = (uiInfo.uiState == UpdaterState::Downloading)
                 ? TranslateF(L"settingsDownloadingVersionFmt", uiInfo.newVersion.c_str())
                 : TranslateF(L"settingsUpdatingToVersionFmt", uiInfo.newVersion.c_str());
-            enableAnimation = true;
+            enableAnimation = false;
             enableCheck = false;
             enableStatus = false;
         }
@@ -140,19 +140,31 @@ namespace AnyFSE::App::AppSettings::Settings
         m_updateCurrentText.SetSize(-1, m_theme.DpiScale(Layout::UpdateHeight) / (showSecond ? 2 : 1));
         m_updateCurrentText.SetText(cVersion);
 
-        if (enableAnimation)
+        const bool downloading = uiInfo.uiState == UpdaterState::Downloading;
+        const bool preparingUpdate = uiInfo.uiState == UpdaterState::ReadyForUpdate;
+        if (downloading || preparingUpdate)
+        {
+            if (preparingUpdate)
+                m_updateCheckButton.SetProgress(1.0);
+            else if (uiInfo.totalBytes > 0)
+                m_updateCheckButton.SetProgress(double(uiInfo.downloadedBytes) / double(uiInfo.totalBytes));
+            else
+                m_updateCheckButton.SetIndeterminateProgress();
+        }
+        else if (enableAnimation)
         {
             m_updateCheckButton.Animate(0, 360, 750, true);
         }
         else
         {
+            m_updateCheckButton.ClearProgress();
             m_updateCheckButton.CancelAnimation();
         }
 
         UpdateWindow(m_updateCheckButton.GetHwnd());
         UpdateWindow(m_updateButton.GetHwnd());
 
-        return !delayed;
+        return !delayed || uiInfo.uiState == UpdaterState::CheckingUpdate || downloading || preparingUpdate;
     }
 
     void SettingsDialog::OnCheckUpdate()
@@ -168,6 +180,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
     void SettingsDialog::OnUpdateNotification()
     {
+        Updater::Subscribe(m_hDialog, WM_UPDATE_NOTIFICATION);
         Updater::UpdateInfo info = Updater::GetLastUpdateInfo();
 
         if (info.uiState == Updater::UpdaterState::UpdateExecuted)
@@ -176,29 +189,46 @@ namespace AnyFSE::App::AppSettings::Settings
             return;
         }
 
-        if (SetVersionStatus(Updater::GetLastUpdateInfo()))
+        // An idle updater has no result yet; preserve the version saved by an earlier check.
+        if (info.uiState == Updater::UpdaterState::Done && info.uiCommand == Updater::UpdaterState::CheckingUpdate)
+        {
+            if (Config::UpdateNotifications
+                && !info.newVersion.empty()
+                && info.newVersion != Config::UpdateLastVersion)
+            {
+                Notification::ShowNewVersion(NULL, info.newVersion);
+            }
+            Config::SaveUpdateVersion(info.newVersion);
+        }
+
+        if (SetVersionStatus(info))
         {
             UpdateVersionStatusDelay(100);
         }
-        if (Config::UpdateNotifications
-            && !info.newVersion.empty()
-            && info.newVersion != Config::UpdateLastVersion)
-        {
-            Notification::ShowNewVersion(NULL, info.newVersion);
-        }
-
-        Config::SaveUpdateVersion(info.newVersion);
-        Updater::Subscribe(m_hDialog, WM_UPDATE_NOTIFICATION);
     }
 
     void SettingsDialog::UpdateVersionStatusDelay(UINT delay)
     {
-        SetTimer(m_hDialog, 0, (UINT)delay,
+        SetTimer(m_hDialog, UpdateStatusTimerId, delay,
         [](HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
         {
             KillTimer(hWnd, idEvent);
-            SendMessage(hWnd, WM_UPDATE_NOTIFICATION, 0, 0);
+            auto* dialog = reinterpret_cast<SettingsDialog*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+            if (dialog)
+                dialog->OnUpdateStatusTimer();
         });
+    }
+
+    void SettingsDialog::OnUpdateStatusTimer()
+    {
+        const Updater::UpdateInfo info = Updater::GetLastUpdateInfo();
+        if (info.uiState == Updater::UpdaterState::UpdateExecuted)
+        {
+            OnClose();
+            return;
+        }
+        if (SetVersionStatus(info))
+            UpdateVersionStatusDelay(100);
     }
 
     void SettingsDialog::OnShowVersion()

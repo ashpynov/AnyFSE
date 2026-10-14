@@ -195,6 +195,7 @@ namespace AnyFSE::App::AppSettings::Settings
         Static m_updateCurrentText;
         Button m_updateButton;
         Button m_languageButton;
+        static constexpr UINT_PTR UpdateStatusTimerId = 1;
 
         void RefreshLocalizedCaption();
         void AddLanguageButton();
@@ -207,6 +208,7 @@ namespace AnyFSE::App::AppSettings::Settings
         void OnCheckUpdate();
         void OnUpdateNetworkRestore();
         void OnUpdateNotification();
+        void OnUpdateStatusTimer();
         void UpdateVersionStatusDelay(UINT delay);
         void OnShowVersion();
         void OnUpdate();

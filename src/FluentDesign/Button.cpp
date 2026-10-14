@@ -25,6 +25,7 @@
 #include <windows.h>
 #include <string>
 #include <functional>
+#include <algorithm>
 #include <Uxtheme.h>
 #include "Tools/Unicode.hpp"
 #include "Button.hpp"
@@ -37,6 +38,20 @@ using namespace Gdiplus;
 
 namespace FluentDesign
 {
+    static RectF MeasureIconLayers(Graphics& graphics, const std::wstring& glyphs, const Font& font, const StringFormat& format)
+    {
+        const RectF bounds(0.0f, 0.0f, 100000.0f, 100000.0f);
+        RectF iconRect{};
+        for (const wchar_t glyph : glyphs)
+        {
+            RectF layerRect{};
+            graphics.MeasureString(&glyph, 1, &font, bounds, &format, &layerRect);
+            iconRect.Width = (std::max)(iconRect.Width, layerRect.Width);
+            iconRect.Height = (std::max)(iconRect.Height, layerRect.Height);
+        }
+        return iconRect;
+    }
+
     Button::Button(Theme &theme, Align::Anchor align, GetParentRectFunc getParentRect)
         : FluentControl(theme, align, getParentRect)
         , m_buttonMouseOver(false)
@@ -298,12 +313,14 @@ namespace FluentDesign
         }
         if (!m_icon.empty())
         {
-            graphics.MeasureString(m_icon.c_str(), -1, &iconFont, bounds, &format, &iconRect);
+            iconRect = MeasureIconLayers(graphics, m_icon, iconFont, format);
         }
 
         float spacing = (!m_text.empty() && !m_icon.empty()) ? m_theme.DpiScaleF(6.0f) : 0.0f;
-        float width = textRect.Width + iconRect.Width + spacing;
-        float height = max(textRect.Height, iconRect.Height);
+        const float progressDiameter = iconRect.Height + m_theme.DpiScaleF(6.0f);
+        float iconWidth = m_showProgress ? (std::max)(iconRect.Width, progressDiameter) : iconRect.Width;
+        float width = textRect.Width + iconWidth + spacing;
+        float height = (std::max)(textRect.Height, m_showProgress ? progressDiameter : iconRect.Height);
         ReleaseDC(m_hWnd, hdc);
 
         return SIZE{(long)width, (long)height};
@@ -321,6 +338,7 @@ namespace FluentDesign
 
     void Button::Animate(int startAngle, int stopAngle, int duration, bool bInfinite)
     {
+        ClearProgress();
         bool active = m_animationTimer;
 
         m_startAngle = startAngle;
@@ -333,7 +351,7 @@ namespace FluentDesign
         m_animationLoop = bInfinite;
         if (!active)
         {
-            m_animationTimer = SetTimer(m_hWnd, 1, 10, NULL);
+            m_animationTimer = SetTimer(m_hWnd, 1, 10, NULL) ? 1 : 0;
             SetAngle(m_startAngle);
         }
     }
@@ -345,14 +363,60 @@ namespace FluentDesign
 
     void Button::CancelAnimation(int endAngle)
     {
-        KillTimer(m_hWnd, m_animationTimer);
+        if (m_animationTimer)
+            KillTimer(m_hWnd, m_animationTimer);
         m_animationTimer = 0;
         SetAngle(endAngle);
     }
 
+    Button& Button::SetProgress(double progress)
+    {
+        progress = progress < 0.0 ? -1.0 : std::clamp(progress, 0.0, 1.0);
+        if (m_showProgress && m_progress == progress)
+            return *this;
+
+        if (m_animationTimer || m_iconAngle)
+            CancelAnimation();
+        if (m_progressTimer)
+        {
+            KillTimer(m_hWnd, m_progressTimer);
+            m_progressTimer = 0;
+        }
+        m_showProgress = true;
+        m_progress = progress;
+        if (progress < 0.0)
+        {
+            m_progressStarted = GetTickCount64();
+            m_progressTimer = SetTimer(m_hWnd, 2, 16, NULL) ? 2 : 0;
+        }
+        InvalidateRect(m_hWnd, NULL, FALSE);
+        return *this;
+    }
+
+    Button& Button::ClearProgress()
+    {
+        if (!m_showProgress)
+            return *this;
+
+        if (m_progressTimer)
+        {
+            KillTimer(m_hWnd, m_progressTimer);
+            m_progressTimer = 0;
+        }
+        m_showProgress = false;
+        InvalidateRect(m_hWnd, NULL, FALSE);
+        return *this;
+    }
+
     LRESULT Button::OnTimer(UINT timerId)
     {
-        if (timerId != 1)
+        if (timerId == 2)
+        {
+            if (m_progressTimer)
+                InvalidateRect(m_hWnd, NULL, FALSE);
+            return 0;
+        }
+        if (timerId != 1 || !m_animationTimer)
             return 0;
 
         int nextAngle = m_iconAngle + m_stepAngle;
@@ -435,6 +499,8 @@ namespace FluentDesign
                 return 1;
 
             case WM_NCDESTROY:
+                This->m_animationTimer = 0;
+                This->m_progressTimer = 0;
                 RemoveWindowSubclass(hWnd, ButtonSubclassProc, uIdSubclass);
                 break;
         }
@@ -567,11 +633,13 @@ namespace FluentDesign
         }
         if (!m_icon.empty())
         {
-            graphics.MeasureString(m_icon.c_str(), -1, &iconFont, measureBounds, &format, &iconRect);
+            iconRect = MeasureIconLayers(graphics, m_icon, iconFont, format);
         }
 
         const float spacing = (!m_text.empty() && !m_icon.empty()) ? m_theme.DpiScaleF(6.0f) : 0.0f;
-        const float contentWidth = iconRect.Width + spacing + textRect.Width;
+        const float progressDiameter = iconRect.Height + m_theme.DpiScaleF(6.0f);
+        const float iconWidth = m_showProgress ? (std::max)(iconRect.Width, progressDiameter) : iconRect.Width;
+        const float contentWidth = iconWidth + spacing + textRect.Width;
         float x = br.X;
         if (align == BS_CENTER)
         {
@@ -585,10 +653,31 @@ namespace FluentDesign
         if (!m_icon.empty())
         {
             RectF iconDraw = br;
-            iconDraw.X = x;
+            iconDraw.X = x + (iconWidth - iconRect.Width) / 2.0f;
             iconDraw.Width = iconRect.Width;
 
-            if (m_iconAngle)
+            if (m_showProgress)
+            {
+                const float thickness = m_theme.DpiScaleF(2.0f);
+                const float diameter = progressDiameter;
+                RectF progressRect(x + (iconWidth - diameter) / 2.0f, br.Y + (br.Height - diameter) / 2.0f, diameter, diameter);
+                progressRect.Inflate(-thickness / 2.0f, -thickness / 2.0f);
+                Pen progressPen(Color(m_theme.GetColor(Theme::Colors::TextAccented)), thickness);
+                if (m_progress >= 1.0)
+                {
+                    graphics.DrawEllipse(&progressPen, progressRect);
+                }
+                else
+                {
+                    const float startAngle = m_progress < 0.0
+                        ? -90.0f + float((GetTickCount64() - m_progressStarted) % 1000) * 360.0f / 1000.0f : -90.0f;
+                    const float sweepAngle = m_progress < 0.0 ? 270.0f : float(m_progress * 360.0);
+                    if (sweepAngle > 0.0f)
+                        graphics.DrawArc(&progressPen, progressRect, startAngle, sweepAngle);
+                }
+            }
+
+            if (m_iconAngle && !m_showProgress)
             {
                 const float cx = iconDraw.X + iconDraw.Width / 2.0f;
                 const float cy = iconDraw.Y + iconDraw.Height / 2.0f;
@@ -597,9 +686,11 @@ namespace FluentDesign
                 iconDraw.X -= cx;
                 iconDraw.Y -= cy;
             }
-            graphics.DrawString(m_icon.c_str(), -1, &iconFont, iconDraw, &format, &textBrush);
+            SolidBrush iconBrush(m_showProgress || m_animationTimer ? Color(m_theme.GetColor(m_textNormalColor)) : textColor);
+            for (const wchar_t glyph : m_icon)
+                graphics.DrawString(&glyph, 1, &iconFont, iconDraw, &format, &iconBrush);
             graphics.ResetTransform();
-            x += iconRect.Width + spacing;
+            x += iconWidth + spacing;
         }
 
         if (!m_text.empty())

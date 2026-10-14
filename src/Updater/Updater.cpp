@@ -1,5 +1,9 @@
 #include <windows.h>
 #include <winhttp.h>
+#include <urlmon.h>
+#include <wrl/client.h>
+#include <wrl/implements.h>
+#include <winrt/base.h>
 #include <sstream>
 #include <vector>
 #include <stdexcept>
@@ -26,6 +30,7 @@ using json = nlohmann::json;
 
 namespace AnyFSE::Updater
 {
+    namespace wrl = Microsoft::WRL;
 
     const std::wstring CODEBERG_REPO_PATH = L"/api/v1/repos/ashpynov/AnyFSE/";
     const std::wstring CODEBERG_RELEASE_PAGE = L"https://codeberg.org/ashpynov/AnyFSE/releases/tag/";
@@ -81,6 +86,38 @@ namespace AnyFSE::Updater
     static std::mutex m_readMutex;
     static UpdateInfo m_lastUpdateInfo{UpdaterState::Idle};
     static std::thread m_thread;
+
+    class DownloadProgressCallback final : public wrl::RuntimeClass<wrl::RuntimeClassFlags<wrl::ClassicCom>, IBindStatusCallback>
+    {
+        HRESULT m_result = S_OK;
+
+    public:
+        HRESULT STDMETHODCALLTYPE OnStartBinding(DWORD, IBinding*) override { return S_OK; }
+        HRESULT STDMETHODCALLTYPE GetPriority(LONG*) override { return E_NOTIMPL; }
+        HRESULT STDMETHODCALLTYPE OnLowResource(DWORD) override { return S_OK; }
+        HRESULT STDMETHODCALLTYPE GetBindInfo(DWORD*, BINDINFO*) override { return E_NOTIMPL; }
+        HRESULT STDMETHODCALLTYPE OnDataAvailable(DWORD, DWORD, FORMATETC*, STGMEDIUM*) override { return S_OK; }
+        HRESULT STDMETHODCALLTYPE OnObjectAvailable(REFIID, IUnknown*) override { return S_OK; }
+
+        HRESULT STDMETHODCALLTYPE OnProgress(ULONG progress, ULONG progressMax, ULONG status, LPCWSTR) override
+        {
+            if (status == BINDSTATUS_BEGINDOWNLOADDATA || status == BINDSTATUS_DOWNLOADINGDATA || status == BINDSTATUS_ENDDOWNLOADDATA)
+            {
+                std::lock_guard<std::mutex> lock(m_readMutex);
+                m_lastUpdateInfo.downloadedBytes = progress;
+                m_lastUpdateInfo.totalBytes = progressMax;
+            }
+            return S_OK;
+        }
+
+        HRESULT STDMETHODCALLTYPE OnStopBinding(HRESULT result, LPCWSTR) override
+        {
+            m_result = result;
+            return S_OK;
+        }
+
+        HRESULT GetResult() const { return m_result; }
+    };
 
     static std::list<SUBSCRIPTION> m_subscribes;
     struct SemVer
@@ -432,6 +469,13 @@ namespace AnyFSE::Updater
         if (tag.empty())
             throw std::invalid_argument("tag is empty");
 
+        {
+            std::lock_guard<std::mutex> lock(m_readMutex);
+            m_lastUpdateInfo.uiState = UpdaterState::Downloading;
+            m_lastUpdateInfo.downloadedBytes = 0;
+            m_lastUpdateInfo.totalBytes = 0;
+        }
+
         // Query release by tag
         std::string resp = WinHttpGet(GetRelease(tag, alt), alt);
         auto j = json::parse(resp);
@@ -467,18 +511,21 @@ namespace AnyFSE::Updater
 
         // download
         std::wstring wurl = Tools::Unicode::to_wstring(downloadUrl);
-        HRESULT hr = URLDownloadToFileW(NULL, wurl.c_str(), localPath.c_str(), 0, NULL);
-        if (FAILED(hr))
+        auto progressCallback = wrl::Make<DownloadProgressCallback>();
+        if (!progressCallback)
+            throw std::bad_alloc();
+        HRESULT hr = URLDownloadToFileW(NULL, wurl.c_str(), localPath.c_str(), 0, progressCallback.Get());
+        if (FAILED(hr) || FAILED(progressCallback->GetResult()))
         {
-            log.Error(log.APIError(), "Download failed");
+            log.Error("Download failed (URLDownloadToFileW=0x%08lX, binding=0x%08lX)", hr, progressCallback->GetResult());
             throw std::runtime_error("Download failed");
         }
-        Sleep(1000);
         {
             std::lock_guard<std::mutex> lock(m_readMutex);
             m_lastUpdateInfo.uiState = UpdaterState::ReadyForUpdate;
             NotifySubscribers();
         }
+        Sleep(1000);
         SHELLEXECUTEINFOW sei = {0};
         sei.cbSize = sizeof(sei);
         sei.fMask = SEE_MASK_NOCLOSEPROCESS;
@@ -579,23 +626,39 @@ namespace AnyFSE::Updater
         m_lastUpdateInfo.newVersion = tag;
         m_lastUpdateInfo.uiState = UpdaterState::Downloading;
         m_lastUpdateInfo.uiCommand = UpdaterState::Downloading;
+        m_lastUpdateInfo.downloadedBytes = 0;
+        m_lastUpdateInfo.totalBytes = 0;
         m_lastUpdateInfo.lCommandAge = GetTickCount64();
 
         NotifySubscribers();
 
         m_thread = std::thread([tag, silentUpdate]()
         {
+            // Paths::GetTempPath initializes WinRT as MTA on this worker thread.
+            const HRESULT comResult = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+            UpdaterState finalState = UpdaterState::NetworkFailed;
             try
             {
-                 m_lastUpdateInfo.uiState = Update(tag, silentUpdate) ? UpdaterState::UpdateExecuted : UpdaterState::Idle;
+                winrt::check_hresult(comResult);
+                finalState = Update(tag, silentUpdate) ? UpdaterState::UpdateExecuted : UpdaterState::Idle;
+            }
+            catch (const winrt::hresult_error& error)
+            {
+                log.Error("Update failed (HRESULT=0x%08lX): %s", static_cast<HRESULT>(error.code()), winrt::to_string(error.message()).c_str());
+            }
+            catch (const std::exception& error)
+            {
+                log.Error("Update failed: %s", error.what());
             }
             catch (...)
             {
-                std::lock_guard<std::mutex> lock(m_readMutex);
-                m_lastUpdateInfo.uiState =UpdaterState::NetworkFailed;
+                log.Error("Update failed with an unknown exception");
             }
+            if (SUCCEEDED(comResult))
+                CoUninitialize();
             {
                 std::lock_guard<std::mutex> lock(m_readMutex);
+                m_lastUpdateInfo.uiState = finalState;
                 m_bThreadExecuted = false;
                 NotifySubscribers();
             }
