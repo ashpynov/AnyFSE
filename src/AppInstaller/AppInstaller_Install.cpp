@@ -43,13 +43,13 @@ namespace AnyFSE
 
     void AppInstaller::OnInstall()
     {
+        LogManager::Initialize("AnyFSE.Installer", LogLevels::Trace, Paths::GetLogsPath());
         fs::path path(fs::temp_directory_path().append(App::Constants::TempInstallDirName));
         if (fs::exists(path))
         {
             fs::remove_all(path);
         }
 
-        LogManager::Initialize("AnyFSE.Installer", LogLevels::Trace);
         log.Info("Starting Installation AnyFSE v%s to %s", APP_VERSION, path.string().c_str());
 
         bool acseServiceWasRunning = IsInjectorServiceRun();
@@ -68,6 +68,9 @@ namespace AnyFSE
             SetCurrentProgress(Translate(L"progressDownloadFiles"));
             CheckSuccess(DownloadFiles(path));
 #endif
+
+            SetCurrentProgress(Translate(L"installerStopExistingApp"));
+            CheckSuccess(DisableInjectorService() && Process::KillAllByName(Constants::AnyFseExe));
 
             std::wstring oldPath = Registry::ReadString(registryPath, L"InstallLocation");
             if (!oldPath.empty())
@@ -107,9 +110,6 @@ namespace AnyFSE
                 SetCurrentProgress(Translate(L"progressRestoreAsusOptimizationService"));
                 CheckSuccess(EnableAsusOptimization());
             }
-
-            DisableInjectorService();
-            StopAnyFSE();
 
             SetCurrentProgress(Translate(L"progressInstallPackage"));
             CopyFiles(path, Tools::Paths::GetInstallPath());

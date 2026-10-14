@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 //
 // Copyright (c) 2025 Artem Shpynov
 //
@@ -33,6 +33,15 @@
 
 namespace AnyFSE::Logging
 {
+    namespace
+    {
+        struct LastErrorGuard
+        {
+            const DWORD code = GetLastError();
+            ~LastErrorGuard() { SetLastError(code); }
+        };
+    }
+
     Logger::Logger(const std::string &name)
     {
         m_loggerName = name;
@@ -43,8 +52,9 @@ namespace AnyFSE::Logging
     }
     std::exception Logger::APIError(DWORD code, const char * prefix)
     {
-        DWORD errorCode = code ? code : GetLastError();
-        if (!code)
+        const LastErrorGuard lastError;
+        const DWORD errorCode = code ? code : lastError.code;
+        if (!errorCode)
         {
             return std::runtime_error("");
         }
@@ -78,6 +88,7 @@ namespace AnyFSE::Logging
     #define LOGGER(__level__) \
     void Logger::__level__(const char * format, ...) \
     {\
+        const LastErrorGuard lastError;\
         va_list args;\
         va_start(args, format);\
         WriteMessage(LogLevels::__level__, format, args);\
@@ -85,6 +96,7 @@ namespace AnyFSE::Logging
     }\
     void Logger::__level__(const std::exception &exception, const char * format, ...) \
     {\
+        const LastErrorGuard lastError;\
         va_list args;\
         va_start(args, format);\
         WriteMessage(LogLevels::__level__, format, args);\

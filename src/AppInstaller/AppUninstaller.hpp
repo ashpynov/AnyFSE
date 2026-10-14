@@ -145,7 +145,6 @@ namespace AnyFSE
             bool DeleteFileWithRetry(const std::wstring& name, DWORD timeoutMs);
             bool DeleteFiles(const std::wstring &path);
             bool AutoDeleteSelf(const std::wstring &path, bool deleteFolder);
-            bool TerminateAnyFSE();
             void OnDone();
     };
 }

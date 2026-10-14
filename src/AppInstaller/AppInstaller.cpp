@@ -323,13 +323,4 @@ namespace AnyFSE
         EndDialog(m_hDialog, IDCANCEL);
     }
 
-    void AppInstaller::StopAnyFSE()
-    {
-        std::set<DWORD> ids;
-        Process::FindAllByName(L"AnyFSE.exe", ids);
-        for (auto id : ids)
-        {
-            Process::Kill(id);
-        }
-    }
 }

@@ -194,6 +194,5 @@ namespace AnyFSE
             bool IsNeedEnableAsusOptimization();
             bool EnableAsusOptimization();
             bool RemoveOldCertificates();
-            void StopAnyFSE();
     };
 }

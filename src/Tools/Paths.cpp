@@ -88,7 +88,7 @@ namespace AnyFSE::Tools::Paths
 
     std::wstring GetLogsPath()
     {
-        return Tools::Paths::GetAppLocalCachePath() + L"\\logs";
+        return Tools::Paths::GetAppPath() + L"\\" + c::AppLocalCacheDirectory + L"\\logs";
     }
 
     std::wstring GetTempPath()

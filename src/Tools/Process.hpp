@@ -42,6 +42,7 @@ namespace AnyFSE::Tools::Process
     bool BringWindowToForeground(HWND hWnd, int nShowCmd = SW_SHOWDEFAULT);
     std::wstring GetWindowProcessName(HWND hWnd);
     HRESULT Kill(DWORD processId);
+    bool KillAllByName(const std::wstring& processName);
 }
 
 namespace Process = AnyFSE::Tools::Process;

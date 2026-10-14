@@ -36,6 +36,7 @@
   "jumpListSettings": "Настройки",
   "progressUnpackFiles": "Распаковка файлов",
   "progressDownloadFiles": "Загрузка файлов",
+  "installerStopExistingApp": "Остановка работающего приложения",
   "progressRemoveOldVersion": "Удаление старой версии",
   "progressEnableDeveloperMode": "Включение режима разработчика",
   "progressInstallPublisherCertificate": "Установка сертификата издателя",

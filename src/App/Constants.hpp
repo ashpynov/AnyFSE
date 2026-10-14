@@ -14,7 +14,7 @@ namespace AnyFSE::App::Constants
     inline constexpr wchar_t AppLocalStateDirectory[] = L"LocalState";
     inline constexpr wchar_t AppLocalCacheDirectory[] = L"LocalCache";
     inline constexpr wchar_t AppTempStateDirectory[] = L"TempState";
-    inline constexpr const wchar_t* PopupperProcessNames[] = { L"SystemSettings.exe" };
+    inline constexpr const wchar_t* PopupperProcessNames[] = { L"SystemSettings.exe", L"RtkUWP.exe", L"Nahimic3.exe" };
     inline constexpr wchar_t AnyFseTaskName[] = L"AnyFSE";
     inline constexpr wchar_t ElevatedEventPrefix[] = L"Local\\AnyFSE.Task.Command.";
     inline constexpr wchar_t ElevatedCallEvent[] = L"Local\\AnyFSE.Task.Call";

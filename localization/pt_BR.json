@@ -42,6 +42,7 @@
   "jumpListSettings": "Configurações",
   "progressUnpackFiles": "Extraindo arquivos",
   "progressDownloadFiles": "Baixando arquivos",
+  "installerStopExistingApp": "Encerrando o aplicativo em execução",
   "progressRemoveOldVersion": "Removendo a versão anterior",
   "progressEnableDeveloperMode": "Ativando o Modo de Desenvolvedor",
   "progressInstallPublisherCertificate": "Instalando o certificado do editor",

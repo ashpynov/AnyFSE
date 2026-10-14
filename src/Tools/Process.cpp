@@ -420,6 +420,28 @@ namespace AnyFSE::Tools::Process
         return std::wstring();
     }
 
+    bool KillAllByName(const std::wstring& processName)
+    {
+        std::set<DWORD> ids;
+        FindAllByName(processName, ids);
+        log.Info("KillAllByName: name=%s, found=%zu", Unicode::to_string(processName).c_str(), ids.size());
+        for (auto id : ids)
+        {
+            HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, id);
+            Kill(id);
+            if (process)
+            {
+                WaitForSingleObject(process, 2000);
+                CloseHandle(process);
+            }
+        }
+        FindAllByName(processName, ids);
+        for (auto id : ids)
+            log.Error("KillAllByName: remaining process PID=%lu", id);
+        SetLastError(ids.empty() ? ERROR_SUCCESS : ERROR_BUSY);
+        return ids.empty();
+    }
+
     HRESULT Kill(DWORD processId)
     {
         if (processId == 0)

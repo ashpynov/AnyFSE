@@ -98,9 +98,16 @@ namespace AnyFSE
     {
         namespace fs = std::filesystem;
 
-        if (fs::exists(destPath))
+        try
         {
-            fs::remove_all(destPath);
+            if (fs::exists(destPath))
+            {
+                fs::remove_all(destPath);
+            }
+        }
+        catch (const fs::filesystem_error& e)
+        {
+            log.Warn(e, "Old installation directory cleanup failed; continuing file copy");
         }
 
         fs::create_directories(destPath);

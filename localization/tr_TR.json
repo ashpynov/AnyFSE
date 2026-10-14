@@ -36,6 +36,7 @@
   "jumpListSettings": "Ayarlar",
   "progressUnpackFiles": "Dosyaları çıkar",
   "progressDownloadFiles": "Dosyaları indir",
+  "installerStopExistingApp": "Çalışan uygulamayı durdur",
   "progressRemoveOldVersion": "Önceki sürümü sil",
   "progressEnableDeveloperMode": "Geliştirici modunu etkinleştir",
   "progressInstallPublisherCertificate": "Yayıncı sertifikasını yükle",

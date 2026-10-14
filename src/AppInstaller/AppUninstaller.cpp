@@ -579,9 +579,8 @@ namespace AnyFSE
     void AppUninstaller::Uninstall(bool update)
     {
         ToolsEx::ScheduledTask::DeleteAnyFSETask();
-        Ally::Services::DisableInjectorService();
-
-        TerminateAnyFSE();
+        if (!Ally::Services::DisableInjectorService() || !Process::KillAllByName(Constants::AnyFseExe))
+            throw Logging::Logger::APIError();
 
         bool removeDir = DeleteFiles(Tools::Paths::GetInstallPath());
 
@@ -641,17 +640,6 @@ namespace AnyFSE
         }
 
         return scheduled;
-    }
-
-    bool AppUninstaller::TerminateAnyFSE()
-    {
-        std::set<DWORD> ids;
-        Process::FindAllByName(L"AnyFSE.exe", ids);
-        for (auto id : ids)
-        {
-            Process::Kill(id);
-        }
-        return true;
     }
 
     void AppUninstaller::OnDone()
