@@ -26,6 +26,7 @@
 #include <string>
 
 #include "App/Constants.hpp"
+#include "App/GamingExperience.hpp"
 #include "AppInstaller.hpp"
 #include "Logging/LogManager.hpp"
 #include "Tools/Process.hpp"
@@ -41,9 +42,24 @@ namespace AnyFSE
     namespace fs = std::filesystem;
     static Logger log = LogManager::GetLogger("Installer");
 
-    void AppInstaller::OnInstall()
+    bool AppInstaller::OnInstall()
     {
-        LogManager::Initialize("AnyFSE.Installer", LogLevels::Trace, Paths::GetLogsPath());
+        LogManager::Initialize(Constants::InstallerLogName, LogLevels::Trace, Paths::GetLogsPath());
+
+        if (!GamingExperience::ApiIsAvailable)
+        {
+            log.Error("Gaming Experience API is not available");
+            return false;
+        }
+
+        if (!GamingExperience::IsGamingHandheld()
+            && (!GamingExperience::EnableGamingHandheld() || !GamingExperience::IsGamingHandheld()))
+        {
+            log.Error("Cannot enable Gaming Handheld mode");
+            return false;
+        }
+
+        m_progressStatus.clear();
         fs::path path(fs::temp_directory_path().append(App::Constants::TempInstallDirName));
         if (fs::exists(path))
         {
@@ -57,7 +73,8 @@ namespace AnyFSE
 
         try
         {
-            ShowProgressPage();
+            if (m_hDialog)
+                ShowProgressPage();
             Sleep(1);
 
 #ifdef OFFLINE_INSTALLER
@@ -143,21 +160,23 @@ namespace AnyFSE
 
             Process::StartProtocol(Constants::AnyFseProtocolHidListener);
 
-            ShowCompletePage();
+            if (m_hDialog)
+                ShowCompletePage();
 
-            LogManager::DeleteLog();
             if (fs::exists(path))
             {
                 fs::remove_all(path);
             }
-
+            LogManager::DeleteLog();
+            return true;
         }
         catch (const std::exception& e)
         {
             ToolsEx::Certificate::RemoveTrustedPeopleCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
 
             log.Error(e, "Installation fail:");
-            ShowErrorPage(Translate(L"installationErrorCaption"), GetProgressText(4) + Unicode::to_wstring(e.what()));
+            if (m_hDialog)
+                ShowErrorPage(Translate(L"installationErrorCaption"), GetProgressText(4) + Unicode::to_wstring(e.what()));
 
             // Best-effort service recovery after failed update.
             if (acseServiceWasRunning)
@@ -169,6 +188,7 @@ namespace AnyFSE
             {
                 EnableDeveloperMode(false);
             }
+            return false;
         }
     }
 }

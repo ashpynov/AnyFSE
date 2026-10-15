@@ -65,7 +65,8 @@ namespace AnyFSE
         private:
 
         public:
-            INT_PTR Show(HINSTANCE hInstance, bool bAutoUpdate);
+            int Show(HINSTANCE hInstance, bool bAutoUpdate);
+            int SilentInstall() { return OnInstall() ? 0 : 1; };
 
             enum Pages : int
             {
@@ -89,8 +90,8 @@ namespace AnyFSE
             {}
 
         private:
-            HINSTANCE m_hInstance;
-            HWND m_hDialog;
+            HINSTANCE m_hInstance = nullptr;
+            HWND m_hDialog = nullptr;
 
             const int Layout_DialogWidth = 540;
             const int Layout_DialogHeight = 280;
@@ -170,7 +171,7 @@ namespace AnyFSE
 
             void OnCancel();
             void OnEnableHomeAppSelection();
-            void OnInstall();
+            bool OnInstall();
             void OnSettings();
             void OnDone();
             bool DeleteOldVersion();

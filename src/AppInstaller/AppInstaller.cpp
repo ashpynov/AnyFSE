@@ -64,15 +64,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     InitCommonControlsEx(&icex);
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
-    int result = (int)AnyFSE::AppInstaller().Show(hInstance, !_wcsnicmp(lpCmdLine, L"/autoupdate", 11));
-
-    return result;
+   return !_wcsnicmp(lpCmdLine, L"/s", 2)
+        ? AnyFSE::AppInstaller().SilentInstall()
+        : AnyFSE::AppInstaller().Show(hInstance, !_wcsnicmp(lpCmdLine, L"/autoupdate", 11));
 }
 namespace AnyFSE
 {
     Logger log = LogManager::GetLogger("Installer");
 
-    INT_PTR AppInstaller::Show(HINSTANCE hInstance, bool bAutoUpdate)
+    int AppInstaller::Show(HINSTANCE hInstance, bool bAutoUpdate)
     {
         m_hInstance = hInstance;
         m_isUpdate = bAutoUpdate || Tools::Packages::IsPackageInstalled(App::Constants::PackageFamilyName);
@@ -106,7 +106,7 @@ namespace AnyFSE
         {
             log.Error(log.APIError(),"Cant create settings dialog)");
         }
-        return res;
+        return (int)res;
     }
 
     void AppInstaller::CenterDialog(HWND hwnd)

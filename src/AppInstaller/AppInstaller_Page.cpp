@@ -322,8 +322,11 @@ namespace AnyFSE
     void AppInstaller::SetCurrentProgress(const std::wstring& status)
     {
         m_progressStatus.push_back(status);
-        m_textStatic.SetText(GetProgressText(5));
-        RedrawWindow(m_hDialog, NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE | RDW_UPDATENOW);
+        if (m_hDialog)
+        {
+            m_textStatic.SetText(GetProgressText(5));
+            RedrawWindow(m_hDialog, NULL, NULL, RDW_ALLCHILDREN | RDW_INVALIDATE | RDW_UPDATENOW);
+        }
     }
 
     void AppInstaller::CheckSuccess(bool bSuccess)

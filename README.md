@@ -127,6 +127,10 @@ Also AnyFSE Installer itself does trick to install AnyFSE package to be register
 
 Launch `AnyFSE.Installer.exe`, wait for it to finish, then configure AnyFSE from the Start menu entry.
 
+For installation or update without installer dialogs, run `AnyFSE.Installer.exe /s`. This enables Gaming Handheld mode if needed and skips
+the license and configuration pages. `/s` takes precedence over `/autoupdate`; arguments are case-insensitive. The exit code is `0` on success
+and `1` on failure. Errors are recorded in the installer log. Administrator rights are required; Windows may still display a UAC prompt.
+
 Your launcher should be installed additionally.
 
 Please note: that AnyFSE work only when it is selected as home application in Settings->Gaming->Full screen experience.
