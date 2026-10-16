@@ -30,6 +30,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             , m_fseOnStartupToggle(m_theme)
             , m_fseExitOnHomeExitToggle(m_theme)
             , m_asAdminToggle(m_theme)
+            , m_gameBarToggle(m_theme)
             , m_customSettingsToggle(m_theme)
             , m_additionalArgumentsEdit(m_theme)
             , m_processNameEdit(m_theme)
@@ -78,6 +79,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         Toggle m_fseOnStartupToggle;
         Toggle m_fseExitOnHomeExitToggle;
         Toggle m_asAdminToggle;
+        Toggle m_gameBarToggle;
         Toggle m_customSettingsToggle;
         Button m_customResetButton;
 
@@ -111,6 +113,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         void OnEnableHomeAppSelection();
         void UpdateHomeAppSelection();
         void UpdateRestoreGamingPC();
+        void OnGameBarChanged();
         void OnCustomChanged();
         void OnCustomReset();
         void UpdateCustomResetEnabled();

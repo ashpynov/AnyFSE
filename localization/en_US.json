@@ -91,6 +91,8 @@
   "settingsStartup": "Startup",
   "settingsStartLauncherAsAdministrator": "Start Launcher as Administrator",
   "settingsStartLauncherAsAdministratorDescription": "Execute launcher with escalated privileges. Running the launcher with elevated privileges is unsafe.",
+  "settingsAllowGamepadGameBar": "Allow the gamepad to open Game Bar in Xbox mode",
+  "settingsAllowGamepadGameBarDescription": "A short press of the Guide button opens Game Bar in Xbox mode",
   "settingsStartupDescription": "Apps that start automatically when you sign in full screen experience",
   "settingsAdditionalArguments": "Additional arguments",
   "settingsAdditionalArgumentsDescription": "Command line arguments passed to application",

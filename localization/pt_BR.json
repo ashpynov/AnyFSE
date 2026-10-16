@@ -120,6 +120,8 @@
   "settingsAdditionalStartupApplications": "Aplicativos adicionais de inicialização",
   "settingsAdditionalStartupApplicationsDescription": "Aplicativos iniciados pelo AnyFSE ao entrar no modo Xbox",
   "settingsStartLauncherAsAdministratorDescription": "Executar o launcher com privilégios elevados. Isso não é seguro.",
+  "settingsAllowGamepadGameBar": "Permitir que o controle abra Game Bar no modo Xbox",
+  "settingsAllowGamepadGameBarDescription": "Um toque curto no botão Guide abre Game Bar no modo Xbox",
   "addBtn": "Adicionar",
   "modifyBtn": "Editar",
   "deleteBtn": "Excluir",

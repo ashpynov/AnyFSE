@@ -91,6 +91,8 @@
   "settingsStartup": "Avvio",
   "settingsStartLauncherAsAdministrator": "Avvia il launcher come amministratore",
   "settingsStartLauncherAsAdministratorDescription": "Esegui il launcher con privilegi elevati. Eseguire il launcher con privilegi elevati non è sicuro.",
+  "settingsAllowGamepadGameBar": "Consenti al controller di aprire Game Bar in modalità Xbox",
+  "settingsAllowGamepadGameBarDescription": "Una breve pressione del pulsante Guide apre Game Bar in modalità Xbox",
   "settingsStartupDescription": "App che si avviano automaticamente quando accedi all'esperienza a schermo intero",
   "settingsAdditionalArguments": "Argomenti aggiuntivi",
   "settingsAdditionalArgumentsDescription": "Argomenti della riga di comando passati all'applicazione",

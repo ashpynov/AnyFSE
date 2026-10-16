@@ -118,6 +118,8 @@
   "settingsAdditionalStartupApplications": "Applications de démarrage supplémentaires",
   "settingsAdditionalStartupApplicationsDescription": "Apps lancées par AnyFSE en mode Xbox",
   "settingsStartLauncherAsAdministratorDescription": "Exécuter le lanceur avec des privilèges élevés. Cela présente un risque de sécurité.",
+  "settingsAllowGamepadGameBar": "Autoriser la manette à ouvrir Game Bar en mode Xbox",
+  "settingsAllowGamepadGameBarDescription": "Un appui court sur le bouton Guide ouvre Game Bar en mode Xbox",
   "addBtn": "Ajouter",
   "modifyBtn": "Modifier",
   "deleteBtn": "Supprimer",

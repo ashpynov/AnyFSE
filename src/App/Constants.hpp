@@ -47,6 +47,8 @@ namespace AnyFSE::App::Constants
     inline constexpr wchar_t ArmouryCrateServiceProcess[] = L"ArmouryCrateSE.Service.exe";
 
     // Registry
+    inline constexpr wchar_t GameBarRegKey[] = L"HKEY_CURRENT_USER\\Software\\Microsoft\\GameBar";
+    inline constexpr wchar_t LegacyGamepadXboxGuideButtonEnabledRegValue[] = L"LegacyGamepadXboxGuideButtonEnabled";
     inline constexpr wchar_t UninstallAnyFseRegKey[] = L"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AnyFSE";
     inline constexpr wchar_t DeviceFormRegKey[] = L"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\OEM";
     inline constexpr wchar_t DeviceFormRegValue[] = L"DeviceForm";

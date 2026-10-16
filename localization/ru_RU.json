@@ -91,6 +91,8 @@
   "settingsStartup": "Автозагрузка приложений",
   "settingsStartLauncherAsAdministrator": "Запускать лаунчер от имени администратора",
   "settingsStartLauncherAsAdministratorDescription": "Запуск лаунчера с повышенными привилегиями. Это небезопасно.",
+  "settingsAllowGamepadGameBar": "Разрешить геймпаду открывать Game Bar в режиме XBox",
+  "settingsAllowGamepadGameBarDescription": "Короткое нажатие кнопки Guide открывает Game Bar в режиме Xbox",
   "settingsStartupDescription": "Приложения, запускаемые при входе в режим Xbox",
   "settingsAdditionalArguments": "Дополнительные аргументы",
   "settingsAdditionalArgumentsDescription": "Аргументы командной строки для приложения",

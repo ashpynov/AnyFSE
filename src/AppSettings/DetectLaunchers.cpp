@@ -174,7 +174,13 @@ namespace AnyFSE::Configuration
 
     void Config::FindSteam(std::list<LauncherConfig>& found)
     {
-        std::wstring installPath = GetInstallPath(L"Steam");
+        std::wstring installPath = Registry::ReadString(L"HKLM\\SOFTWARE\\Valve\\Steam", L"InstallPath");
+
+        if (installPath.empty() || !fs::exists(fs::path(installPath) / "steam.exe"))
+        {
+            installPath = GetInstallPath(L"Steam");
+        }
+        
         if (!installPath.empty())
         {
             found.push_back(GetLauncherDefaults(LauncherType::SteamBigPicture, installPath));

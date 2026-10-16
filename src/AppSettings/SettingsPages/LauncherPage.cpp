@@ -70,6 +70,12 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             Layout::LineHeight, Layout::LinePadding, 0);
         m_pAsAdminLine->SetIcon(L'\xE7EF');
 
+        m_dialog.AddSettingsLine(settingPageList, top,
+            Translate(L"settingsAllowGamepadGameBar"),
+            Translate(L"settingsAllowGamepadGameBarDescription"),
+            m_gameBarToggle,
+            Layout::LineHeight, Layout::LinePadding, 0).SetIcon(L'\xE7FC');
+
         m_dialog.AddPage((new ConfirmationsPage(m_theme, m_dialog))->AddLine(settingPageList, top));
 
         m_pCustomSettingsLine = &m_dialog.AddSettingsLine(settingPageList, top,
@@ -210,6 +216,9 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     void LauncherPage::LoadControls()
     {
         m_asAdminToggle.SetCheck(Config::AsAdmin);
+        m_gameBarToggle.OnChanged.Clear();
+        m_gameBarToggle.SetCheck(!Registry::ReadBool(c::GameBarRegKey, c::LegacyGamepadXboxGuideButtonEnabledRegValue));
+        m_gameBarToggle.OnChanged = delegate(OnGameBarChanged);
         m_currentLauncherPath = Config::GetNativePath(Config::Launcher.StartCommand);
         Config::FindLaunchers(m_launchersList);
         Config::FindNotInstalledLaunchers(m_notInstalledLaunchersList);
@@ -354,6 +363,11 @@ namespace AnyFSE::App::AppSettings::Settings::Page
                     ? Translate(L"settingsNativeLauncherSelected")
                     : L"");
         }
+    }
+
+    void LauncherPage::OnGameBarChanged()
+    {
+        Registry::WriteBool(c::GameBarRegKey, c::LegacyGamepadXboxGuideButtonEnabledRegValue, !m_gameBarToggle.GetCheck());
     }
 
     void LauncherPage::OnCustomChanged()

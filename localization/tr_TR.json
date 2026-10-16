@@ -118,6 +118,8 @@
   "settingsAdditionalStartupApplications": "Ek başlangıç uygulamaları",
   "settingsAdditionalStartupApplicationsDescription": "Tam ekran deneyimine girildiğinde AnyFSE tarafından çalıştırılacak uygulamaları yapılandır",
   "settingsStartLauncherAsAdministratorDescription": "Başlatıcıyı yükseltilmiş ayrıcalıklarla çalıştır. Bu güvenli değildir.",
+  "settingsAllowGamepadGameBar": "Oyun kumandasının Xbox modunda Game Bar'ı açmasına izin ver",
+  "settingsAllowGamepadGameBarDescription": "Guide düğmesine kısa basıldığında Xbox modunda Game Bar açılır",
   "addBtn": "Ekle ",
   "modifyBtn": "Düzenle",
   "deleteBtn": "Sil",
