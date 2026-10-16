@@ -207,6 +207,8 @@ namespace FluentDesign
             m_colors[CloseButton] = 0xFF000000;
             m_colors[CloseButtonHover] = RGB(0xC4, 0x2B, 0x1C);
             m_colors[CloseButtonPressed] = RGB(0xB2, 0x27, 0x1C);
+
+            m_colors[SplashBack] = GetGrey(0);
         }
         else
         {
@@ -281,6 +283,8 @@ namespace FluentDesign
             m_colors[CloseButton] = 0xFF000000;
             m_colors[CloseButtonHover] = RGB(0xC4, 0x2B, 0x1C);
             m_colors[CloseButtonPressed] = RGB(0xB2, 0x27, 0x1C);
+
+            m_colors[SplashBack] = GetGrey(243);
         }
         if(m_hDialogBack) DeleteObject(m_hDialogBack);
         m_hDialogBack = CreateSolidBrush(GetColorRef(FluentDesign::Theme::Colors::Dialog));

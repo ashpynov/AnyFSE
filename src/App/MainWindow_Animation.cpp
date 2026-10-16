@@ -41,7 +41,7 @@
 namespace AnyFSE::App::Window
 {
     static Logger log = LogManager::GetLogger("Window/Animation");
-    
+
     void MainWindow::OnPaint()
     {
         FluentDesign::DoubleBuferedPaint paint(m_hWnd);
@@ -108,7 +108,7 @@ namespace AnyFSE::App::Window
         graphics.SetPixelOffsetMode(PixelOffsetModeHighQuality);
         // Fill background
         Color backgroundColor;
-        backgroundColor.SetFromCOLORREF(m_theme.GetColorRef(FluentDesign::Theme::Dialog));
+        backgroundColor.SetFromCOLORREF(m_theme.GetColorRef(FluentDesign::Theme::SplashBack));
         SolidBrush backgroundBrush(backgroundColor);
 
         RectF rect = ToRectF(clientRect);

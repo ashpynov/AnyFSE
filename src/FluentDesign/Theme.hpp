@@ -107,6 +107,8 @@ namespace FluentDesign
             CloseButtonHover,
             CloseButtonPressed,
 
+            SplashBack,
+
             Max
         };
 
