@@ -1,11 +1,10 @@
 # AnyFSE Home Application
-![DownloadCountTotal](https://img.shields.io/github/downloads/ashpynov/AnyFSE/AnyFSE.Installer.exe?displayAssetName=false&style=plastic) [![DownloadCountLatest](https://img.shields.io/github/downloads/ashpynov/AnyFSE/latest/AnyFSE.Installer.exe?displayAssetName=false&style=plastic)](https://github.com/ashpynov/AnyFSE/releases/latest) [![LatestVersion](https://img.shields.io/github/v/tag/ashpynov/AnyFSE?label=Latest%20version&style=plastic)](https://github.com/ashpynov/AnyFSE/releases/latest) [![License](https://img.shields.io/github/license/ashpynov/AnyFSE?style=plastic)](LICENCE)
+ [![LatestVersion](https://img.shields.io/github/v/tag/ashpynov/AnyFSE?label=Latest%20version&style=plastic)](https://apps.microsoft.com/detail/XPFM6KZ5SD704G?referrer=appbadge&mode=full) [![License](https://img.shields.io/github/license/ashpynov/AnyFSE?style=plastic)](LICENCE)
+
+[![Get it from Microsoft Store](https://get.microsoft.com/images/en-us%20dark.svg)](https://apps.microsoft.com/detail/XPFM6KZ5SD704G?referrer=appbadge&mode=full) [<img src="https://raw.githubusercontent.com/rubenpgrady/get-it-on-github/refs/heads/main/get-it-on-github.png" alt="Get it on GitHub" height="45"/>](https://github.com/ashpynov/AnyFSE/releases/latest)
 
 The AnyFSE Home application aims to give users the ability to use their favorite launchers as Home applications for Gaming Full Screen Experience mode on modern Windows.
 
-[Latest Release](https://github.com/ashpynov/AnyFSE/releases/latest)
-
-[Help and Discussions](https://discord.gg/hnVwuTzDmk)
 
 AnyFSE can be selected as Home application for full screen experience and will execute users favourite launchers like Playnite, Steam Big Picture mode, LaunchBox, etc. in full screen experience mode (Xbox mode).
 

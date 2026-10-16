@@ -1,0 +1,143 @@
+﻿Field,Type,English,Russian,Portuguese (Brazil),French (France),Italian,Turkish
+ProductName,Text,AnyFSE,AnyFSE,AnyFSE,AnyFSE,AnyFSE,AnyFSE
+Description,Text,"Make your favorite launcher the home app for Xbox mode on Windows.
+
+AnyFSE starts your preferred launcher in Xbox mode, with support for Playnite, Steam Big Picture, LaunchBox and other launchers. Personalize startup with a custom video and customize the ROG Ally system buttons to suit your setup.
+
+Xbox mode support must already be available on your Windows device. Your chosen launcher must be installed separately.","Сделайте любимый лаунчер главным приложением режима Xbox в Windows.
+
+AnyFSE запускает выбранный лаунчер в режиме Xbox и поддерживает Playnite, Steam Big Picture, LaunchBox и другие лаунчеры. Добавьте собственное видео при запуске и настройте системные кнопки ROG Ally под себя.
+
+На вашем устройстве с Windows уже должна быть доступна поддержка режима Xbox. Выбранный лаунчер необходимо установить отдельно.","Use seu launcher favorito como aplicativo inicial do modo Xbox no Windows.
+
+O AnyFSE inicia o launcher de sua escolha no modo Xbox, com suporte a Playnite, Steam Big Picture, LaunchBox e outros launchers. Personalize a inicialização com seu próprio vídeo e configure os botões de sistema do ROG Ally do seu jeito.
+
+Seu dispositivo Windows já deve oferecer suporte ao modo Xbox. O launcher escolhido deve ser instalado separadamente.","Faites de votre lanceur préféré l’application d’accueil du mode Xbox sous Windows.
+
+AnyFSE lance l’application de votre choix en mode Xbox et prend en charge Playnite, Steam Big Picture, LaunchBox et d’autres lanceurs. Personnalisez le démarrage avec votre propre vidéo et adaptez les boutons système du ROG Ally à vos préférences.
+
+Le mode Xbox doit déjà être pris en charge sur votre appareil Windows. Le lanceur de votre choix doit être installé séparément.","Usa il tuo launcher preferito come applicazione Home della modalità Xbox su Windows.
+
+AnyFSE avvia il launcher scelto in modalità Xbox e supporta Playnite, Steam Big Picture, LaunchBox e altri launcher. Personalizza l’avvio con un tuo video e adatta i pulsanti di sistema di ROG Ally alle tue preferenze.
+
+Il dispositivo Windows deve già supportare la modalità Xbox. Il launcher scelto deve essere installato separatamente.","Favori başlatıcınızı Windows üzerindeki Xbox modunun ana uygulaması yapın.
+
+AnyFSE, seçtiğiniz başlatıcıyı Xbox modunda çalıştırır; Playnite, Steam Big Picture, LaunchBox ve diğer başlatıcıları destekler. Açılışa kendi videonuzu ekleyin ve ROG Ally sistem düğmelerini ihtiyaçlarınıza göre özelleştirin.
+
+Windows cihazınızda Xbox modu desteğinin önceden mevcut olması gerekir. Seçtiğiniz başlatıcı ayrıca yüklenmelidir."
+WhatsNew,Text,First release on Microsoft Store.,Первый выпуск в Microsoft Store.,Primeira versão na Microsoft Store.,Première version sur le Microsoft Store.,Prima versione su Microsoft Store.,Microsoft Store üzerindeki ilk sürüm.
+ProductFeatures1,Text,Use your preferred launcher as the Xbox mode home app,Выбор любимого лаунчера в качестве главного приложения режима Xbox,Use seu launcher favorito como aplicativo inicial do modo Xbox,Utilisez votre lanceur préféré comme application d’accueil du mode Xbox,Usa il tuo launcher preferito come applicazione Home della modalità Xbox,Tercih ettiğiniz başlatıcıyı Xbox modunun ana uygulaması olarak kullanın
+ProductFeatures2,Text,Show a custom video when your launcher starts,Собственное видео при запуске лаунчера,Exiba um vídeo personalizado ao iniciar o launcher,Affichez une vidéo personnalisée au démarrage du lanceur,Mostra un video personalizzato all’avvio del launcher,Başlatıcınız açılırken özel bir video gösterin
+ProductFeatures3,Text,Customize ROG Ally system buttons,Настройка системных кнопок ROG Ally,Personalize os botões de sistema do ROG Ally,Personnalisez les boutons système du ROG Ally,Personalizza i pulsanti di sistema di ROG Ally,ROG Ally sistem düğmelerini özelleştirin
+ProductFeatures4,Text,"Support for Playnite, Steam Big Picture, LaunchBox and other launchers","Поддержка Playnite, Steam Big Picture, LaunchBox и других лаунчеров","Suporte a Playnite, Steam Big Picture, LaunchBox e outros launchers","Prise en charge de Playnite, Steam Big Picture, LaunchBox et d’autres lanceurs","Supporto per Playnite, Steam Big Picture, LaunchBox e altri launcher","Playnite, Steam Big Picture, LaunchBox ve diğer başlatıcılar için destek"
+ProductFeatures5,Text,,,,,,
+ProductFeatures6,Text,,,,,,
+ProductFeatures7,Text,,,,,,
+ProductFeatures8,Text,,,,,,
+ProductFeatures9,Text,,,,,,
+ProductFeatures10,Text,,,,,,
+ProductFeatures11,Text,,,,,,
+ProductFeatures12,Text,,,,,,
+ProductFeatures13,Text,,,,,,
+ProductFeatures14,Text,,,,,,
+ProductFeatures15,Text,,,,,,
+ProductFeatures16,Text,,,,,,
+ProductFeatures17,Text,,,,,,
+ProductFeatures18,Text,,,,,,
+ProductFeatures19,Text,,,,,,
+ProductFeatures20,Text,,,,,,
+ShortDescription,Text,"Use Playnite, Steam and other launchers as your Xbox mode home app on Windows.","Используйте Playnite, Steam и другие лаунчеры как главное приложение режима Xbox в Windows.","Use Playnite, Steam e outros launchers como aplicativo inicial do modo Xbox no Windows.","Utilisez Playnite, Steam et d’autres lanceurs comme application d’accueil du mode Xbox sous Windows.","Usa Playnite, Steam e altri launcher come applicazione Home della modalità Xbox su Windows.","Playnite, Steam ve diğer başlatıcıları Windows Xbox modunda ana uygulamanız olarak kullanın."
+SearchTerms1,Text,anyfse,anyfse,anyfse,anyfse,anyfse,anyfse
+SearchTerms2,Text,Xbox mode,режим Xbox,modo Xbox,mode Xbox,modalità Xbox,Xbox modu
+SearchTerms3,Text,FSE,FSE,FSE,FSE,FSE,FSE
+SearchTerms4,Text,game launcher,игровой лаунчер,launcher de jogos,lanceur de jeux,launcher di giochi,oyun başlatıcı
+SearchTerms5,Text,full screen experience,полноэкранный режим,experiência em tela cheia,expérience plein écran,esperienza a schermo intero,tam ekran deneyimi
+SearchTerms6,Text,,,,,,
+SearchTerms7,Text,,,,,,
+Applicable license terms,Text,"MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the ""Software""), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.","Лицензия MIT
+
+Настоящим любому лицу, получившему копию данного программного обеспечения и сопутствующей документации (далее «Программное обеспечение»), безвозмездно предоставляется разрешение использовать Программное обеспечение без ограничений, включая, помимо прочего, право использовать, копировать, изменять, объединять, публиковать, распространять, сублицензировать и/или продавать копии Программного обеспечения, а также разрешать лицам, которым предоставляется Программное обеспечение, совершать указанные действия при соблюдении следующих условий:
+
+Приведённое выше уведомление об авторских правах и настоящее уведомление о разрешении должны быть включены во все копии или существенные части Программного обеспечения.
+
+ПРОГРАММНОЕ ОБЕСПЕЧЕНИЕ ПРЕДОСТАВЛЯЕТСЯ «КАК ЕСТЬ», БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, ЯВНЫХ ИЛИ ПОДРАЗУМЕВАЕМЫХ, В ТОМ ЧИСЛЕ ГАРАНТИЙ ТОВАРНОЙ ПРИГОДНОСТИ, ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЁННОЙ ЦЕЛИ И НЕНАРУШЕНИЯ ПРАВ ТРЕТЬИХ ЛИЦ. НИ ПРИ КАКИХ ОБСТОЯТЕЛЬСТВАХ АВТОРЫ ИЛИ ПРАВООБЛАДАТЕЛИ НЕ НЕСУТ ОТВЕТСТВЕННОСТИ ПО КАКИМ-ЛИБО ПРЕТЕНЗИЯМ, ЗА УБЫТКИ ИЛИ ПО ИНЫМ ОБЯЗАТЕЛЬСТВАМ, ВОЗНИКАЮЩИМ ИЗ ДОГОВОРА, ДЕЛИКТА ИЛИ ПО ДРУГИМ ОСНОВАНИЯМ В СВЯЗИ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ, ЕГО ИСПОЛЬЗОВАНИЕМ ИЛИ ИНЫМИ ДЕЙСТВИЯМИ С НИМ.","Licença MIT
+
+É concedida permissão, gratuitamente, a qualquer pessoa que obtenha uma cópia deste software e dos arquivos de documentação associados (o «Software»), para lidar com o Software sem restrições, incluindo, sem limitação, os direitos de usar, copiar, modificar, mesclar, publicar, distribuir, sublicenciar e/ou vender cópias do Software, e permitir que as pessoas às quais o Software é fornecido façam o mesmo, sujeitas às seguintes condições:
+
+O aviso de direitos autorais acima e este aviso de permissão devem ser incluídos em todas as cópias ou partes substanciais do Software.
+
+O SOFTWARE É FORNECIDO «NO ESTADO EM QUE SE ENCONTRA», SEM GARANTIA DE QUALQUER TIPO, EXPRESSA OU IMPLÍCITA, INCLUINDO, SEM LIMITAÇÃO, AS GARANTIAS DE COMERCIABILIDADE, ADEQUAÇÃO A UMA FINALIDADE ESPECÍFICA E NÃO VIOLAÇÃO DE DIREITOS. EM NENHUMA HIPÓTESE OS AUTORES OU TITULARES DOS DIREITOS AUTORAIS SERÃO RESPONSÁVEIS POR QUALQUER REIVINDICAÇÃO, DANOS OU OUTRA RESPONSABILIDADE, SEJA EM AÇÃO DE CONTRATO, ATO ILÍCITO OU OUTRA FORMA, DECORRENTE DO SOFTWARE, DE SEU USO OU DE OUTRAS OPERAÇÕES COM O SOFTWARE, OU EM CONEXÃO COM ELES.","Licence MIT
+
+L’autorisation est accordée, gratuitement, à toute personne obtenant une copie de ce logiciel et des fichiers de documentation associés (le « Logiciel »), d’utiliser le Logiciel sans restriction, y compris, sans s’y limiter, les droits d’utiliser, de copier, de modifier, de fusionner, de publier, de distribuer, de concéder en sous-licence et/ou de vendre des copies du Logiciel, ainsi que d’autoriser les personnes auxquelles le Logiciel est fourni à en faire autant, sous réserve des conditions suivantes :
+
+L’avis de droit d’auteur ci-dessus et le présent avis d’autorisation doivent être inclus dans toutes les copies ou parties substantielles du Logiciel.
+
+LE LOGICIEL EST FOURNI « EN L’ÉTAT », SANS GARANTIE D’AUCUNE SORTE, EXPRESSE OU IMPLICITE, Y COMPRIS, SANS S’Y LIMITER, LES GARANTIES DE QUALITÉ MARCHANDE, D’ADÉQUATION À UN USAGE PARTICULIER ET D’ABSENCE DE CONTREFAÇON. EN AUCUN CAS LES AUTEURS OU LES TITULAIRES DES DROITS D’AUTEUR NE POURRONT ÊTRE TENUS RESPONSABLES D’UNE RÉCLAMATION, DE DOMMAGES OU D’UNE AUTRE RESPONSABILITÉ, QUE CE SOIT DANS LE CADRE D’UNE ACTION CONTRACTUELLE, DÉLICTUELLE OU AUTRE, RÉSULTANT DU LOGICIEL, DE SON UTILISATION OU D’AUTRES OPÉRATIONS LIÉES AU LOGICIEL, OU EN RAPPORT AVEC CEUX-CI.","Licenza MIT
+
+Con la presente si concede gratuitamente a chiunque ottenga una copia di questo software e dei file di documentazione associati (il «Software») il permesso di utilizzare il Software senza restrizioni, inclusi, senza limitazione, i diritti di usare, copiare, modificare, unire, pubblicare, distribuire, concedere in sublicenza e/o vendere copie del Software, nonché di consentire alle persone a cui il Software viene fornito di fare altrettanto, alle seguenti condizioni:
+
+L’avviso di copyright sopra riportato e il presente avviso di autorizzazione devono essere inclusi in tutte le copie o parti sostanziali del Software.
+
+IL SOFTWARE È FORNITO «COSÌ COM’È», SENZA GARANZIE DI ALCUN TIPO, ESPLICITE O IMPLICITE, INCLUSE, SENZA LIMITAZIONE, LE GARANZIE DI COMMERCIABILITÀ, IDONEITÀ A UNO SCOPO PARTICOLARE E NON VIOLAZIONE DI DIRITTI. IN NESSUN CASO GLI AUTORI O I TITOLARI DEL COPYRIGHT POTRANNO ESSERE RITENUTI RESPONSABILI DI RECLAMI, DANNI O ALTRE RESPONSABILITÀ, DERIVANTI DA CONTRATTO, ILLECITO O ALTRO, ORIGINATI DAL SOFTWARE, DAL SUO UTILIZZO O DA ALTRE OPERAZIONI CON IL SOFTWARE, O A ESSI CONNESSI.","MIT Lisansı
+
+Bu yazılımın ve ilgili belgelendirme dosyalarının (bundan sonra «Yazılım» olarak anılacaktır) bir kopyasını edinen herkese, aşağıdaki koşullara tabi olmak üzere, Yazılımı kullanma, kopyalama, değiştirme, birleştirme, yayımlama, dağıtma, alt lisanslama ve/veya kopyalarını satma hakları da dahil ancak bunlarla sınırlı olmamak üzere, Yazılım üzerinde herhangi bir kısıtlama olmaksızın işlem yapma ve Yazılımın sağlandığı kişilere de aynı hakları tanıma izni ücretsiz olarak verilmektedir:
+
+Yukarıdaki telif hakkı bildirimi ve bu izin bildirimi, Yazılımın tüm kopyalarına veya önemli bölümlerine dahil edilmelidir.
+
+YAZILIM, TİCARETE ELVERİŞLİLİK, BELİRLİ BİR AMACA UYGUNLUK VE HAK İHLALİ OLMAMASI GARANTİLERİ DE DAHİL ANCAK BUNLARLA SINIRLI OLMAMAK ÜZERE, AÇIK VEYA ZIMNİ HİÇBİR GARANTİ VERİLMEKSİZİN «OLDUĞU GİBİ» SUNULMAKTADIR. YAZARLAR VEYA TELİF HAKKI SAHİPLERİ, SÖZLEŞMEDEN, HAKSIZ FİİLDEN VEYA BAŞKA BİR NEDENDEN KAYNAKLANMASINA BAKILMAKSIZIN, YAZILIMDAN, YAZILIMIN KULLANIMINDAN VEYA YAZILIMLA İLGİLİ DİĞER İŞLEMLERDEN DOĞAN VEYA BUNLARLA BAĞLANTILI OLAN HERHANGİ BİR TALEP, ZARAR VEYA DİĞER YÜKÜMLÜLÜKTEN HİÇBİR DURUMDA SORUMLU TUTULAMAZ."
+Copyright,Text,Copyright (c) 2025-2026 Artem Shpynov,Copyright (c) 2025-2026 Artem Shpynov,Copyright (c) 2025-2026 Artem Shpynov,Copyright (c) 2025-2026 Artem Shpynov,Copyright (c) 2025-2026 Artem Shpynov,Copyright (c) 2025-2026 Artem Shpynov
+DevelopedBy,Text,Artem Shpynov,Artem Shpynov,Artem Shpynov,Artem Shpynov,Artem Shpynov,Artem Shpynov
+RequirementsMinimum1,Text,,,,,,
+RequirementsMinimum2,Text,,,,,,
+RequirementsMinimum3,Text,,,,,,
+RequirementsMinimum4,Text,,,,,,
+RequirementsMinimum5,Text,,,,,,
+RequirementsMinimum6,Text,,,,,,
+RequirementsMinimum7,Text,,,,,,
+RequirementsMinimum8,Text,,,,,,
+RequirementsMinimum9,Text,,,,,,
+RequirementsMinimum10,Text,,,,,,
+RequirementsMinimum11,Text,,,,,,
+RequirementsRecommended1,Text,,,,,,
+RequirementsRecommended2,Text,,,,,,
+RequirementsRecommended3,Text,,,,,,
+RequirementsRecommended4,Text,,,,,,
+RequirementsRecommended5,Text,,,,,,
+RequirementsRecommended6,Text,,,,,,
+RequirementsRecommended7,Text,,,,,,
+RequirementsRecommended8,Text,,,,,,
+RequirementsRecommended9,Text,,,,,,
+RequirementsRecommended10,Text,,,,,,
+RequirementsRecommended11,Text,,,,,,
+StoreLogos1,Provide the file name only if it is in the same folder. Provide relative path to image starting with the subfolder name otherwise,BoxArt-1080x1080.png,BoxArt-1080x1080.png,BoxArt-1080x1080.png,BoxArt-1080x1080.png,BoxArt-1080x1080.png,BoxArt-1080x1080.png
+StoreLogos2,Provide the file name only if it is in the same folder. Provide relative path to image starting with the subfolder name otherwise,PosterArt-720x1080.png,PosterArt-720x1080.png,PosterArt-720x1080.png,PosterArt-720x1080.png,PosterArt-720x1080.png,PosterArt-720x1080.png
+Screenshots1,Provide the file name only if it is in the same folder. Provide relative path to image starting with the subfolder name otherwise,S1.png,S1.png,S1.png,S1.png,S1.png,S1.png
+Screenshots2,Provide the file name only if it is in the same folder. Provide relative path to image starting with the subfolder name otherwise,S2.png,S2.png,S2.png,S2.png,S2.png,S2.png
+Screenshots3,Provide the file name only if it is in the same folder. Provide relative path to image starting with the subfolder name otherwise,,,,,,
+Screenshots4,Provide the file name only if it is in the same folder. Provide relative path to image starting with the subfolder name otherwise,,,,,,
+Screenshots5,Provide the file name only if it is in the same folder. Provide relative path to image starting with the subfolder name otherwise,,,,,,
+Screenshots6,Provide the file name only if it is in the same folder. Provide relative path to image starting with the subfolder name otherwise,,,,,,
+Screenshots7,Provide the file name only if it is in the same folder. Provide relative path to image starting with the subfolder name otherwise,,,,,,
+Screenshots8,Provide the file name only if it is in the same folder. Provide relative path to image starting with the subfolder name otherwise,,,,,,
+Screenshots9,Provide the file name only if it is in the same folder. Provide relative path to image starting with the subfolder name otherwise,,,,,,
+Screenshots10,Provide the file name only if it is in the same folder. Provide relative path to image starting with the subfolder name otherwise,,,,,,
+HeroArts,Text,,,,,,
+Trailers,Text,,,,,,
