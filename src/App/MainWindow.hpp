@@ -100,8 +100,6 @@ namespace AnyFSE::App::Window
         UINT_PTR m_updateTimerId = 2;
         UINT_PTR m_launcherCheckTimerId = 3;
         UINT_PTR m_launcherTimeoutTimerId = 4;
-        UINT_PTR m_hUpdateTimer = NULL;
-        UINT_PTR m_hLauncherCheckTimer = NULL;
         bool m_bLauncherWasActive = false;
 
         UINT_PTR m_launcherStartedTime = 0;
@@ -132,7 +130,6 @@ namespace AnyFSE::App::Window
         BOOL LoadLogoImage();
         RECT LogoRect();
         void DrawClient(HDC hdc, const RECT& clientRect);
-        BOOL FreeTimer(UINT_PTR &refTimer);
         void OnTimer(UINT_PTR timerId);
         void OnLauncherTimeoutTimer();
         void OnLauncherCheckTimer();

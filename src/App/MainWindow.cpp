@@ -135,8 +135,6 @@ namespace AnyFSE::App::Window
         m_closing = false;
         m_bLauncherWasActive = false;
         m_launcherStartedTime = 0;
-        m_hUpdateTimer = NULL;
-        m_hLauncherCheckTimer = NULL;
 
         if (IsWindow(m_hWnd))
         {
@@ -164,8 +162,7 @@ namespace AnyFSE::App::Window
 
         UpdateIcon();
 
-        m_hLauncherCheckTimer = SetTimer(m_hWnd, m_launcherCheckTimerId, CHECK_INTERVAL_MS, NULL);
-        if (!m_hLauncherCheckTimer)
+        if (!SetTimer(m_hWnd, m_launcherCheckTimerId, CHECK_INTERVAL_MS, NULL))
         {
             log.Error(Logger::APIError(), "Cannot create launcher check timer");
             return false;

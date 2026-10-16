@@ -31,13 +31,6 @@ namespace AnyFSE::App::Window
 {
     static Logger log = LogManager::GetLogger("Window/Timer");
 
-    BOOL MainWindow::FreeTimer(UINT_PTR &refTimer)
-    {
-        BOOL res = ::KillTimer(m_hWnd, refTimer);
-        refTimer = NULL;
-        return res;
-    }
-
     void MainWindow::OnTimer(UINT_PTR timerId)
     {
         if (m_closing)
@@ -103,14 +96,14 @@ namespace AnyFSE::App::Window
             return;
         }
 
-        FreeTimer(m_launcherCheckTimerId);
+        KillTimer(m_hWnd, m_launcherCheckTimerId);
 
         UINT_PTR now = GetTickCount64();
 
         if (Config::SplashDelayHide && now < m_launcherStartedTime + HIDE_DELAY_MS)
         {
             log.Trace("Set Timeout timer to DestroyWindow");
-            FreeTimer(m_launcherTimeoutTimerId);
+            KillTimer(m_hWnd, m_launcherTimeoutTimerId);
             SetTimer(m_hWnd, m_launcherTimeoutTimerId, HIDE_DELAY_MS - (int)(now - m_launcherStartedTime) + 1, NULL);
 
             return;
