@@ -8,6 +8,9 @@ namespace AnyFSE::App::Constants
     inline constexpr wchar_t PackageAtomName[] = L"ArtemShpynov.AnyFSE_by4wjhxmygwn4";
     inline constexpr wchar_t WaitingExitMutex[] = L"ArtemShpynov.AnyFSE_WaitingExitFSE";
 
+    // Winlogon shell readiness events (opened only when Windows has created them).
+    inline constexpr wchar_t ShellDesktopSwitchEvent[] = L"ShellDesktopSwitchEvent";
+
     // Product files
     inline constexpr wchar_t AnyFseSettingsDll[] = L"AnyFSE.Settings.dll";
     inline constexpr wchar_t AnyFseExe[] = L"AnyFSE.exe";

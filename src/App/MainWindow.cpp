@@ -199,6 +199,9 @@ namespace AnyFSE::App::Window
         m_empty = empty;
         if (IsWindow(m_hWnd))
         {
+
+            SignalShellReady();
+
             if (Config::SplashShowVideo)
             {
                 m_videoPlayer.Load(m_currentVideo.c_str(), Config::SplashVideoMute, Config::SplashVideoLoop, Config::SplashVideoPause, m_hWnd);
@@ -225,6 +228,24 @@ namespace AnyFSE::App::Window
             SetForegroundWindow(m_hWnd);
         }
         return true;
+    }
+
+    void MainWindow::SignalShellReady()
+    {
+        UpdateWindow(m_hWnd);
+
+        HANDLE event = OpenEvent(EVENT_MODIFY_STATE, FALSE, Constants::ShellDesktopSwitchEvent);
+        if (!event)
+        {
+            log.Warn(Logger::APIError(), "Cannot open shell readiness event %ls", Constants::ShellDesktopSwitchEvent);
+            return;
+        }
+
+        SetEvent(event);
+        
+        log.Info("Signaled shell readiness event %ls", Constants::ShellDesktopSwitchEvent);
+
+        CloseHandle(event);
     }
 
     bool MainWindow::IsVisible()

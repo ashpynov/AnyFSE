@@ -64,6 +64,7 @@ namespace AnyFSE::App::Window
 
         void Reset();
         void OnCreate();
+        void SignalShellReady();
 
         void OnPaint();
         void OnPrintClient(HDC hdc);
