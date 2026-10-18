@@ -74,6 +74,7 @@ namespace AnyFSE::App::Window
         if (becameInactive && Launchers::HasLauncherProcess())
         {
             log.Trace("Launcher window disappeared after detection, but launcher process still exists; keep waiting");
+            m_bLauncherWasActive = false;
             return;
         }
 

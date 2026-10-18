@@ -81,6 +81,7 @@ namespace AnyFSE::Configuration
             SteamBigPicture.ProcessName = L"steamwebhelper.exe";
             SteamBigPicture.ClassName = L"SDL_app";
             SteamBigPicture.IsTrayAggressive = true;
+            SteamBigPicture.OnRestating = App::Launchers::SteamSwapLauncher;
             result.push_back(SteamBigPicture);
         }
         {
@@ -94,6 +95,7 @@ namespace AnyFSE::Configuration
             Steam.ProcessName = L"steamwebhelper.exe";
             Steam.ClassName = L"SDL_app";
             Steam.IsTrayAggressive = true;
+            Steam.OnRestating = App::Launchers::SteamSwapLauncher;
             result.push_back(Steam);
         }
         {

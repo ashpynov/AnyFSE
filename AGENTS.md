@@ -23,3 +23,4 @@
   `Tools/Registry.hpp` is available.
 - Avoid introduce `using namespace` or individual `using` declarations except local single place case. Prefer a short namespace alias such as
   `namespace c = AnyFSE::App::Constants;` and access constants as `c::Name`.
+- Do not specify *W versions of API.

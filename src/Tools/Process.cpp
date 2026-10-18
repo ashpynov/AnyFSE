@@ -361,7 +361,7 @@ namespace AnyFSE::Tools::Process
             return false;
         }
 
-        if (IsIconic(hWnd))
+        if (IsIconic(hWnd) || !IsWindowVisible(hWnd))
         {
             ShowWindow(hWnd, nCmdShow);
         }

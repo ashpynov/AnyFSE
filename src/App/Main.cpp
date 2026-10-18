@@ -100,6 +100,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return 0;
     }
 
+    if (Config::Launcher.IsTrayAggressive && Launchers::IsLauncherInTray())
+    {
+        Launchers::FocusLauncher();
+        ExitFSE::WaitHomeAppExit();
+        return 0;
+    }
+
     if (ExitFSE::WaitExitFSEMode())
     {
         return 0;

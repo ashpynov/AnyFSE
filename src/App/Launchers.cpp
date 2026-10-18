@@ -32,6 +32,7 @@
 #include "App/Constants.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/Packages.hpp"
+#include "Tools/WindowClosedEvent.hpp"
 #include "App/GamingExperience.hpp"
 
 
@@ -39,23 +40,58 @@ namespace AnyFSE::App::Launchers
 {
     static Logger log = LogManager::GetLogger("Launchers");
 
+    bool HasLauncherStartingProcess()
+    {
+        if (!Config::Launcher.IsTrayAggressive)
+        {
+            return HasLauncherProcess();
+        }
+
+        if (!HasLauncherProcess())
+        {
+            return false;
+        }
+
+        Sleep(1000);
+
+        if (!HasLauncherProcess())
+        {
+            return false;
+        }
+
+        if (IsLauncherActive())
+            return HasLauncherProcess();
+
+        Config::Launcher.OnRestating.Notify();
+
+        return HasLauncherProcess() && IsLauncherActive();
+    }
+
     bool WaitLauncherExit()
     {
         while (HANDLE hProcess = Launchers::GetLauncherProcess())
         {
             log.Debug("Start waiting process %#08x for %s", hProcess, Unicode::to_string(Config::Launcher.Name).c_str());
 
+            Tools::WindowClosedEvent launcherWindowClosed(Config::Launcher.IsTrayAggressive ? GetLauncherWindow(true) : NULL);
+
+            const HANDLE handles[] = {hProcess, launcherWindowClosed.Handle()};
+
             DWORD waitResult = WAIT_TIMEOUT;
             do
             {
-                waitResult = WaitForSingleObject(hProcess, 10000);
-                log.Trace("Wait Result: %s", waitResult == WAIT_TIMEOUT ? "Timeout" : "Process completed");
+                waitResult = WaitForMultipleObjects(handles[1] ? 2 : 1, handles, FALSE, 10000);
+                log.Trace("Wait Result: %s",
+                    waitResult == WAIT_TIMEOUT          ? "Timeout"
+                    : waitResult == WAIT_OBJECT_0 + 1   ? "Window hidden"
+                                                        : "Process completed");
 
                 Config::LoadExitFSEOnHomeExit();
 
                 if (!Config::ExitFSEOnHomeExit
                     || !App::GamingExperience::IsFullscreenMode())
                 {
+                    CloseHandle(hProcess);
                     return false;
                 }
 
@@ -63,7 +99,10 @@ namespace AnyFSE::App::Launchers
 
             CloseHandle(hProcess);
 
-            return HasLauncherProcess();
+            return Config::Launcher.IsTrayAggressive
+                ? HasLauncherStartingProcess()
+                : HasLauncherProcess();
+
         };
         return false;
     }
@@ -158,6 +197,12 @@ namespace AnyFSE::App::Launchers
         return hWnd && IsIconic(hWnd);
     }
 
+    bool IsLauncherInTray()
+    {
+        HWND hWnd = GetLauncherWindow(true, true);
+        return hWnd && !IsWindowVisible(hWnd);
+    }
+
     void FocusLauncher()
     {
         log.Debug("Focusing Launcher");
@@ -175,17 +220,21 @@ namespace AnyFSE::App::Launchers
             return;
         }
 
-        HWND launcherHwnd = GetLauncherWindow(true);
+        HWND launcherHwnd = GetLauncherWindow(true, true);
         if (launcherHwnd)
         {
             Process::BringWindowToForeground(launcherHwnd, SW_SHOWMAXIMIZED);
         }
     }
 
-    HWND GetLauncherWindow(bool includeMinimized)
+    HWND GetLauncherWindow(bool includeMinimized, bool includeTray)
+    {
+        return GetLauncherWindow(Config::Launcher, includeMinimized, includeTray);
+    }
+
+    HWND GetLauncherWindow(const LauncherConfig& launcher, bool includeMinimized, bool includeTray)
     {
         HWND launcherHwnd = nullptr;
-        const LauncherConfig& launcher = Config::Launcher;
 
         if (!launcher.AppUserModelID.empty())
         {
@@ -194,12 +243,14 @@ namespace AnyFSE::App::Launchers
             launcherHwnd = Process::GetWindow(processIds, 0, L"", L"", WS_VISIBLE);
         }
 
+        DWORD visibility = includeTray ? 0 : WS_VISIBLE;
+
         if (!launcherHwnd)
         {
             launcherHwnd = Process::GetWindow(
                 launcher.ProcessName, launcher.ExStyle,
                 launcher.ClassName, launcher.WindowTitle,
-                WS_VISIBLE, launcher.NoStyle
+                visibility, launcher.NoStyle
             );
         }
 
@@ -217,7 +268,7 @@ namespace AnyFSE::App::Launchers
             launcherHwnd = Process::GetWindow(
                 launcher.ProcessNameAlt, launcher.ExStyleAlt,
                 launcher.ClassNameAlt, launcher.WindowTitleAlt,
-                WS_VISIBLE, launcher.NoStyle
+                visibility, launcher.NoStyle
             );
         }
 
@@ -229,6 +280,7 @@ namespace AnyFSE::App::Launchers
                 WS_MINIMIZE, launcher.NoStyle
             );
         }
+
         return launcherHwnd;
     }
 
@@ -307,6 +359,42 @@ namespace AnyFSE::App::Launchers
                 Config::Launcher
             );
         }
+        return false;
+    }
+
+    bool SteamSwapLauncher()
+    {
+        std::wstring path = std::filesystem::path(Config::Launcher.StartCommand).parent_path().wstring();
+
+        LauncherConfig steamBpm;
+        Config::GetLauncherDefaults(LauncherType::SteamBigPicture, path, steamBpm);
+
+        LauncherConfig steam;
+        Config::GetLauncherDefaults(LauncherType::Steam, path, steam);
+
+        if (Process::FindFirstByName(Config::Launcher.ProcessName) == 0)
+            return false;
+
+        if (Config::Launcher.Type != steamBpm.Type && Launchers::GetLauncherWindow(steamBpm, true))
+        {
+            log.Debug("Swap Steam launher to Seam BPM mode");
+            Config::Launcher = steamBpm;
+            return true;
+        }
+        else if (Config::Launcher.Type != steam.Type && Launchers::GetLauncherWindow(steam, true, true))
+        {
+            log.Debug("Swap Steam BMP launher to Seam mode");
+            Config::Launcher = steam;
+            HWND hWnd = GetLauncherWindow(true, true);
+            if (hWnd)
+            {
+                ShowWindow(hWnd, SW_MINIMIZE);
+                ShowWindow(hWnd, SW_SHOWMAXIMIZED);
+            }
+
+            return true;
+        }
+
         return false;
     }
 }

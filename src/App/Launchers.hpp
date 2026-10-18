@@ -34,9 +34,11 @@ namespace AnyFSE::App::Launchers
     bool IsLauncherActive();
     bool IsLauncherActiveOrMinimized();
     bool IsLauncherMinimized();
+    bool IsLauncherInTray();
 
     void FocusLauncher();
-    HWND GetLauncherWindow(bool includeMinimized);
+    HWND GetLauncherWindow(bool includeMinimized, bool includeTray = false);
+    HWND GetLauncherWindow(const LauncherConfig &launcher, bool includeMinimized, bool includeTray = false);
     bool HasLauncherProcess();
     HANDLE GetLauncherProcess();
     // Only enabled applications with the requested AsAdmin value are selected.
@@ -45,4 +47,5 @@ namespace AnyFSE::App::Launchers
 
     bool IsPlaynite(LauncherType type);
     bool PlayniteSwapLauncher();
+    bool SteamSwapLauncher();
 }
