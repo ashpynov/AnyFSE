@@ -134,7 +134,6 @@ namespace AnyFSE::App::Window
         m_successChecked = false;
         m_closing = false;
         m_bLauncherWasActive = false;
-        m_launcherStartedTime = 0;
 
         if (IsWindow(m_hWnd))
         {

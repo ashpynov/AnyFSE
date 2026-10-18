@@ -184,7 +184,6 @@ namespace AnyFSE::Configuration
             static bool SplashVideoPause;
             static bool SplashSimplifiedSwitch;
             static bool SplashSimplifiedSwitchText;
-            static bool SplashDelayHide;
 
             static bool CleanupFailedStart;
             static DWORD RestartDelay;

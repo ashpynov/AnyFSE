@@ -88,12 +88,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             Layout::LineHeightSmall, Layout::LinePadding, (int)(Layout::LineSmallMargin * 1.5));
         m_pSplashVideoLine->AddGroupItem(m_pSimplifiedSwitchTextLine);
 
-        m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            Translate(L"settingsSplashDelayHide"),
-            Translate(L"settingsSplashDelayHideDescription"),
-            m_delayHideToggle,
-            Layout::LineHeight, 0, 0);
-
         m_showTextToggle.OnChanged += delegate(OnShowTextChanged);
         m_pSplashTextLine->OnChanged += delegate(m_dialog.UpdateLayout);
 
@@ -122,7 +116,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         m_simplifiedSwitchToggle.SetCheck(Config::SplashSimplifiedSwitch);
         m_simplifiedSwitchTextToggle.SetCheck(Config::SplashSimplifiedSwitchText);
         OnSimplifiedSwitchChanged();
-        m_delayHideToggle.SetCheck(Config::SplashDelayHide);
     }
 
     void SplashPage::SaveControls()
@@ -141,7 +134,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         Config::SplashVideoPause = m_videoPauseToggle.GetCheck();
         Config::SplashSimplifiedSwitch = m_simplifiedSwitchToggle.GetCheck();
         Config::SplashSimplifiedSwitchText = m_simplifiedSwitchTextToggle.GetCheck();
-        Config::SplashDelayHide = m_delayHideToggle.GetCheck();
     }
 
     void SplashPage::OnGotoSplashFolder()

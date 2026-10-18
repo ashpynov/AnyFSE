@@ -71,7 +71,6 @@ namespace AnyFSE::Configuration
     bool            Config::SplashVideoPause = true;
     bool            Config::SplashSimplifiedSwitch = true;
     bool            Config::SplashSimplifiedSwitchText = true;
-    bool            Config::SplashDelayHide = false;
     bool            Config::QuickStart = false;
     bool            Config::AsAdmin = false;
     bool            Config::CleanupFailedStart = true;
@@ -158,7 +157,6 @@ namespace AnyFSE::Configuration
         SplashVideoPause        = config.value(jp("/Splash/Video/Pause"),    true);
         SplashSimplifiedSwitch  = config.value(jp("/Splash/SimplifiedSwitch"), true);
         SplashSimplifiedSwitchText = config.value(jp("/Splash/SimplifiedSwitchText"), true);
-        SplashDelayHide         = config.value(jp("/Splash/DelayHide"),      false);
         StartupApps             = config.value(jp("/StartupApps"),           std::list<StartupApp>());
         ExitFSEOnHomeExit       = config.value(jp("/Extra/ExitFSEOnHomeExit"), false);
         HotkeysEnable           = config.value(jp("/Hotkeys/Enable"),       false);
@@ -250,7 +248,6 @@ namespace AnyFSE::Configuration
         config["Splash"]["TillEnd"]             = SplashTillEnd;
         config["Splash"]["SimplifiedSwitch"]    = SplashSimplifiedSwitch;
         config["Splash"]["SimplifiedSwitchText"] = SplashSimplifiedSwitchText;
-        config["Splash"]["DelayHide"]           = SplashDelayHide;
 
         config["Splash"]["CustomText"]          = SplashCustomText;
 

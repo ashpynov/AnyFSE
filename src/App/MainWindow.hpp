@@ -102,12 +102,9 @@ namespace AnyFSE::App::Window
         UINT_PTR m_launcherTimeoutTimerId = 4;
         bool m_bLauncherWasActive = false;
 
-        UINT_PTR m_launcherStartedTime = 0;
-
         const int CHECK_INTERVAL_MS = 500;
         const int LAUNCHER_TIMEOUT_MS = 60000;
         const int ZOOM_INTERVAL_MS = 20;
-        const int HIDE_DELAY_MS = 2000;
 
         static constexpr float NORMAL_LOGO_SIZE = 150.0f;
         static constexpr float LARGE_LOGO_SIZE = 195.0f;

@@ -86,11 +86,6 @@ namespace AnyFSE::App::Window
 
         m_bLauncherWasActive = true;
 
-        if (!m_launcherStartedTime)
-        {
-            m_launcherStartedTime = GetTickCount64();
-        }
-
         if (isActive && Config::SplashShowVideo && Config::SplashTillEnd && m_videoPlayer.ShouldWaitForEnd())
         {
             log.Trace("Waiting Splash Video to complete");
@@ -98,17 +93,6 @@ namespace AnyFSE::App::Window
         }
 
         KillTimer(m_hWnd, m_launcherCheckTimerId);
-
-        UINT_PTR now = GetTickCount64();
-
-        if (Config::SplashDelayHide && now < m_launcherStartedTime + HIDE_DELAY_MS)
-        {
-            log.Trace("Set Timeout timer to DestroyWindow");
-            KillTimer(m_hWnd, m_launcherTimeoutTimerId);
-            SetTimer(m_hWnd, m_launcherTimeoutTimerId, HIDE_DELAY_MS - (int)(now - m_launcherStartedTime) + 1, NULL);
-
-            return;
-        }
 
         m_closing = true;
         log.Trace("Destroy Splash Window now by launcherCheckTimer");
