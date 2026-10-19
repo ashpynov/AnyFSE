@@ -104,6 +104,8 @@ Update these files together. Do not change only one of them.
    - Change `<Identity Name="...">` if you are renaming the package identity.
    - Change `<Identity Publisher="CN=...">` to exactly match the signing certificate subject.
    - Example: if the certificate subject is `CN=Your Publisher Name`, the manifest publisher must be `Publisher="CN=Your Publisher Name"`.
+   - Keep `packageName`, `publisher`, and `applicationId` in `AnyFSE.manifest` equal to the package's `Identity Name`, `Identity Publisher`, and `Application Id`.
+     The executable embeds this manifest to acquire package identity on direct launch.
 
 3. `AnyFSE.Package.vcxproj`
    - Update `<CertificateName>` for readable build output.
@@ -122,6 +124,22 @@ Get-AppxPackage -Name "Your.Package.Identity.Name" |
 ```
 
 Use the returned `PackageFamilyName` in `src\App\Constants.hpp`; `AppUserModelId` is `<PackageFamilyName>!App`.
+
+## Check the Microsoft Store listing
+
+`XPFM6KZ5SD704G` is the Store product ID for the EXE installer listing. It is separate from the sparse package identity;
+do not substitute it for `packageName` or `applicationId` in the executable manifest.
+
+```powershell
+winget show --id XPFM6KZ5SD704G --source msstore --disable-interactivity
+winget list --name AnyFSE --disable-interactivity
+```
+
+`show` reports the catalog's version and installer URL. A catalog version of `Unknown` does not mean that the installed EXE has no version.
+`list` reports installed versions; the EXE entry should map to `XPFM6KZ5SD704G` with source `msstore`, alongside the separate identity package.
+Both installer variants write `DisplayVersion` as `AssemblyVersion.BinaryVersionRevision` (four numeric components, for example `0.90.22.37`).
+The revision matches the installer's numeric file version and the packaged APPX; release tags and download URLs keep their existing format.
+Publish a new submission in Partner Center to update the Store installer URL; rebuilding locally does not update the Store listing.
 
 ## Build the offline package
 

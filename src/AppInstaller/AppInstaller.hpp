@@ -40,6 +40,10 @@ namespace AnyFSE
 #define VER_VERSION_STR "1.2.3"
 #endif
 
+#ifndef VER_DISPLAY_VERSION_STR
+#define VER_DISPLAY_VERSION_STR "0.0.0.0"
+#endif
+
 #ifndef VER_COMPANY_NAME
 #define VER_COMPANY_NAME "Artem Shpynov"
 #endif

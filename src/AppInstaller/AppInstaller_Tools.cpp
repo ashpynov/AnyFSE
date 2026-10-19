@@ -123,7 +123,7 @@ namespace AnyFSE
 
         return
             Registry::WriteString(registryPath, L"DisplayName", Unicode::to_wstring(VER_PRODUCT_NAME)) &&
-            Registry::WriteString(registryPath, L"DisplayVersion", Unicode::to_wstring(APP_VERSION)) &&
+            Registry::WriteString(registryPath, L"DisplayVersion", Unicode::to_wstring(VER_DISPLAY_VERSION_STR)) &&
             Registry::WriteString(registryPath, L"Publisher", Unicode::to_wstring(VER_COMPANY_NAME)) &&
             Registry::WriteString(registryPath, L"InstallLocation", installPath) &&
             Registry::WriteString(registryPath, L"DisplayIcon", installPath + L"\\" + Unicode::to_wstring(VER_PRODUCT_NAME) + L".exe") &&

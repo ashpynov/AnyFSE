@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <AssemblyVersion>0.90.22</AssemblyVersion>
-    <VersionRevision>37</VersionRevision>
+    <AssemblyVersion>0.90.23</AssemblyVersion>
+    <VersionRevision>0</VersionRevision>
     <BinaryVersionRevision>$(VersionRevision)</BinaryVersionRevision>
     <AssemblyProduct>AnyFSE</AssemblyProduct>
     <AssemblyCompany>Artem Shpynov</AssemblyCompany>
@@ -17,6 +17,7 @@
       <PreprocessorDefinitions>
                 VER_VERSION=$(AssemblyVersion.Replace('.', ',')),$(BinaryVersionRevision);
                 VER_VERSION_STR=\"$(AssemblyVersion)\";
+                VER_DISPLAY_VERSION_STR="$(AssemblyVersion).$(BinaryVersionRevision)";
                 COMPANY_NAME=\"$(AssemblyCompany)\";
                 PRODUCT_NAME=\"$(AssemblyProduct)\";
                 FILE_DESCRIPTION=\"$(AssemblyDescription)\";

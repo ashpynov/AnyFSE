@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+  <msix xmlns="urn:schemas-microsoft-com:msix.v1"
+        packageName="ArtemShpynov.AnyFSE"
+        publisher="CN=DDCC7751-898D-4BC9-B80C-4AA73E5D5762"
+        applicationId="App" />
+</assembly>

@@ -54,6 +54,7 @@
             <PreprocessorDefinitions>
                 _STATIC_CPPLIB;_DISABLE_DEPRECATE_STATIC_CPPLIB;WIN32;WIN64;_WIN64;_AMD64_;_DEBUG;_WINDOWS;
                 VER_VERSION_STR="$(AssemblyVersion)";
+                VER_DISPLAY_VERSION_STR="$(AssemblyVersion).$(BinaryVersionRevision)";
                 VER_PRODUCT_NAME="$(AssemblyProduct)";
                 VER_COMPANY_NAME="$(AssemblyCompany)";
                 VER_PUBLISHER_CN="$(PublisherCN)";
@@ -74,6 +75,7 @@
             <PreprocessorDefinitions>
                 _STATIC_CPPLIB;_DISABLE_DEPRECATE_STATIC_CPPLIB;WIN32;WIN64;_WIN64;_AMD64_;_WINDOWS;
                 VER_VERSION_STR="$(AssemblyVersion)";
+                VER_DISPLAY_VERSION_STR="$(AssemblyVersion).$(BinaryVersionRevision)";
                 VER_PRODUCT_NAME="$(AssemblyProduct)";
                 VER_COMPANY_NAME="$(AssemblyCompany)";
                 VER_PUBLISHER_CN="$(PublisherCN)";
@@ -110,6 +112,7 @@
         <ClCompile Include="src\Logging\*.cpp" />
         <ClCompile Include="src\Tools\*.cpp" />
         <ClInclude Include="src\resource.h" />
+        <Manifest Include="AnyFSE.manifest" />
         <ResourceCompile Include="src\Resource.rc" />
         <Image Include="media\AnyFSEIcon.ico" />
     </ItemGroup>

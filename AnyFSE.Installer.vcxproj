@@ -70,6 +70,7 @@
       <PreprocessorDefinitions>
         _STATIC_CPPLIB;_DISABLE_DEPRECATE_STATIC_CPPLIB;WIN32;WIN64;_WIN64;_AMD64_;_DEBUG;WIN32;_WINDOWS;UNICODE;_UNICODE;
         VER_VERSION_STR="$(AssemblyVersion)";
+        VER_DISPLAY_VERSION_STR="$(AssemblyVersion).$(BinaryVersionRevision)";
         VER_PRODUCT_NAME="$(AssemblyProduct)";
         VER_COMPANY_NAME="$(AssemblyCompany)";
         VER_PUBLISHER_CN="$(PublisherCN)";
@@ -99,6 +100,7 @@
       <PreprocessorDefinitions>
         _STATIC_CPPLIB;_DISABLE_DEPRECATE_STATIC_CPPLIB;WIN32;WIN64;_WIN64;_AMD64_;NDEBUG;WIN32;_WINDOWS;UNICODE;_UNICODE;
         VER_VERSION_STR="$(AssemblyVersion)";
+        VER_DISPLAY_VERSION_STR="$(AssemblyVersion).$(BinaryVersionRevision)";
         VER_PRODUCT_NAME="$(AssemblyProduct)";
         VER_COMPANY_NAME="$(AssemblyCompany)";
         VER_PUBLISHER_CN="$(PublisherCN)";
