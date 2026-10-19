@@ -25,7 +25,37 @@ Il dispositivo Windows deve già supportare la modalità Xbox. Il launcher scelt
 AnyFSE, seçtiğiniz başlatıcıyı Xbox modunda çalıştırır; Playnite, Steam Big Picture, LaunchBox ve diğer başlatıcıları destekler. Açılışa kendi videonuzu ekleyin ve ROG Ally sistem düğmelerini ihtiyaçlarınıza göre özelleştirin.
 
 Windows cihazınızda Xbox modu desteğinin önceden mevcut olması gerekir. Seçtiğiniz başlatıcı ayrıca yüklenmelidir."
-WhatsNew,Text,First release on Microsoft Store.,Первый выпуск в Microsoft Store.,Primeira versão na Microsoft Store.,Première version sur le Microsoft Store.,Prima versione su Microsoft Store.,Microsoft Store üzerindeki ilk sürüm.
+WhatsNew,Text,"- Immediate close logon screen as soon as AnyFSE executed
+- Added option to disable Guide button in Xbox mode to open Game Bar. Now it is able to use Guide button (short press only) in Steam Guide button chords or focus it.
+- New detection of Steam installation for systems with pre-installed Steam (like OneXPlayer 3)
+- Pure black starting logo background to respect OLED screens
+- Improved handling Exit Xbox mode on launcher switching for Steam and Playnite
+- Updated icons assets","- Экран входа закрывается сразу после запуска AnyFSE
+- Добавлена возможность отключить открытие Game Bar кнопкой Guide в режиме Xbox. Теперь короткое нажатие Guide можно использовать для сочетаний кнопок Steam или переключения на Steam.
+- Обновлено обнаружение Steam на системах с предустановленным Steam (например, OneXPlayer 3)
+- Для экранов OLED фон стартового логотипа сделан полностью чёрным
+- Улучшена обработка выхода из режима Xbox при переключении лаунчеров Steam и Playnite
+- Обновлены значки приложения","- A tela de login é fechada assim que o AnyFSE é iniciado
+- Adicionada a opção de impedir que o botão Guide abra a Game Bar no modo Xbox. Agora, um toque curto no botão Guide pode ser usado nos atalhos de controle do Steam ou para colocar o Steam em primeiro plano.
+- Atualizada a detecção da instalação do Steam em sistemas com o Steam pré-instalado (como o OneXPlayer 3)
+- Fundo totalmente preto no logotipo de inicialização para telas OLED
+- Melhorado o tratamento da saída do modo Xbox ao alternar os launchers Steam e Playnite
+- Atualizados os ícones do aplicativo","- L’écran de connexion se ferme dès le démarrage d’AnyFSE
+- Ajout d’une option pour empêcher le bouton Guide d’ouvrir la Game Bar en mode Xbox. Un appui court sur Guide peut désormais servir aux raccourcis de manette Steam ou à remettre Steam au premier plan.
+- Nouvelle détection de l’installation de Steam sur les systèmes où Steam est préinstallé (comme le OneXPlayer 3)
+- Fond entièrement noir derrière le logo de démarrage pour les écrans OLED
+- Amélioration de la gestion de la sortie du mode Xbox lors du changement de lanceur avec Steam et Playnite
+- Mise à jour des icônes de l’application","- La schermata di accesso si chiude non appena viene avviato AnyFSE
+- Aggiunta un’opzione per impedire al pulsante Guide di aprire la Game Bar in modalità Xbox. Ora una pressione breve di Guide può essere usata per le combinazioni di pulsanti di Steam o per portare Steam in primo piano.
+- Aggiornato il rilevamento dell’installazione di Steam sui sistemi con Steam preinstallato (come OneXPlayer 3)
+- Sfondo completamente nero dietro il logo di avvio per gli schermi OLED
+- Migliorata la gestione dell’uscita dalla modalità Xbox durante il cambio di launcher con Steam e Playnite
+- Aggiornate le icone dell’applicazione","- AnyFSE başlatılır başlatılmaz oturum açma ekranı kapanır
+- Xbox modunda Guide düğmesinin Game Bar’ı açmasını engelleyen bir seçenek eklendi. Guide düğmesine kısa basma artık Steam düğme kombinasyonları için veya Steam’i ön plana getirmek için kullanılabilir.
+- Steam’in önceden yüklü olduğu sistemlerde (OneXPlayer 3 gibi) Steam kurulumunu algılama yöntemi yenilendi
+- OLED ekranlar için başlangıç logosunun arka planı tamamen siyah yapıldı
+- Steam ve Playnite başlatıcıları arasında geçiş yaparken Xbox modundan çıkışın işlenmesi iyileştirildi
+- Uygulama simgeleri güncellendi"
 ProductFeatures1,Text,Use your preferred launcher as the Xbox mode home app,Выбор любимого лаунчера в качестве главного приложения режима Xbox,Use seu launcher favorito como aplicativo inicial do modo Xbox,Utilisez votre lanceur préféré comme application d’accueil du mode Xbox,Usa il tuo launcher preferito come applicazione Home della modalità Xbox,Tercih ettiğiniz başlatıcıyı Xbox modunun ana uygulaması olarak kullanın
 ProductFeatures2,Text,Show a custom video when your launcher starts,Собственное видео при запуске лаунчера,Exiba um vídeo personalizado ao iniciar o launcher,Affichez une vidéo personnalisée au démarrage du lanceur,Mostra un video personalizzato all’avvio del launcher,Başlatıcınız açılırken özel bir video gösterin
 ProductFeatures3,Text,Customize ROG Ally system buttons,Настройка системных кнопок ROG Ally,Personalize os botões de sistema do ROG Ally,Personnalisez les boutons système du ROG Ally,Personalizza i pulsanti di sistema di ROG Ally,ROG Ally sistem düğmelerini özelleştirin
