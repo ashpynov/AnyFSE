@@ -49,6 +49,9 @@ namespace AnyFSE::App::Constants
     inline constexpr wchar_t AsusOptimizationProcess[] = L"AsusOptimization.exe";
     inline constexpr wchar_t ArmouryCrateServiceProcess[] = L"ArmouryCrateSE.Service.exe";
 
+    // Windows imports used by ACSEFilter.
+    inline constexpr char DeviceIoControlFunction[] = "DeviceIoControl";
+
     // Registry
     inline constexpr wchar_t GameBarRegKey[] = L"HKEY_CURRENT_USER\\Software\\Microsoft\\GameBar";
     inline constexpr wchar_t LegacyGamepadXboxGuideButtonEnabledRegValue[] = L"LegacyGamepadXboxGuideButtonEnabled";

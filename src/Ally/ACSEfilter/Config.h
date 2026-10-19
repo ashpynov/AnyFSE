@@ -5,17 +5,11 @@
 namespace ACSEFilter::Config
 {
 
-    // ASUS USB vendor ID.
-    inline constexpr USHORT kTargetVendorId = 0x0B05;
+    inline constexpr DWORD kAtkWmiIoControlCode = 0x0022240C;
+    inline constexpr DWORD kAtkDevsMethod = 0x53564544;
+    inline constexpr DWORD kAtkHidEventDeviceId = 0x00100021;
 
-    inline constexpr USHORT kTargetProductIds[] = { 0x1ABE, 0x1B4C };
-
-    inline constexpr DWORD kExpectedReadLength = 6;
-
-    // Bytes returned to ASUS Optimization software when a matching HID read completes.
-    inline constexpr BYTE kReplacementBytes[kExpectedReadLength] = { 0x5A, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-    inline constexpr BYTE kReplacementKeys[] =
+    inline constexpr BYTE kSuppressedButtonCodes[] =
     {
           0x38 // AC_PRESS
         , 0x93 // LIBRARY_PRESS
@@ -24,4 +18,4 @@ namespace ACSEFilter::Config
         , 0xA8 // AC_HOLD_RELEASE
     };
 
-} // namespace ACSEFilter::config
+} // namespace ACSEFilter::Config

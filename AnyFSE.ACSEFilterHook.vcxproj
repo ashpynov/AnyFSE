@@ -60,7 +60,6 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>hid.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -77,21 +76,18 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>hid.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Ally\ACSEfilter\HidReadFilter.cpp" />
+    <ClCompile Include="src\Ally\ACSEfilter\DeviceIoControlFilter.cpp" />
     <ClCompile Include="src\Ally\ACSEfilter\Hook.cpp" />
     <ClCompile Include="src\Ally\ACSEfilter\IATHook.cpp" />
-    <ClCompile Include="src\Ally\ACSEfilter\Native.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Ally\ACSEfilter\Config.h" />
     <ClInclude Include="src\Ally\ACSEfilter\DebugLog.h" />
-    <ClInclude Include="src\Ally\ACSEfilter\HidReadFilter.h" />
+    <ClInclude Include="src\Ally\ACSEfilter\DeviceIoControlFilter.h" />
     <ClInclude Include="src\Ally\ACSEfilter\IATHook.h" />
-    <ClInclude Include="src\Ally\ACSEfilter\Native.h" />
     <ClInclude Include="src\resource.h" />
   </ItemGroup>
   <ItemGroup>

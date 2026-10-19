@@ -2,17 +2,9 @@
 
 #include <windows.h>
 
-#include <cstddef>
-
 namespace ACSEFilter
 {
 
-    struct ImportHookSpec
-    {
-        const char *functionName;
-        void *hookFunction;
-    };
-
-    void PatchModuleImports(HMODULE module, const ImportHookSpec *hooks, size_t hookCount);
+    bool PatchImport(HMODULE module, const char *functionName, void *hookFunction);
 
 } // namespace ACSEFilter

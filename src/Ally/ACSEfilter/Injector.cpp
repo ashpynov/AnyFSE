@@ -208,7 +208,7 @@ namespace
             TRY(WriteProcessMemory(process, remotePath, fullDllPathText.c_str(), bytes, nullptr),
                 "WriteProcessMemory failed");
 
-            const auto loadLibraryW = reinterpret_cast<LPTHREAD_START_ROUTINE>(GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "LoadLibraryW"));
+            const LPTHREAD_START_ROUTINE loadLibraryW = (LPTHREAD_START_ROUTINE)GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "LoadLibraryW");
             TRY(loadLibraryW,
                 "Could not resolve LoadLibraryW.");
 
@@ -511,7 +511,7 @@ namespace
             if (!QueryServiceStatusEx(
                     service,
                     SC_STATUS_PROCESS_INFO,
-                    reinterpret_cast<LPBYTE>(&status),
+                    (LPBYTE)&status,
                     sizeof(status),
                     &bytesNeeded))
             {
@@ -560,7 +560,7 @@ namespace
         if (!QueryServiceStatusEx(
                 service,
                 SC_STATUS_PROCESS_INFO,
-                reinterpret_cast<LPBYTE>(&status),
+                (LPBYTE)&status,
                 sizeof(status),
                 &bytesNeeded))
         {

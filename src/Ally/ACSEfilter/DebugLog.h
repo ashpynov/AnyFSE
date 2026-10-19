@@ -1,6 +1,6 @@
 #pragma once
 
-#if 1
+#if 0
 
 #include <windows.h>
 #include <strsafe.h>
@@ -14,7 +14,7 @@ namespace ACSEFilter::Debug
     {
         char *message = nullptr;
         const DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
-        const DWORD length = FormatMessageA(flags, nullptr, error, 0, reinterpret_cast<LPSTR>(&message), 0, nullptr);
+        const DWORD length = FormatMessageA(flags, nullptr, error, 0, (LPSTR)&message, 0, nullptr);
 
         std::string result;
         if (length && message)

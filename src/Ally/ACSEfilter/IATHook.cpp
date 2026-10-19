@@ -4,117 +4,78 @@
 
 namespace ACSEFilter
 {
-    namespace
+    bool PatchImport(HMODULE module, const char *functionName, void *hookFunction)
     {
-        bool IsReadablePeImage(HMODULE module)
+        if (!module || !functionName || !hookFunction)
         {
-            if (!module)
-            {
-                return false;
-            }
-
-            const auto *dos = reinterpret_cast<const IMAGE_DOS_HEADER *>(module);
-            if (dos->e_magic != IMAGE_DOS_SIGNATURE)
-            {
-                return false;
-            }
-
-            const auto *nt = reinterpret_cast<const IMAGE_NT_HEADERS *>(reinterpret_cast<const BYTE *>(module) + dos->e_lfanew);
-            return nt->Signature == IMAGE_NT_SIGNATURE;
+            return false;
         }
 
-        const ImportHookSpec *FindHook(const char *functionName, const ImportHookSpec *hooks, size_t hookCount)
+        BYTE *base = (BYTE *)module;
+        const IMAGE_DOS_HEADER *dos = (const IMAGE_DOS_HEADER *)base;
+        if (dos->e_magic != IMAGE_DOS_SIGNATURE)
         {
-            if (!functionName)
+            return false;
+        }
+
+        const IMAGE_NT_HEADERS *nt = (const IMAGE_NT_HEADERS *)(base + dos->e_lfanew);
+        if (nt->Signature != IMAGE_NT_SIGNATURE)
+        {
+            return false;
+        }
+
+        const IMAGE_DATA_DIRECTORY &directory = nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
+        if (!directory.VirtualAddress || !directory.Size)
+        {
+            return false;
+        }
+
+        bool patched = false;
+        const IMAGE_IMPORT_DESCRIPTOR *import = (const IMAGE_IMPORT_DESCRIPTOR *)(base + directory.VirtualAddress);
+        for (; import->Name; ++import)
+        {
+            if (!import->OriginalFirstThunk || !import->FirstThunk)
             {
-                return nullptr;
+                continue;
             }
 
-            for (size_t i = 0; i < hookCount; ++i)
+            const IMAGE_THUNK_DATA *names = (const IMAGE_THUNK_DATA *)(base + import->OriginalFirstThunk);
+            IMAGE_THUNK_DATA *thunk = (IMAGE_THUNK_DATA *)(base + import->FirstThunk);
+            for (; thunk->u1.Function; ++thunk, ++names)
             {
-                if (std::strcmp(functionName, hooks[i].functionName) == 0)
+                if (IMAGE_SNAP_BY_ORDINAL(names->u1.Ordinal))
                 {
-                    return &hooks[i];
+                    continue;
                 }
-            }
 
-            return nullptr;
-        }
-
-        void PatchThunk(IMAGE_THUNK_DATA *thunk, void *hookFunction)
-        {
-            auto *slot = reinterpret_cast<void **>(&thunk->u1.Function);
-            if (*slot == hookFunction)
-            {
-                return;
-            }
-
-            DWORD oldProtect = 0;
-            if (!VirtualProtect(slot, sizeof(void *), PAGE_READWRITE, &oldProtect))
-            {
-                return;
-            }
-
-            *slot = hookFunction;
-
-            DWORD ignored = 0;
-            VirtualProtect(slot, sizeof(void *), oldProtect, &ignored);
-            FlushInstructionCache(GetCurrentProcess(), slot, sizeof(void *));
-        }
-
-        void PatchModuleImportsImpl(HMODULE module, const ImportHookSpec *hooks, size_t hookCount)
-        {
-            if (!IsReadablePeImage(module))
-            {
-                return;
-            }
-
-            const auto *base = reinterpret_cast<const BYTE *>(module);
-            const auto *dos = reinterpret_cast<const IMAGE_DOS_HEADER *>(base);
-            const auto *nt = reinterpret_cast<const IMAGE_NT_HEADERS *>(base + dos->e_lfanew);
-            const auto &directory = nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
-
-            if (!directory.VirtualAddress || !directory.Size)
-            {
-                return;
-            }
-
-            auto *import = reinterpret_cast<IMAGE_IMPORT_DESCRIPTOR *>(const_cast<BYTE *>(base) + directory.VirtualAddress);
-
-            for (; import->Name; ++import)
-            {
-                auto *thunk = reinterpret_cast<IMAGE_THUNK_DATA *>(const_cast<BYTE *>(base) + import->FirstThunk);
-                auto *originalThunk = import->OriginalFirstThunk
-                                          ? reinterpret_cast<IMAGE_THUNK_DATA *>(const_cast<BYTE *>(base) + import->OriginalFirstThunk)
-                                          : nullptr;
-
-                for (size_t index = 0; thunk[index].u1.Function; ++index)
+                const IMAGE_IMPORT_BY_NAME *name = (const IMAGE_IMPORT_BY_NAME *)(base + names->u1.AddressOfData);
+                if (std::strcmp((const char *)name->Name, functionName) != 0)
                 {
-                    if (!originalThunk)
-                    {
-                        continue;
-                    }
-
-                    if (IMAGE_SNAP_BY_ORDINAL(originalThunk[index].u1.Ordinal))
-                    {
-                        continue;
-                    }
-
-                    const auto *importByName = reinterpret_cast<const IMAGE_IMPORT_BY_NAME *>(base + originalThunk[index].u1.AddressOfData);
-                    const ImportHookSpec *hook = FindHook(reinterpret_cast<const char *>(importByName->Name), hooks, hookCount);
-                    if (hook)
-                    {
-                        PatchThunk(&thunk[index], hook->hookFunction);
-                    }
+                    continue;
                 }
+
+                void **slot = (void **)&thunk->u1.Function;
+                if (*slot == hookFunction)
+                {
+                    patched = true;
+                    continue;
+                }
+
+                DWORD oldProtect = 0;
+                if (!VirtualProtect(slot, sizeof(void *), PAGE_READWRITE, &oldProtect))
+                {
+                    continue;
+                }
+
+                InterlockedExchangePointer(slot, hookFunction);
+
+                DWORD ignored = 0;
+                VirtualProtect(slot, sizeof(void *), oldProtect, &ignored);
+                patched = true;
             }
         }
 
-    } // namespace
-
-    void PatchModuleImports(HMODULE module, const ImportHookSpec *hooks, size_t hookCount)
-    {
-        PatchModuleImportsImpl(module, hooks, hookCount);
+        return patched;
     }
 
 } // namespace ACSEFilter
