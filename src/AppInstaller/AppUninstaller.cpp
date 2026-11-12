@@ -110,7 +110,7 @@ namespace AnyFSE
     INT_PTR AppUninstaller::Show(HINSTANCE hInstance)
     {
         m_hInstance = hInstance;
-        LogManager::Initialize("AnyFSE/Uninstaller");
+        // LogManager::Initialize("AnyFSE/Uninstaller");
 
         Tools::Localization::InitializeFromLocales();
 

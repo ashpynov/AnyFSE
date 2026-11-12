@@ -44,7 +44,8 @@ namespace AnyFSE
 
     bool AppInstaller::OnInstall()
     {
-        LogManager::Initialize(Constants::InstallerLogName, LogLevels::Trace, Paths::GetLogsPath());
+        // Keep the package data directory unlocked while Windows registers the package.
+        // LogManager::Initialize(Constants::InstallerLogName, LogLevels::Trace, Paths::GetLogsPath());
 
         if (!GamingExperience::ApiIsAvailable)
         {
