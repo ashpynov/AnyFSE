@@ -41,6 +41,7 @@
 #include "Tools/Notification.hpp"
 #include "Tools/Paths.hpp"
 #include "Tools/Process.hpp"
+#include "Tools/ShellWindow.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "GamingExperience.hpp"
 
@@ -255,7 +256,7 @@ namespace AnyFSE::App::Window
         }
 
         SetEvent(event);
-        
+
         log.Info("Signaled shell readiness event %ls", Constants::ShellDesktopSwitchEvent);
 
         CloseHandle(event);
@@ -402,6 +403,11 @@ namespace AnyFSE::App::Window
     {
         if (ShouldKeepSplashActive())
         {
+            // Keep the shell view active too: uncloaking alone can stall Steam's presentation after the video.
+            const HRESULT result = ShellWindow::SwitchTo(m_hWnd);
+            if (FAILED(result))
+                log.Warn("Cannot activate splash shell view: HRESULT=%#lx", static_cast<unsigned long>(result));
+
             SetWindowPos(m_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
             // Do not use the generic foreground helper: its simulated Alt key releases the foreground lock.
             if (GetForegroundWindow() != m_hWnd)
@@ -409,10 +415,26 @@ namespace AnyFSE::App::Window
             if (GetForegroundWindow() == m_hWnd && LockSetForegroundWindow(LSFW_LOCK))
                 m_foregroundLocked = true;
         }
-        else if (m_foregroundLocked)
+        else
         {
-            LockSetForegroundWindow(LSFW_UNLOCK);
-            m_foregroundLocked = false;
+            if (m_foregroundLocked)
+            {
+                LockSetForegroundWindow(LSFW_UNLOCK);
+                m_foregroundLocked = false;
+            }
+
+            if (!m_empty && Config::SplashShowVideo && Config::SplashTillEnd && !m_currentVideo.empty() && GamingExperience::IsFullscreenMode())
+            {
+                // Hand the active shell view back after the video so the launcher resumes presentation.
+                SetWindowPos(m_hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                HWND launcher = Launchers::GetLauncherWindow(true);
+                if (launcher)
+                {
+                    const HRESULT result = ShellWindow::SwitchTo(launcher);
+                    if (FAILED(result))
+                        log.Warn("Cannot switch to launcher shell view: HRESULT=%#lx", static_cast<unsigned long>(result));
+                }
+            }
         }
     }
 
