@@ -81,7 +81,7 @@ namespace AnyFSE::App::Constants
     inline constexpr wchar_t ZipExtension[] = L".zip";
     inline constexpr wchar_t ReleaseZipPrefix[] = L"AnyFSE.";
     inline constexpr wchar_t TempInstallDirName[] = L"AnyFSE_install";
-    inline constexpr wchar_t GitHubReleaseRoot[] = L"https://github.org/ashpynov/AnyFSE/releases/download/v";
+    inline constexpr wchar_t GitHubReleaseRoot[] = L"https://github.com/ashpynov/AnyFSE/releases/download/v";
     inline constexpr wchar_t CodebergReleaseRoot[] = L"https://codeberg.org/ashpynov/AnyFSE/releases/download/v";
     inline constexpr wchar_t UpdaterCommandMessage[] = L"AnyFSE.Updater.Command";
     inline constexpr wchar_t AnyFseProtocolSettings[] = L"anyfse://settings";
