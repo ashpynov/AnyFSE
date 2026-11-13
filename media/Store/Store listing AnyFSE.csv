@@ -25,32 +25,80 @@ Il dispositivo Windows deve già supportare la modalità Xbox. Il launcher scelt
 AnyFSE, seçtiğiniz başlatıcıyı Xbox modunda çalıştırır; Playnite, Steam Big Picture, LaunchBox ve diğer başlatıcıları destekler. Açılışa kendi videonuzu ekleyin ve ROG Ally sistem düğmelerini ihtiyaçlarınıza göre özelleştirin.
 
 Windows cihazınızda Xbox modu desteğinin önceden mevcut olması gerekir. Seçtiğiniz başlatıcı ayrıca yüklenmelidir."
-WhatsNew,Text,"- Immediate close logon screen as soon as AnyFSE executed
+WhatsNew,Text,"v0.90.24
+
+- Fixed exiting the full screen experience when the home app closes (#122)
+- Fixed restarting with Win+Shift+F11 when ""Enter Xbox mode on start"" is disabled (#120)
+- Fixed the GitHub path used for updates (#119)
+- Added support for Shift Game Launcher (#121)
+- Improved keeping the video on top during playback
+- Implemented a new way to filter button events from the ArmouryCrate service
+- Immediate close logon screen as soon as AnyFSE executed
 - Added option to disable Guide button in Xbox mode to open Game Bar. Now it is able to use Guide button (short press only) in Steam Guide button chords or focus it.
 - New detection of Steam installation for systems with pre-installed Steam (like OneXPlayer 3)
 - Pure black starting logo background to respect OLED screens
 - Improved handling Exit Xbox mode on launcher switching for Steam and Playnite
-- Updated icons assets","- Экран входа закрывается сразу после запуска AnyFSE
+- Updated icons assets","v0.90.24
+
+- Исправлен выход из полноэкранного режима при закрытии главного приложения (#122)
+- Исправлен перезапуск по Win+Shift+F11 при отключённой опции «Входить в режим Xbox при запуске» (#120)
+- Исправлен путь к GitHub для обновлений (#119)
+- Добавлена поддержка Shift Game Launcher (#121)
+- Улучшено отображение видео поверх других окон во время воспроизведения
+- Реализован новый способ фильтрации событий кнопок службы ArmouryCrate
+- Экран входа закрывается сразу после запуска AnyFSE
 - Добавлена возможность отключить открытие Game Bar кнопкой Guide в режиме Xbox. Теперь короткое нажатие Guide можно использовать для сочетаний кнопок Steam или переключения на Steam.
 - Обновлено обнаружение Steam на системах с предустановленным Steam (например, OneXPlayer 3)
 - Для экранов OLED фон стартового логотипа сделан полностью чёрным
 - Улучшена обработка выхода из режима Xbox при переключении лаунчеров Steam и Playnite
-- Обновлены значки приложения","- A tela de login é fechada assim que o AnyFSE é iniciado
+- Обновлены значки приложения","v0.90.24
+
+- Corrigida a saída da experiência em tela cheia ao fechar o aplicativo inicial (#122)
+- Corrigida a reinicialização com Win+Shift+F11 quando a opção ""Entrar no modo Xbox ao iniciar"" está desativada (#120)
+- Corrigido o caminho do GitHub usado nas atualizações (#119)
+- Adicionado suporte ao Shift Game Launcher (#121)
+- Melhorada a exibição do vídeo sobre outras janelas durante a reprodução
+- Implementado um novo método para filtrar eventos de botões do serviço ArmouryCrate
+- A tela de login é fechada assim que o AnyFSE é iniciado
 - Adicionada a opção de impedir que o botão Guide abra a Game Bar no modo Xbox. Agora, um toque curto no botão Guide pode ser usado nos atalhos de controle do Steam ou para colocar o Steam em primeiro plano.
 - Atualizada a detecção da instalação do Steam em sistemas com o Steam pré-instalado (como o OneXPlayer 3)
 - Fundo totalmente preto no logotipo de inicialização para telas OLED
 - Melhorado o tratamento da saída do modo Xbox ao alternar os launchers Steam e Playnite
-- Atualizados os ícones do aplicativo","- L’écran de connexion se ferme dès le démarrage d’AnyFSE
+- Atualizados os ícones do aplicativo","v0.90.24
+
+- Correction de la sortie de l’expérience plein écran à la fermeture de l’application d’accueil (#122)
+- Correction du redémarrage avec Win+Shift+F11 lorsque l’option « Activer le mode Xbox au démarrage » est désactivée (#120)
+- Correction du chemin GitHub utilisé pour les mises à jour (#119)
+- Ajout de la prise en charge de Shift Game Launcher (#121)
+- Amélioration du maintien de la vidéo au premier plan pendant la lecture
+- Mise en œuvre d’une nouvelle méthode pour filtrer les événements des boutons du service ArmouryCrate
+- L’écran de connexion se ferme dès le démarrage d’AnyFSE
 - Ajout d’une option pour empêcher le bouton Guide d’ouvrir la Game Bar en mode Xbox. Un appui court sur Guide peut désormais servir aux raccourcis de manette Steam ou à remettre Steam au premier plan.
 - Nouvelle détection de l’installation de Steam sur les systèmes où Steam est préinstallé (comme le OneXPlayer 3)
 - Fond entièrement noir derrière le logo de démarrage pour les écrans OLED
 - Amélioration de la gestion de la sortie du mode Xbox lors du changement de lanceur avec Steam et Playnite
-- Mise à jour des icônes de l’application","- La schermata di accesso si chiude non appena viene avviato AnyFSE
+- Mise à jour des icônes de l’application","v0.90.24
+
+- Corretta l’uscita dall’esperienza a schermo intero alla chiusura dell’applicazione Home (#122)
+- Corretto il riavvio con Win+Shift+F11 quando l’opzione «Entra in modalità Xbox all’avvio» è disattivata (#120)
+- Corretto il percorso GitHub utilizzato per gli aggiornamenti (#119)
+- Aggiunto il supporto per Shift Game Launcher (#121)
+- Migliorata la visualizzazione del video in primo piano durante la riproduzione
+- Implementato un nuovo metodo per filtrare gli eventi dei pulsanti del servizio ArmouryCrate
+- La schermata di accesso si chiude non appena viene avviato AnyFSE
 - Aggiunta un’opzione per impedire al pulsante Guide di aprire la Game Bar in modalità Xbox. Ora una pressione breve di Guide può essere usata per le combinazioni di pulsanti di Steam o per portare Steam in primo piano.
 - Aggiornato il rilevamento dell’installazione di Steam sui sistemi con Steam preinstallato (come OneXPlayer 3)
 - Sfondo completamente nero dietro il logo di avvio per gli schermi OLED
 - Migliorata la gestione dell’uscita dalla modalità Xbox durante il cambio di launcher con Steam e Playnite
-- Aggiornate le icone dell’applicazione","- AnyFSE başlatılır başlatılmaz oturum açma ekranı kapanır
+- Aggiornate le icone dell’applicazione","v0.90.24
+
+- Ana uygulama kapatıldığında tam ekran deneyiminden çıkış düzeltildi (#122)
+- «Başlangıçta Xbox moduna gir» seçeneği devre dışıyken Win+Shift+F11 ile yeniden başlatma düzeltildi (#120)
+- Güncellemeler için kullanılan GitHub yolu düzeltildi (#119)
+- Shift Game Launcher desteği eklendi (#121)
+- Oynatma sırasında videonun diğer pencerelerin üzerinde kalması iyileştirildi
+- ArmouryCrate hizmetinin düğme olaylarını filtrelemek için yeni bir yöntem uygulandı
+- AnyFSE başlatılır başlatılmaz oturum açma ekranı kapanır
 - Xbox modunda Guide düğmesinin Game Bar’ı açmasını engelleyen bir seçenek eklendi. Guide düğmesine kısa basma artık Steam düğme kombinasyonları için veya Steam’i ön plana getirmek için kullanılabilir.
 - Steam’in önceden yüklü olduğu sistemlerde (OneXPlayer 3 gibi) Steam kurulumunu algılama yöntemi yenilendi
 - OLED ekranlar için başlangıç logosunun arka planı tamamen siyah yapıldı
