@@ -105,15 +105,22 @@ namespace AnyFSE::Configuration
         return launcher;
     }
 
+    bool Config::AddLauncher(std::list<LauncherConfig>& found, LauncherType type, const std::wstring& installPath,
+        const std::wstring& launcherName)
+    {
+        if (installPath.empty())
+            return false;
+
+        LauncherConfig launcher = GetLauncherDefaults(type, installPath);
+        if (!launcherName.empty())
+            launcher.Name = launcherName;
+        found.push_back(launcher);
+        return true;
+    }
+
     void Config::FindArmouryCrate(std::list<LauncherConfig>& found)
     {
-        std::wstring installPath =
-            Packages::GetAppxInstallLocation(L"B9ECED6F.ArmouryCrateSE_qmba6cd70vzyy");
-
-        if (!installPath.empty())
-        {
-            found.push_back(GetLauncherDefaults(LauncherType::ArmouryCrate, L""));
-        }
+        AddLauncher(found, LauncherType::ArmouryCrate, Packages::GetAppxInstallLocation(L"B9ECED6F.ArmouryCrateSE_qmba6cd70vzyy"));
     }
 
     bool Config::FindLaunchers(std::list<LauncherConfig> &found)
@@ -131,6 +138,7 @@ namespace AnyFSE::Configuration
         FindSteam(found);
         FindBigBox(found);
         FindOneGameLauncher(found);
+        FindShiftGameLauncher(found);
         FindPocketDeck(found);
         FindRetroBat(found);
         FindKodi(found);
@@ -165,11 +173,8 @@ namespace AnyFSE::Configuration
         {
             installPath = GetAssociationPath(L"Playnite.ext");
         }
-        if (!installPath.empty())
-        {
-            found.push_back(GetLauncherDefaults(LauncherType::PlayniteFullscreen, installPath));
-            found.push_back(GetLauncherDefaults(LauncherType::PlayniteDesktop, installPath));
-        }
+        AddLauncher(found, LauncherType::PlayniteFullscreen, installPath);
+        AddLauncher(found, LauncherType::PlayniteDesktop, installPath);
     }
 
     void Config::FindSteam(std::list<LauncherConfig>& found)
@@ -180,77 +185,45 @@ namespace AnyFSE::Configuration
         {
             installPath = GetInstallPath(L"Steam");
         }
-        
-        if (!installPath.empty())
-        {
-            found.push_back(GetLauncherDefaults(LauncherType::SteamBigPicture, installPath));
 
-            found.push_back(GetLauncherDefaults(LauncherType::Steam, installPath));
-        }
+        AddLauncher(found, LauncherType::SteamBigPicture, installPath);
+        AddLauncher(found, LauncherType::Steam, installPath);
     }
 
     void Config::FindBigBox(std::list<LauncherConfig> &found)
     {
-        std::wstring installPath = SearchAppUserModel(L"LaunchBox");
-        if (!installPath.empty())
-        {
-            found.push_back(GetLauncherDefaults(LauncherType::BigBox, installPath));
-        }
+        AddLauncher(found, LauncherType::BigBox, SearchAppUserModel(L"LaunchBox"));
     }
 
     void Config::FindOneGameLauncher(std::list<LauncherConfig> &found)
     {
-        std::wstring installPath = Packages::GetAppxInstallLocation(L"62269AlexShats.OneGameLauncher_gghb1w55myjr2");
-        if (!installPath.empty())
-        {
-            found.push_back(GetLauncherDefaults(LauncherType::OneGameLauncher, L""));
-        }
+        AddLauncher(found, LauncherType::OneGameLauncher, Packages::GetAppxInstallLocation(L"62269AlexShats.OneGameLauncher_gghb1w55myjr2"));
+    }
+
+    void Config::FindShiftGameLauncher(std::list<LauncherConfig>& found)
+    {
+        AddLauncher(found, LauncherType::ShiftGameLauncher, Packages::GetAppxInstallLocation(L"HealthyBread.ShiftLauncher_w2r0zaqdfadz2"));
     }
 
     void Config::FindPocketDeck(std::list<LauncherConfig>& found)
     {
-        std::wstring installPath = Packages::GetAppxInstallLocation(L"cyberdesk.PocketDeck_a94wxpzanyhhj");
-        if (!installPath.empty())
-        {
-            auto launcher = GetLauncherDefaults(LauncherType::PocketDeck, installPath);
-            launcher.Name = L"PocketDeck";
-            found.push_back(launcher);
-        }
-
-        installPath = Packages::GetAppxInstallLocation(L"cyberdesk.PocketDeckLite_a94wxpzanyhhj");
-        if (!installPath.empty())
-        {
-            auto launcher = GetLauncherDefaults(LauncherType::PocketDeck, installPath);
-            launcher.Name = L"PocketDeck Lite";
-            found.push_back(launcher);
-        }
+        AddLauncher(found, LauncherType::PocketDeck, Packages::GetAppxInstallLocation(L"cyberdesk.PocketDeck_a94wxpzanyhhj"), L"PocketDeck");
+        AddLauncher(found, LauncherType::PocketDeck, Packages::GetAppxInstallLocation(L"cyberdesk.PocketDeckLite_a94wxpzanyhhj"), L"PocketDeck Lite");
     }
 
     void Config::FindRetroBat(std::list<LauncherConfig> &found)
     {
-        std::wstring installPath = Registry::ReadString(L"HKCU\\Software\\RetroBat", L"LatestKnownInstallPath");
-        if (!installPath.empty())
-        {
-            found.push_back(GetLauncherDefaults(LauncherType::RetroBat, installPath));
-        }
+        AddLauncher(found, LauncherType::RetroBat, Registry::ReadString(L"HKCU\\Software\\RetroBat", L"LatestKnownInstallPath"));
     }
 
     void Config::FindKodi(std::list<LauncherConfig> &found)
     {
-        std::wstring installPath = GetInstallPath(L"Kodi");
-        if (!installPath.empty())
-        {
-            found.push_back(GetLauncherDefaults(LauncherType::Kodi, installPath));
-        }
+        AddLauncher(found, LauncherType::Kodi, GetInstallPath(L"Kodi"));
     }
 
     void Config::FindCortex(std::list<LauncherConfig> &found)
     {
-        std::wstring installPath = GetInstallPath(L"Razer Cortex");
-        if (!installPath.empty())
-        {
-            found.push_back(GetLauncherDefaults(LauncherType::Cortex, installPath));
-        }
+        AddLauncher(found, LauncherType::Cortex, GetInstallPath(L"Razer Cortex"));
     }
 
 

@@ -122,6 +122,18 @@ namespace AnyFSE::Configuration
             result.push_back(OneGameLauncher);
         }
         {
+            LauncherConfig Shift = {};
+            Shift.Type = LauncherType::ShiftGameLauncher;
+            Shift.Name = L"Shift Game Launcher";
+            Shift.URL = L"https://apps.microsoft.com/detail/9PJW4XLWDJLR";
+            Shift.StartCommand = L"shiftlauncher://";
+            Shift.ProcessName = L"shiftlauncher.exe";
+            Shift.ClassName = L"ShiftLauncher";
+            Shift.ActivationProtocol = L"@";
+            Shift.AppUserModelID = L"HealthyBread.ShiftLauncher_w2r0zaqdfadz2!ShiftLauncher";
+            result.push_back(Shift);
+        }
+        {
             LauncherConfig PocketDeck = {};
             PocketDeck.Type = LauncherType::PocketDeck;
             PocketDeck.Name = L"PocketDeck";

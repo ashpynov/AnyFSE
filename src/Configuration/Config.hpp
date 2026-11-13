@@ -51,7 +51,8 @@ namespace AnyFSE::Configuration
         RetroBat,
         Kodi,
         Cortex,
-        PocketDeck
+        PocketDeck,
+        ShiftGameLauncher
     };
 
     struct LauncherConfig
@@ -108,11 +109,14 @@ namespace AnyFSE::Configuration
             static bool IsAnyFSEConfigured();
             static bool FindInstalledLaunchers(std::list<LauncherConfig> &found);
             static bool FindNotInstalledLaunchers(std::list<LauncherConfig> &found);
+            static bool AddLauncher(std::list<LauncherConfig>& found, LauncherType type, const std::wstring& installPath,
+                const std::wstring& launcherName = L"");
             static std::wstring GetNativePath(const std::wstring &launcher);
             static void FindPlaynite(std::list<LauncherConfig>& found);
             static void FindSteam(std::list<LauncherConfig>& found);
             static void FindBigBox(std::list<LauncherConfig>& found);
             static void FindOneGameLauncher(std::list<LauncherConfig>& found);
+            static void FindShiftGameLauncher(std::list<LauncherConfig>& found);
             static void FindNativeLaunchers(std::list<LauncherConfig> &found);
             static void FindArmouryCrate(std::list<LauncherConfig> &found);
             static void FindRetroBat(std::list<LauncherConfig>& found);

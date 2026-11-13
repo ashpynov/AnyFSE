@@ -240,7 +240,14 @@ namespace AnyFSE::App::Launchers
         {
             std::vector<DWORD> pids = Tools::Packages::GetAppProcessIds(launcher.AppUserModelID);
             std::set<DWORD> processIds(pids.begin(), pids.end());
-            launcherHwnd = Process::GetWindow(processIds, 0, L"", L"", WS_VISIBLE);
+            launcherHwnd = Process::GetWindow(
+                processIds,
+                launcher.ExStyle,
+                launcher.ClassName,
+                launcher.WindowTitle,
+                WS_VISIBLE,
+                launcher.NoStyle
+            );
         }
 
         DWORD visibility = includeTray ? 0 : WS_VISIBLE;
