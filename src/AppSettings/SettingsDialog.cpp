@@ -37,12 +37,11 @@
 #include "Tools/List.hpp"
 #include "Tools/Unicode.hpp"
 #include "App/Constants.hpp"
+#include "Tools/Autorun.hpp"
 #include "Tools/DoubleBufferedPaint.hpp"
 #include "Tools/Window.hpp"
-#include "Tools/Registry.hpp"
 #include "Tools/Process.hpp"
 #include "Tools/Localization.hpp"
-#include "Tools/Paths.hpp"
 #include "Ally/Ally.hpp"
 #include "App/JumpList.hpp"
 
@@ -858,23 +857,16 @@ namespace AnyFSE::App::AppSettings::Settings
 
     void SettingsDialog::SaveSettings()
     {
-        for (auto& page: m_pages)
+        for (Page::SettingsPage* page : m_pages)
         {
             page->SaveControls();
         }
 
         Config::Save();
 
-        if (!Ally::UpdateHidListener() && Ally::CheckListener())
-        {
-            const std::wstring command = L"\"" + Tools::Paths::GetExeFileName() + L"\" /HidListener";
-            Registry::WriteString(Constants::HidListenerAutorunKey, Constants::HidListenerAutorunValue, command);
-            Process::StartProtocol(Constants::AnyFseProtocolHidListener);
-        }
-        else
-        {
-            Registry::DeleteValue(Constants::HidListenerAutorunKey, Constants::HidListenerAutorunValue);
-        }
+        Autorun::UpdateHidListenerRegistration();
+        if (!Ally::UpdateHidListener())
+            Ally::EnsureListener();
     }
 
     void SettingsDialog::OpenSettingsPage()

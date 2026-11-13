@@ -582,6 +582,7 @@ namespace AnyFSE
         if (!Ally::Services::DisableInjectorService() || !Process::KillAllByName(Constants::AnyFseExe))
             throw Logging::Logger::APIError();
 
+        Registry::DeleteValue(Constants::HidListenerAutorunKey, Constants::HidListenerAutorunValue);
         bool removeDir = DeleteFiles(Tools::Paths::GetInstallPath());
 
         if (!update)

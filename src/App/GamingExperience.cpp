@@ -149,57 +149,48 @@ namespace AnyFSE::App
 
         if (mode != ConfirmationMode::Ask)
         {
-            const auto dialogKey = c::SystemDialogResultsRegKey;
-            const auto confirmation = c::EnterGamingPostureConfirmationRegValue;
-            const auto confirmationConfig = c::EnterGamingPostureConfirmationConfigRegValue;
-            const auto confirmationRestore = c::EnterGamingPostureConfirmationRestoreRegValue;
-
             if (mode == ConfirmationMode::Reboot)
             {
                 std::wstring homeApp = Registry::ReadString(c::GamingHomeAppRegKey, c::GamingHomeAppRegValue);
-                if (!_wcsicmp(homeApp.c_str(), c::AppUserModelId)
-                    && !Registry::ReadBool(c::GamingHomeAppRegKey, c::StartupToGamingHomeRegValue))
+                const bool startup = Registry::ReadBool(c::GamingHomeAppRegKey, c::StartupToGamingHomeRegValue);
+                if (!_wcsicmp(homeApp.c_str(), c::AppUserModelId) && !startup)
                 {
-                    Registry::WriteBool(c::GamingHomeAppRegKey, c::StartupToGamingHomeRestoreRegValue, false);
+                    // The next boot must launch AnyFSE so it can restore the user's startup preference.
+                    Registry::WriteBool(c::GamingHomeAppRegKey, c::StartupToGamingHomeRestoreRegValue, startup);
                     Registry::WriteBool(c::GamingHomeAppRegKey, c::StartupToGamingHomeRegValue, true);
                 }
             }
 
-            DWORD current = Registry::ReadDWORD(dialogKey, confirmation, 0);
-            DWORD configured = Registry::ReadDWORD(dialogKey, confirmationConfig, current);
-            Registry::WriteDWORD(dialogKey, confirmationRestore, configured);
-            Registry::WriteDWORD(dialogKey, confirmationConfig, mode);
-            Registry::WriteDWORD(dialogKey, confirmation, mode);
+            DWORD current = Registry::ReadDWORD(c::SystemDialogResultsRegKey, c::EnterGamingPostureConfirmationRegValue, 0);
+            DWORD configured = Registry::ReadDWORD(c::SystemDialogResultsRegKey, c::EnterGamingPostureConfirmationConfigRegValue, current);
+            Registry::WriteDWORD(c::SystemDialogResultsRegKey, c::EnterGamingPostureConfirmationRestoreRegValue, configured);
+            Registry::WriteDWORD(c::SystemDialogResultsRegKey, c::EnterGamingPostureConfirmationConfigRegValue, mode);
+            Registry::WriteDWORD(c::SystemDialogResultsRegKey, c::EnterGamingPostureConfirmationRegValue, mode);
         }
 
         HRESULT hres = SetGamingFullScreenExperience(TRUE);
         log.Debug("Entering FSE mode return %u", hres);
+        // The shell may already be restarting; keep the overrides until AnyFSE starts after reboot.
+        if (FAILED(hres) && hres != HRESULT_FROM_WIN32(ERROR_FAIL_NOACTION_REBOOT))
+            RestoreEnterFSEConfirmation();
         return false;
     }
 
     bool GamingExperience::RestoreEnterFSEConfirmation()
     {
-        const auto homeKey = c::GamingHomeAppRegKey;
-        const auto startup = c::StartupToGamingHomeRegValue;
-        const auto startupRestore = c::StartupToGamingHomeRestoreRegValue;
-
-        if (Registry::ValueExists(homeKey, startupRestore))
+        if (Registry::ValueExists(c::GamingHomeAppRegKey, c::StartupToGamingHomeRestoreRegValue))
         {
-            Registry::WriteBool(homeKey, startup, Registry::ReadBool(homeKey, startupRestore));
-            Registry::DeleteValue(homeKey, startupRestore);
+            Registry::WriteBool(c::GamingHomeAppRegKey, c::StartupToGamingHomeRegValue,
+                Registry::ReadBool(c::GamingHomeAppRegKey, c::StartupToGamingHomeRestoreRegValue));
+            Registry::DeleteValue(c::GamingHomeAppRegKey, c::StartupToGamingHomeRestoreRegValue);
         }
 
-        const auto dialogKey = c::SystemDialogResultsRegKey;
-        const auto confirmation = c::EnterGamingPostureConfirmationRegValue;
-        const auto confirmationConfig = c::EnterGamingPostureConfirmationConfigRegValue;
-        const auto confirmationRestore = c::EnterGamingPostureConfirmationRestoreRegValue;
-
-        DWORD restoreValue = Registry::ReadDWORD(dialogKey, confirmationRestore, 0);
-        if (restoreValue)
+        DWORD restoreValue = Registry::ReadDWORD(c::SystemDialogResultsRegKey, c::EnterGamingPostureConfirmationRestoreRegValue, 0);
+        if (Registry::ValueExists(c::SystemDialogResultsRegKey, c::EnterGamingPostureConfirmationRestoreRegValue))
         {
-            Registry::WriteDWORD(dialogKey, confirmationConfig, restoreValue);
-            Registry::WriteDWORD(dialogKey, confirmation, restoreValue);
-            Registry::DeleteValue(dialogKey, confirmationRestore);
+            Registry::WriteDWORD(c::SystemDialogResultsRegKey, c::EnterGamingPostureConfirmationConfigRegValue, restoreValue);
+            Registry::WriteDWORD(c::SystemDialogResultsRegKey, c::EnterGamingPostureConfirmationRegValue, restoreValue);
+            Registry::DeleteValue(c::SystemDialogResultsRegKey, c::EnterGamingPostureConfirmationRestoreRegValue);
         }
 
         return false;

@@ -25,6 +25,7 @@
 #include <fstream>
 #include <sstream>
 #include "Config.hpp"
+#include "App/Constants.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/Paths.hpp"
 #include "Tools/nlohmann/json.hpp"
@@ -32,7 +33,7 @@
 
 #pragma comment(lib, "version.lib")
 
-
+namespace c = AnyFSE::App::Constants;
 
 namespace AnyFSE::Configuration
 {
@@ -104,7 +105,7 @@ namespace AnyFSE::Configuration
 
     std::string Config::GetConfigFileA(bool readOnly)
     {
-        return Unicode::to_string(Tools::Paths::GetConfigPath() + L"\\AnyFSE.json");
+        return Unicode::to_string((fs::path(Paths::GetConfigPath()) / c::AnyFseConfigFile).wstring());
     }
 
     json Config::GetConfig()
@@ -120,6 +121,11 @@ namespace AnyFSE::Configuration
             catch(...) {}
         }
         return config;
+    }
+
+    bool Config::IsHidListenerEnabled()
+    {
+        return HotkeysEnable || AllyHidEnable;
     }
 
     void Config::LoadExitFSEOnHomeExit()

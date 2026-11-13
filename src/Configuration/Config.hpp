@@ -141,6 +141,7 @@ namespace AnyFSE::Configuration
             static bool LoadLauncherSettings(const std::wstring &path, LauncherConfig &out,
                 std::optional<LauncherType> type = std::nullopt);
             static json GetConfig();
+            static bool IsHidListenerEnabled();
             static void LoadExitFSEOnHomeExit();
             static void Save();
 

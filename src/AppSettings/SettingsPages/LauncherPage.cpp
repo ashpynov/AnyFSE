@@ -223,6 +223,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         Config::FindLaunchers(m_launchersList);
         Config::FindNotInstalledLaunchers(m_notInstalledLaunchersList);
         Config::LoadLauncherSettings(m_currentLauncherPath, m_config);
+        m_fseOnStartupToggle.SetCheck(Config::FseOnStartup);
         UpdateCombo();
 
         bool customSettings = Config::CustomSettings;
@@ -429,7 +430,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             m_pFseOnStartupLine->Enable();
             m_pExitOnHomeExitLine->Enable();
         }
-        m_fseOnStartupToggle.SetCheck(Config::FseOnStartup);
         m_fseExitOnHomeExitToggle.SetCheck(Config::ExitFSEOnHomeExit);
 
         bool alwaysSettings = m_defaultConfig.Type==LauncherType::Custom;

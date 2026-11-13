@@ -14,6 +14,7 @@ namespace AnyFSE::App::Constants
     // Product files
     inline constexpr wchar_t AnyFseSettingsDll[] = L"AnyFSE.Settings.dll";
     inline constexpr wchar_t AnyFseExe[] = L"AnyFSE.exe";
+    inline constexpr wchar_t AnyFseConfigFile[] = L"AnyFSE.json";
     inline constexpr wchar_t AppLocalStateDirectory[] = L"LocalState";
     inline constexpr wchar_t AppLocalCacheDirectory[] = L"LocalCache";
     inline constexpr wchar_t AppTempStateDirectory[] = L"TempState";
@@ -87,6 +88,7 @@ namespace AnyFSE::App::Constants
     inline constexpr wchar_t AnyFseProtocolSettings[] = L"anyfse://settings";
     inline constexpr wchar_t ProtocolSeparator[] = L"://";
     inline constexpr wchar_t AnyFseProtocolHidListener[] = L"anyfse://HidListener";
+    inline constexpr wchar_t HidListenerArgument[] = L"/HidListener";
     inline constexpr wchar_t HidListenerAutorunKey[] = L"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run";
     inline constexpr wchar_t HidListenerAutorunValue[] = L"AnyFSE Hotkeys";
     inline constexpr wchar_t MainWindowClass[] = L"AnyFSE";

@@ -151,6 +151,12 @@
     <ClCompile Include="src\Tools\Packages.cpp" />
     <ClCompile Include="src\Tools\Event.cpp" />
     <ClCompile Include="src\Tools\Registry.cpp" />
+    <ClCompile Include="src\Tools\Autorun.cpp" />
+    <ClCompile Include="src\Configuration\Config.cpp" />
+    <ClCompile Include="src\Configuration\Config.Launchers.cpp" />
+    <ClCompile Include="src\App\Launchers.cpp" />
+    <ClCompile Include="src\Tools\Elevated.cpp" />
+    <ClCompile Include="src\Tools\WindowClosedEvent.cpp" />
     <ClCompile Include="src\Tools\Unicode.cpp" />
     <ClCompile Include="src\Tools\Window.cpp" />
     <ClCompile Include="src\Tools\Process.cpp" />

@@ -27,12 +27,14 @@
 
 #include "App/Constants.hpp"
 #include "App/GamingExperience.hpp"
+#include "Configuration/Config.hpp"
 #include "AppInstaller.hpp"
 #include "Logging/LogManager.hpp"
 #include "Tools/Process.hpp"
 #include "Tools/Registry.hpp"
 #include "Tools/Unicode.hpp"
 #include "Tools/Paths.hpp"
+#include "Tools/Autorun.hpp"
 #include "Tools/Packages.hpp"
 #include "AppInstaller/Certificate.hpp"
 #include "AppInstaller/ScheduledTask.hpp"
@@ -159,6 +161,8 @@ namespace AnyFSE
                 CheckSuccess(true);
             }
 
+            Config::Load();
+            Autorun::UpdateHidListenerRegistration();
             Process::StartProtocol(Constants::AnyFseProtocolHidListener);
 
             if (m_hDialog)
