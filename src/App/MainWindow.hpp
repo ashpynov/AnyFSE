@@ -56,7 +56,13 @@ namespace AnyFSE::App::Window
         int m_result = ERROR_RESTART_APPLICATION;
         bool m_empty = false;
         bool m_successChecked = false;
+        bool m_launcherDetected = false;
         bool m_closing = false;
+        bool m_foregroundLocked = false;
+
+        static constexpr UINT WM_KEEP_SPLASH_ACTIVE = WM_APP + 2;
+        bool ShouldKeepSplashActive();
+        void UpdateSplashActivation();
 
         static WNDCLASS WC;
         static LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -83,10 +89,11 @@ namespace AnyFSE::App::Window
         bool Show(bool empty = false);
         bool Create(LPCTSTR windowName);
 
-        int Run(const std::wstring &name);
+        int Run(const std::wstring &name, bool startLauncher = false);
         static int RunLoop();
 
         bool IsVisible();
+        bool WasLauncherDetected() const { return m_launcherDetected; }
         int ExitOnError();
         HWND GetHwnd() { return m_hWnd; }
 

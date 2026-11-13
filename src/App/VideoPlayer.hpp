@@ -28,6 +28,7 @@
 #include <mfapi.h>
 #include <mfplay.h>
 #include <mfidl.h>
+#include "Tools/Event.hpp"
 
 namespace AnyFSE::App::Window
 {
@@ -96,6 +97,8 @@ namespace AnyFSE::App::Window
         void Resize();
         int GetPlayCount();
         bool ShouldWaitForEnd();
+
+        Tools::Event OnPlaybackEnded;
 
 
         ULONG AddRef();

@@ -71,6 +71,7 @@ namespace AnyFSE::App::Window
         , m_gdiplusToken(0ll)
         , WM_TASKBARCREATED(RegisterWindowMessage(L"TaskbarCreated"))
     {
+        m_videoPlayer.OnPlaybackEnded = delegate(UpdateSplashActivation);
         ZeroMemory(&WC, sizeof(WC));
         SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
@@ -91,6 +92,7 @@ namespace AnyFSE::App::Window
     }
     MainWindow::~MainWindow()
     {
+        m_videoPlayer.OnPlaybackEnded.Clear();
         if (WC.hIcon)
         {
             DestroyIcon(WC.hIcon);
@@ -132,6 +134,7 @@ namespace AnyFSE::App::Window
         m_result = ERROR_RESTART_APPLICATION;
         m_empty = false;
         m_successChecked = false;
+        m_launcherDetected = false;
         m_closing = false;
         m_bLauncherWasActive = false;
 
@@ -178,7 +181,7 @@ namespace AnyFSE::App::Window
         return true;
     };
 
-    int MainWindow::Run(const std::wstring& name)
+    int MainWindow::Run(const std::wstring& name, bool startLauncher)
     {
         log.Debug("Create splash window");
 
@@ -187,7 +190,16 @@ namespace AnyFSE::App::Window
             return (int)GetLastError();
         }
 
-        Show();
+        const bool startAfterShow = startLauncher && !m_currentVideo.empty();
+        if (startLauncher && !startAfterShow)
+            Launchers::StartLauncher(Config::AsAdmin);
+
+        if (!Show())
+            return (int)GetLastError();
+
+        // Acquire the splash foreground lock before the launcher can activate its window.
+        if (startAfterShow)
+            Launchers::StartLauncher(Config::AsAdmin);
 
         int exitCode = MainWindow::RunLoop();
         log.Debug("Splash window loop finished.");
@@ -226,6 +238,7 @@ namespace AnyFSE::App::Window
             }
             SetActiveWindow(m_hWnd);
             SetForegroundWindow(m_hWnd);
+            UpdateSplashActivation();
         }
         return true;
     }
@@ -349,19 +362,58 @@ namespace AnyFSE::App::Window
             InvalidateRect(m_hWnd, NULL, FALSE);
             return 0;
         }
-        case WM_ACTIVATE:
-            if (!m_closing && LOWORD(wParam) == WA_INACTIVE
-                && GamingExperience::IsFullscreenMode()
-                && Config::SplashShowVideo
-                && Config::SplashTillEnd
-                && m_videoPlayer.ShouldWaitForEnd())
+        case WM_WINDOWPOSCHANGING:
+            if (ShouldKeepSplashActive())
             {
-                Process::BringWindowToForeground(m_hWnd, SW_SHOWMAXIMIZED);
+                // Keep the video above other windows even if the shell changes our Z order during activation.
+                WINDOWPOS* position = reinterpret_cast<WINDOWPOS*>(lParam);
+                position->hwndInsertAfter = HWND_TOPMOST;
+                position->flags &= ~SWP_NOZORDER;
+            }
+            break;
+        case WM_ACTIVATE:
+            if (LOWORD(wParam) != WA_INACTIVE && ShouldKeepSplashActive())
+            {
+                if (LockSetForegroundWindow(LSFW_LOCK))
+                    m_foregroundLocked = true;
+            }
+            if (LOWORD(wParam) == WA_INACTIVE && ShouldKeepSplashActive())
+            {
+                // Preserve coverage immediately; queued focus recovery must not expose the launcher for a frame.
+                SetWindowPos(m_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                PostMessage(m_hWnd, WM_KEEP_SPLASH_ACTIVE, 0, 0);
                 return 0;
             }
             break;
+        case WM_KEEP_SPLASH_ACTIVE:
+            UpdateSplashActivation();
+            return 0;
         }
         return DefWindowProc(m_hWnd, uMsg, wParam, lParam);
+    }
+
+    bool MainWindow::ShouldKeepSplashActive()
+    {
+        return !m_closing && !m_empty && GamingExperience::IsFullscreenMode()
+            && Config::SplashShowVideo && Config::SplashTillEnd && m_videoPlayer.ShouldWaitForEnd();
+    }
+
+    void MainWindow::UpdateSplashActivation()
+    {
+        if (ShouldKeepSplashActive())
+        {
+            SetWindowPos(m_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+            // Do not use the generic foreground helper: its simulated Alt key releases the foreground lock.
+            if (GetForegroundWindow() != m_hWnd)
+                SetForegroundWindow(m_hWnd);
+            if (GetForegroundWindow() == m_hWnd && LockSetForegroundWindow(LSFW_LOCK))
+                m_foregroundLocked = true;
+        }
+        else if (m_foregroundLocked)
+        {
+            LockSetForegroundWindow(LSFW_UNLOCK);
+            m_foregroundLocked = false;
+        }
     }
 
     // static
@@ -381,6 +433,8 @@ namespace AnyFSE::App::Window
 
     void MainWindow::OnDestroy()
     {
+        m_closing = true;
+        UpdateSplashActivation();
         m_videoPlayer.Close();
         FreeAnimationResources();
         PostQuitMessage(m_result);

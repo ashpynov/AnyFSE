@@ -112,10 +112,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return 0;
     }
 
+    const bool deferLauncherStart = !isRestarting && GamingExperience::IsFullscreenMode() && Config::SplashShowVideo && Config::SplashTillEnd;
+
     if (!isRestarting)
     {
         Config::Launcher.OnBoot.Notify();
-        Launchers::StartLauncher(Config::AsAdmin);
+        if (!deferLauncherStart)
+            Launchers::StartLauncher(Config::AsAdmin);
     }
 
     {
@@ -136,9 +139,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 }
             }
 
-            exitCode = mainWindow.Run(TranslateF(L"splashIsLaunchingFmt", Config::Launcher.Name.c_str()));
+            exitCode = mainWindow.Run(TranslateF(L"splashIsLaunchingFmt", Config::Launcher.Name.c_str()), deferLauncherStart && !isRestarting);
 
-            isRestarting = ExitFSE::WaitHomeAppExit();
+            isRestarting = ExitFSE::WaitHomeAppExit(mainWindow.WasLauncherDetected());
 
             if (isRestarting)
             {

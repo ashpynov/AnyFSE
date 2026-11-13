@@ -47,9 +47,11 @@ namespace AnyFSE::App::ExitFSE
         return false;
     }
 
-    bool WaitHomeAppExit()
+    bool WaitHomeAppExit(bool launcherWasDetected)
     {
-        if (!Config::ExitFSEOnHomeExit || !GamingExperience::IsFullscreenMode() || IsMutexExists() || !Launchers::IsLauncherActiveOrMinimized() )
+        // A launcher detected during the splash may have already closed; still handle leaving FSE in that case.
+        if (!Config::ExitFSEOnHomeExit || !GamingExperience::IsFullscreenMode() || IsMutexExists()
+            || (!launcherWasDetected && !Launchers::IsLauncherActiveOrMinimized()))
         {
             log.Trace("Skip WaitHomeAppExit: ExitFSEOnHomeExit: %s, IsFullscreenMode: %s,  IsMutexExists: %s, IsLauncherActiveOrMinimized: %s",
                 Config::ExitFSEOnHomeExit ? "True" : "False",
@@ -70,6 +72,7 @@ namespace AnyFSE::App::ExitFSE
         log.Debug("Waiting Launcher To Exit");
 
         bool restarted = Launchers::WaitLauncherExit()
+            && Config::Launcher.OnRestating.HasSubscribe()
             && App::GamingExperience::IsFullscreenMode()
             && Launchers::HasLauncherProcess();
 

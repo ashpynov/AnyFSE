@@ -114,7 +114,8 @@ namespace AnyFSE::App::Window
         RectF rect = ToRectF(clientRect);
         graphics.FillRectangle(&backgroundBrush, 0.0f, 0.0f, rect.Width, rect.Height);
 
-        if (m_empty)
+        // Do not reveal the logo and text when a completed video window is hidden.
+        if (m_empty || (Config::SplashShowVideo && m_videoPlayer.GetPlayCount() > 0))
             return;
 
         if (Config::SplashShowLogo && m_pLogoImage && m_pLogoImage->GetLastStatus() == Gdiplus::Ok)

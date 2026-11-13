@@ -105,7 +105,8 @@ Update these files together. Do not change only one of them.
    - Change `<Identity Publisher="CN=...">` to exactly match the signing certificate subject.
    - Example: if the certificate subject is `CN=Your Publisher Name`, the manifest publisher must be `Publisher="CN=Your Publisher Name"`.
    - Keep `packageName`, `publisher`, and `applicationId` in `AnyFSE.manifest` equal to the package's `Identity Name`, `Identity Publisher`, and `Application Id`.
-     The executable embeds this manifest to acquire package identity on direct launch.
+     Release executables embed this manifest to acquire package identity on direct launch.
+     Debug executables omit it so local debugging from `build\Debug` does not require package registration.
 
 3. `AnyFSE.Package.vcxproj`
    - Update `<CertificateName>` for readable build output.

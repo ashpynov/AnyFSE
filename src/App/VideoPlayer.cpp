@@ -227,6 +227,8 @@ namespace AnyFSE::App::Window
                 log.Debug("Video Completed");
                 m_waitForEnd = false;
                 m_playCount++;
+                // Media callbacks run on the owning UI thread; release splash activation before hiding the video.
+                OnPlaybackEnded.Notify();
                 if (m_loop)
                 {
                     log.Debug("Video Loop");

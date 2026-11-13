@@ -39,6 +39,11 @@ namespace AnyFSE::App::Window
             return;
         }
 
+        UpdateSplashActivation();
+
+        if (Config::SplashShowVideo && m_videoPlayer.GetPlayCount() > 0)
+            StopAnimation();
+
         if (timerId == m_launcherTimeoutTimerId)
         {
             OnLauncherTimeoutTimer();
@@ -51,6 +56,19 @@ namespace AnyFSE::App::Window
 
     void MainWindow::OnLauncherTimeoutTimer()
     {
+        if (ShouldKeepSplashActive())
+        {
+            log.Trace("Waiting for the first video playback before launcher timeout");
+            return;
+        }
+
+        if (Config::SplashShowVideo && Config::SplashTillEnd && m_launcherDetected
+            && !Launchers::IsLauncherActiveOrMinimized() && Launchers::HasLauncherProcess())
+        {
+            log.Trace("Launcher window is absent, but its process is still running; keep waiting");
+            return;
+        }
+
         log.Trace("Destroy Window by launcherTimeout");
 
         m_closing = true;
@@ -67,15 +85,31 @@ namespace AnyFSE::App::Window
 
     void MainWindow::OnLauncherCheckTimer()
     {
+        const bool playAtLeastOnce = Config::SplashShowVideo && Config::SplashTillEnd;
         const bool isActive = Launchers::IsLauncherActiveOrMinimized();
         const bool becameActive = isActive && !m_bLauncherWasActive;
         const bool becameInactive = m_bLauncherWasActive && !isActive;
 
+        // Preserve detection across a disappearing window only in play-at-least-once mode.
+        if (isActive && playAtLeastOnce)
+            m_launcherDetected = true;
+
         if (becameInactive && Launchers::HasLauncherProcess())
         {
-            log.Trace("Launcher window disappeared after detection, but launcher process still exists; keep waiting");
-            m_bLauncherWasActive = false;
-            return;
+            // While completing the video, keep the window history until the process also disappears.
+            if (playAtLeastOnce)
+            {
+                log.Trace("Launcher window disappeared, but its process is still running; keep waiting");
+                return;
+            }
+
+            // Outside that mode, only restart-capable presets may wait for another window.
+            if (Config::Launcher.OnRestating.HasSubscribe())
+            {
+                log.Trace("Launcher window disappeared; waiting for a supported restart");
+                m_bLauncherWasActive = false;
+                return;
+            }
         }
 
         if (!isActive && !m_bLauncherWasActive)
@@ -86,7 +120,7 @@ namespace AnyFSE::App::Window
 
         m_bLauncherWasActive = true;
 
-        if (isActive && Config::SplashShowVideo && Config::SplashTillEnd && m_videoPlayer.ShouldWaitForEnd())
+        if (isActive && playAtLeastOnce && m_videoPlayer.ShouldWaitForEnd())
         {
             log.Trace("Waiting Splash Video to complete");
             return;
@@ -97,6 +131,10 @@ namespace AnyFSE::App::Window
         m_closing = true;
         log.Trace("Destroy Splash Window now by launcherCheckTimer");
         DestroyWindow(m_hWnd);
+
+        // Activating a protocol launcher after its window closed could start it again.
+        if (!isActive)
+            return;
 
         if (becameActive)
         {

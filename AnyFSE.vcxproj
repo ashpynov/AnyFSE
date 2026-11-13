@@ -112,7 +112,8 @@
         <ClCompile Include="src\Logging\*.cpp" />
         <ClCompile Include="src\Tools\*.cpp" />
         <ClInclude Include="src\resource.h" />
-        <Manifest Include="AnyFSE.manifest" />
+        <!-- Local Debug launches run without a registered package identity. -->
+        <Manifest Include="AnyFSE.manifest" Condition="'$(Configuration)'!='Debug'" />
         <ResourceCompile Include="src\Resource.rc" />
         <Image Include="media\AnyFSEIcon.ico" />
     </ItemGroup>

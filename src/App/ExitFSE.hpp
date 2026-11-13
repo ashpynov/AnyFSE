@@ -27,6 +27,6 @@
 
 namespace AnyFSE::App::ExitFSE
 {
-    bool WaitHomeAppExit();
+    bool WaitHomeAppExit(bool launcherWasDetected = false);
     bool WaitExitFSEMode();
 }

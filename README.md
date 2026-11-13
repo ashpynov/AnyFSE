@@ -34,6 +34,7 @@ Some other launchers potentially can be supported too with minor customizations
     - [Steam Big Picture & Desktop](https://store.steampowered.com/about/)
     - [LaunchBox BigBox](https://www.launchbox-app.com/download)
     - [One Game Launcher](https://ogl.app/)
+    - [Shift Game Launcher](https://apps.microsoft.com/detail/9PJW4XLWDJLR)
     - [RetroBat](https://www.retrobat.org/download/)
     - [Armoury Crate SE](https://armoury-crate.com/#download)
     - [Kodi](https://kodi.tv/)
