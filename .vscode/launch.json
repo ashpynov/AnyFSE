@@ -31,7 +31,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "AnyFSE.exe",
-            "args": ["/HidListener"],
+            "args": ["/HidListenerJob"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build/Debug",
             "environment": [],

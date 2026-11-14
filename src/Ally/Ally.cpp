@@ -2,6 +2,7 @@
 #include <vector>
 #include <algorithm>
 #include <filesystem>
+#include <cmath>
 #include <windows.h>
 #include <shellapi.h>
 #include "Ally/Ally.hpp"
@@ -17,6 +18,9 @@
 #include "Ally.hpp"
 #include "Ally/Services.hpp"
 #include "App/GamingExperience.hpp"
+#include <Xinput.h>
+
+#pragma comment(lib, "xinput.lib")
 
 using namespace AnyFSE::App;
 
@@ -27,6 +31,8 @@ namespace Ally
     static const wchar_t *HidListenerClass = L"HIDListener";
     static constexpr int HotkeyEnterFSEWithReboot = (int)GamingExperience::ConfirmationMode::Reboot;
     static constexpr int HotkeyEnterFSENow = (int)GamingExperience::ConfirmationMode::Now;
+    static constexpr UINT_PTR MouseTimerId = 1;
+    static constexpr UINT MouseTimerIntervalMs = 8;
     static HANDLE hHidThread = nullptr;
 
     static bool UpdateHotkeys(HWND hWnd)
@@ -202,7 +208,7 @@ namespace Ally
         log.Trace("Bind Mode + LibraryPress to %s", Config::AllyHidModeLibraryPress );
     }
 
-    void OnInput(bool allyEnabled, HANDLE hDevice, HRAWINPUT rawInput, bool * pbModePressed)
+    void OnInput(HWND hwnd, bool allyEnabled, HANDLE hDevice, HRAWINPUT rawInput, bool * pbModePressed)
     {
         if (!allyEnabled)
         {
@@ -235,11 +241,19 @@ namespace Ally
 
             if (buttonCode == Ally::EventCode::ModePress)
             {
+                if (!*pbModePressed)
+                {
+                    SetTimer(hwnd, MouseTimerId, MouseTimerIntervalMs, nullptr);
+                }
                 *pbModePressed = true;
             }
             else if (buttonCode == Ally::EventCode::Release)
             {
-                *pbModePressed = false;
+                if (*pbModePressed)
+                {
+                    *pbModePressed = false;
+                    OnTimer(hwnd, *pbModePressed);
+                }
             }
             else if (*pbModePressed &&
                      (buttonCode == Ally::ACHold || buttonCode == Ally::ACPress || buttonCode == Ally::CCPress || buttonCode == Ally::LibraryPress))
@@ -298,6 +312,69 @@ namespace Ally
         if (!allyEnabled && !hotkeysRegistered)
         {
             PostQuitMessage(0);
+        }
+    }
+
+    void OnTimer(HWND hwnd, bool bModePressed)
+    {
+        constexpr double MaximumSpeed = 800.0; // Relative mouse units per second.
+        constexpr double DeadZone = XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;
+        static thread_local ULONGLONG previousTick = 0;
+        static thread_local double remainderX = 0.0;
+        static thread_local double remainderY = 0.0;
+
+        if (!bModePressed)
+        {
+            previousTick = 0;
+            remainderX = remainderY = 0.0;
+            KillTimer(hwnd, MouseTimerId);
+            return;
+        }
+
+        XINPUT_STATE state = {};
+        if (XInputGetState(0, &state) != ERROR_SUCCESS)
+        {
+            previousTick = 0;
+            remainderX = remainderY = 0.0;
+            return;
+        }
+
+        const ULONGLONG now = GetTickCount64();
+        const double elapsed = previousTick ? (std::min)((double)(now - previousTick) / 1000.0, 0.05) : 0.016;
+        previousTick = now;
+
+        const double x = state.Gamepad.sThumbRX;
+        const double y = state.Gamepad.sThumbRY;
+        const double magnitude = std::sqrt(x * x + y * y);
+        if (magnitude <= DeadZone)
+        {
+            remainderX = remainderY = 0.0;
+            return;
+        }
+
+        const double strength = (std::min)((magnitude - DeadZone) / (32767.0 - DeadZone), 1.0);
+        const double distance = MaximumSpeed * strength * strength * strength * elapsed;
+        remainderX += x / magnitude * distance;
+        remainderY -= y / magnitude * distance;
+
+        INPUT input = {};
+        input.type = INPUT_MOUSE;
+        input.mi.dwFlags = MOUSEEVENTF_MOVE;
+        input.mi.dx = (LONG)remainderX;
+        input.mi.dy = (LONG)remainderY;
+        if (!input.mi.dx && !input.mi.dy)
+        {
+            return;
+        }
+
+        if (SendInput(1, &input, sizeof(input)) == 1)
+        {
+            remainderX -= input.mi.dx;
+            remainderY -= input.mi.dy;
+        }
+        else
+        {
+            remainderX = remainderY = 0.0;
         }
     }
 
@@ -360,7 +437,7 @@ namespace Ally
             switch (msg.message)
             {
             case WM_INPUT:
-                OnInput(allyEnabled, hDevice, (HRAWINPUT)msg.lParam, &bModePressed);
+                OnInput(hwnd, allyEnabled, hDevice, (HRAWINPUT)msg.lParam, &bModePressed);
                 break;
             case WM_HOTKEY:
                 OnHotkey((int)msg.wParam);
@@ -368,10 +445,17 @@ namespace Ally
             case WM_USER:
                 OnUser(hwnd, allyEnabled, hDevice, rid);
                 break;
+            case WM_TIMER:
+                if (msg.hwnd == hwnd && msg.wParam == MouseTimerId)
+                {
+                    OnTimer(hwnd, bModePressed);
+                }
+                break;
             }
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+        OnTimer(hwnd, false);
         UnregisterHotKey(hwnd, HotkeyEnterFSEWithReboot);
         UnregisterHotKey(hwnd, HotkeyEnterFSENow);
         DestroyWindow(hwnd);
