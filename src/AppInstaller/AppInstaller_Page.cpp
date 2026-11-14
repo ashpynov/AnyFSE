@@ -332,7 +332,7 @@ namespace AnyFSE
     void AppInstaller::CheckSuccess(bool bSuccess)
     {
         const DWORD error = bSuccess ? ERROR_SUCCESS : GetLastError();
-        log.Info("%s - %s", Unicode::to_string(m_progressStatus.back()).c_str(), bSuccess ? "OK" : "FAIL");
+        log.Info("%ls - %s", m_progressStatus.back().c_str(), bSuccess ? "OK" : "FAIL");
 
         std::wstring step = (bSuccess ? L"\x2713 ": L"\x2715 ") + m_progressStatus.back();
         m_progressStatus.pop_back();

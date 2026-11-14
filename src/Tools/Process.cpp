@@ -196,7 +196,7 @@ namespace AnyFSE::Tools::Process
             &si,            // Pointer to STARTUPINFO structure
             &pi))           // Pointer to PROCESS_INFORMATION structure
         {
-            log.Error(log.APIError(), "Can't CreateProcess:", Unicode::to_string(cmdLine.data()).c_str());
+            log.Error(log.APIError(), "Can't CreateProcess: %ls", cmdLine.data());
             return 0;
         }
 
@@ -244,7 +244,7 @@ namespace AnyFSE::Tools::Process
                 {
                     std::wstring classNameStr(className, classNameLength);
 
-                    TRACE("Class Name: %s", Unicode::to_string(classNameStr).c_str());
+                    TRACE("Class Name: %ls", classNameStr.c_str());
 
                     // Compare titles (case-sensitive)
                     if (classNameStr == searchData->className)
@@ -263,7 +263,7 @@ namespace AnyFSE::Tools::Process
                 {
                     std::wstring currentTitle(title, titleLength);
 
-                    log.Debug("Title Name: %s", Unicode::to_string(currentTitle).c_str());
+                    log.Debug("Title Name: %ls", currentTitle.c_str());
                     // Compare titles (case-sensitive)
                     if (currentTitle == searchData->windowTitle)
                     {
@@ -424,7 +424,7 @@ namespace AnyFSE::Tools::Process
     {
         std::set<DWORD> ids;
         FindAllByName(processName, ids);
-        log.Info("KillAllByName: name=%s, found=%zu", Unicode::to_string(processName).c_str(), ids.size());
+        log.Info("KillAllByName: name=%ls, found=%zu", processName.c_str(), ids.size());
         for (auto id : ids)
         {
             HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, id);

@@ -156,7 +156,7 @@ namespace AnyFSE::Updater
 
     std::string WinHttpGet(const std::wstring &path, bool alt)
     {
-        log.Debug("Getting url: %s", Unicode::to_string(path).c_str());
+        log.Debug("Getting url: %ls", path.c_str());
 
         HINTERNET hSession = WinHttpOpen(App::Constants::UpdaterSessionUserAgent,
                                          WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
@@ -680,7 +680,7 @@ namespace AnyFSE::Updater
 
         int since = GetSince(lastCheck);
 
-        log.Debug("Check schedule interval: lastChecked=%s (%ds/%.2fh ago)", Unicode::to_string(lastCheck).c_str(), since, (float)since / 3600);
+        log.Debug("Check schedule interval: lastChecked=%ls (%ds/%.2fh ago)", lastCheck.c_str(), since, (float)since / 3600);
 
         if (since < checkInterval * 3600)
         {

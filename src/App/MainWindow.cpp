@@ -487,7 +487,7 @@ namespace AnyFSE::App::Window
             // Check if the directory exists
             if (!fs::exists(mediaPath) || !fs::is_directory(mediaPath))
             {
-                log.Error("Error: Directory does not exist or is not a directory: %s", Unicode::to_string(mediaPath).c_str());
+                log.Error("Error: Directory does not exist or is not a directory: %ls", mediaPath.c_str());
                 return;
             }
 

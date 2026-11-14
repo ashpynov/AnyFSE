@@ -72,7 +72,9 @@ namespace AnyFSE::App::Constants
     inline constexpr wchar_t EnterGamingPostureConfirmationRestoreRegValue[] = L"EnterGamingPostureConfirmation_Restore";
 
     // ASUS MCU synchronization and the current user's AC SE profiles.
-    inline constexpr wchar_t AllyMcuGlobalMutex[] = L"Global\\AsusMCUHIDMutex";
+    inline constexpr wchar_t AllyMcuMutex[] = L"AsusMCUHIDMutex";
+    inline constexpr wchar_t AllyAacNbHalMutex[] = L"Global\\AacNBHalMutex";
+    inline constexpr wchar_t AllyGamepadDeviceMutex[] = L"ACSE_GamepadCustomize__AFX__DevMtx";
     inline constexpr wchar_t AllyGamepadConfigRegKey[] = L"HKCU\\Software\\ASUS\\ARMOURY CRATE Service\\GamepadCustomize";
     inline constexpr wchar_t AllyProfileModeRegValue[] = L"GameBuzzMode";
     inline constexpr wchar_t AllyPreviousProfileModeRegValue[] = L"PrevGameBuzzMode";

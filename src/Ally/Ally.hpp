@@ -47,6 +47,7 @@ namespace Ally
 
     bool IsSupported();
 
+    // Returns a borrowed Raw Input handle owned by Windows; do not call CloseHandle.
     HANDLE FindHIDDevice(std::wstring* path = nullptr);
     bool GetRawInputDevice(HANDLE hDevice, HWND hWnd, RAWINPUTDEVICE *pRid);
 

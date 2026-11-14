@@ -60,7 +60,7 @@ namespace Ally::Handlers
     bool SteamIsActive()
     {
         std::wstring activeProcess = Unicode::to_lower(Process::GetWindowProcessName(WindowFromPoint(POINT{1, 1})));
-        log.Trace("ActiveWindow: %s %x", Unicode::to_string(activeProcess).c_str(), WindowFromPoint(POINT{1, 1}));
+        log.Trace("ActiveWindow: %ls %x", activeProcess.c_str(), WindowFromPoint(POINT{1, 1}));
         return activeProcess == L"steamwebhelper.exe";
     }
 
@@ -155,7 +155,7 @@ namespace Ally::Handlers
     void OpenGameBarComandCenter()
     {
         std::wstring activeProcess = Unicode::to_lower(Process::GetWindowProcessName(WindowFromPoint(POINT{1, 1})));
-        log.Trace("ActiveWindow: %s %x", Unicode::to_string(activeProcess).c_str(), WindowFromPoint(POINT{1, 1}));
+        log.Trace("ActiveWindow: %ls %x", activeProcess.c_str(), WindowFromPoint(POINT{1, 1}));
         if (activeProcess == L"gamebar.exe" || activeProcess == L"classiccommandcenter.exe")
         {
             SendKeyInput({VK_ESCAPE});

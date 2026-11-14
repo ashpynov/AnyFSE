@@ -47,6 +47,14 @@ namespace Ally
             (!ProfileParser::Load(Profile::Mode::Desktop, desktop) || !(HasMouse(desktop.leftStick) || HasMouse(desktop.rightStick))))
             return false;
         Hid::McuLock lock;
+        if (!lock.IsAcquired())
+        {
+            m_original.reset();
+            m_applied.reset();
+            Close();
+            log.Warn("Controller locking failed; forgetting current Mode press and mapping snapshots");
+            return false;
+        }
         if (!Open())
             return false;
 
@@ -133,6 +141,14 @@ namespace Ally
         if (!m_original)
             return;
         Hid::McuLock lock;
+        if (!lock.IsAcquired())
+        {
+            m_original.reset();
+            m_applied.reset();
+            Close();
+            log.Warn("Controller locking failed; forgetting current Mode press and mapping snapshots");
+            return;
+        }
         // Never reopen a disconnected controller and restore a stale snapshot.
         Hid::Mapping current;
         if (!Hid::ReadMapping(m_device, current, m_deviceLost))

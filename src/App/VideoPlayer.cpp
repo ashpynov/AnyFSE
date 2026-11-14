@@ -328,14 +328,14 @@ namespace AnyFSE::App::Window
 
         if (m_bInitialized && videoFile && videoFile[0] && m_loadedVideo == videoFile)
         {
-            log.Debug("Video: %s is preloaded already", Unicode::to_string(videoFile).c_str());
+            log.Debug("Video: %ls is preloaded already", videoFile);
             return S_OK;
         }
 
         m_playCount = 0;
         m_waitForEnd = false;
 
-        log.Debug("Load Video: %s", Unicode::to_string(videoFile ? videoFile : L"").c_str());
+        log.Debug("Load Video: %ls", videoFile ? videoFile : L"");
 
         if (m_bInitialized)
         {

@@ -94,7 +94,7 @@ namespace AnyFSE::App::ExitFSE
                 {
                     Sleep(500);
                     std::wstring activeProcess = Unicode::to_lower(Process::GetWindowProcessName(WindowFromPoint(POINT{1, 1})));
-                    log.Trace("Waiting ExitFSE: Active process: %s", Unicode::to_string(activeProcess).c_str());
+                    log.Trace("Waiting ExitFSE: Active process: %ls", activeProcess.c_str());
                     isGamebar = activeProcess == L"gamebar.exe";
                     wasGamebar |= isGamebar;
                 }

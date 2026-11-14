@@ -151,7 +151,7 @@ namespace Ally::Hid
         Command command;
         Command subcommand;
         BYTE length;
-        BYTE busy;
+        BYTE status; // Opaque response payload; readiness is acknowledged by the subcommand.
         BYTE reserved[59];
 
         explicit ButtonStatusReport();
@@ -191,9 +191,12 @@ namespace Ally::Hid
         ~McuLock();
         McuLock(const McuLock&) = delete;
         McuLock& operator=(const McuLock&) = delete;
+        bool IsAcquired() const { return m_acquired; }
 
     private:
-        HANDLE m_handle = nullptr;
+        void Release();
+        HANDLE m_handles[3] {};
+        bool m_acquired = false;
     };
 
     HANDLE Open();

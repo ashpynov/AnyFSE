@@ -37,9 +37,9 @@ namespace AnyFSE::Tools::Icon
 {
     static Logger log = LogManager::GetLogger("Tools/Icon");
 
-    HICON LoadIconFromRaw(std::vector<uint8_t> imageData, int size)
+    HICON LoadIconFromRaw(const std::vector<uint8_t> &imageData, int size)
     {
-        if (imageData.empty()) return nullptr;
+        if (imageData.empty() || size <= 0) return nullptr;
 
         // Create IStream from memory
         HICON hIcon = nullptr;
@@ -56,6 +56,8 @@ namespace AnyFSE::Tools::Icon
             };
 
             void* pData = GlobalLock(hGlobal);
+            if (!pData)
+                break;
             memcpy(pData, imageData.data(), imageData.size());
             GlobalUnlock(hGlobal);
 
@@ -64,21 +66,43 @@ namespace AnyFSE::Tools::Icon
             {
                 break;
             }
+            hGlobal = nullptr; // The stream now owns the allocation (fDeleteOnRelease = TRUE).
 
             bitmap = new Gdiplus::Bitmap(pStream);
             if (!bitmap || bitmap->GetLastStatus() != Gdiplus::Ok)
             {
                 break;
             }
-            int w = bitmap->GetHeight();
-            int h = bitmap->GetWidth();
+            const UINT width = bitmap->GetWidth();
+            const UINT height = bitmap->GetHeight();
+            if (!width || !height)
+                break;
 
-            bitmap->GetHICON(&hIcon);
+            Gdiplus::Bitmap scaled(size, size, PixelFormat32bppPARGB);
+            if (scaled.GetLastStatus() != Gdiplus::Ok)
+                break;
+            Gdiplus::Status drawStatus;
+            {
+                Gdiplus::Graphics graphics(&scaled);
+                graphics.Clear(Gdiplus::Color(0, 0, 0, 0));
+                graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
+                graphics.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHalf);
+                Gdiplus::ImageAttributes attributes;
+                attributes.SetWrapMode(Gdiplus::WrapModeTileFlipXY);
+                const float scale = min(static_cast<float>(size) / width, static_cast<float>(size) / height);
+                const float scaledWidth = width * scale;
+                const float scaledHeight = height * scale;
+                const Gdiplus::RectF destination((size - scaledWidth) / 2, (size - scaledHeight) / 2, scaledWidth, scaledHeight);
+                drawStatus = graphics.DrawImage(bitmap, destination, 0, 0,
+                    static_cast<float>(width), static_cast<float>(height), Gdiplus::UnitPixel, &attributes);
+            }
+            if (drawStatus == Gdiplus::Ok)
+                scaled.GetHICON(&hIcon);
         } while (false);
 
-        if (hGlobal) GlobalFree(hGlobal);
         if (bitmap)  delete bitmap;
         if (pStream) pStream->Release();
+        if (hGlobal) GlobalFree(hGlobal);
 
         return hIcon;
     }
@@ -113,7 +137,7 @@ namespace AnyFSE::Tools::Icon
 
         if (icon[0]==L'@')
         {
-            return LoadIconFromRaw(Packages::GetAppDisplayLogoRawBytes(iconPath.c_str() + 1, 32), 32);
+            return LoadIconFromRaw(Packages::GetAppDisplayLogoRawBytes(iconPath.c_str() + 1, iconSize), iconSize);
         }
 
         std::filesystem::path path(iconPath);

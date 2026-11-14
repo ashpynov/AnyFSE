@@ -71,7 +71,7 @@ namespace AnyFSE::App::Launchers
     {
         while (HANDLE hProcess = Launchers::GetLauncherProcess())
         {
-            log.Debug("Start waiting process %#08x for %s", hProcess, Unicode::to_string(Config::Launcher.Name).c_str());
+            log.Debug("Start waiting process %#08x for %ls", hProcess, Config::Launcher.Name.c_str());
 
             Tools::WindowClosedEvent launcherWindowClosed(Config::Launcher.IsTrayAggressive ? GetLauncherWindow(true) : NULL);
 
@@ -171,9 +171,9 @@ namespace AnyFSE::App::Launchers
             return;
         }
 
-        log.Debug("Start Launcher: %s params: %s",
-            Unicode::to_string(Config::Launcher.StartCommand).c_str(),
-            Unicode::to_string(Config::Launcher.StartArg).c_str()
+        log.Debug("Start Launcher: %ls params: %ls",
+            Config::Launcher.StartCommand.c_str(),
+            Config::Launcher.StartArg.c_str()
         );
         if (0 == Process::StartProcess(Config::Launcher.StartCommand, Config::Launcher.StartArg))
         {
@@ -330,7 +330,7 @@ namespace AnyFSE::App::Launchers
         {
             if (app.Enabled && app.AsAdmin == asAdmin)
             {
-                log.Debug("Launching: %s %s", Unicode::to_string(app.Path).c_str(), Unicode::to_string(app.Args).c_str() );
+                log.Debug("Launching: %ls %ls", app.Path.c_str(), app.Args.c_str() );
                 Process::StartProcess(app.Path, app.Args);
             }
         }

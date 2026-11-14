@@ -257,7 +257,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         }
         else if (m_config.Type == LauncherType::Native)
         {
-            log.Debug("Saving %s as launcher", Unicode::to_string(m_config.Name).c_str());
+            log.Debug("Saving %ls as launcher", m_config.Name.c_str());
             Registry::WriteBool(gamingConfiguration, c::StartupToGamingHomeRegValue, fseOnStartup);
             Registry::WriteString(gamingConfiguration, gamingHomeApp, m_config.AppUserModelID);
         }
@@ -269,7 +269,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         }
 
         std::wstring savedLauncher = Registry::ReadString(gamingConfiguration, gamingHomeApp);
-        log.Debug("Saved launcher: %s", Unicode::to_string(savedLauncher).c_str());
+        log.Debug("Saved launcher: %ls", savedLauncher.c_str());
 
         Config::Launcher.Type = m_config.Type;
         Config::Launcher.StartCommand = m_config.StartCommand;

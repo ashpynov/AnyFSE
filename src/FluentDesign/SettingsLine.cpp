@@ -898,7 +898,7 @@ namespace FluentDesign
             DestroyIcon(m_hIcon);
             m_hIcon = NULL;
         }
-        m_hIcon = Icon::LoadIcon(path);
+        m_hIcon = Icon::LoadIcon(path, m_theme.GetSize_Icon());
         UpdateLayout();
     }
 

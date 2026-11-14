@@ -69,7 +69,10 @@ namespace Ally
             for (const ControlModeHotkey& hotkey : controlModeHotkeys)
             {
                 if (RegisterHotKey(hWnd, hotkey.id, hotkey.modifiers, hotkey.key))
+                {
                     profileRegistered = true;
+                    log.Debug("Registered %s", hotkey.combination);
+                }
                 else
                     log.Warn(log.APIError(), "Could not register %s", hotkey.combination);
             }
@@ -126,7 +129,7 @@ namespace Ally
                 L"BaseBoardProduct",
                 L"");
 
-            log.Debug("Detected ASUS device: '%s'", Unicode::to_string(product).c_str());
+            log.Debug("Detected ASUS device: '%ls'", product.c_str());
 
             version =   (product == L"RC73XA") ? RogAllyVersion::XboxROGAllyX
                       : (product == L"RC73YA") ? RogAllyVersion::XboxROGAlly
@@ -143,10 +146,37 @@ namespace Ally
             || GetRogAllyVersion() == RogAllyVersion::XboxROGAlly;
     }
 
+    bool IsSameHIDDevice(HANDLE device, const std::wstring& expectedPath)
+    {
+        UINT size = 0;
+        if (GetRawInputDeviceInfo(device, RIDI_DEVICENAME, nullptr, &size) == UINT(-1) || !size)
+            return false;
+
+        std::wstring path(size, L'\0');
+        if (GetRawInputDeviceInfo(device, RIDI_DEVICENAME, path.data(), &size) == UINT(-1))
+            return false;
+
+        return _wcsicmp(path.c_str(), expectedPath.c_str()) == 0;
+    }
+
     HANDLE FindHIDDevice(std::wstring* path)
     {
         if (path)
             path->clear();
+
+        static HANDLE hDevice = NULL;
+        static std::wstring sPath = L"";
+
+        if (hDevice && IsSameHIDDevice(hDevice, sPath))
+        {
+            if (path)
+                *path = sPath;
+            return hDevice;
+        }
+
+        hDevice = NULL;
+        sPath.clear();
+
         UINT numDevices = 0;
         // Call once with NULL to get the required array size
         GetRawInputDeviceList(NULL, &numDevices, sizeof(RAWINPUTDEVICELIST));
@@ -156,7 +186,7 @@ namespace Ally
 
         USHORT usagePage = 0;
         USHORT usage = 0;
-        HANDLE hDevice = NULL;
+
 
         for (UINT i = 0; i < numDevices; i++)
         {
@@ -172,7 +202,7 @@ namespace Ally
 
                 if (devicePath.find(L"VID_0B05") != std::string::npos)
                 {
-                    log.Debug("Detected ASUS HID device at: '%s'", Unicode::to_string(devicePath).c_str());
+                    log.Debug("Detected ASUS HID device at: '%ls'", devicePath.c_str());
                 }
 
                 if (devicePath.find(L"VID_0B05") != std::string::npos
@@ -181,7 +211,11 @@ namespace Ally
                     && devicePath.find(L"MI_02") != std::string::npos
                     && devicePath.find(L"COL01") != std::string::npos)
                 {
-                    log.Debug("Selected ASUS HID device: '%s'", Unicode::to_string(devicePath).c_str());
+                    log.Debug("Selected ASUS HID device: '%ls'", devicePath.c_str());
+
+                    hDevice = deviceList[i].hDevice;
+                    sPath = devicePath;
+
                     if (path)
                         *path = devicePath.c_str();
                     return deviceList[i].hDevice;
@@ -214,12 +248,12 @@ namespace Ally
         ButtonBind[Ally::EventCode::ACPress] =          IsXBoxRogAlly() ? Handlers::GetByName(Config::AllyHidLibraryPress) : Handlers::GetByName(Config::AllyHidACPress);
         ButtonBind[Ally::EventCode::ACHold] =           Handlers::GetByName(Config::AllyHidACHold);
         ButtonBind[Ally::EventCode::CCPress] =          IsXBoxRogAlly() ? Handlers::GetByName(Config::AllyHidACPress) : Handlers::GetByName(Config::AllyHidCCPress);
-        ButtonBind[Ally::EventCode::LibraryPress] =     Handlers::GetByName(Config::AllyHidLibraryPress);
+        ButtonBind[Ally::EventCode::LibraryPress] =     IsXBoxRogAlly() ? Handlers::GetByName(Config::AllyHidLibraryPress) : Handlers::GetByName(Config::AllyHidACPress);
 
         ButtonBind[Ally::EventCode::MACPress] =         IsXBoxRogAlly() ? Handlers::GetByName(Config::AllyHidModeLibraryPress) : Handlers::GetByName(Config::AllyHidModeACPress);
         ButtonBind[Ally::EventCode::MACHold] =          Handlers::GetByName(Config::AllyHidModeACHold);
         ButtonBind[Ally::EventCode::MCCPress] =         IsXBoxRogAlly() ? Handlers::GetByName(Config::AllyHidModeACPress) : Handlers::GetByName(Config::AllyHidModeCCPress);
-        ButtonBind[Ally::EventCode::MLibraryPress] =    Handlers::GetByName(Config::AllyHidModeLibraryPress);
+        ButtonBind[Ally::EventCode::MLibraryPress] =    IsXBoxRogAlly() ? Handlers::GetByName(Config::AllyHidModeLibraryPress) : Handlers::GetByName(Config::AllyHidModeACPress);
 
         ButtonBind[Ally::EventCode::ROGHoldRelease] =   NULL;
         ButtonBind[Ally::EventCode::ModePress] =        NULL;
@@ -236,15 +270,15 @@ namespace Ally
 
         log.Trace("Bind Mode is %s", IsXBoxRogAlly() ? "XBoxRoxAlly" : "RogAlly");
 
-        log.Trace("Bind ACPress to %s", IsXBoxRogAlly() ? Config::AllyHidLibraryPress : Config::AllyHidACPress );
-        log.Trace("Bind ACHold to %s", Config::AllyHidACHold);
-        log.Trace("Bind CCPress to %s", IsXBoxRogAlly() ? Config::AllyHidACPress : Config::AllyHidCCPress );
-        log.Trace("Bind LibraryPress to %s", Config::AllyHidLibraryPress );
+        log.Trace("Bind ACPress to %ls", IsXBoxRogAlly() ? Config::AllyHidLibraryPress.c_str() : Config::AllyHidACPress.c_str() );
+        log.Trace("Bind ACHold to %ls", Config::AllyHidACHold.c_str());
+        log.Trace("Bind CCPress to %ls", IsXBoxRogAlly() ? Config::AllyHidACPress.c_str() : Config::AllyHidCCPress.c_str() );
+        log.Trace("Bind LibraryPress to %ls", Config::AllyHidLibraryPress.c_str() );
 
-        log.Trace("Bind Mode + ACPress to %s", IsXBoxRogAlly() ? Config::AllyHidModeLibraryPress : Config::AllyHidModeACPress );
-        log.Trace("Bind Mode + ACHold to %s", Config::AllyHidModeACHold);
-        log.Trace("Bind Mode + CCPress to %s", IsXBoxRogAlly() ? Config::AllyHidModeACPress : Config::AllyHidModeCCPress );
-        log.Trace("Bind Mode + LibraryPress to %s", Config::AllyHidModeLibraryPress );
+        log.Trace("Bind Mode + ACPress to %ls", IsXBoxRogAlly() ? Config::AllyHidModeLibraryPress.c_str() : Config::AllyHidModeACPress.c_str() );
+        log.Trace("Bind Mode + ACHold to %ls", Config::AllyHidModeACHold.c_str());
+        log.Trace("Bind Mode + CCPress to %ls", IsXBoxRogAlly() ? Config::AllyHidModeACPress.c_str() : Config::AllyHidModeCCPress.c_str() );
+        log.Trace("Bind Mode + LibraryPress to %ls", Config::AllyHidModeLibraryPress.c_str() );
     }
 
     static constexpr UINT DoublePressDelayMs = 400;
@@ -355,7 +389,6 @@ namespace Ally
             {
                 seq << (int)raw->data.hid.bRawData[i] << " ";
             }
-            seq << ("\n");
             log.Trace("Recieved sequence: %s", seq.str().c_str());
 
             Ally::EventCode buttonCode = (Ally::EventCode)raw->data.hid.bRawData[1];
@@ -419,6 +452,7 @@ namespace Ally
         FinishPress(hwnd, pressedKey, false);
         const int previousMouseMode = Config::AllyHidModeMouse;
         Config::Load();
+        log.Debug("Reloading listener settings: AllyControlModeHotkeys=%d", int(Config::AllyControlModeHotkeys));
         if (previousMouseMode != Config::AllyHidModeMouse || Config::AllyHidModeMouse == Config::MouseDisabled)
             controller.Stop();
         bool enableHid = (Config::AllyHidEnable || Config::AllyHidModeMouse) && Ally::IsSupported();
@@ -488,6 +522,11 @@ namespace Ally
         {
             return -1;
         }
+
+        // Settings may run without elevation while this listener runs elevated.
+        // WM_USER only requests a reload from disk; message parameters are ignored.
+        if (!ChangeWindowMessageFilterEx(hwnd, WM_USER, MSGFLT_ALLOW, nullptr))
+            log.Warn(log.APIError(), "Could not allow listener settings notifications");
 
         // Register raw input for ASUS Rog Ally service device
         RAWINPUTDEVICE rid = {};
@@ -591,8 +630,9 @@ namespace Ally
         HWND hWnd = FindWindow(Ally::HidListenerClass, L"");
         if (hWnd)
         {
-            PostMessage(hWnd, WM_USER, 0, 0);
-            return true;
+            if (PostMessage(hWnd, WM_USER, 0, 0))
+                return true;
+            log.Warn(log.APIError(), "Could not notify HID listener of settings changes");
         }
         return false;
     }
