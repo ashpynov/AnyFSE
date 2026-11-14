@@ -1,0 +1,41 @@
+name: Mirror to Codeberg
+
+on:
+  push:
+  delete:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-codeberg
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    if: github.repository == 'ashpynov/AnyFSE'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Sync branches and tags
+        env:
+          CODEBERG_TOKEN: ${{ secrets.CODEBERG_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$CODEBERG_TOKEN"
+
+          git clone --bare \
+            "https://github.com/$GITHUB_REPOSITORY.git" mirror.git
+
+          printf '%s\n' '#!/bin/sh' \
+            'printf "%s\n" "$CODEBERG_TOKEN"' \
+            > "$RUNNER_TEMP/codeberg-askpass"
+          chmod 700 "$RUNNER_TEMP/codeberg-askpass"
+
+          GIT_ASKPASS="$RUNNER_TEMP/codeberg-askpass" \
+          GIT_TERMINAL_PROMPT=0 \
+          git -C mirror.git -c credential.helper= push --prune \
+            https://ashpynov@codeberg.org/ashpynov/AnyFSE.git \
+            '+refs/heads/*:refs/heads/*' \
+            '+refs/tags/*:refs/tags/*'
