@@ -2,10 +2,11 @@
 #include <Windows.h>
 #include <map>
 #include <functional>
+#include <string>
 
 namespace Ally
 {
-    class Gamepad;
+    class Controller;
 
     enum EventCode
     {
@@ -41,7 +42,7 @@ namespace Ally
 
     bool IsSupported();
 
-    HANDLE FindHIDDevice();
+    HANDLE FindHIDDevice(std::wstring* path = nullptr);
     bool GetRawInputDevice(HANDLE hDevice, HWND hWnd, RAWINPUTDEVICE *pRid);
 
     inline std::map<Ally::EventCode,  std::function<void()>> ButtonBind;
@@ -61,7 +62,7 @@ namespace Ally
     RogAllyVersion GetRogAllyVersion();
     bool IsXBoxRogAlly();
 
-    void OnInput(bool allyEnabled, HANDLE hDevice, HRAWINPUT rawInput, bool* pbModePressed, Gamepad& gamepad);
+    void OnInput(bool hidEnabled, HANDLE hDevice, HRAWINPUT rawInput, bool* pbModePressed, Controller& controller);
     void OnHotkey(int id);
 
 }

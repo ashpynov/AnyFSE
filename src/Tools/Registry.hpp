@@ -33,7 +33,7 @@ namespace AnyFSE::Tools::Registry
     bool ValueExists(const std::wstring &subKey, const std::wstring &valueName);
 
     bool WriteString(const std::wstring &subKey, const std::wstring &valueName, const std::wstring &value);
-    bool WriteDWORD(const std::wstring &subKey, const std::wstring &valueName, DWORD value);
+    bool WriteDWORD(const std::wstring &subKey, const std::wstring &valueName, DWORD value, DWORD options = REG_OPTION_NON_VOLATILE);
     bool WriteBool(const std::wstring &subKey, const std::wstring &valueName, bool value);
     bool WriteBinary(const std::wstring &subKey, const std::wstring &valueName, const BYTE* data, DWORD size);
 

@@ -17,27 +17,67 @@
 #include "Ally.hpp"
 #include "Ally/Services.hpp"
 #include "App/GamingExperience.hpp"
-#include "Ally/Gamepad.hpp"
+#include "Ally/Controller.hpp"
+#include "Ally/Profile.hpp"
 
 using namespace AnyFSE::App;
 
 namespace Ally
 {
+    enum ControlModeHotkeyId
+    {
+        HotkeyProfileAuto = 0x100,
+        HotkeyProfileGamepad,
+        HotkeyProfileDesktop,
+        HotkeyProfileToggle,
+        HotkeyProfileNext
+    };
+
+    struct ControlModeHotkey
+    {
+        int id;
+        UINT modifiers;
+        UINT key;
+        void (*handler)();
+        const char* combination;
+    };
 
     static Logger log = LogManager::GetLogger("HIDListener");
     static const wchar_t *HidListenerClass = L"HIDListener";
     static constexpr int HotkeyEnterFSEWithReboot = (int)GamingExperience::ConfirmationMode::Reboot;
     static constexpr int HotkeyEnterFSENow = (int)GamingExperience::ConfirmationMode::Now;
+    static constexpr UINT ControlModeModifiers = MOD_WIN | MOD_ALT | MOD_CONTROL | MOD_NOREPEAT;
+    static const ControlModeHotkey controlModeHotkeys[] = {
+        {HotkeyProfileAuto, ControlModeModifiers, VK_F8, Profile::SetAuto, "Win+Alt+Ctrl+F8"},
+        {HotkeyProfileGamepad, ControlModeModifiers, VK_F9, Profile::SetGamepad, "Win+Alt+Ctrl+F9"},
+        {HotkeyProfileDesktop, ControlModeModifiers | MOD_SHIFT, VK_F9, Profile::SetDesktop, "Win+Alt+Ctrl+Shift+F9"},
+        {HotkeyProfileToggle, ControlModeModifiers, VK_F10, Profile::SetToggle, "Win+Alt+Ctrl+F10"},
+        {HotkeyProfileNext, ControlModeModifiers | MOD_SHIFT, VK_F10, Profile::SetNext, "Win+Alt+Ctrl+Shift+F10"}
+    };
     static HANDLE hHidThread = nullptr;
 
     static bool UpdateHotkeys(HWND hWnd)
     {
         UnregisterHotKey(hWnd, HotkeyEnterFSEWithReboot);
         UnregisterHotKey(hWnd, HotkeyEnterFSENow);
+        for (const ControlModeHotkey& hotkey : controlModeHotkeys)
+            UnregisterHotKey(hWnd, hotkey.id);
+
+        bool profileRegistered = false;
+        if (Config::AllyControlModeHotkeys && Ally::IsSupported())
+        {
+            for (const ControlModeHotkey& hotkey : controlModeHotkeys)
+            {
+                if (RegisterHotKey(hWnd, hotkey.id, hotkey.modifiers, hotkey.key))
+                    profileRegistered = true;
+                else
+                    log.Warn(log.APIError(), "Could not register %s", hotkey.combination);
+            }
+        }
 
         if (!Config::HotkeysEnable)
         {
-            return false;
+            return profileRegistered;
         }
 
         bool rebootRegistered = RegisterHotKey(
@@ -60,7 +100,7 @@ namespace Ally
             log.Warn(log.APIError(), "Could not register Win+Ctrl+F11");
         }
 
-        return rebootRegistered || nowRegistered;
+        return rebootRegistered || nowRegistered || profileRegistered;
     }
 
     bool IsSupported()
@@ -103,8 +143,10 @@ namespace Ally
             || GetRogAllyVersion() == RogAllyVersion::XboxROGAlly;
     }
 
-    HANDLE FindHIDDevice()
+    HANDLE FindHIDDevice(std::wstring* path)
     {
+        if (path)
+            path->clear();
         UINT numDevices = 0;
         // Call once with NULL to get the required array size
         GetRawInputDeviceList(NULL, &numDevices, sizeof(RAWINPUTDEVICELIST));
@@ -140,6 +182,8 @@ namespace Ally
                     && devicePath.find(L"COL01") != std::string::npos)
                 {
                     log.Debug("Selected ASUS HID device: '%s'", Unicode::to_string(devicePath).c_str());
+                    if (path)
+                        *path = devicePath.c_str();
                     return deviceList[i].hDevice;
                 }
             }
@@ -203,9 +247,9 @@ namespace Ally
         log.Trace("Bind Mode + LibraryPress to %s", Config::AllyHidModeLibraryPress );
     }
 
-    void OnInput(bool allyEnabled, HANDLE hDevice, HRAWINPUT rawInput, bool* pbModePressed, Gamepad& gamepad)
+    void OnInput(bool hidEnabled, HANDLE hDevice, HRAWINPUT rawInput, bool* pbModePressed, Controller& controller)
     {
-        if (!allyEnabled)
+        if (!hidEnabled)
         {
             return;
         }
@@ -239,7 +283,8 @@ namespace Ally
                 if (!*pbModePressed)
                 {
                     *pbModePressed = true;
-                    gamepad.Start();
+                    if (Config::AllyHidModeMouse)
+                        controller.Start(Config::AllyHidModeMouse);
                 }
             }
             else if (buttonCode == Ally::EventCode::Release)
@@ -247,7 +292,7 @@ namespace Ally
                 if (*pbModePressed)
                 {
                     *pbModePressed = false;
-                    gamepad.Stop();
+                    controller.Stop();
                 }
             }
             else if (*pbModePressed &&
@@ -256,7 +301,7 @@ namespace Ally
                 buttonCode = (Ally::EventCode)(buttonCode + Ally::EventCode::ModePress);
             }
 
-            if (Ally::ButtonBind.find(buttonCode) != Ally::ButtonBind.end() &&
+            if (Config::AllyHidEnable && Ally::ButtonBind.find(buttonCode) != Ally::ButtonBind.end() &&
                 Ally::ButtonBind[buttonCode])
             {
                 Ally::ButtonBind[buttonCode]();
@@ -266,6 +311,17 @@ namespace Ally
 
     void OnHotkey(int id)
     {
+        if (Config::AllyControlModeHotkeys)
+        {
+            for (const ControlModeHotkey& hotkey : controlModeHotkeys)
+            {
+                if (id == hotkey.id)
+                {
+                    hotkey.handler();
+                    return;
+                }
+            }
+        }
         switch (id)
         {
             case HotkeyEnterFSEWithReboot:
@@ -277,14 +333,17 @@ namespace Ally
         }
     }
 
-    void OnUser(HWND hwnd, bool& allyEnabled, HANDLE& hDevice, RAWINPUTDEVICE& rid, bool& bModePressed, Gamepad& gamepad)
+    void OnUser(HWND hwnd, bool& hidEnabled, HANDLE& hDevice, RAWINPUTDEVICE& rid, bool& bModePressed, Controller& controller)
     {
+        const int previousMouseMode = Config::AllyHidModeMouse;
         Config::Load();
-        bool enableAlly = Config::AllyHidEnable && Ally::IsSupported();
-        if (enableAlly)
+        if (previousMouseMode != Config::AllyHidModeMouse || Config::AllyHidModeMouse == Config::MouseDisabled)
+            controller.Stop();
+        bool enableHid = (Config::AllyHidEnable || Config::AllyHidModeMouse) && Ally::IsSupported();
+        if (enableHid)
         {
             Ally::Load();
-            if (!allyEnabled)
+            if (!hidEnabled)
             {
                 hDevice = Ally::FindHIDDevice();
                 if (Ally::GetRawInputDevice(hDevice, hwnd, &rid))
@@ -293,10 +352,10 @@ namespace Ally
                 }
             }
         }
-        else if (allyEnabled)
+        else if (hidEnabled)
         {
             bModePressed = false;
-            gamepad.Stop();
+            controller.Stop();
             rid.dwFlags = RIDEV_REMOVE;
             rid.hwndTarget = NULL;
             RegisterRawInputDevices(&rid, 1, sizeof(rid));
@@ -304,9 +363,11 @@ namespace Ally
             hDevice = NULL;
         }
 
-        allyEnabled = enableAlly;
+        hidEnabled = enableHid;
+        if (hidEnabled && bModePressed && previousMouseMode != Config::AllyHidModeMouse && Config::AllyHidModeMouse != Config::MouseDisabled)
+            controller.Start(Config::AllyHidModeMouse);
         bool hotkeysRegistered = UpdateHotkeys(hwnd);
-        if (!allyEnabled && !hotkeysRegistered)
+        if (!hidEnabled && !hotkeysRegistered)
         {
             PostQuitMessage(0);
         }
@@ -314,13 +375,13 @@ namespace Ally
 
     DWORD WINAPI HIDListener(LPVOID lpParam)
     {
-        bool allyEnabled = Config::AllyHidEnable && Ally::IsSupported();
-        if (!allyEnabled && !Config::HotkeysEnable)
+        bool hidEnabled = (Config::AllyHidEnable || Config::AllyHidModeMouse) && Ally::IsSupported();
+        if (!hidEnabled && !Config::HotkeysEnable && !(Config::AllyControlModeHotkeys && Ally::IsSupported()))
         {
             return -1;
         }
 
-        HANDLE hDevice = allyEnabled ? Ally::FindHIDDevice() : NULL;
+        HANDLE hDevice = hidEnabled ? Ally::FindHIDDevice() : NULL;
 
         if (FindWindow(HidListenerClass,NULL) != NULL)
         {
@@ -328,7 +389,7 @@ namespace Ally
         }
 
         AnyFSE::Tools::EnablePowerEfficencyMode(true);
-        if (allyEnabled)
+        if (hidEnabled)
         {
             Load();
         }
@@ -348,13 +409,13 @@ namespace Ally
 
         // Register raw input for ASUS Rog Ally service device
         RAWINPUTDEVICE rid = {};
-        if (allyEnabled && Ally::GetRawInputDevice(hDevice, hwnd, &rid))
+        if (hidEnabled && Ally::GetRawInputDevice(hDevice, hwnd, &rid))
         {
             RegisterRawInputDevices(&rid, 1, sizeof(rid));
         }
 
         bool hotkeysRegistered = UpdateHotkeys(hwnd);
-        if (!allyEnabled && !hotkeysRegistered)
+        if (!hidEnabled && !hotkeysRegistered)
         {
             DestroyWindow(hwnd);
             return -1;
@@ -365,28 +426,30 @@ namespace Ally
         MSG msg;
 
         bool bModePressed = false;
-        Gamepad gamepad;
+        Controller controller;
 
         while (GetMessage(&msg, NULL, 0, 0))
         {
             switch (msg.message)
             {
             case WM_INPUT:
-                OnInput(allyEnabled, hDevice, (HRAWINPUT)msg.lParam, &bModePressed, gamepad);
+                OnInput(hidEnabled, hDevice, (HRAWINPUT)msg.lParam, &bModePressed, controller);
                 break;
             case WM_HOTKEY:
                 OnHotkey((int)msg.wParam);
                 break;
             case WM_USER:
-                OnUser(hwnd, allyEnabled, hDevice, rid, bModePressed, gamepad);
+                OnUser(hwnd, hidEnabled, hDevice, rid, bModePressed, controller);
                 break;
             }
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-        gamepad.Stop();
+        controller.Stop();
         UnregisterHotKey(hwnd, HotkeyEnterFSEWithReboot);
         UnregisterHotKey(hwnd, HotkeyEnterFSENow);
+        for (const ControlModeHotkey& hotkey : controlModeHotkeys)
+            UnregisterHotKey(hwnd, hotkey.id);
         DestroyWindow(hwnd);
         log.Trace("Exit HID and hotkey sink thread");
         return 0;
@@ -459,7 +522,8 @@ namespace Ally
 
     bool CheckListener()
     {
-        return (Config::HotkeysEnable || (Config::AllyHidEnable && Ally::IsSupported()))
+        return (Config::HotkeysEnable ||
+            ((Config::AllyHidEnable || Config::AllyHidModeMouse || Config::AllyControlModeHotkeys) && Ally::IsSupported()))
             && FindWindow(HidListenerClass, NULL) == NULL;
     }
 

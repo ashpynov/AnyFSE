@@ -5,6 +5,7 @@
 #include <vector>
 #include <psapi.h>
 #include "Ally/Handlers.hpp"
+#include "Ally/Profile.hpp"
 #include "Tools/Process.hpp"
 #include "Tools/Unicode.hpp"
 #include "Logging/LogManager.hpp"
@@ -37,6 +38,11 @@ namespace Ally::Handlers
         { L"SteamQAM", L"Steam Quick Menu (Ctrl+2)", Handlers::OpenSteamQuickMenu },
         { L"AnyFSESettings", L"AnyFSE Settings", Handlers::OpenAnyFSESettings },
         { L"Keyboard", L"On-Screen Keyboard", Handlers::ShowKeyboard },
+        { L"SetAutoProfile", L"Auto Control Mode", Profile::SetAuto },
+        { L"SetGamepadProfile", L"Gamepad Control Mode", Profile::SetGamepad },
+        { L"SetDesktopProfile", L"Desktop Control Mode", Profile::SetDesktop },
+        { L"SetNextProfile", L"Next Control Mode", Profile::SetNext },
+        { L"ToggleProfile", L"Toggle Desktop/Gamepad profile", Profile::SetToggle },
     };
 
     std::function<void()> Handlers::GetByName(const std::wstring &handleName)

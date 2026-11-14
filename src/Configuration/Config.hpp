@@ -206,7 +206,16 @@ namespace AnyFSE::Configuration
             static std::wstring UpdateLastVersion;
             static std::wstring Locale;
 
+            enum AllyMouseMode
+            {
+                MouseDisabled = 0,
+                CopyDesktopSticks = 1,
+                WindowsGamepadCursorMode = 2
+            };
+
             static bool         AllyHidEnable;
+            static int          AllyHidModeMouse;
+            static bool         AllyControlModeHotkeys;
             static bool         AllyHidExtraCommandsEnable;
             static std::wstring AllyHidACPress;
             static std::wstring AllyHidACHold;

@@ -546,6 +546,10 @@ namespace AnyFSE::App::AppSettings::Settings
             return;
         }
 
+        if (m_pActivePageList)
+            m_pageScrollPositions[m_pActivePageList] = m_theme.DpiUnscale(m_scrollView.GetScrollPos());
+
+        int scrollPos = m_theme.DpiScale(m_pageScrollPositions[pPageList]);
         int invert = back ? -1 : 1;
 
         RECT scrollRect;
@@ -620,9 +624,11 @@ namespace AnyFSE::App::AppSettings::Settings
         }
         m_pActivePageList = pPageList;
         UpdateLayout();
-        RedrawWindow(m_hDialog, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
-
         m_captionBackButton.Enable(m_pActivePageList != &m_settingPageList);
+        if (back && !pPageList->empty())
+            m_theme.SwapFocus(pPageList->front().GetHWnd());
+        m_scrollView.ScrollTo(scrollPos);
+        RedrawWindow(m_hDialog, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
     }
 
     void SettingsDialog::UpdateDpiLayout()
@@ -872,7 +878,6 @@ namespace AnyFSE::App::AppSettings::Settings
     void SettingsDialog::OpenSettingsPage()
     {
         SwitchActivePage(L"", &m_settingPageList, true);
-        m_theme.SwapFocus(m_settingPageList.front().GetHWnd());
     }
 
     void SettingsDialog::RefreshLocalizedCaption()

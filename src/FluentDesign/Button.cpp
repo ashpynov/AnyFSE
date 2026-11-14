@@ -460,6 +460,11 @@ namespace FluentDesign
                 This->HandleMouse(hWnd, uMsg);
                 return 0;
 
+            case WM_MOUSEHOVER:
+                if (IsWindowEnabled(hWnd) && !This->m_mousePressed)
+                    This->OnHover.Notify();
+                return 0;
+
             case WM_GETDLGCODE:
                 if ( wParam == VK_SPACE || wParam ==VK_RETURN || wParam ==VK_GAMEPAD_A
                     || wParam == VK_LEFT  || wParam == VK_UP || wParam == VK_RIGHT || wParam == VK_DOWN)
@@ -524,6 +529,11 @@ namespace FluentDesign
                 tme.dwFlags = TME_LEAVE;
                 tme.hwndTrack = hWnd;
                 TrackMouseEvent(&tme);
+            }
+            if (OnHover.HasSubscribe())
+            {
+                TRACKMOUSEEVENT hover {sizeof(hover), TME_HOVER, hWnd, HOVER_DEFAULT};
+                TrackMouseEvent(&hover);
             }
             break;
 
@@ -687,8 +697,30 @@ namespace FluentDesign
                 iconDraw.Y -= cy;
             }
             SolidBrush iconBrush(m_showProgress || m_animationTimer ? Color(m_theme.GetColor(m_textNormalColor)) : textColor);
+            FontFamily iconFamily;
+            iconFont.GetFamily(&iconFamily);
+            const int iconStyle = iconFont.GetStyle();
+            const float emSize = iconFont.GetHeight(&graphics) * iconFamily.GetEmHeight(iconStyle) / iconFamily.GetLineSpacing(iconStyle);
+            GraphicsPath iconPath;
             for (const wchar_t glyph : m_icon)
-                graphics.DrawString(&glyph, 1, &iconFont, iconDraw, &format, &iconBrush);
+                iconPath.AddString(&glyph, 1, &iconFamily, iconStyle, emSize, PointF(), StringFormat::GenericTypographic());
+
+            RectF inkBounds;
+            iconPath.GetBounds(&inkBounds);
+            Matrix alignment;
+            alignment.Translate(
+                iconDraw.X + (iconDraw.Width - inkBounds.Width) / 2.0f - inkBounds.X,
+                iconDraw.Y + (iconDraw.Height - inkBounds.Height) / 2.0f - inkBounds.Y);
+            const PixelOffsetMode pixelOffset = graphics.GetPixelOffsetMode();
+            graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
+            for (const wchar_t glyph : m_icon)
+            {
+                GraphicsPath layer;
+                layer.AddString(&glyph, 1, &iconFamily, iconStyle, emSize, PointF(), StringFormat::GenericTypographic());
+                layer.Transform(&alignment);
+                graphics.FillPath(&iconBrush, &layer);
+            }
+            graphics.SetPixelOffsetMode(pixelOffset);
             graphics.ResetTransform();
             x += iconWidth + spacing;
         }

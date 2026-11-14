@@ -27,6 +27,7 @@
 #include <commctrl.h>
 #include <string>
 #include <vector>
+#include <map>
 #include <memory>
 #include <filesystem>
 
@@ -182,6 +183,7 @@ namespace AnyFSE::App::AppSettings::Settings
 
         std::list<SettingsLine> m_settingPageList;
         std::list<SettingsLine> *m_pActivePageList = nullptr;
+        std::map<std::list<SettingsLine> *, int> m_pageScrollPositions;
 
 
         void UpdateDpiLayout();

@@ -159,7 +159,8 @@ namespace AnyFSE::App::CmdLine
             return false;
         }
 
-        if (Config::HotkeysEnable || (Config::AllyHidEnable && Ally::IsSupported()))
+        if (Config::HotkeysEnable ||
+            ((Config::AllyHidEnable || Config::AllyHidModeMouse || Config::AllyControlModeHotkeys) && Ally::IsSupported()))
         {
             log.Debug("Starting background HID/hotkey listener\n");
             AnyFSE::Logging::LogManager::Initialize("AnyFSE/BackgroundListener", Config::LogLevel, Config::LogPath);
@@ -176,7 +177,8 @@ namespace AnyFSE::App::CmdLine
             return false;
         }
 
-        if (Config::HotkeysEnable || (Config::AllyHidEnable && Ally::IsSupported()))
+        if (Config::HotkeysEnable ||
+            ((Config::AllyHidEnable || Config::AllyHidModeMouse || Config::AllyControlModeHotkeys) && Ally::IsSupported()))
         {
             Elevated::Call(Constants::ElevatedHidListener);
         }

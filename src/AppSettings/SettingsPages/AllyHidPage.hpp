@@ -20,6 +20,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             : m_theme(theme)
             , m_dialog(dialog)
             , m_enableAllyHidToggle(theme)
+            , m_modeMouseCombo(theme)
+            , m_controlModeHotkeysToggle(theme)
             , m_acPressCombo(theme)
             , m_acHoldCombo(theme)
             , m_ccPressCombo(theme)
@@ -39,6 +41,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         std::list<SettingsLine> m_pageLinesList;
 
         Toggle m_enableAllyHidToggle;
+        ComboBox m_modeMouseCombo;
+        Toggle m_controlModeHotkeysToggle;
         ComboBox m_acPressCombo;
         ComboBox m_acHoldCombo;
         ComboBox m_ccPressCombo;
@@ -49,6 +53,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         ComboBox m_modeLibraryPressCombo;
 
         SettingsLine * m_pAllyHidLine;
+        SettingsLine * m_pModeMouseLine = nullptr;
         SettingsLine * m_pACPressLine = nullptr;
         SettingsLine * m_pACHoldLine = nullptr;
         SettingsLine * m_pCCPressLine = nullptr;

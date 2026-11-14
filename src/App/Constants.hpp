@@ -14,8 +14,6 @@ namespace AnyFSE::App::Constants
 
     // Product files
     inline constexpr wchar_t AnyFseSettingsDll[] = L"AnyFSE.Settings.dll";
-    inline constexpr wchar_t GameInputDll[] = L"GameInput.dll";
-    inline constexpr char GameInputCreateExport[] = "GameInputCreate";
     inline constexpr wchar_t AnyFseExe[] = L"AnyFSE.exe";
     inline constexpr wchar_t AnyFseConfigFile[] = L"AnyFSE.json";
     inline constexpr wchar_t AppLocalStateDirectory[] = L"LocalState";
@@ -73,6 +71,25 @@ namespace AnyFSE::App::Constants
     inline constexpr wchar_t EnterGamingPostureConfirmationConfigRegValue[] = L"EnterGamingPostureConfirmation_Config";
     inline constexpr wchar_t EnterGamingPostureConfirmationRestoreRegValue[] = L"EnterGamingPostureConfirmation_Restore";
 
+    // ASUS MCU synchronization and the current user's AC SE profiles.
+    inline constexpr wchar_t AllyMcuGlobalMutex[] = L"Global\\AsusMCUHIDMutex";
+    inline constexpr wchar_t AllyGamepadConfigRegKey[] = L"HKCU\\Software\\ASUS\\ARMOURY CRATE Service\\GamepadCustomize";
+    inline constexpr wchar_t AllyProfileModeRegValue[] = L"GameBuzzMode";
+    inline constexpr wchar_t AllyPreviousProfileModeRegValue[] = L"PrevGameBuzzMode";
+    inline constexpr wchar_t GameInputRegKey[] = L"HKCU\\Volatile Environment\\GameInput";
+    inline constexpr wchar_t GameInputMouseModeActiveRegValue[] = L"MouseModeActive";
+    inline constexpr wchar_t AllyProfileRootPath[] =
+        L"%LOCALAPPDATA%\\Packages\\B9ECED6F.ArmouryCrateSE_qmba6cd70vzyy\\LocalState\\GamepadCustomize";
+    inline constexpr wchar_t AllyDesktopProfilePath[] = L"Profiles\\_sys_desktop.json";
+    inline constexpr wchar_t AllyGamepadProfilePath[] = L"Profiles\\_sys_gamepad.json";
+    inline constexpr wchar_t AllyTemplates[] = L"Templates";
+    inline constexpr wchar_t AllySystemTemplates[] = L"SystemTemplates";
+    inline constexpr wchar_t AllyDesktopTemplateId[] = L"_sys_desktop";
+    inline constexpr wchar_t AllyGamepadTemplateId[] = L"_sys_gamepad";
+    inline constexpr wchar_t AllyCombKeys[] = L"CombKeys";
+
+    inline constexpr wchar_t GamepadCursorIconPath[] = L"@/Assets/gamepad_cursor";
+
     // Installer / updater assets
     inline constexpr wchar_t InstallerSilentArgument[] = L"/s";
     inline constexpr wchar_t InstallerAutoUpdateArgument[] = L"/autoupdate";
@@ -96,6 +113,7 @@ namespace AnyFSE::App::Constants
     inline constexpr wchar_t VideoWindowClass[] = L"AnyFSE.VideoWindow";
     inline constexpr wchar_t SettingsDialogClass[] = L"AnyFSESettingsDialogClass";
     inline constexpr wchar_t SettingsLineClass[] = L"AnyFSE_SettingsLineClass";
+    inline constexpr wchar_t TooltipWindowClass[] = L"STATIC";
     inline constexpr wchar_t UpdaterNotifyWindowClass[] = L"AnyFSE_Updater_NotifyWnd";
     inline constexpr wchar_t UpdaterUserAgentHeader[] = L"User-Agent: AnyFSE-Updater\r\n";
     inline constexpr wchar_t UpdaterGitHubAcceptHeader[] = L"Accept: application/vnd.github.v3+json\r\n";

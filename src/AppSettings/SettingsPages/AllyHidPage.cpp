@@ -28,6 +28,21 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         rogAllySupport.OnChanged += delegate(OpenAllyHidPage);
 
         ULONG pageTop = 0;
+        m_pModeMouseLine = &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+            Translate(L"settingsAllyModeMouse"),
+            Translate(L"settingsAllyModeMouseDescription"),
+            m_modeMouseCombo,
+            Layout::LineHeight, Layout::LinePadding, 0, 260);
+        m_pModeMouseLine->SetInfo(Translate(L"settingsAllyModeMouseHelp"));
+
+        SettingsLine& controlModeHotkeysLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+            Translate(L"settingsAllyControlModeHotkeys"),
+            Translate(L"settingsAllyControlModeHotkeysDescription"),
+            m_controlModeHotkeysToggle,
+            Layout::LineHeight, Layout::LinePadding, 0);
+        controlModeHotkeysLine.SetIcon(L'\xE765');
+        controlModeHotkeysLine.SetInfo(Translate(L"settingsAllyControlModeHotkeysHelp"));
+
         m_pAllyHidLine = &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
             Translate(L"settingsAllyEnableAlternativeButtons"),
             Translate(L"settingsAllyEnableAlternativeButtonsDescription"),
@@ -111,7 +126,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
                     Translate(L"settingsAllyModePressLibrary"),
                     Translate(L"settingsAllyShortPressRightActionMode"),
                     m_modeLibraryPressCombo,
-                    Layout::LineHeight, Layout::LinePadding, 0, 240));
+                    Layout::LineHeight, 0, 0, 240));
         }
 
         ReloadIcons();
@@ -145,7 +160,14 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             }
         }
 
+        m_modeMouseCombo.Reset();
+        m_modeMouseCombo.AddItem(Translate(L"settingsAllyModeMouseDisabled"), L"", L"0");
+        m_modeMouseCombo.AddItem(Translate(L"settingsAllyModeMouseCopy"), L"", L"1");
+        m_modeMouseCombo.AddItem(Translate(L"settingsAllyModeMouseWindows"), L"", L"2");
+        m_modeMouseCombo.SelectItem(Config::AllyHidModeMouse);
+
         m_enableAllyHidToggle.SetCheck(Config::AllyHidEnable);
+        m_controlModeHotkeysToggle.SetCheck(Config::AllyControlModeHotkeys);
 
         m_acPressCombo.SelectItem(Config::AllyHidACPress);
         m_modeACPressCombo.SelectItem(Config::AllyHidModeACPress);
@@ -173,9 +195,9 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             return;
         }
 
-        bool changed = Config::AllyHidEnable != m_enableAllyHidToggle.GetCheck();
-
         Config::AllyHidEnable = m_enableAllyHidToggle.GetCheck();
+        Config::AllyHidModeMouse = m_modeMouseCombo.GetSelectedIndex();
+        Config::AllyControlModeHotkeys = m_controlModeHotkeysToggle.GetCheck();
 
         Config::AllyHidACPress = m_acPressCombo.GetCurentValue();
         Config::AllyHidModeACPress = m_modeACPressCombo.GetCurentValue();
@@ -214,6 +236,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     {
         std::wstring path = L"@/Assets/asus_cac_keymap_";
         std::wstring suffix = m_theme.IsDarkThemeEnabled() ? L".png" : L".theme-light.png";
+
+        m_pModeMouseLine->SetIcon(Constants::GamepadCursorIconPath + suffix);
 
         if (!Ally::IsXBoxRogAlly())
         {

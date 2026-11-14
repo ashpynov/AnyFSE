@@ -259,6 +259,7 @@ namespace FluentDesign
         case WM_MOUSELEAVE:
             m_buttonMouseOver = false;
             m_buttonPressed = false;
+            SendMessage(GetParent(hWnd), WM_NCMOUSELEAVE, 0, 0);
             InvalidateRect(hWnd, NULL, TRUE);
             break;
 

@@ -143,5 +143,6 @@ namespace FluentDesign
 
         Event OnChanged;
         Event OnButtonDown;
+        Event OnHover;
     };
 }

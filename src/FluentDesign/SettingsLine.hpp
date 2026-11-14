@@ -33,6 +33,7 @@
 #include "Tools/Process.hpp"
 #include "Button.hpp"
 #include "Popup.hpp"
+#include "Tooltip.hpp"
 
 namespace FluentDesign
 {
@@ -47,7 +48,8 @@ namespace FluentDesign
             Next,
             Link,
             Caption,
-            Menu
+            Menu,
+            Info
         };
 
     private:
@@ -99,6 +101,8 @@ namespace FluentDesign
         const int CHEVRON_SPACE = 9;
 
         Button m_chevronButton;
+        Tooltip m_tooltip;
+        std::wstring m_infoText;
 
     private:
         virtual LPARAM OnCommand(HWND hwnd, int msg, WPARAM wParam, LPARAM lParam) { return 0; };
@@ -134,6 +138,7 @@ namespace FluentDesign
         // Text management
         void SetName(const std::wstring &name);
         void SetDescription(const std::wstring &description);
+        void SetInfo(const std::wstring &text);
         const std::wstring &GetName() const { return m_name; }
         const std::wstring &GetDescription() const { return m_description; }
 
@@ -207,6 +212,7 @@ namespace FluentDesign
         void OnMouseLeave();
         void OnEnable(bool enabled);
         void OnLButtonDown();
+        void OnChevronClick();
 
         // Drawing methods
         void DrawText(HDC hdc);

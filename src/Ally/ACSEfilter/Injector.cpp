@@ -236,7 +236,7 @@ namespace
 
         catch (const std::exception &e)
         {
-            LOG_ERROR(e.what());
+            e; LOG_ERROR(e.what());
 
             if (thread)  CloseHandle(thread);
             if (remotePath)  VirtualFreeEx(process, remotePath, 0, MEM_RELEASE);

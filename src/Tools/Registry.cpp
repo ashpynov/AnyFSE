@@ -146,20 +146,23 @@ namespace AnyFSE::Tools::Registry
         return (result == ERROR_SUCCESS);
     }
 
-    bool WriteDWORD(const std::wstring &subKey, const std::wstring &valueName, DWORD value)
+    bool WriteDWORD(const std::wstring &subKey, const std::wstring &valueName, DWORD value, DWORD options)
     {
         std::wstring actualPath;
         HKEY rootKey = GetRootKey(subKey, actualPath);
 
         HKEY hKey;
-        LONG result = RegCreateKeyExW(rootKey, actualPath.c_str(), 0, nullptr,
-                                      REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &hKey, nullptr);
+        LONG result = RegCreateKeyEx(rootKey, actualPath.c_str(), 0, nullptr, options, KEY_SET_VALUE, nullptr, &hKey, nullptr);
         if (result != ERROR_SUCCESS)
+        {
+            SetLastError(result);
             return false;
+        }
 
-        result = RegSetValueExW(hKey, valueName.c_str(), 0, REG_DWORD,
+        result = RegSetValueEx(hKey, valueName.c_str(), 0, REG_DWORD,
                                 reinterpret_cast<const BYTE *>(&value), sizeof(DWORD));
         RegCloseKey(hKey);
+        SetLastError(result);
 
         return (result == ERROR_SUCCESS);
     }

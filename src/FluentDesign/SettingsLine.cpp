@@ -162,6 +162,7 @@ namespace FluentDesign
     SettingsLine::SettingsLine(FluentDesign::Theme& theme)
         : FluentControl(theme)
         , m_chevronButton(theme)
+        , m_tooltip(theme)
         , m_enabled(true)
         , m_hovered(false)
         , m_linePadding(2)
@@ -274,6 +275,7 @@ namespace FluentDesign
 
         if (message == WM_NCDESTROY)
         {
+            This->m_tooltip.Hide(false);
             RemoveWindowSubclass(hWnd, WndProc, uIdSubclass);
             return DefSubclassProc(hWnd, message, wParam, lParam);
         }
@@ -325,6 +327,11 @@ namespace FluentDesign
         case WM_MOUSELEAVE:
             OnMouseLeave();
             return 0;
+
+        case WM_SHOWWINDOW:
+            if (!wParam)
+                m_tooltip.Hide(false);
+            break;
 
         case WM_ENABLE:
             OnEnable(wParam != 0);
@@ -645,7 +652,8 @@ namespace FluentDesign
 
     void SettingsLine::OnMouseMove()
     {
-        if (!m_hovered && (m_childControlsList.size() || HasChevron()) && m_state != State::Normal && m_state != State::Menu)
+        if (!m_hovered && (m_childControlsList.size() || HasChevron()) &&
+            m_state != State::Normal && m_state != State::Menu && m_state != State::Info)
         {
             POINT pt;
             GetCursorPos(&pt);
@@ -669,7 +677,8 @@ namespace FluentDesign
 
     void SettingsLine::OnMouseLeave()
     {
-        if ((m_childControlsList.size() || HasChevron()) && m_state != State::Normal && m_state != State::Menu)
+        if ((m_childControlsList.size() || HasChevron()) &&
+            m_state != State::Normal && m_state != State::Menu && m_state != State::Info)
         {
             POINT pt;
             GetCursorPos(&pt);
@@ -697,6 +706,8 @@ namespace FluentDesign
     void SettingsLine::OnEnable(bool enabled)
     {
         m_enabled = enabled;
+        if (!enabled)
+            m_tooltip.Hide(false);
         for (auto hwnd: m_childControlsList)
         {
             SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
@@ -726,12 +737,27 @@ namespace FluentDesign
             SetState(m_state == State::Closed ?  State::Opened : State::Closed);
             OnChanged.Notify();
         }
-        else if (m_state != State::Menu && HasChevron())
+        else if (m_state != State::Menu && m_state != State::Info && HasChevron())
         {
             OnChanged.Notify();
         }
 
         Invalidate();
+    }
+
+    void SettingsLine::OnChevronClick()
+    {
+        if (m_state != State::Info)
+        {
+            OnLButtonDown();
+            return;
+        }
+        if (!m_enabled || m_infoText.empty())
+            return;
+
+        RECT rect;
+        GetWindowRect(m_chevronButton.GetHwnd(), &rect);
+        m_tooltip.Show(m_chevronButton.GetHwnd(), m_infoText, rect.right, rect.bottom + m_theme.DpiScale(4));
     }
 
     void SettingsLine::EnsureChevron()
@@ -746,21 +772,29 @@ namespace FluentDesign
                 m_theme.DpiScale(CHEVRON_SIZE)
             );
             m_chevronButton.SetFlat(true);
-            m_chevronButton.OnClick += delegate(OnLButtonDown);
-            m_chevronButton.SetColors(
-                Theme::Colors::Default, Theme::Colors::Default,
-                Theme::Colors::Default, Theme::Colors::PanelHover,
-                Theme::Colors::Default, Theme::Colors::PanelHover
-            );
+            m_chevronButton.OnClick += delegate(OnChevronClick);
         }
     }
 
     void SettingsLine::SetChevron(State state)
     {
+        m_chevronButton.OnHover.Clear();
         bool bShow = state != State::Normal && state != State::Caption;
         if (bShow)
         {
             EnsureChevron();
+            m_chevronButton.SetColors(
+                Theme::Colors::Default, Theme::Colors::Default,
+                Theme::Colors::Default, state == State::Info ? Theme::Colors::Transparent : Theme::Colors::PanelHover,
+                Theme::Colors::Default, Theme::Colors::PanelHover
+            );
+            if (state == State::Info)
+            {
+                m_chevronButton.OnHover += [This = this]() {
+                    if (GetForegroundWindow() == GetAncestor(This->m_hWnd, GA_ROOT))
+                        This->OnChevronClick();
+                };
+            }
             std::wstring icon;
             switch (state)
             {
@@ -778,6 +812,9 @@ namespace FluentDesign
                     break;
                 case State::Menu:
                     icon = L"\xE712";
+                    break;
+                case State::Info:
+                    icon = L"\xE946";
                     break;
             }
             m_chevronButton.SetIcon(icon);
@@ -879,6 +916,13 @@ namespace FluentDesign
         }
     }
 
+    void SettingsLine::SetInfo(const std::wstring &text)
+    {
+        m_tooltip.Hide(false);
+        m_infoText = text;
+        SetState(text.empty() ? State::Normal : State::Info);
+    }
+
     void SettingsLine::SetMenu(const std::vector<Popup::PopupItem> &items)
     {
         SetState(State::Menu);
@@ -971,7 +1015,7 @@ namespace FluentDesign
 
     int SettingsLine::ReflowLinkButtons(int width)
     {
-        if (m_linkButtons.size()==0)
+        if (width <= 0 || m_linkButtons.empty())
         {
             return m_height;
         }
@@ -986,13 +1030,14 @@ namespace FluentDesign
             maxHeight = max(maxHeight, rc.bottom - rc.top);
         }
 
-        int columns = min(m_nMaxColumns, 1 + (int)((width - m_theme.DpiScale(m_leftMargin) - maxWidth) / (maxWidth + m_theme.DpiScale(LINK_PADDING))));
+        int columns = 1 + (width - m_theme.DpiScale(m_leftMargin) - maxWidth) / (maxWidth + m_theme.DpiScale(LINK_PADDING));
+        columns = max(1, min(m_nMaxColumns, columns));
 
-        int cWidth = (width - m_theme.DpiScale(m_leftMargin)) / columns;
-        int top = 0;
+        int cWidth = max(0, width - m_theme.DpiScale(m_leftMargin)) / columns;
         int index = 0;
 
-        int gridHeight = (int)((m_linkButtons.size() / columns) - 1) * (maxHeight + m_theme.DpiScale(LINK_VPADDING)) + maxHeight;
+        int rows = (static_cast<int>(m_linkButtons.size()) + columns - 1) / columns;
+        int gridHeight = (rows - 1) * (maxHeight + m_theme.DpiScale(LINK_VPADDING)) + maxHeight;
 
         int vertMargins = (m_theme.DpiScale(m_designHeight) - maxHeight) / 2;
 
@@ -1123,7 +1168,11 @@ namespace FluentDesign
     }
     void SettingsLine::SetState(State state)
     {
+        if (state != State::Info)
+            m_tooltip.Hide(false);
         m_state = state;
+        if (m_state == State::Info)
+            m_hovered = false;
 
         if (m_state == State::Opened && m_groupItemsList.size())
         {
