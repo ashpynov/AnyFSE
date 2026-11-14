@@ -32,6 +32,23 @@ namespace AnyFSE::Tools::Elevated
         };
         typedef std::unique_ptr<void, CloseHandleDeleter> Handle;
 
+        class CallLock
+        {
+            Handle m_mutex;
+        public:
+            CallLock() : m_mutex(CreateMutex(nullptr, FALSE, c::ElevatedCallMutex))
+            {
+                if (!m_mutex)
+                    throw std::runtime_error("Cannot create elevated call mutex: " + std::to_string(GetLastError()));
+
+                const DWORD result = WaitForSingleObject(m_mutex.get(), INFINITE);
+                if (result != WAIT_OBJECT_0 && result != WAIT_ABANDONED)
+                    throw std::runtime_error("Cannot acquire elevated call mutex: " + std::to_string(GetLastError()));
+            }
+
+            ~CallLock() { ReleaseMutex(m_mutex.get()); }
+        };
+
         void Check(HRESULT result)
         {
             if (FAILED(result))
@@ -111,13 +128,8 @@ namespace AnyFSE::Tools::Elevated
         try
         {
             const std::wstring eventName = EventName(name);
-            // Holding this object reserves the single request slot, including across threads/processes.
-            Handle call(CreateEventW(nullptr, TRUE, FALSE, c::ElevatedCallEvent));
-            const DWORD callError = GetLastError();
-            if (!call)
-                Check(HRESULT_FROM_WIN32(callError));
-            if (callError == ERROR_ALREADY_EXISTS)
-                throw std::runtime_error("An elevated call is already in progress");
+            // Serialize requests across threads/processes until the task exits and its request event is closed.
+            CallLock call;
 
             ComScope com;
             wrl::ComPtr<ITaskService> service;

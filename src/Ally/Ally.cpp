@@ -247,7 +247,89 @@ namespace Ally
         log.Trace("Bind Mode + LibraryPress to %s", Config::AllyHidModeLibraryPress );
     }
 
-    void OnInput(bool hidEnabled, HANDLE hDevice, HRAWINPUT rawInput, bool* pbModePressed, Controller& controller)
+    static constexpr UINT DoublePressDelayMs = 400;
+    static constexpr UINT_PTR ButtonPressTimer = 1;
+
+    bool IsServiceEvent(EventCode key)
+    {
+        switch (key)
+        {
+        case Release:
+        case ROGHoldRelease:
+        case Unknown:
+        case GyroButtonDown:
+        case GyroButtonUp:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    bool CanDoubleEvent(EventCode key)
+    {
+        switch (key)
+        {
+        case ACPress:
+        case CCPress:
+        case LibraryPress:
+        case ModePress:
+        case MACPress:
+        case MCCPress:
+        case MLibraryPress:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    void FinishPress(HWND hwnd, EventCode& pressedKey, bool execute = true)
+    {
+        KillTimer(hwnd, ButtonPressTimer);
+        const EventCode key = pressedKey;
+        pressedKey = Unknown;
+        if (execute && key != Unknown && Config::AllyHidEnable && ButtonBind[key])
+            ButtonBind[key]();
+    }
+
+    void OnTimer(HWND hwnd, UINT_PTR timer, EventCode& pressedKey)
+    {
+        if (timer == ButtonPressTimer && pressedKey != Unknown)
+            FinishPress(hwnd, pressedKey);
+    }
+
+    void OnPress(HWND hwnd, EventCode key, EventCode& pressedKey)
+    {
+        // These reports are not presses and must not interrupt the double-press window.
+        if (IsServiceEvent(key))
+            return;
+
+        const EventCode doubleKey = static_cast<EventCode>(key + Double);
+        if (pressedKey != Unknown)
+        {
+            const bool twice = key == pressedKey && ButtonBind[doubleKey];
+            FinishPress(hwnd, pressedKey, !twice);
+            if (twice)
+            {
+                ButtonBind[doubleKey]();
+                return;
+            }
+        }
+
+        if (CanDoubleEvent(key) && ButtonBind[doubleKey])
+        {
+            pressedKey = key;
+            if (SetTimer(hwnd, ButtonPressTimer, DoublePressDelayMs, nullptr))
+                return;
+            log.Warn(log.APIError(), "Could not start double-press timer");
+            FinishPress(hwnd, pressedKey);
+            return;
+        }
+        if (ButtonBind[key])
+            ButtonBind[key]();
+    }
+
+    void OnInput(bool hidEnabled, HANDLE hDevice, HRAWINPUT rawInput, bool* pbModePressed, Controller& controller,
+                 HWND hwnd, EventCode& pressedKey)
     {
         if (!hidEnabled)
         {
@@ -298,14 +380,13 @@ namespace Ally
             else if (*pbModePressed &&
                      (buttonCode == Ally::ACHold || buttonCode == Ally::ACPress || buttonCode == Ally::CCPress || buttonCode == Ally::LibraryPress))
             {
+                if (pressedKey == ModePress)
+                    FinishPress(hwnd, pressedKey, false);
                 buttonCode = (Ally::EventCode)(buttonCode + Ally::EventCode::ModePress);
             }
 
-            if (Config::AllyHidEnable && Ally::ButtonBind.find(buttonCode) != Ally::ButtonBind.end() &&
-                Ally::ButtonBind[buttonCode])
-            {
-                Ally::ButtonBind[buttonCode]();
-            }
+            if (Config::AllyHidEnable)
+                OnPress(hwnd, buttonCode, pressedKey);
         }
     }
 
@@ -333,8 +414,9 @@ namespace Ally
         }
     }
 
-    void OnUser(HWND hwnd, bool& hidEnabled, HANDLE& hDevice, RAWINPUTDEVICE& rid, bool& bModePressed, Controller& controller)
+    void OnUser(HWND hwnd, bool& hidEnabled, HANDLE& hDevice, RAWINPUTDEVICE& rid, bool& bModePressed, Controller& controller, EventCode& pressedKey)
     {
+        FinishPress(hwnd, pressedKey, false);
         const int previousMouseMode = Config::AllyHidModeMouse;
         Config::Load();
         if (previousMouseMode != Config::AllyHidModeMouse || Config::AllyHidModeMouse == Config::MouseDisabled)
@@ -427,24 +509,29 @@ namespace Ally
 
         bool bModePressed = false;
         Controller controller;
+        EventCode pressedKey = Unknown;
 
         while (GetMessage(&msg, NULL, 0, 0))
         {
             switch (msg.message)
             {
             case WM_INPUT:
-                OnInput(hidEnabled, hDevice, (HRAWINPUT)msg.lParam, &bModePressed, controller);
+                OnInput(hidEnabled, hDevice, (HRAWINPUT)msg.lParam, &bModePressed, controller, hwnd, pressedKey);
+                break;
+            case WM_TIMER:
+                OnTimer(hwnd, msg.wParam, pressedKey);
                 break;
             case WM_HOTKEY:
                 OnHotkey((int)msg.wParam);
                 break;
             case WM_USER:
-                OnUser(hwnd, hidEnabled, hDevice, rid, bModePressed, controller);
+                OnUser(hwnd, hidEnabled, hDevice, rid, bModePressed, controller, pressedKey);
                 break;
             }
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+        FinishPress(hwnd, pressedKey, false);
         controller.Stop();
         UnregisterHotKey(hwnd, HotkeyEnterFSEWithReboot);
         UnregisterHotKey(hwnd, HotkeyEnterFSENow);

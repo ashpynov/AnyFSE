@@ -15,7 +15,7 @@
 
 ## C++ Style
 
-- Do not use `auto`; specify types explicitly.
+- Prefer explicit types over `auto`. Use `auto` only when spelling out the type would materially reduce readability, such as complex iterator or template types.
 - Source lines up to 160 characters are acceptable. Do not wrap readable code to satisfy a narrower limit; split lines that exceed 160 characters.
 - Move string literals that represent paths, registry keys or values, protocol names, executable names, service names, and similar identifiers
   into the appropriate `Constants` module instead of embedding them at call sites.

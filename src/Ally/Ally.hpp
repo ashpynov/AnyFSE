@@ -27,7 +27,12 @@ namespace Ally
         MACPress = ACPress + ModePress,
         MCCPress = CCPress + ModePress,
         MACHold = ACHold + ModePress,
-        MLibraryPress = LibraryPress + ModePress
+        MLibraryPress = LibraryPress + ModePress,
+        Double = 400,
+        DoubleACPress = ACPress + Double,
+        DoubleCCPress = CCPress + Double,
+        DoubleLibraryPress = LibraryPress + Double,
+        DoubleModePress = ModePress + Double
     };
 
     enum RogAllyVersion
@@ -62,7 +67,8 @@ namespace Ally
     RogAllyVersion GetRogAllyVersion();
     bool IsXBoxRogAlly();
 
-    void OnInput(bool hidEnabled, HANDLE hDevice, HRAWINPUT rawInput, bool* pbModePressed, Controller& controller);
+    void OnInput(bool hidEnabled, HANDLE hDevice, HRAWINPUT rawInput, bool* pbModePressed, Controller& controller,
+                 HWND hwnd, EventCode& pressedKey);
     void OnHotkey(int id);
 
 }

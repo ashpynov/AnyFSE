@@ -22,7 +22,7 @@ namespace AnyFSE::App::Constants
     inline constexpr const wchar_t* PopupperProcessNames[] = { L"SystemSettings.exe", L"RtkUWP.exe", L"Nahimic3.exe" };
     inline constexpr wchar_t AnyFseTaskName[] = L"AnyFSE";
     inline constexpr wchar_t ElevatedEventPrefix[] = L"Local\\AnyFSE.Task.Command.";
-    inline constexpr wchar_t ElevatedCallEvent[] = L"Local\\AnyFSE.Task.Call";
+    inline constexpr wchar_t ElevatedCallMutex[] = L"Local\\AnyFSE.Task.CallMutex";
     inline constexpr wchar_t ElevatedStartLauncher[] = L"StartLauncher";
     inline constexpr wchar_t ElevatedStartupApps[] = L"StartupApps";
     inline constexpr wchar_t ElevatedEnableGamingHandheld[] = L"EnableGamingHandheld";
