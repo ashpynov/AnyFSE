@@ -5,6 +5,8 @@
 
 namespace Ally
 {
+    class Gamepad;
+
     enum EventCode
     {
         Release = 0,
@@ -59,8 +61,7 @@ namespace Ally
     RogAllyVersion GetRogAllyVersion();
     bool IsXBoxRogAlly();
 
-    void OnInput(HWND hwnd, bool allyEnabled, HANDLE hDevice, HRAWINPUT rawInput, bool *pbModePressed);
+    void OnInput(bool allyEnabled, HANDLE hDevice, HRAWINPUT rawInput, bool* pbModePressed, Gamepad& gamepad);
     void OnHotkey(int id);
-    void OnTimer(HWND hwnd, bool bModePressed);
 
 }

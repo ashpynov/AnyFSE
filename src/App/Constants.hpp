@@ -14,6 +14,8 @@ namespace AnyFSE::App::Constants
 
     // Product files
     inline constexpr wchar_t AnyFseSettingsDll[] = L"AnyFSE.Settings.dll";
+    inline constexpr wchar_t GameInputDll[] = L"GameInput.dll";
+    inline constexpr char GameInputCreateExport[] = "GameInputCreate";
     inline constexpr wchar_t AnyFseExe[] = L"AnyFSE.exe";
     inline constexpr wchar_t AnyFseConfigFile[] = L"AnyFSE.json";
     inline constexpr wchar_t AppLocalStateDirectory[] = L"LocalState";
