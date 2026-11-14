@@ -38,14 +38,8 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         links.AddLinkButton(Translate(L"settingsSourceCodeGithub"), L"https://github.com/ashpynov/AnyFSE/");
         links.AddLinkButton(Translate(L"settingsNavigateConfigFolder"), Tools::Paths::GetConfigPath() + L"\\");
 
-        links.AddLinkButton(Translate(L"settingsSourceCodeCodeberg"), L"https://codeberg.org/ashpynov/AnyFSE/");
-        links.AddLinkButton(Translate(L"settingsNavigateSplashFolder"), Tools::Paths::GetSplashDefaultPath() + L"\\");
-
         links.AddLinkButton(Translate(L"settingsReportIssueGithub"), L"https://github.com/ashpynov/AnyFSE/issues");
-        links.AddLinkButton(L"", L"");
-
-        links.AddLinkButton(Translate(L"settingsReportIssueCodeberg"), L"https://codeberg.org/ashpynov/AnyFSE/issues");
-        links.AddLinkButton(L"", L"");
+        links.AddLinkButton(Translate(L"settingsNavigateSplashFolder"), Tools::Paths::GetSplashDefaultPath() + L"\\");
 
         support.SetState(FluentDesign::SettingsLine::Opened);
 
