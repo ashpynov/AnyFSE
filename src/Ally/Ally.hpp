@@ -8,6 +8,17 @@ namespace Ally
 {
     class Controller;
 
+    enum ControlModeHotkeyId
+    {
+        HotkeyProfileAuto = 0x100,
+        HotkeyProfileGamepad,
+        HotkeyProfileDesktop,
+        HotkeyProfileToggle,
+        HotkeyProfileNext,
+        HotkeyScrollUp,
+        HotkeyScrollDown
+    };
+
     enum EventCode
     {
         Release = 0,
@@ -42,7 +53,8 @@ namespace Ally
         ROGAlly,
         ROGAllyX,
         XboxROGAlly,
-        XboxROGAllyX
+        XboxROGAllyX,
+        XboxROGAllyX20
     };
 
     bool IsSupported();

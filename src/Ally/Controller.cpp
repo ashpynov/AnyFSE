@@ -1,5 +1,6 @@
 #include <windows.h>
 #include "Ally/Controller.hpp"
+#include "Ally/Ally.hpp"
 #include "Ally/ProfileParser.hpp"
 #include "Configuration/Config.hpp"
 #include "Logging/LogManager.hpp"
@@ -7,6 +8,31 @@
 namespace Ally
 {
     static auto log = AnyFSE::Logging::LogManager::GetLogger("Controller");
+
+    static void LogMappingDifferences(const char* operation, const Hid::Mapping& expected, const Hid::Mapping& actual)
+    {
+        const BYTE* expectedBytes = reinterpret_cast<const BYTE*>(&expected);
+        const BYTE* actualBytes = reinterpret_cast<const BYTE*>(&actual);
+        for (size_t offset = 0; offset < sizeof(Hid::Mapping); ++offset)
+        {
+            if (expectedBytes[offset] == actualBytes[offset])
+                continue;
+            const char* region = "buttons";
+            size_t regionOffset = offset;
+            unsigned block = unsigned(offset / sizeof(Hid::ButtonBlock)) + 1;
+            if (offset < sizeof(Hid::ButtonMapping))
+                regionOffset %= sizeof(Hid::ButtonBlock);
+            else
+            {
+                regionOffset = offset - sizeof(Hid::ButtonMapping);
+                block = 0;
+                region = regionOffset < sizeof(Hid::StickMapping) ? "left stick" : "right stick";
+                regionOffset %= sizeof(Hid::StickMapping);
+            }
+            log.Trace("%s mismatch: %s, block %u, byte %zu (mapping offset 0x%03zX): expected %02X, read %02X",
+                operation, region, block, regionOffset, offset, unsigned(expectedBytes[offset]), unsigned(actualBytes[offset]));
+        }
+    }
 
     Controller::~Controller()
     {
@@ -70,6 +96,8 @@ namespace Ally
             return true;
         }
 
+        const bool scrollHotkeys = mode == Config::WindowsGamepadCursorMode && RegisterScrollHotkeys();
+
         // Keep the expected snapshot even on failed/uncertain writes. Stop may
         // restore only after reading an exact match; it never writes blindly.
         m_original = before;
@@ -92,11 +120,21 @@ namespace Ally
             m_applied->leftStick.mouseAction = Hid::MappingActions::MouseCursor;
 
             m_applied->rightStick = {};
-            m_applied->rightStick.type = Hid::MCUMappingType::Mouse;
-            m_applied->rightStick.mouseDirections[0] = static_cast<BYTE>(Hid::MappingActions::ScrollUp);
-            m_applied->rightStick.mouseDirections[1] = static_cast<BYTE>(Hid::MappingActions::ScrollDown);
-            m_applied->rightStick.mouseDirections[2] = static_cast<BYTE>(Hid::MappingActions::ScrollUp);
-            m_applied->rightStick.mouseDirections[3] = static_cast<BYTE>(Hid::MappingActions::ScrollDown);
+            if (scrollHotkeys)
+            {
+                m_applied->rightStick.type = Hid::MCUMappingType::Keyboard;
+                // PS/2 set 2 codes for F14 through F23; these are not Windows virtual-key codes.
+                static constexpr BYTE scrollScanCodes[] = { 0x10, 0x18, 0x20, 0x28, 0x30, 0x38, 0x40, 0x48, 0x50, 0x57 };
+                for (size_t direction = 0; direction < 4; ++direction)
+                    m_applied->rightStick.keyboardDirections[direction] = scrollScanCodes[m_scrollKeys[direction % 2] - VK_F14];
+            }
+            else
+            {
+                m_applied->rightStick.type = Hid::MCUMappingType::Mouse;
+                for (size_t direction = 0; direction < 4; ++direction)
+                    m_applied->rightStick.mouseDirections[direction] = static_cast<BYTE>(
+                        direction % 2 == 0 ? Hid::MappingActions::ScrollUp : Hid::MappingActions::ScrollDown);
+            }
 
             Hid::ButtonBlock& ab = m_applied->buttons.blocks[static_cast<size_t>(Hid::ButtonBlockIndex::AB)];
             ab.first.primary = {};
@@ -121,15 +159,19 @@ namespace Ally
         if (!Hid::ReadMapping(m_device, after, m_deviceLost))
         {
             log.Warn("Temporary mapping could not be verified; retaining recovery state");
+            ReleaseScrollHotkeys();
             return false;
         }
         const bool matches = after == *m_applied;
+        if (!matches)
+            LogMappingDifferences("Temporary mapping", *m_applied, after);
         // Keep the actual result so a partial write can also be restored,
         // provided the mapping has not changed since this snapshot.
         m_applied = after;
         if (!written || !matches)
         {
             log.Warn("Temporary controller mapping was not fully applied; retaining recovery state");
+            ReleaseScrollHotkeys();
             return false;
         }
         log.Debug("Temporary mouse mapping %d applied; controller mapping snapshot retained", mode);
@@ -138,6 +180,7 @@ namespace Ally
 
     void Controller::Stop()
     {
+        ReleaseScrollHotkeys();
         if (!m_original)
             return;
         Hid::McuLock lock;
@@ -172,8 +215,11 @@ namespace Ally
             Hid::Mapping restored;
             if (!Hid::ReadMapping(m_device, restored, m_deviceLost))
                 return;
+            const bool matches = restored == *m_original;
+            if (!matches)
+                LogMappingDifferences("Original mapping", *m_original, restored);
             m_applied = restored;
-            if (!written || !(restored == *m_original))
+            if (!written || !matches)
             {
                 log.Warn("Controller mapping was not fully restored; retaining recovery state");
                 return;
@@ -181,9 +227,50 @@ namespace Ally
             log.Debug("Original controller mapping restored");
         }
         else
+        {
+            LogMappingDifferences("Current vs retained mapping", *m_applied, current);
             log.Debug("Controller mapping changed externally; skipping restoration");
+        }
         m_original.reset();
         m_applied.reset();
         Close();
     }
+
+    bool Controller::RegisterScrollHotkeys()
+    {
+        ReleaseScrollHotkeys();
+        int count = 0;
+        for (UINT key = VK_F14; key <= VK_F23 && count < 2; ++key)
+        {
+            // Keep keyboard repeat enabled: each WM_HOTKEY produces one wheel step.
+            if (RegisterHotKey(nullptr, count == 0 ? HotkeyScrollUp : HotkeyScrollDown, 0, key))
+            {
+                m_scrollKeys[count++] = key;
+                log.Debug("Registered cursor scroll hotkey F%u", key - VK_F1 + 1);
+            }
+            else
+            {
+                const DWORD error = GetLastError();
+                log.Debug("Cursor scroll hotkey F%u unavailable: error %lu", key - VK_F1 + 1, error);
+            }
+        }
+        if (count == 2)
+            return true;
+        log.Warn("Could not register two cursor scroll hotkeys from F14-F23; using MCU mouse wheel actions");
+        ReleaseScrollHotkeys();
+        return false;
+    }
+
+    void Controller::ReleaseScrollHotkeys()
+    {
+        for (int index = 0; index < 2; ++index)
+        {
+            if (m_scrollKeys[index])
+            {
+                UnregisterHotKey(nullptr, index == 0 ? HotkeyScrollUp : HotkeyScrollDown);
+                m_scrollKeys[index] = 0;
+            }
+        }
+    }
+
 }

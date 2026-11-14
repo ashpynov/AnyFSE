@@ -24,15 +24,6 @@ using namespace AnyFSE::App;
 
 namespace Ally
 {
-    enum ControlModeHotkeyId
-    {
-        HotkeyProfileAuto = 0x100,
-        HotkeyProfileGamepad,
-        HotkeyProfileDesktop,
-        HotkeyProfileToggle,
-        HotkeyProfileNext
-    };
-
     struct ControlModeHotkey
     {
         int id;
@@ -131,7 +122,8 @@ namespace Ally
 
             log.Debug("Detected ASUS device: '%ls'", product.c_str());
 
-            version =   (product == L"RC73XA") ? RogAllyVersion::XboxROGAllyX
+            version =   (product == L"RC74XA") ? RogAllyVersion::XboxROGAllyX20
+                      : (product == L"RC73XA") ? RogAllyVersion::XboxROGAllyX
                       : (product == L"RC73YA") ? RogAllyVersion::XboxROGAlly
                       : (product == L"RC72LA") ? RogAllyVersion::ROGAllyX
                       : (product == L"RC71L")  ? RogAllyVersion::ROGAlly
@@ -142,7 +134,8 @@ namespace Ally
 
     bool IsXBoxRogAlly()
     {
-        return GetRogAllyVersion() == RogAllyVersion::XboxROGAllyX
+        return GetRogAllyVersion() == RogAllyVersion::XboxROGAllyX20
+            || GetRogAllyVersion() == RogAllyVersion::XboxROGAllyX
             || GetRogAllyVersion() == RogAllyVersion::XboxROGAlly;
     }
 
@@ -438,6 +431,17 @@ namespace Ally
         }
         switch (id)
         {
+            case HotkeyScrollUp:
+            case HotkeyScrollDown:
+            {
+                INPUT input {};
+                input.type = INPUT_MOUSE;
+                input.mi.dwFlags = MOUSEEVENTF_WHEEL;
+                input.mi.mouseData = static_cast<DWORD>(id == HotkeyScrollUp ? WHEEL_DELTA : -WHEEL_DELTA);
+                if (SendInput(1, &input, sizeof(input)) != 1)
+                    log.Warn("Could not send cursor scroll input: error %lu", GetLastError());
+                break;
+            }
             case HotkeyEnterFSEWithReboot:
                 GamingExperience::EnterFSEModeWithReboot();
                 break;
@@ -561,7 +565,10 @@ namespace Ally
                 OnTimer(hwnd, msg.wParam, pressedKey);
                 break;
             case WM_HOTKEY:
-                OnHotkey((int)msg.wParam);
+                // Ignore scroll notifications still queued after the registrations were released.
+                if ((msg.wParam == HotkeyScrollUp || msg.wParam == HotkeyScrollDown) && !controller.HasScrollHotkeys())
+                    break;
+                OnHotkey(static_cast<int>(msg.wParam));
                 break;
             case WM_USER:
                 OnUser(hwnd, hidEnabled, hDevice, rid, bModePressed, controller, pressedKey);

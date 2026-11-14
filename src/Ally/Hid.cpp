@@ -225,12 +225,15 @@ namespace Ally::Hid
 
     bool WriteMapping(HANDLE device, const Mapping& mapping)
     {
+        const RogAllyVersion version = GetRogAllyVersion();
+        // ASUS checks button readiness only on RC71; newer MCU families write directly.
+        const bool checkButtons = version == RogAllyVersion::ROGAlly;
         // The MCU needs the complete button table before the stick command,
         // even when only the sticks change. Preserve every button byte.
         BYTE index = 1;
         for (const ButtonBlock& block : mapping.buttons.blocks)
         {
-            if (!WaitForButtons(device))
+            if (checkButtons && !WaitForButtons(device))
                 return false;
             SetButtonsReport report(index++, block);
             if (!HidD_SetFeature(device, &report, DWORD(sizeof(report))))
@@ -239,9 +242,6 @@ namespace Ally::Hid
                 return false;
             }
         }
-        if (!WaitForButtons(device))
-            return false;
-
         SetSticksReport report(mapping.leftStick, mapping.rightStick);
         if (HidD_SetFeature(device, &report, DWORD(sizeof(report))))
             return true;
