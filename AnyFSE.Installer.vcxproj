@@ -19,6 +19,7 @@
     <RootNamespace>AnyFSE</RootNamespace>
     <AssemblyDescription>AnyFSE Installer</AssemblyDescription>
     <WindowsSdkToolsPath>$(WindowsSdkDir)bin\$(WindowsTargetPlatformVersion)\x64</WindowsSdkToolsPath>
+    <MakePriExe>$(WindowsSdkToolsPath)\MakePri.exe</MakePriExe>
     <SignToolExe>$(WindowsSdkToolsPath)\signtool.exe</SignToolExe>
   </PropertyGroup>
   <PropertyGroup Condition="'$(VCTargetsPath)'==''" >
@@ -47,18 +48,15 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <PropertyGroup>
     <OutDir>$(SolutionDir)build\$(Configuration)\</OutDir>
-    <PackageDir>$(MSBuildProjectDirectory)\build\objs\Package\$(Configuration)\$(Platform)</PackageDir>
     <PayloadDir>$(MSBuildProjectDirectory)\build\$(Configuration)\staging</PayloadDir>
     <IntDir>$(SolutionDir)build\objs\$(ProjectName)\$(Configuration)\$(Platform)\</IntDir>
     <TargetName>AnyFSE.Installer</TargetName>
     <OutExe>$(OutDir)$(TargetName).exe</OutExe>
-    <OldVersionRevision>$([MSBuild]::Add($(VersionRevision), -1))</OldVersionRevision>
-    <BinaryVersionRevision>$(OldVersionRevision)</BinaryVersionRevision>
   </PropertyGroup>
 
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)|$(Offline)'=='Release|x64|Offline'">
-  <TargetName>AnyFSE.Installer.Offline.$(AssemblyVersion)-$(OldVersionRevision)</TargetName>
+  <TargetName>AnyFSE.Installer.Offline.$(AssemblyVersion)-$(BinaryVersionRevision)</TargetName>
     <OutExe>$(OutDir)$(TargetName).exe</OutExe>
   </PropertyGroup>
 
@@ -73,7 +71,6 @@
         VER_DISPLAY_VERSION_STR="$(AssemblyVersion).$(BinaryVersionRevision)";
         VER_PRODUCT_NAME="$(AssemblyProduct)";
         VER_COMPANY_NAME="$(AssemblyCompany)";
-        VER_PUBLISHER_CN="$(PublisherCN)";
         MINIZ_NO_DEFLATE_APIS;MINIZ_NO_ZLIB_APIS;
         %(PreprocessorDefinitions)
       </PreprocessorDefinitions>
@@ -103,7 +100,6 @@
         VER_DISPLAY_VERSION_STR="$(AssemblyVersion).$(BinaryVersionRevision)";
         VER_PRODUCT_NAME="$(AssemblyProduct)";
         VER_COMPANY_NAME="$(AssemblyCompany)";
-        VER_PUBLISHER_CN="$(PublisherCN)";
         MINIZ_NO_DEFLATE_APIS;MINIZ_NO_ZLIB_APIS;
         %(PreprocessorDefinitions)
       </PreprocessorDefinitions>
@@ -124,7 +120,7 @@
     <ClCompile>
       <PreprocessorDefinitions>
         OFFLINE_INSTALLER;
-        APP_VERSION="$(AssemblyVersion)-$(OldVersionRevision)";
+        APP_VERSION="$(AssemblyVersion)-$(BinaryVersionRevision)";
         %(PreprocessorDefinitions)
       </PreprocessorDefinitions>
     </ClCompile>
@@ -136,7 +132,6 @@
     <ClCompile Include="src\AppInstaller\AppInstaller_Page.cpp" />
     <ClCompile Include="src\AppInstaller\AppInstaller_Tools.cpp" />
     <ClCompile Include="src\AppInstaller\Admin.cpp" />
-    <ClCompile Include="src\AppInstaller\Certificate.cpp" />
     <ClCompile Include="src\AppInstaller\Zip.cpp" />
     <ClCompile Include="src\Tools\miniz\miniz.c" />
     <ClCompile Include="src\FluentDesign\Theme.cpp" />
@@ -182,36 +177,60 @@
     </ResourceCompile>
   </ItemGroup>
 
-  <!-- Run after solution dependencies, before compiling the embedded offline archive. -->
-  <Target Name="CreateInstallerArchives" BeforeTargets="PrepareForBuild">
+  <ItemDefinitionGroup>
+    <ProjectReference>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectReference Include="AnyFSE.vcxproj">
+      <Project>{9D1A8C46-5C52-4E5A-B0EE-123456789ABC}</Project>
+    </ProjectReference>
+    <ProjectReference Include="AnyFSE.Settings.vcxproj">
+      <Project>{7F3A9B1C-82D4-4E5F-91A6-B8C7D2E4F619}</Project>
+    </ProjectReference>
+    <ProjectReference Include="AnyFSE.ACSEFilterHook.vcxproj">
+      <Project>{5E3A1A7D-0A6F-483B-A456-7827D920418A}</Project>
+    </ProjectReference>
+    <ProjectReference Include="AnyFSE.ACSEFilterInjector.vcxproj">
+      <Project>{1CF8E3B0-E827-41B2-89D5-7A4B84C84093}</Project>
+    </ProjectReference>
+    <ProjectReference Include="AnyFSE.Uninstaller.vcxproj">
+      <Project>{A7343A8C-B93E-48BF-8036-42A11028468F}</Project>
+      <Targets>BuildSigned</Targets>
+    </ProjectReference>
+  </ItemGroup>
+
+  <Target Name="CreateInstallerArchives" BeforeTargets="PrepareForBuild" DependsOnTargets="ResolveProjectReferences">
     <ItemGroup>
       <ApplicationFiles Include="$(OutDir)AnyFSE.exe" />
       <ApplicationFiles Include="$(OutDir)AnyFSE.Settings.dll" />
       <ApplicationFiles Include="$(OutDir)AnyFSE.ACSEFilterHook.dll" />
       <ApplicationFiles Include="$(OutDir)AnyFSE.ACSEFilterInjector.exe" />
       <ApplicationFiles Include="$(OutDir)unins000.exe" />
-      <ApplicationFiles Include="$(MSBuildProjectDirectory)\AnyFSE.Temp.cer;$(OutDir)$(AssemblyProduct)-$(AssemblyVersion).identity.appx" />
-      <PackageContent Include="$(PackageDir)\**\*" />
+      <RegistrationFiles Include="$(MSBuildProjectDirectory)\AppxManifest.xml;$(MSBuildProjectDirectory)\CustomCapability.SCCD" />
+      <PayloadAssets Include="$(MSBuildProjectDirectory)\Assets\*" />
       <PayloadLocalization Include="$(MSBuildProjectDirectory)\localization\*.json" />
       <ApplicationDumpFiles Include="$(OutDir)AnyFSE*.pdb" Exclude="$(OutDir)AnyFSE*-*.pdb" />
     </ItemGroup>
     <Error Condition="!Exists('%(ApplicationFiles.Identity)')" Text="Required installer file is missing: %(ApplicationFiles.Identity)" />
-    <Error Condition="!Exists('$(PackageDir)\AppxManifest.xml') Or !Exists('$(PackageDir)\resources.pri')"
-           Text="Fresh package contents are missing. Run the Package task before building the installer." />
     <Error Condition="'@(PayloadLocalization)' == ''" Text="No source localization files were found." />
     <RemoveDir Directories="$(PayloadDir)" />
     <MakeDir Directories="$(PayloadDir)" />
     <Copy SourceFiles="@(ApplicationFiles)" DestinationFolder="$(PayloadDir)" />
-    <Copy SourceFiles="@(PackageContent)"
-          DestinationFiles="@(PackageContent->'$(PayloadDir)\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(RegistrationFiles)" DestinationFolder="$(PayloadDir)" />
+    <Copy SourceFiles="@(PayloadAssets)" DestinationFolder="$(PayloadDir)\Assets" />
     <Copy SourceFiles="@(PayloadLocalization)" DestinationFolder="$(PayloadDir)\Localization" />
     <PropertyGroup>
       <PayloadZip>$([System.IO.Path]::GetFullPath('$(OutDir)$(AssemblyProduct).$(AssemblyVersion).zip'))</PayloadZip>
       <PDBFiles>@(ApplicationDumpFiles-&gt;'&quot;%(Filename)%(Extension)&quot;', ' ')</PDBFiles>
     </PropertyGroup>
     <MakeDir Directories="$(IntDir)" />
+    <Exec Command="&quot;$(MakePriExe)&quot; createconfig /cf &quot;$(IntDir)priconfig.xml&quot; /dq en-US /o" />
+    <Exec Command="&quot;$(MakePriExe)&quot; new /pr &quot;$(PayloadDir)&quot; /cf &quot;$(IntDir)priconfig.xml&quot; /of &quot;$(PayloadDir)\resources.pri&quot; /o" />
     <ZipDirectory SourceDirectory="$(PayloadDir)" DestinationFile="$(PayloadZip)" Overwrite="true" />
-    <Exec Command="tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion)-$(OldVersionRevision).pdb.zip&quot; $(PDBFiles)" WorkingDirectory="$(OutDir)" />
+    <Exec Command="tar -a -cf &quot;$(AssemblyProduct).$(AssemblyVersion)-$(BinaryVersionRevision).pdb.zip&quot; $(PDBFiles)" WorkingDirectory="$(OutDir)" />
   </Target>
 
   <Target Name="CleanInstallerStaging" AfterTargets="Build">
@@ -237,6 +256,13 @@
         <Exec Command="&quot;$(SignToolExe)&quot; sign /sha1 &quot;$(CertificateThumbprint)&quot; /fd SHA256 /a &quot;$(OutExe)&quot;" WorkingDirectory="$(MSBuildProjectDirectory)" />
 
         <Message Text="EXE signed successfully: $(OutExe)" Importance="high" />
+        <PropertyGroup>
+            <NewVersionRevision>$([MSBuild]::Add($(VersionRevision), 1))</NewVersionRevision>
+        </PropertyGroup>
+        <XmlPoke
+            XmlInputPath="$(MSBuildProjectDirectory)/AnyFSE.Version.props"
+            Query="/*/*/*[local-name()='VersionRevision']"
+            Value="$(NewVersionRevision)" />
     </Target>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

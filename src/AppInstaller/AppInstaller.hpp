@@ -48,10 +48,6 @@ namespace AnyFSE
 #define VER_COMPANY_NAME "Artem Shpynov"
 #endif
 
-#ifndef VER_PUBLISHER_CN
-#define VER_PUBLISHER_CN "DDCC7751-898D-4BC9-B80C-4AA73E5D5762"
-#endif
-
 #ifndef VER_PRODUCT_NAME
 #define VER_PRODUCT_NAME "AnyFSE"
 #endif
@@ -198,6 +194,5 @@ namespace AnyFSE
             bool EnableInjectorService();
             bool IsNeedEnableAsusOptimization();
             bool EnableAsusOptimization();
-            bool RemoveOldCertificates();
     };
 }

@@ -36,14 +36,6 @@ namespace AnyFSE
 #define VER_VERSION_STR "1.2.3"
 #endif
 
-#ifndef VER_PUBLISHER_CN
-#define VER_PUBLISHER_CN "DDCC7751-898D-4BC9-B80C-4AA73E5D5762"
-#endif
-
-#ifndef VER_COMPANY_NAME
-#define VER_COMPANY_NAME "Artem Shpynov"
-#endif
-
 
 
 #ifndef APP_VERSION
@@ -57,7 +49,7 @@ namespace AnyFSE
         private:
 
         public:
-            INT_PTR Show(HINSTANCE hInstance);
+            INT_PTR Show(HINSTANCE hInstance, bool update = false);
             void Uninstall(bool update = false);
 
             enum Pages : int
@@ -82,6 +74,7 @@ namespace AnyFSE
         private:
             HINSTANCE m_hInstance;
             HWND m_hDialog;
+            bool m_update = false;
 
             const int Layout_DialogWidth = 480;
             const int Layout_DialogHeight = 280;

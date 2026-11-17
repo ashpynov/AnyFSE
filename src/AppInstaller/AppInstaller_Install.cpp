@@ -36,7 +36,7 @@
 #include "Tools/Paths.hpp"
 #include "Tools/Autorun.hpp"
 #include "Tools/Packages.hpp"
-#include "AppInstaller/Certificate.hpp"
+#include "Updater/Version.hpp"
 #include "AppInstaller/ScheduledTask.hpp"
 
 namespace AnyFSE
@@ -91,6 +91,7 @@ namespace AnyFSE
 
             SetCurrentProgress(Translate(L"installerStopExistingApp"));
             CheckSuccess(DisableInjectorService() && Process::KillAllByName(Constants::AnyFseExe));
+            Config::Load();
 
             std::wstring oldPath = Registry::ReadString(registryPath, L"InstallLocation");
             if (!oldPath.empty())
@@ -117,14 +118,6 @@ namespace AnyFSE
                 CheckSuccess(true);
             }
 
-            RemoveOldCertificates();
-
-            if (true)
-            {
-                SetCurrentProgress(Translate(L"progressInstallPublisherCertificate"));
-                CheckSuccess(ToolsEx::Certificate::InstallTrustedPeopleCertificate(path.wstring() + L"/" + App::Constants::TempCertFile));
-            }
-
             if (IsNeedEnableAsusOptimization())
             {
                 SetCurrentProgress(Translate(L"progressRestoreAsusOptimizationService"));
@@ -132,15 +125,16 @@ namespace AnyFSE
             }
 
             SetCurrentProgress(Translate(L"progressInstallPackage"));
-            CopyFiles(path, Tools::Paths::GetInstallPath());
+            const std::string installedVersion = Packages::GetPackageVersion(Constants::PackageFamilyName);
+            if (!installedVersion.empty() && Updater::SemVerGreater(Constants::FolderRegistrationVersion, installedVersion))
+            {
+                Packages::RemovePackage(Constants::PackageFamilyName);
+            }
 
-            CheckSuccess(Tools::Packages::InstallPackage(
-                path.wstring() + L"/" + App::Constants::AppxFilePrefix + Unicode::to_wstring(VER_VERSION_STR) + L".identity.appx",
-                App::Constants::PackageFamilyName,
-                Tools::Paths::GetInstallPath()
-            ));
+            CopyFiles(path, Paths::GetInstallPath());
+            CheckSuccess(Packages::InstallPackage((fs::path(Paths::GetInstallPath()) / Constants::AppxManifestFile).wstring()));
 
-            ToolsEx::Certificate::RemoveTrustedPeopleCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
+            Config::Save();
 
             RegisterUninstall();
             ToolsEx::ScheduledTask::RegisterAnyFSETask(Tools::Paths::GetInstallPath());
@@ -161,7 +155,6 @@ namespace AnyFSE
                 CheckSuccess(true);
             }
 
-            Config::Load();
             Autorun::UpdateHidListenerRegistration();
             Process::StartProtocol(Constants::AnyFseProtocolHidListener);
 
@@ -177,8 +170,6 @@ namespace AnyFSE
         }
         catch (const std::exception& e)
         {
-            ToolsEx::Certificate::RemoveTrustedPeopleCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
-
             log.Error(e, "Installation fail:");
             if (m_hDialog)
                 ShowErrorPage(Translate(L"installationErrorCaption"), GetProgressText(4) + Unicode::to_wstring(e.what()));

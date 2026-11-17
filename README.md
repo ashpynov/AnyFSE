@@ -105,17 +105,12 @@ This component is not in the critical path for normal input, launcher startup, o
 
 - In the ACSE Filter source, there is no networking, downloading, credential access, keylogging, file encryption, Defender disabling, or arbitrary payload execution. The DLL path is fixed to AnyFSE.ACSEFilterHook.dll beside the injector executable.
 
-Also AnyFSE Installer itself does trick to install AnyFSE package to be registered as Home Application. This also may flag Defender:
+The AnyFSE installer registers the application as a Home Application:
 
-- It contain bundled archive (or download it).
-
-- It exract this archive to Program Files
-
-- It Enable developer mode to allow CustomCapability 'Microsoft.appCategory.gamingHome'
-
-- It install temp certificate to Trusted People to install package
-
-- After installation it remove temp certificate and turn off developer mode.
+- It extracts its bundled archive to Program Files.
+- It temporarily enables Developer Mode for the `Microsoft.appCategory.gamingHome` custom capability.
+- It registers `Program Files\AnyFSE\AppxManifest.xml` directly through Windows `PackageManager`; the EXE and resources remain in that folder.
+- It restores the previous Developer Mode setting afterwards.
 
 
 ## Install, Configure and Uninstall

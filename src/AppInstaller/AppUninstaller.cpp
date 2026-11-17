@@ -45,7 +45,6 @@
 #include "App/Constants.hpp"
 #include "App/GamingExperience.hpp"
 #include "Ally/Services.hpp"
-#include "AppInstaller/Certificate.hpp"
 #include "AppInstaller/ScheduledTask.hpp"
 
 
@@ -100,16 +99,17 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         icex.dwICC = ICC_STANDARD_CLASSES;
         InitCommonControlsEx(&icex);
         SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-        return (int)AnyFSE::AppUninstaller().Show(hInstance);
+        return (int)AnyFSE::AppUninstaller().Show(hInstance, options.update);
     }
 }
 namespace AnyFSE
 {
     Logger log = LogManager::GetLogger("Uninstaller");
 
-    INT_PTR AppUninstaller::Show(HINSTANCE hInstance)
+    INT_PTR AppUninstaller::Show(HINSTANCE hInstance, bool update)
     {
         m_hInstance = hInstance;
+        m_update = update;
         // LogManager::Initialize("AnyFSE/Uninstaller");
 
         Tools::Localization::InitializeFromLocales();
@@ -583,17 +583,14 @@ namespace AnyFSE
             throw Logging::Logger::APIError();
 
         Registry::DeleteValue(Constants::HidListenerAutorunKey, Constants::HidListenerAutorunValue);
-        bool removeDir = DeleteFiles(Tools::Paths::GetInstallPath());
 
         if (!update)
         {
             App::GamingExperience::RestoreGamingPC();
-            Tools::Packages::RemovePackage(App::Constants::PackageFamilyName);
         }
-        ToolsEx::Certificate::RemoveRootCertificate(Unicode::to_wstring(VER_COMPANY_NAME));
-        ToolsEx::Certificate::RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
-        ToolsEx::Certificate::RemoveTrustedPeopleCertificate(Unicode::to_wstring(VER_COMPANY_NAME));
-        ToolsEx::Certificate::RemoveTrustedPeopleCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
+        // Update mode removes the loose registration while retaining application data.
+        Packages::RemovePackage(Constants::PackageFamilyName, update);
+        const bool removeDir = DeleteFiles(Paths::GetInstallPath());
 
         Registry::DeleteKey(L"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AnyFSE");
 
@@ -607,7 +604,7 @@ namespace AnyFSE
     {
         try
         {
-            Uninstall();
+            Uninstall(m_update);
         }
         catch(const std::exception& e)
         {

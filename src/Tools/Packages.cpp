@@ -2,8 +2,7 @@
 
 #include <windows.h>
 #include <appmodel.h>
-#include <iostream>
-#include <filesystem>
+#include <exception>
 
 #include "Packages.hpp"
 #include "App/Constants.hpp"
@@ -108,7 +107,7 @@ namespace AnyFSE::Tools::Packages
         {
             try
             {
-                Windows::Storage::Streams::IRandomAccessStreamWithContentType stream;
+                IRandomAccessStreamWithContentType stream;
                 if ( resourcePath.empty() )
                 {
                     auto logoRef = pkg.GetLogoAsRandomAccessStreamReference(Windows::Foundation::Size((float)size, (float)size));
@@ -134,7 +133,7 @@ namespace AnyFSE::Tools::Packages
 
                 return bytes;
             }
-            catch (winrt::hresult_error const&)
+            catch (hresult_error const&)
             {
             }
         }
@@ -180,79 +179,73 @@ namespace AnyFSE::Tools::Packages
 
     bool IsPackageInstalled(const std::wstring &packageFamilyName)
     {
-        winrt::init_apartment(); // Initialize WinRT apartment for using WinRT APIs
-        winrt::Windows::Management::Deployment::PackageManager packageManager;
+        init_apartment(); // Initialize WinRT apartment for using WinRT APIs
+        PackageManager packageManager;
 
         auto packages = packageManager.FindPackagesForUser(L"", packageFamilyName);
         return packages.begin() != packages.end();
     }
 
-    bool InstallPackage( const std::wstring & packageFilePath, const std::wstring & packageFamilyName, const std::wstring & externalInstallPath)
+    std::string GetPackageVersion(const std::wstring &packageFamilyName)
     {
-        winrt::init_apartment(); // Initialize WinRT apartment for using WinRT APIs
+        init_apartment();
+
+        PackageManager packageManager;
+        const auto packages = packageManager.FindPackagesForUser(L"", packageFamilyName);
+        for (const auto &package : packages)
+        {
+            const auto version = package.Id().Version();
+            return std::to_string(version.Major) + "." + std::to_string(version.Minor) + "."
+                + std::to_string(version.Build) + "." + std::to_string(version.Revision);
+        }
+        return "";
+    }
+
+    bool InstallPackage(const std::wstring &packageFilePath)
+    {
+        init_apartment();
 
         try
         {
-            namespace fs = std::filesystem;
-            namespace d = winrt::Windows::Management::Deployment;
-            namespace f = winrt::Windows::Foundation;
-
-            d::PackageManager packageManager;
-
-
-            f::Uri packageUri(fs::absolute(packageFilePath).wstring());
-            std::wcerr << packageUri.ToString().c_str() << std::endl;
-
-            d::AddPackageOptions options;
+            PackageManager packageManager;
+            const Windows::Foundation::Uri packageUri(packageFilePath);
+            RegisterPackageOptions options;
+            options.DeveloperMode(true);
             options.ForceUpdateFromAnyVersion(true);
-            options.ForceTargetAppShutdown(true);
-            options.ForceAppShutdown(true);
-            options.ExternalLocationUri(f::Uri(externalInstallPath));
 
-            // Start the installation
-            auto operation = packageManager.AddPackageByUriAsync(packageUri, options);
-
-            // Wait for installation to complete
-            auto result = operation.get();
-
+            const DeploymentResult result = packageManager.RegisterPackageByUriAsync(packageUri, options).get();
             if (result.IsRegistered())
-            {
                 return true;
-            }
-            else
-            {
-                throw std::exception(Unicode::to_string(result.ErrorText().c_str()).c_str());
-            }
 
-            return true;
+            throw std::exception(Unicode::to_string(result.ErrorText().c_str()).c_str());
         }
-        catch (const winrt::hresult_error &e)
+        catch (const hresult_error &e)
         {
             throw std::exception(Unicode::to_string(e.message().c_str()).c_str());
         }
-        return false;
     }
 
-    bool RemovePackage(const std::wstring & packageFamilyName)
+    bool RemovePackage(const std::wstring &packageFamilyName, bool preserveData)
     {
-        winrt::init_apartment(); // Initialize WinRT apartment for using WinRT APIs
+        init_apartment(); // Initialize WinRT apartment for using WinRT APIs
 
         try
         {
-            namespace fs = std::filesystem;
-            namespace d = winrt::Windows::Management::Deployment;
-            namespace f = winrt::Windows::Foundation;
-
-            d::PackageManager packageManager;
-            auto packages = packageManager.FindPackages(packageFamilyName);
-            for (auto& package : packages)
+            PackageManager packageManager;
+            for (const Package &package : packageManager.FindPackagesForUser(L"", packageFamilyName))
             {
-                auto removing = packageManager.RemovePackageAsync(package.Id().FullName());
-                auto removed = removing.get();
+                RemovalOptions options = !preserveData ? RemovalOptions::None
+                    : package.IsDevelopmentMode()
+                        ? RemovalOptions::PreserveApplicationData
+                        : RemovalOptions::PreserveRoamableApplicationData;
+
+                const DeploymentResult result =
+                    packageManager.RemovePackageAsync(package.Id().FullName(), options).get();
+                check_hresult(result.ExtendedErrorCode());
             }
             return true;
         }
-        catch (const winrt::hresult_error &e)
+        catch (const hresult_error &e)
         {
             throw std::exception(Unicode::to_string(e.message().c_str()).c_str());
         }

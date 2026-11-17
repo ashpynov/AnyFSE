@@ -1,15 +1,8 @@
 #include <string>
 #include <windows.h>
-#include <wincrypt.h>
 #include <filesystem>
 
-#include <winrt/Windows.Foundation.h>
-#include <winrt/windows.applicationmodel.h>
-#include <winrt/windows.foundation.collections.h>
-#include <winrt/Windows.Management.Deployment.h>
-
 #include "AppInstaller.hpp"
-#include "AppInstaller/Certificate.hpp"
 #include "App/Constants.hpp"
 #include "Logging/LogManager.hpp"
 #include "Tools/Paths.hpp"
@@ -81,16 +74,16 @@ namespace AnyFSE
     bool AppInstaller::IsDeveloperModeEnabled()
     {
         return Registry::ReadDWORD(
-            L"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AppModelUnlock",
-            L"AllowDevelopmentWithoutDevLicense",
+            Constants::AppModelUnlockRegKey,
+            Constants::AllowDevelopmentRegValue,
             0) == 1;
     }
 
     void AppInstaller::EnableDeveloperMode(bool bEnable)
     {
         Registry::WriteDWORD(
-            L"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AppModelUnlock",
-            L"AllowDevelopmentWithoutDevLicense",
+            Constants::AppModelUnlockRegKey,
+            Constants::AllowDevelopmentRegValue,
             bEnable ? 1 : 0);
     }
 
@@ -158,11 +151,4 @@ namespace AnyFSE
         return Ally::Services::EnableAsusOptimizationService();
     }
 
-    bool AppInstaller::RemoveOldCertificates()
-    {
-        ToolsEx::Certificate::RemoveTrustedPeopleCertificate(Unicode::to_wstring(VER_COMPANY_NAME));
-        ToolsEx::Certificate::RemoveTrustedPeopleCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
-        ToolsEx::Certificate::RemoveRootCertificate(Unicode::to_wstring(VER_PUBLISHER_CN));
-        return true;
-    }
 };

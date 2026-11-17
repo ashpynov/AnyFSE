@@ -13,6 +13,7 @@
 #include <string>
 
 #include "Updater.hpp"
+#include "Updater/Version.hpp"
 #include "App/Constants.hpp"
 #include "Updater/Updater.hpp"
 #include "Tools/Unicode.hpp"
@@ -120,12 +121,6 @@ namespace AnyFSE::Updater
     };
 
     static std::list<SUBSCRIPTION> m_subscribes;
-    struct SemVer
-    {
-        int major = 0, minor = 0, patch = 0;
-        std::string pre;
-    };
-
     static void AddSubscribe(HWND hWnd, UINT uMsg);
     static void ClearSubscriptions();
     static void NotifySubscribers();
@@ -134,8 +129,6 @@ namespace AnyFSE::Updater
     static bool Update(const std::wstring &tag, bool silentUpdate);
     static bool Update(const std::wstring &tag, bool silentUpdate, bool alt);
     static std::string WinHttpGet(const std::wstring& path, bool alt);
-    static SemVer ParseSemVer(const std::string& tag);
-    static bool SemVerGreater(const SemVer& a, const SemVer& b);
     static std::wstring GetModuleVersion();
     static std::string PickAssetDownloadUrl(const json& release);
 
@@ -237,43 +230,6 @@ namespace AnyFSE::Updater
         log.Debug("Recieved %d bytes", result.size());
 
         return result;
-    }
-
-    SemVer ParseSemVer(const std::string &tag)
-    {
-        // accept tags like v1.2.3 or 1.2.3-alpha
-        std::string t = tag;
-        if (!t.empty() && t[0] == 'v')
-            t.erase(0, 1);
-
-        SemVer v;
-        size_t pos = t.find('-');
-        if (pos != std::string::npos)
-        {
-            v.pre = t.substr(pos + 1);
-            t = t.substr(0, pos);
-        }
-
-        std::replace(t.begin(), t.end(), '.', ' ');
-        std::istringstream iss(t);
-        iss >> v.major >> v.minor >> v.patch;
-        return v;
-    }
-
-    bool SemVerGreater(const SemVer &a, const SemVer &b)
-    {
-        if (a.major != b.major)
-            return a.major > b.major;
-        if (a.minor != b.minor)
-            return a.minor > b.minor;
-        if (a.patch != b.patch)
-            return a.patch > b.patch;
-        // if numeric equal: non-prerelease is greater than prerelease
-        if (a.pre.empty() && !b.pre.empty())
-            return true;
-        if (!a.pre.empty() && b.pre.empty())
-            return false;
-        return a.pre > b.pre; // lexical compare for prerelease labels
     }
 
     std::wstring GetModuleVersion()

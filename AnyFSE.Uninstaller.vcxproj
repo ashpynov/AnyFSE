@@ -13,7 +13,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectName>Uninstaller</ProjectName>
-    <ProjectGuid>{A3F1C4B2-8D9E-4F67-92A1-5B3C8D7E6F4A}</ProjectGuid>
+    <ProjectGuid>{A7343A8C-B93E-48BF-8036-42A11028468F}</ProjectGuid>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
     <RootNamespace>AnyFSE</RootNamespace>
@@ -108,7 +108,6 @@
     <ClCompile Include="src\App\GamingExperience.cpp" />
     <ClCompile Include="src\AppInstaller\AppUninstaller.cpp" />
     <ClCompile Include="src\AppInstaller\Admin.cpp" />
-    <ClCompile Include="src\AppInstaller\Certificate.cpp" />
     <ClCompile Include="src\Ally\Services.cpp" />
     <ClCompile Include="src\FluentDesign\Theme.cpp" />
     <ClCompile Include="src\FluentDesign\Theme_Colors.cpp" />

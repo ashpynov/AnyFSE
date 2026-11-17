@@ -45,8 +45,9 @@ namespace AnyFSE::Tools::Packages
     std::vector<DWORD> GetAppProcessIds(const std::wstring &appUserModelID);
     std::vector<std::wstring> GetNativeLaunchers();
     bool IsPackageInstalled(const std::wstring &packageFamilyName);
-    bool InstallPackage(const std::wstring &packageFilePath, const std::wstring &packageFamilyName, const std::wstring &externalInstallPath = L"");
-    bool RemovePackage(const std::wstring &packageFamilyName);
+    std::string GetPackageVersion(const std::wstring &packageFamilyName);
+    bool InstallPackage(const std::wstring &packageFilePath);
+    bool RemovePackage(const std::wstring &packageFamilyName, bool preserveData = false);
 };
 
 namespace Packages = AnyFSE::Tools::Packages;

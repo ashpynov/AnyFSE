@@ -4,6 +4,7 @@ namespace AnyFSE::App::Constants
 {
     // Package / identity
     inline constexpr wchar_t PackageFamilyName[] = L"ArtemShpynov.AnyFSE_by4wjhxmygwn4";
+    inline constexpr char FolderRegistrationVersion[] = "0.90.26";
     inline constexpr wchar_t AppUserModelId[] = L"ArtemShpynov.AnyFSE_by4wjhxmygwn4!App";
     inline constexpr wchar_t PackageAtomName[] = L"ArtemShpynov.AnyFSE_by4wjhxmygwn4";
     inline constexpr wchar_t WaitingExitMutex[] = L"ArtemShpynov.AnyFSE_WaitingExitFSE";
@@ -74,11 +75,9 @@ namespace AnyFSE::App::Constants
     inline constexpr wchar_t InstallerSilentArgument[] = L"/s";
     inline constexpr wchar_t InstallerAutoUpdateArgument[] = L"/autoupdate";
     inline constexpr char InstallerLogName[] = "AnyFSE.Installer";
-    inline constexpr wchar_t RootCertificateStore[] = L"ROOT";
-    inline constexpr wchar_t TrustedPeopleCertificateStore[] = L"TrustedPeople";
-    inline constexpr wchar_t PublisherCertFriendlyName[] = L"AnyFSE package temp certificate";
-    inline constexpr wchar_t TempCertFile[] = L"AnyFSE.Temp.cer";
-    inline constexpr wchar_t AppxFilePrefix[] = L"AnyFSE-";
+    inline constexpr wchar_t AppxManifestFile[] = L"AppxManifest.xml";
+    inline constexpr wchar_t AppModelUnlockRegKey[] = L"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AppModelUnlock";
+    inline constexpr wchar_t AllowDevelopmentRegValue[] = L"AllowDevelopmentWithoutDevLicense";
     inline constexpr wchar_t ZipExtension[] = L".zip";
     inline constexpr wchar_t ReleaseZipPrefix[] = L"AnyFSE.";
     inline constexpr wchar_t TempInstallDirName[] = L"AnyFSE_install";
