@@ -18,39 +18,46 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         m_theme.OnThemeChanged += delegate(ReloadIcons);
 
-        SettingsLine & rogAllySupport = m_dialog.AddSettingsLine(settingPageList, top,
-            Translate(L"settingsAllyFeatures"),
-            Translate(L"settingsAllyFeaturesDescription"),
-            Layout::LineHeight, Layout::LinePadding, 0
-        );
-        rogAllySupport.SetState(FluentDesign::SettingsLine::Next);
-        rogAllySupport.SetIcon(L"@B9ECED6F.ASUSCommandCenter_qmba6cd70vzyy");
-        rogAllySupport.OnChanged += delegate(OpenAllyHidPage);
+        m_dialog.AddSettingsLine(settingPageList, top,
+                Translate(L"settingsAllyFeatures"),
+                Translate(L"settingsAllyFeaturesDescription"),
+                Layout::LineHeight, Layout::LinePadding, 0)
+            .SetState(SettingsLine::Next)
+            .SetIcon(L"@B9ECED6F.ASUSCommandCenter_qmba6cd70vzyy")
+            .OnChanged += delegate(OpenAllyHidPage);
 
         ULONG pageTop = 0;
         m_pModeMouseLine = &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            Translate(L"settingsAllyModeMouse"),
-            Translate(L"settingsAllyModeMouseDescription"),
-            m_modeMouseCombo,
-            Layout::LineHeight, Layout::LinePadding, 0, 260);
-        m_pModeMouseLine->SetInfo(Translate(L"settingsAllyModeMouseHelp"));
+                Translate(L"settingsAllyModeMouse"),
+                Translate(L"settingsAllyModeMouseDescription"),
+                m_modeMouseCombo,
+                Layout::LineHeight, Layout::LinePadding, 0, 260)
+            .SetInfo(Translate(L"settingsAllyModeMouseHelp"));
 
-        SettingsLine& controlModeHotkeysLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            Translate(L"settingsAllyControlModeHotkeys"),
-            Translate(L"settingsAllyControlModeHotkeysDescription"),
-            m_controlModeHotkeysToggle,
-            Layout::LineHeight, Layout::LinePadding, 0);
-        controlModeHotkeysLine.SetIcon(L'\xE765');
-        controlModeHotkeysLine.SetInfo(Translate(L"settingsAllyControlModeHotkeysHelp"));
+        m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                Translate(L"settingsAllyControlModeHotkeys"),
+                Translate(L"settingsAllyControlModeHotkeysDescription"),
+                m_controlModeHotkeysToggle,
+                Layout::LineHeight, Layout::LinePadding, 0)
+            .SetIcon(L'\xE765')
+            .SetInfo(Translate(L"settingsAllyControlModeHotkeysHelp"));
+
+        m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                Translate(L"settingsAllyControlModeHaptic"),
+                Translate(L"settingsAllyControlModeHapticDescription"),
+                m_controlModeHapticToggle,
+                Layout::LineHeight, Layout::LinePadding, 0)
+            .SetIcon(L'\xE659')
+            .SetInfo(Translate(L"settingsAllyControlModeHapticHelp"));
 
         m_pAllyHidLine = &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            Translate(L"settingsAllyEnableAlternativeButtons"),
-            Translate(L"settingsAllyEnableAlternativeButtonsDescription"),
-            m_enableAllyHidToggle,
-            Layout::LineHeight, 0, 0);
-        m_pAllyHidLine->SetIcon(L"@B9ECED6F.ASUSCommandCenter_qmba6cd70vzyy");
-        m_enableAllyHidToggle.OnChanged = delegate(EnableAllyHidChanged);
+                Translate(L"settingsAllyEnableAlternativeButtons"),
+                Translate(L"settingsAllyEnableAlternativeButtonsDescription"),
+                m_enableAllyHidToggle,
+                Layout::LineHeight, 0, 0)
+            .SetIcon(L"@B9ECED6F.ASUSCommandCenter_qmba6cd70vzyy");
 
+        m_enableAllyHidToggle.OnChanged = delegate(EnableAllyHidChanged);
 
         m_pACPressLine = &m_pAllyHidLine->AddGroupItem(
             &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
@@ -168,6 +175,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
         m_enableAllyHidToggle.SetCheck(Config::AllyHidEnable);
         m_controlModeHotkeysToggle.SetCheck(Config::AllyControlModeHotkeys);
+        m_controlModeHapticToggle.SetCheck(Config::AllyControlModeHaptic);
 
         m_acPressCombo.SelectItem(Config::AllyHidACPress);
         m_modeACPressCombo.SelectItem(Config::AllyHidModeACPress);
@@ -198,6 +206,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         Config::AllyHidEnable = m_enableAllyHidToggle.GetCheck();
         Config::AllyHidModeMouse = m_modeMouseCombo.GetSelectedIndex();
         Config::AllyControlModeHotkeys = m_controlModeHotkeysToggle.GetCheck();
+        Config::AllyControlModeHaptic = m_controlModeHapticToggle.GetCheck();
 
         Config::AllyHidACPress = m_acPressCombo.GetCurentValue();
         Config::AllyHidModeACPress = m_modeACPressCombo.GetCurentValue();

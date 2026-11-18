@@ -23,89 +23,85 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     void LauncherPage::AddPage(std::list<SettingsLine>& settingPageList, ULONG &top)
     {
         m_pHomeAppSelectionLine = &m_dialog.AddSettingsLine(settingPageList, top,
-            Translate(L"settingsHomeAppSelectionUnavailable"),
-            Translate(L"settingsHomeAppSelectionUnavailableDescription"),
-            m_enableHomeAppSelectionButton,
-            Layout::LineHeight, Layout::LinePadding, 0,
-            Layout::CustomSettingsWidth, Layout::BrowseHeight);
-        m_pHomeAppSelectionLine->SetIcon(L'\xE7BA');
-        m_pHomeAppSelectionLine->Show(false);
+                Translate(L"settingsHomeAppSelectionUnavailable"),
+                Translate(L"settingsHomeAppSelectionUnavailableDescription"),
+                m_enableHomeAppSelectionButton,
+                Layout::LineHeight, Layout::LinePadding, 0,
+                Layout::CustomSettingsWidth, Layout::BrowseHeight)
+            .SetIcon(L'\xE7BA')
+            .Show(false);
 
         m_pLauncherLine = &m_dialog.AddSettingsLine(settingPageList, top,
-            Translate(L"settingsChooseHomeApp"),
-            Translate(L"settingsChooseHomeAppDescription"),
-            m_launcherCombo,
-            Layout::LineHeight, Layout::LauncherBrowsePadding, 0,
-            Layout::LauncherComboWidth );
-
-        m_pLauncherLine->SetFrame(Gdiplus::FrameFlags::SIDE_NO_BOTTOM | Gdiplus::FrameFlags::CORNER_TOP);
+                Translate(L"settingsChooseHomeApp"),
+                Translate(L"settingsChooseHomeAppDescription"),
+                m_launcherCombo,
+                Layout::LineHeight, Layout::LauncherBrowsePadding, 0,
+                Layout::LauncherComboWidth)
+            .SetFrame(Gdiplus::FrameFlags::SIDE_NO_BOTTOM | Gdiplus::FrameFlags::CORNER_TOP);
 
         m_pBrowseLine = &m_dialog.AddSettingsLine(settingPageList, top,
-            L"",
-            L"",
-            m_browseButton,
-            Layout::LauncherBrowseLineHeight, Layout::LinePadding, 0,
-            Layout::BrowseWidth, Layout::BrowseHeight);
-
-        m_pBrowseLine->SetFrame(Gdiplus::FrameFlags::SIDE_NO_TOP | Gdiplus::FrameFlags::CORNER_BOTTOM);
+                L"",
+                L"",
+                m_browseButton,
+                Layout::LauncherBrowseLineHeight, Layout::LinePadding, 0,
+                Layout::BrowseWidth, Layout::BrowseHeight)
+            .SetFrame(Gdiplus::FrameFlags::SIDE_NO_TOP | Gdiplus::FrameFlags::CORNER_BOTTOM);
 
         m_pFseOnStartupLine = &m_dialog.AddSettingsLine(settingPageList, top,
-            Translate(L"settingsEnterFseOnStartup"),
-            L"",
-            m_fseOnStartupToggle,
-            Layout::LineHeight, Layout::LinePadding, 0);
-        m_pFseOnStartupLine->SetIcon(L'\xE93A');
+                Translate(L"settingsEnterFseOnStartup"),
+                L"",
+                m_fseOnStartupToggle,
+                Layout::LineHeight, Layout::LinePadding, 0)
+            .SetIcon(L'\xE93A');
 
         m_pExitOnHomeExitLine = &m_dialog.AddSettingsLine(settingPageList, top,
-            Translate(L"settingsLeaveFseOnHomeExit"),
-            Translate(L"settingsLeaveFseOnHomeExitDescription"),
-            m_fseExitOnHomeExitToggle,
-            Layout::LineHeight, Layout::LinePadding, 0);
-        m_pExitOnHomeExitLine->SetIcon(L'\xEE47');
+                Translate(L"settingsLeaveFseOnHomeExit"),
+                Translate(L"settingsLeaveFseOnHomeExitDescription"),
+                m_fseExitOnHomeExitToggle,
+                Layout::LineHeight, Layout::LinePadding, 0)
+            .SetIcon(L'\xEE47');
 
         m_pAsAdminLine = &m_dialog.AddSettingsLine(settingPageList, top,
-            Translate(L"settingsStartLauncherAsAdministrator"),
-            Translate(L"settingsStartLauncherAsAdministratorDescription"),
-            m_asAdminToggle,
-            Layout::LineHeight, Layout::LinePadding, 0);
-        m_pAsAdminLine->SetIcon(L'\xE7EF');
+                Translate(L"settingsStartLauncherAsAdministrator"),
+                Translate(L"settingsStartLauncherAsAdministratorDescription"),
+                m_asAdminToggle,
+                Layout::LineHeight, Layout::LinePadding, 0)
+            .SetIcon(L'\xE7EF');
 
         m_dialog.AddSettingsLine(settingPageList, top,
-            Translate(L"settingsAllowGamepadGameBar"),
-            Translate(L"settingsAllowGamepadGameBarDescription"),
-            m_gameBarToggle,
-            Layout::LineHeight, Layout::LinePadding, 0).SetIcon(L'\xE7FC');
+                Translate(L"settingsAllowGamepadGameBar"),
+                Translate(L"settingsAllowGamepadGameBarDescription"),
+                m_gameBarToggle,
+                Layout::LineHeight, Layout::LinePadding, 0)
+            .SetIcon(L'\xE7FC');
 
         m_dialog.AddPage((new ConfirmationsPage(m_theme, m_dialog))->AddLine(settingPageList, top));
 
         m_pCustomSettingsLine = &m_dialog.AddSettingsLine(settingPageList, top,
-            Translate(L"settingsUseCustomSettings"),
-            Translate(L"settingsUseCustomSettingsDescription"),
-            m_customSettingsToggle,
-            Layout::LineHeight, Layout::LinePadding, 0);
-
-        m_pCustomSettingsLine->SetState(FluentDesign::SettingsLine::Next);
-        m_pCustomSettingsLine->SetIcon(L'\xE115');
+                Translate(L"settingsUseCustomSettings"),
+                Translate(L"settingsUseCustomSettingsDescription"),
+                m_customSettingsToggle,
+                Layout::LineHeight, Layout::LinePadding, 0)
+            .SetState(FluentDesign::SettingsLine::Next)
+            .SetIcon(L'\xE115');
         m_pCustomSettingsLine->OnChanged += delegate(OpenCustomSettingsPage);
 
         AddCustomPage();
 
         m_pSplashSettingsLine = &m_dialog.AddSettingsLine(settingPageList, top,
-            Translate(L"settingsSplashScreenSettings"),
-            Translate(L"settingsSplashScreenSettingsDescription"),
-            Layout::LineHeight, Layout::LinePadding, 0);
-
-        m_pSplashSettingsLine->SetState(SettingsLine::Next);
-        m_pSplashSettingsLine->SetIcon(L'\xEB9F');
+                Translate(L"settingsSplashScreenSettings"),
+                Translate(L"settingsSplashScreenSettingsDescription"),
+                Layout::LineHeight, Layout::LinePadding, 0)
+            .SetState(SettingsLine::Next)
+            .SetIcon(L'\xEB9F');
         m_pSplashSettingsLine->OnChanged += delegate(OpenSplashSettingsPage);
 
         m_pStartupSettingsLine = &m_dialog.AddSettingsLine(settingPageList, top,
-            Translate(L"settingsStartup"),
-            Translate(L"settingsStartupDescription"),
-            Layout::LineHeight, Layout::LinePadding, 0);
-
-        m_pStartupSettingsLine->SetState(FluentDesign::SettingsLine::Next);
-        m_pStartupSettingsLine->SetIcon(L'\xE18C');
+                Translate(L"settingsStartup"),
+                Translate(L"settingsStartupDescription"),
+                Layout::LineHeight, Layout::LinePadding, 0)
+            .SetState(FluentDesign::SettingsLine::Next)
+            .SetIcon(L'\xE18C');
         m_pStartupSettingsLine->OnChanged += delegate(OpenStartupSettingsPage);
 
         m_dialog.AddPage(m_pSplashPage);
@@ -130,23 +126,20 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         /// Custom Settings Page part
         ULONG pageTop = 0;
 
-        SettingsLine & parametersSettingsLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            Translate(L"settingsAdditionalArguments"),
-            Translate(L"settingsAdditionalArgumentsDescription"),
-            m_additionalArgumentsEdit,
-            Layout::LineHeight, Layout::LinePadding, 0);
-
-        parametersSettingsLine.SetIcon(L'\xE62F');
+        m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                Translate(L"settingsAdditionalArguments"),
+                Translate(L"settingsAdditionalArgumentsDescription"),
+                m_additionalArgumentsEdit,
+                Layout::LineHeight, Layout::LinePadding, 0)
+            .SetIcon(L'\xE62F');
 
         SettingsLine & primarySettingsLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            Translate(L"settingsHomeApplicationDetection"),
-            Translate(L"settingsHomeApplicationDetectionDescription"),
-            Layout::LineHeightSmall, 0, 0);
-
-
-        primarySettingsLine.SetState(SettingsLine::State::Closed);
+                Translate(L"settingsHomeApplicationDetection"),
+                Translate(L"settingsHomeApplicationDetectionDescription"),
+                Layout::LineHeightSmall, 0, 0)
+            .SetState(SettingsLine::State::Closed)
+            .SetIcon(L'\xF8A5');
         primarySettingsLine.OnChanged += delegate(m_dialog.UpdateLayout);
-        primarySettingsLine.SetIcon(L'\xF8A5');
 
         primarySettingsLine.AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
             Translate(L"settingsProcessName"),
@@ -167,13 +160,12 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             Layout::LineHeightSmall, Layout::LinePadding, Layout::LineSmallMargin));
 
         SettingsLine & secondarySettingsLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            Translate(L"settingsAlternativeModeDetection"),
-            Translate(L"settingsAlternativeModeDetectionDescription"),
-            Layout::LineHeightSmall, 0, 0);
-
-        secondarySettingsLine.SetState(SettingsLine::State::Closed);
+                Translate(L"settingsAlternativeModeDetection"),
+                Translate(L"settingsAlternativeModeDetectionDescription"),
+                Layout::LineHeightSmall, 0, 0)
+            .SetState(SettingsLine::State::Closed)
+            .SetIcon(L'\xE737');
         secondarySettingsLine.OnChanged += delegate(m_dialog.UpdateLayout);
-        secondarySettingsLine.SetIcon(L'\xE737');
 
         secondarySettingsLine.AddGroupItem(&m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
             Translate(L"settingsSecondaryProcessName"),
@@ -194,12 +186,12 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             Layout::LineHeightSmall, 0, Layout::LineSmallMargin));
 
         m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"",
-            L"",
-            m_customResetButton,
-            Layout::LineHeightSmall, Layout::LinePadding, Layout::LineSmallMargin,
-            Layout::StartupAddWidth, Layout::StartupAddHeight
-        ).SetState(FluentDesign::SettingsLine::Caption);
+                L"",
+                L"",
+                m_customResetButton,
+                Layout::LineHeightSmall, Layout::LinePadding, Layout::LineSmallMargin,
+                Layout::StartupAddWidth, Layout::StartupAddHeight)
+            .SetState(FluentDesign::SettingsLine::Caption);
 
         m_customResetButton.SetText(Translate(L"resetBtn"));
         m_customResetButton.OnChanged = delegate(OnCustomReset);

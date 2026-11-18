@@ -14,16 +14,15 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 {
     SettingsPage * ConfirmationsPage::AddLine(std::list<SettingsLine>& settingPageList, ULONG &top)
     {
-        FluentDesign::SettingsLine &confirmationsLine = m_dialog.AddSettingsLine(settingPageList,
-            top,
-            Translate(L"settingsConfirmationsSetup"),
-            Translate(L"settingsConfirmationsSetupDescription"),
-            Layout::LineHeight, Layout::LinePadding, 0,
-            Layout::LauncherComboWidth);
-
-        confirmationsLine.SetIcon(L'\xE9CE');
-        confirmationsLine.SetState(SettingsLine::State::Next);
-        confirmationsLine.OnChanged = delegate(OpenConfirmationsSettingsPage);
+        m_dialog.AddSettingsLine(settingPageList,
+                top,
+                Translate(L"settingsConfirmationsSetup"),
+                Translate(L"settingsConfirmationsSetupDescription"),
+                Layout::LineHeight, Layout::LinePadding, 0,
+                Layout::LauncherComboWidth)
+            .SetIcon(L'\xE9CE')
+            .SetState(SettingsLine::State::Next)
+            .OnChanged = delegate(OpenConfirmationsSettingsPage);
         return this;
     }
 
@@ -31,24 +30,24 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     {
         ULONG pageTop = 0;
         m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            Translate(L"settingsConfirmationsEnterMode"),
-            Translate(L"settingsConfirmationsEnterModeDescription"),
-            m_confirmEnterCombo,
-            Layout::LineHeight, Layout::LinePadding, 0, 330)
+                Translate(L"settingsConfirmationsEnterMode"),
+                Translate(L"settingsConfirmationsEnterModeDescription"),
+                m_confirmEnterCombo,
+                Layout::LineHeight, Layout::LinePadding, 0, 330)
             .SetIcon(L'\xE93A');
 
         m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            Translate(L"settingsConfirmationsExitMode"),
-            L"",
-            m_confirmExitCombo,
-            Layout::LineHeight, Layout::LinePadding, 0, 330)
+                Translate(L"settingsConfirmationsExitMode"),
+                L"",
+                m_confirmExitCombo,
+                Layout::LineHeight, Layout::LinePadding, 0, 330)
             .SetIcon(L'\xEE47');
 
         m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            Translate(L"settingsHotkeys"),
-            Translate(L"settingsHotkeysDescription"),
-            m_hotkeysToggle,
-            Layout::LineHeight, Layout::LinePadding, 0, 330)
+                Translate(L"settingsHotkeys"),
+                Translate(L"settingsHotkeysDescription"),
+                m_hotkeysToggle,
+                Layout::LineHeight, Layout::LinePadding, 0, 330)
             .SetIcon(L'\xE765');
 
         std::vector<std::wstring> enterOptions{

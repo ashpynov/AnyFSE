@@ -216,6 +216,7 @@ namespace AnyFSE::Configuration
             static bool         AllyHidEnable;
             static int          AllyHidModeMouse;
             static bool         AllyControlModeHotkeys;
+            static bool         AllyControlModeHaptic;
             static bool         AllyHidExtraCommandsEnable;
             static std::wstring AllyHidACPress;
             static std::wstring AllyHidACHold;

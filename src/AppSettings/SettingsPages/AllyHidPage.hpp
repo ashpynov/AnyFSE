@@ -22,6 +22,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
             , m_enableAllyHidToggle(theme)
             , m_modeMouseCombo(theme)
             , m_controlModeHotkeysToggle(theme)
+            , m_controlModeHapticToggle(theme)
             , m_acPressCombo(theme)
             , m_acHoldCombo(theme)
             , m_ccPressCombo(theme)
@@ -43,6 +44,7 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         Toggle m_enableAllyHidToggle;
         ComboBox m_modeMouseCombo;
         Toggle m_controlModeHotkeysToggle;
+        Toggle m_controlModeHapticToggle;
         ComboBox m_acPressCombo;
         ComboBox m_acHoldCombo;
         ComboBox m_ccPressCombo;

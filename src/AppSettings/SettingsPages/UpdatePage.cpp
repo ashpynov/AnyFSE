@@ -13,14 +13,13 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         RECT rect;
         GetClientRect(m_dialog.GetHwnd(), &rect);
 
-        SettingsLine & dialogLine = m_dialog.AddSettingsLine(settingPageList, top,
-            Translate(L"settingsUpdateSettings"),
-            Translate(L"settingsUpdateSettingsDescription"),
-            Layout::LineHeight, Layout::LinePadding, 0);
-
-        dialogLine.SetState(FluentDesign::SettingsLine::Next);
-        dialogLine.SetIcon(L'\xEDAB');
-
+        m_dialog.AddSettingsLine(settingPageList, top,
+                Translate(L"settingsUpdateSettings"),
+                Translate(L"settingsUpdateSettingsDescription"),
+                Layout::LineHeight, Layout::LinePadding, 0)
+            .SetState(FluentDesign::SettingsLine::Next)
+            .SetIcon(L'\xEDAB')
+            .OnChanged += delegate(OpenUpdateSettingsPage);
 
         ULONG topPage = 0;
 
@@ -55,7 +54,6 @@ namespace AnyFSE::App::AppSettings::Settings::Page
         LoadControls();
 
         m_notificationsToggle.OnChanged = delegate(SaveControls);
-        dialogLine.OnChanged += delegate(OpenUpdateSettingsPage);
         m_preReleaseToggle.OnChanged = delegate(UpdateSettingsChangedCheck);
         m_checkIntervalCombo.OnChanged = delegate(UpdateSettingsChangedCheck);
     }

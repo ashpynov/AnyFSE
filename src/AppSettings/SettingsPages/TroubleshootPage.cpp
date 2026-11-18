@@ -31,16 +31,15 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     {
         ULONG topPage = 0;
 
-        FluentDesign::SettingsLine &logLevel = m_dialog.AddSettingsLine(settingPageList,
-            top,
-            Translate(L"settingsTroubleshootSetLogs"),
-            Translate(L"settingsTroubleshootSetLogsDescription"),
-            m_troubleLogLevelCombo,
-            Layout::LineHeight, Layout::LinePadding, 0,
-            Layout::LauncherComboWidth);
-
-        logLevel.SetIcon(L'\xEBE8');
-        logLevel.OnLink = delegate(OnGotoLogsFolder);
+        m_dialog.AddSettingsLine(settingPageList,
+                top,
+                Translate(L"settingsTroubleshootSetLogs"),
+                Translate(L"settingsTroubleshootSetLogsDescription"),
+                m_troubleLogLevelCombo,
+                Layout::LineHeight, Layout::LinePadding, 0,
+                Layout::LauncherComboWidth)
+            .SetIcon(L'\xEBE8')
+            .OnLink = delegate(OnGotoLogsFolder);
 
         for (int i = (int)LogLevels::Disabled; i < (int)LogLevels::Max; i++)
         {

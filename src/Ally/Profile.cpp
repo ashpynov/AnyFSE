@@ -1,4 +1,5 @@
 #include "Ally/Profile.hpp"
+#include "Ally/Haptic.hpp"
 #include "App/Constants.hpp"
 #include "Logging/LogManager.hpp"
 #include "Tools/Registry.hpp"
@@ -12,16 +13,19 @@ namespace Ally::Profile
     void SetDesktop()
     {
         SetMode(Mode::Desktop);
+        Haptic::Feedback(Haptic::Pulse::Double);
     }
 
     void SetGamepad()
     {
         SetMode(Mode::Gamepad);
+        Haptic::Feedback(Haptic::Pulse::Single);
     }
 
     void SetAuto()
     {
         SetMode(Mode::Auto);
+        Haptic::Feedback(Haptic::Pulse::Triple);
     }
 
     void SetMode(Mode mode)

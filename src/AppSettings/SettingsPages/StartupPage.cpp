@@ -12,34 +12,30 @@ namespace AnyFSE::App::AppSettings::Settings::Page
     void StartupPage::AddPage(std::list<SettingsLine>& settingPageList, ULONG &top)
     {
         ULONG pageTop = 0;
-        SettingsLine &startupAppLinkLine = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            Translate(L"settingsNativeStartupSettings"),
-            Translate(L"settingsNativeStartupSettingsDescription"),
-            Layout::LineHeight, Layout::LinePadding, 0);
-
-        startupAppLinkLine.SetState(FluentDesign::SettingsLine::Link);
-        startupAppLinkLine.SetIcon(L'\xE18C');
-        startupAppLinkLine.OnChanged += delegate(OpenMSSettingsStartupApps);
+        m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                Translate(L"settingsNativeStartupSettings"),
+                Translate(L"settingsNativeStartupSettingsDescription"),
+                Layout::LineHeight, Layout::LinePadding, 0)
+            .SetState(FluentDesign::SettingsLine::Link)
+            .SetIcon(L'\xE18C')
+            .OnChanged += delegate(OpenMSSettingsStartupApps);
 
         m_pStartupPageAppsHeader = &m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            Translate(L"settingsAdditionalStartupApplications"),
-            Translate(L"settingsAdditionalStartupApplicationsDescription"),
-            Layout::LineHeight, 0, 0
-        );
+                Translate(L"settingsAdditionalStartupApplications"),
+                Translate(L"settingsAdditionalStartupApplicationsDescription"),
+                Layout::LineHeight, 0, 0)
+            .SetState(FluentDesign::SettingsLine::Caption);
 
-        m_pStartupPageAppsHeader->SetState(FluentDesign::SettingsLine::Caption);
-
-        SettingsLine & line = m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
-            L"",
-            L"",
-            m_startupAddButton,
-            Layout::LineHeightSmall, Layout::LinePadding, Layout::LineSmallMargin,
-            Layout::StartupAddWidth, Layout::StartupAddHeight
-        );
+        m_dialog.AddSettingsLine(m_pageLinesList, pageTop,
+                L"",
+                L"",
+                m_startupAddButton,
+                Layout::LineHeightSmall, Layout::LinePadding, Layout::LineSmallMargin,
+                Layout::StartupAddWidth, Layout::StartupAddHeight)
+            .SetState(FluentDesign::SettingsLine::Caption);
 
         m_startupAddButton.SetText(Translate(L"addBtn"));
         m_startupAddButton.OnChanged = delegate(OnStartupAdd);
-        line.SetState(FluentDesign::SettingsLine::Caption);
     }
 
     void StartupPage::LoadControls()
@@ -117,13 +113,11 @@ namespace AnyFSE::App::AppSettings::Settings::Page
 
     void StartupPage::SetStartupAppLine(SettingsLine *pLine, const std::wstring& path, const std::wstring& args, bool asAdmin)
     {
-        pLine->SetData(0, path);
-        pLine->SetData(1, args);
-        pLine->SetData(2, asAdmin ? L"1" : L"0");
-
-
-        pLine->SetName(Config::GetApplicationName(path));
-        pLine->SetDescription(path + L" " + args);
+        pLine->SetData(0, path)
+            .SetData(1, args)
+            .SetData(2, asAdmin ? L"1" : L"0")
+            .SetName(Config::GetApplicationName(path))
+            .SetDescription(path + L" " + args);
 
         if (!path.empty())
         {

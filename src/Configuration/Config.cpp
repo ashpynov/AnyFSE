@@ -90,6 +90,7 @@ namespace AnyFSE::Configuration
     bool            Config::AllyHidEnable = false;
     int             Config::AllyHidModeMouse = Config::MouseDisabled;
     bool            Config::AllyControlModeHotkeys = false;
+    bool            Config::AllyControlModeHaptic = true;
     bool            Config::AllyHidExtraCommandsEnable = false;
     std::wstring    Config::AllyHidACPress = L"GamebarCommandCenter";
     std::wstring    Config::AllyHidACHold = L"TaskSwitcher";
@@ -179,6 +180,7 @@ namespace AnyFSE::Configuration
         AllyHidEnable           = config.value(jp("/AllyHid/Enable"),       false);
         AllyHidModeMouse        = config.value(jp("/AllyHid/ModeMouse"), int(MouseDisabled));
         AllyControlModeHotkeys  = config.value(jp("/Ally/ControlModeHotkeys"), false);
+        AllyControlModeHaptic   = config.value(jp("/Ally/ControlModeHaptic"), true);
         AllyHidACPress          = config.value(jp("/AllyHid/ACPress"),      std::wstring(L"GamebarCommandCenter"));
         AllyHidACHold           = config.value(jp("/AllyHid/ACHold"),       std::wstring(L"TaskSwitcher"));
         AllyHidCCPress          = config.value(jp("/AllyHid/CCPress"),      std::wstring(L"HomeApp"));
@@ -290,6 +292,7 @@ namespace AnyFSE::Configuration
         config["AllyHid"]["Enable"]             = AllyHidEnable;
         config["AllyHid"]["ModeMouse"]          = AllyHidModeMouse;
         config["Ally"]["ControlModeHotkeys"]    = AllyControlModeHotkeys;
+        config["Ally"]["ControlModeHaptic"]     = AllyControlModeHaptic;
         config["AllyHid"]["ACPress"]            = AllyHidACPress;
         config["AllyHid"]["ACHold"]             = AllyHidACHold;
         config["AllyHid"]["CCPress"]            = AllyHidCCPress;

@@ -776,7 +776,7 @@ namespace FluentDesign
         }
     }
 
-    void SettingsLine::SetChevron(State state)
+    SettingsLine& SettingsLine::SetChevron(State state)
     {
         m_chevronButton.OnHover.Clear();
         bool bShow = state != State::Normal && state != State::Caption;
@@ -828,6 +828,7 @@ namespace FluentDesign
             UpdateLayout();
             OnMouseLeave();
         }
+        return *this;
     }
 
     static bool IsSelfVisible(HWND hwnd)
@@ -885,13 +886,14 @@ namespace FluentDesign
         Invalidate();
     }
 
-    void SettingsLine::SetIcon(wchar_t icon)
+    SettingsLine& SettingsLine::SetIcon(wchar_t icon)
     {
         m_icon = icon;
         UpdateLayout();
+        return *this;
     }
 
-    void SettingsLine::SetIcon(const std::wstring &path)
+    SettingsLine& SettingsLine::SetIcon(const std::wstring &path)
     {
         if (m_hIcon)
         {
@@ -900,9 +902,10 @@ namespace FluentDesign
         }
         m_hIcon = Icon::LoadIcon(path, m_theme.GetSize_Icon());
         UpdateLayout();
+        return *this;
     }
 
-    void SettingsLine::SetOverlayIcon(const std::wstring &path)
+    SettingsLine& SettingsLine::SetOverlayIcon(const std::wstring &path)
     {
         HICON icon = Icon::LoadIcon(path);
         if (m_hOverlayIcon)
@@ -914,20 +917,22 @@ namespace FluentDesign
         {
             Invalidate();
         }
+        return *this;
     }
 
-    void SettingsLine::SetInfo(const std::wstring &text)
+    SettingsLine& SettingsLine::SetInfo(const std::wstring &text)
     {
         m_tooltip.Hide(false);
         m_infoText = text;
-        SetState(text.empty() ? State::Normal : State::Info);
+        return SetState(text.empty() ? State::Normal : State::Info);
     }
 
-    void SettingsLine::SetMenu(const std::vector<Popup::PopupItem> &items)
+    SettingsLine& SettingsLine::SetMenu(const std::vector<Popup::PopupItem> &items)
     {
         SetState(State::Menu);
         m_chevronButton.SetMenu(items);
         UpdateLayout();
+        return *this;
     }
 
     void SettingsLine::PositionChildControl()
@@ -992,7 +997,7 @@ namespace FluentDesign
         Process::StartProtocol(url);
     }
 
-    void SettingsLine::AddLinkButton(const std::wstring &name, const std::wstring &url)
+    SettingsLine& SettingsLine::AddLinkButton(const std::wstring &name, const std::wstring &url)
     {
         m_linkButtons.emplace_back(m_theme);
         Button &b = m_linkButtons.back();
@@ -1004,13 +1009,14 @@ namespace FluentDesign
             b.Enable(false);
         }
         OnChanged.Notify();
+        return *this;
     }
 
-    int SettingsLine::SetMaxColumns(int nColumns)
+    SettingsLine& SettingsLine::SetMaxColumns(int nColumns)
     {
         m_nMaxColumns = nColumns;
         OnChanged.Notify();
-        return 0;
+        return *this;
     }
 
     int SettingsLine::ReflowLinkButtons(int width)
@@ -1053,13 +1059,14 @@ namespace FluentDesign
     }
 
     // Public methods implementation
-    void SettingsLine::AddChildControl(HWND hChildControl)
+    SettingsLine& SettingsLine::AddChildControl(HWND hChildControl)
     {
         SetParent(hChildControl, m_hWnd);
         EnableWindow(hChildControl, m_enabled);
         ShowWindow(hChildControl, SW_SHOWNOACTIVATE);
         m_childControlsList.push_back(hChildControl);
         UpdateLayout();
+        return *this;
     }
 
     HWND SettingsLine::GetChildControl(int n)
@@ -1073,19 +1080,21 @@ namespace FluentDesign
         return *it;
     }
 
-    void SettingsLine::SetName(const std::wstring &name)
+    SettingsLine& SettingsLine::SetName(const std::wstring &name)
     {
         m_name = name;
         UpdateLayout();
+        return *this;
     }
 
-    void SettingsLine::SetDescription(const std::wstring &description)
+    SettingsLine& SettingsLine::SetDescription(const std::wstring &description)
     {
         m_description = NormalizeLineFeeds(description);
         UpdateLayout();
+        return *this;
     }
 
-    void SettingsLine::Enable(bool enable)
+    SettingsLine& SettingsLine::Enable(bool enable)
     {
         m_enabled = enable;
         EnableWindow(m_hWnd, enable);
@@ -1094,25 +1103,28 @@ namespace FluentDesign
             EnableWindow(hwnd, enable);
         }
         Invalidate();
+        return *this;
     }
 
-    void SettingsLine::Disable()
+    SettingsLine& SettingsLine::Disable()
     {
-        Enable(false);
+        return Enable(false);
     }
 
-    void SettingsLine::Show(bool show)
+    SettingsLine& SettingsLine::Show(bool show)
     {
         m_visible = show;
         ShowWindow(m_hWnd, show ? SW_SHOW : SW_HIDE);
+        return *this;
     }
 
-    void SettingsLine::SetSize(int width, int height)
+    SettingsLine& SettingsLine::SetSize(int width, int height)
     {
         m_width = width;
         m_height = height;
         //m_designHeight = m_theme.DpiUnscale(height);
         SetWindowPos(m_hWnd, NULL, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
+        return *this;
     }
 
     int SettingsLine::GetDesignHeight() const
@@ -1155,18 +1167,20 @@ namespace FluentDesign
         return height;
     }
 
-    void SettingsLine::SetTop(int top)
+    SettingsLine& SettingsLine::SetTop(int top)
     {
         m_top = top;
         SetWindowPos(m_hWnd, NULL, m_left, m_top, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+        return *this;
     }
 
-    void SettingsLine::SetLeftMargin(int margin)
+    SettingsLine& SettingsLine::SetLeftMargin(int margin)
     {
         m_leftMargin = margin;
         UpdateLayout();
+        return *this;
     }
-    void SettingsLine::SetState(State state)
+    SettingsLine& SettingsLine::SetState(State state)
     {
         if (state != State::Info)
             m_tooltip.Hide(false);
@@ -1192,6 +1206,7 @@ namespace FluentDesign
         SetChevron(m_state);
 
         UpdateLayout();
+        return *this;
     }
 
     SettingsLine& SettingsLine::AddGroupItem(SettingsLine *groupItem)

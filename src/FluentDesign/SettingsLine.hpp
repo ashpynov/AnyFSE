@@ -132,39 +132,40 @@ namespace FluentDesign
         HWND GetHWnd() const { return m_hWnd; }
 
         // Child control management
-        void AddChildControl(HWND hChildControl);
+        SettingsLine& AddChildControl(HWND hChildControl);
         HWND GetChildControl(int n = 0);
 
         // Text management
-        void SetName(const std::wstring &name);
-        void SetDescription(const std::wstring &description);
-        void SetInfo(const std::wstring &text);
+        SettingsLine& SetName(const std::wstring &name);
+        SettingsLine& SetDescription(const std::wstring &description);
+        SettingsLine& SetInfo(const std::wstring &text);
         const std::wstring &GetName() const { return m_name; }
         const std::wstring &GetDescription() const { return m_description; }
 
         // State management
-        void Enable(bool enable = true);
-        void Disable();
-        void Show(bool show = true);
+        SettingsLine& Enable(bool enable = true);
+        SettingsLine& Disable();
+        SettingsLine& Show(bool show = true);
         bool IsVisible() const { return m_visible; }
         bool IsEnabled() const { return m_enabled; }
 
-        void SetFrame(UINT flags)
+        SettingsLine& SetFrame(UINT flags)
         {
             m_frameFlags = flags;
             InvalidateRect(m_hWnd, NULL, FALSE);
+            return *this;
         }
 
         // Sizing
-        void SetSize(int width, int height);
+        SettingsLine& SetSize(int width, int height);
         int GetDesignHeight() const;
         int GetDesignPadding() const;
 
         int GetTotalHeight() const;
-        void SetTop(int top);
-        void SetLeftMargin(int margin);
+        SettingsLine& SetTop(int top);
+        SettingsLine& SetLeftMargin(int margin);
 
-        void SetState(State state);
+        SettingsLine& SetState(State state);
         State GetState() { return m_state; }
 
         SettingsLine& AddGroupItem(SettingsLine *groupItem);
@@ -172,25 +173,29 @@ namespace FluentDesign
         SettingsLine *GetGroupHeader() { return m_groupLine; }
         std::list<SettingsLine *> &GetGroupItems() { return m_groupItemsList; }
         void EnsureChevron();
-        void SetChevron(State state);
+        SettingsLine& SetChevron(State state);
         bool HasChevron() const;
         void UpdateLayout();
         bool IsNested() const { return m_groupLine; }
         void Invalidate(BOOL bErase = FALSE);
 
-        void SetIcon(wchar_t icon);
-        void SetIcon(const std::wstring& path);
+        SettingsLine& SetIcon(wchar_t icon);
+        SettingsLine& SetIcon(const std::wstring& path);
         // Draw over the main icon at its bottom-right corner. Empty path clears the overlay.
-        void SetOverlayIcon(const std::wstring& path);
+        SettingsLine& SetOverlayIcon(const std::wstring& path);
 
-        void SetMenu(const std::vector<Popup::PopupItem> &items);
-        void SetData(int index, const std::wstring &data) { m_data[index] = data; }
+        SettingsLine& SetMenu(const std::vector<Popup::PopupItem> &items);
+        SettingsLine& SetData(int index, const std::wstring &data)
+        {
+            m_data[index] = data;
+            return *this;
+        }
         std::wstring GetData(int index);
 
         void NavigateTo(const std::wstring &url);
 
-        void AddLinkButton(const std::wstring &name, const std::wstring &url);
-        int SetMaxColumns(int nColumns);
+        SettingsLine& AddLinkButton(const std::wstring &name, const std::wstring &url);
+        SettingsLine& SetMaxColumns(int nColumns);
 
         Event OnChanged;
         Event OnLink;
