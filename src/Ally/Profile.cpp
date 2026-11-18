@@ -13,19 +13,16 @@ namespace Ally::Profile
     void SetDesktop()
     {
         SetMode(Mode::Desktop);
-        Haptic::Feedback(Haptic::Pulse::Double);
     }
 
     void SetGamepad()
     {
         SetMode(Mode::Gamepad);
-        Haptic::Feedback(Haptic::Pulse::Single);
     }
 
     void SetAuto()
     {
         SetMode(Mode::Auto);
-        Haptic::Feedback(Haptic::Pulse::Triple);
     }
 
     void SetMode(Mode mode)
@@ -51,6 +48,19 @@ namespace Ally::Profile
         }
 
         Registry::DeleteValue(c::GameInputRegKey, c::GameInputMouseModeActiveRegValue);
+
+        switch(mode)
+        {
+            case Mode::Auto:
+                Haptic::Feedback(Haptic::Pulse::Triple);
+                break;
+            case Mode::Gamepad:
+                Haptic::Feedback(Haptic::Pulse::Single);
+                break;
+            case Mode::Desktop:
+                Haptic::Feedback(Haptic::Pulse::Double);
+                break;
+        }
     }
 
     void SetToggle()
