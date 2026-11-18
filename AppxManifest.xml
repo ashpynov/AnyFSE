@@ -8,8 +8,9 @@
   xmlns:uap4="http://schemas.microsoft.com/appx/manifest/uap/windows10/4"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
+  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
   xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
-  IgnorableNamespaces="uap uap3 uap4 rescap desktop6">
+  IgnorableNamespaces="uap uap3 uap4 rescap uap10 desktop6">
 
   <Identity
     Name="ArtemShpynov.AnyFSE"
@@ -21,6 +22,7 @@
     <DisplayName>AnyFSE</DisplayName>
     <PublisherDisplayName>Artem Shpynov</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
+    <uap10:AllowExternalContent>true</uap10:AllowExternalContent>
     <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
     <desktop6:RegistryWriteVirtualization>disabled</desktop6:RegistryWriteVirtualization>
   </Properties>
@@ -34,8 +36,9 @@
   </Resources>
 
   <Applications>
-    <Application Id="App" Executable="AnyFSE.exe" EntryPoint="Windows.FullTrustApplication">
+    <Application Id="App" Executable="AnyFSE.exe" uap10:TrustLevel="mediumIL" uap10:RuntimeBehavior="win32App">
       <uap:VisualElements
+        AppListEntry="default"
         DisplayName="AnyFSE"
         Description="AnyFSE Home application launcher"
         BackgroundColor="transparent"

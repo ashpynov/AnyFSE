@@ -24,11 +24,11 @@ Keep private keys and any exported PFX files private. The installer does not imp
 
 ## Application identity
 
-`AppxManifest.xml` is a static manifest copied directly into the installer payload together with `CustomCapability.SCCD` and `Assets`. No separate registration project, MakeAppx, MakePri, or generated resource index is used. Its registration version is fixed at `1.0.0.0`, independently of the binary version; `ForceUpdateFromAnyVersion` is enabled when registering updated files.
+`AppxManifest.xml` is a static manifest copied directly into the installer payload together with `CustomCapability.SCCD` and `Assets`. It declares an identity package with external content (`AllowExternalContent=true`, `RuntimeBehavior=win32App`, `TrustLevel=mediumIL`). `AppListEntry=default` keeps AnyFSE visible in Start, as with the previous signed identity package. Start visibility is separate from the external-location registration; do not set `AppListEntry=none` to suppress a duplicate uninstall entry, because it also removes the Start entry. The installer keeps its normal uninstall entry. No separate registration project or signed APPX/MSIX archive is used. Its registration version is fixed at `1.0.0.0`, independently of the binary version; `ForceUpdateFromAnyVersion` is enabled when registering updated files.
 
 Keep `Identity Name`, `Identity Publisher`, and `Application Id` stable for upgrades. If the identity changes, update `PackageFamilyName`, `AppUserModelId`, and `PackageAtomName` in `src\App\Constants.hpp`. A changed identity also changes the per-user package data directory.
 
-The EXE no longer embeds the sparse-package `msix` identity manifest. Windows supplies identity when it launches the registered application; direct EXE launches use the existing fallback paths under the same package data directory.
+Release EXEs embed `AnyFSE.manifest` with the matching `msix` identity metadata so direct launches also acquire the registered external package identity. Keep its `packageName`, `publisher`, and `applicationId` equal to the package manifest's `Identity Name`, `Identity Publisher`, and `Application Id`. Debug EXEs omit this metadata so local debugging does not require package registration.
 
 For a fork, update `AssemblyCompany`, `AssemblyCopyright`, and `BinarySigningCN` in `AnyFSE.Version.props`. Update the manifest display strings separately. Also review release URLs and updater settings.
 
@@ -57,7 +57,7 @@ Expected outputs under `build\Release`:
 
 The payload contains the five explicitly listed runtime binaries, `AppxManifest.xml`, `CustomCapability.SCCD`, assets, localizations, and `resources.pri`. MakePri generates the resource index from the staging directory so Windows can select icon sizes, scale and unplated variants, and theme variants for JumpList icons. No APPX/MSIX archive or package certificate is created. Required missing inputs stop the build; stale output files are not used to discover payload contents.
 
-The installer copies these files into `%PROGRAMFILES%\AnyFSE` and registers `AppxManifest.xml` directly through the Windows Runtime API `PackageManager.RegisterPackageByUriAsync`, with `RegisterPackageOptions.DeveloperMode` and `ForceUpdateFromAnyVersion` enabled. Registration does not launch PowerShell or any other child process.
+The installer copies these files into `%PROGRAMFILES%\AnyFSE` and registers `AppxManifest.xml` directly through the Windows Runtime API `PackageManager.RegisterPackageByUriAsync`, with `RegisterPackageOptions.DeveloperMode` and `ForceUpdateFromAnyVersion` enabled. `ExternalLocationUri` points to the same installation directory containing `AnyFSE.exe`. Registration does not launch PowerShell or any other child process and does not require a package certificate.
 
 Developer Mode is enabled for registration if needed and restored to its previous state afterwards, including on failure. This permits the development SCCD used for `gamingHome`. Registration checks the deployment result and reports Windows deployment errors to the installer.
 

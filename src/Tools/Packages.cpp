@@ -201,7 +201,7 @@ namespace AnyFSE::Tools::Packages
         return "";
     }
 
-    bool InstallPackage(const std::wstring &packageFilePath)
+    bool InstallPackage(const std::wstring &packageFilePath, const std::wstring &externalInstallPath)
     {
         init_apartment();
 
@@ -212,6 +212,7 @@ namespace AnyFSE::Tools::Packages
             RegisterPackageOptions options;
             options.DeveloperMode(true);
             options.ForceUpdateFromAnyVersion(true);
+            options.ExternalLocationUri(Windows::Foundation::Uri(externalInstallPath));
 
             const DeploymentResult result = packageManager.RegisterPackageByUriAsync(packageUri, options).get();
             if (result.IsRegistered())

@@ -131,8 +131,9 @@ namespace AnyFSE
                 Packages::RemovePackage(Constants::PackageFamilyName);
             }
 
-            CopyFiles(path, Paths::GetInstallPath());
-            CheckSuccess(Packages::InstallPackage((fs::path(Paths::GetInstallPath()) / Constants::AppxManifestFile).wstring()));
+            const std::wstring installPath = Paths::GetInstallPath();
+            CopyFiles(path, installPath);
+            CheckSuccess(Packages::InstallPackage((fs::path(installPath) / Constants::AppxManifestFile).wstring(), installPath));
 
             Config::Save();
 
