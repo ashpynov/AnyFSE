@@ -208,5 +208,7 @@
   "settingsLogLevelDebug": "Mensagens de depuração",
   "settingsLogLevelTrace": "Rastreamento detalhado",
   "toggleOn": "Ativado",
-  "toggleOff": "Desativado"
+  "toggleOff": "Desativado",
+  "hotkeyBoxEmpty": "Não atribuído",
+  "hotkeyBoxRecording": "Pressione um atalho..."
 }

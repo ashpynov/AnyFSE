@@ -66,7 +66,7 @@ namespace FluentDesign
             L"BUTTON",
             L"",
             WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP,
-            x, y, width, m_theme.DpiScale(Layout_ItemHeight),
+            x, y, width, m_theme.DpiScale(Layout_ComboHeight),
             hParent, NULL, GetModuleHandle(NULL), NULL);
 
         m_hImageList = ImageList_Create(
@@ -416,7 +416,7 @@ namespace FluentDesign
     {
         SetWindowPos(m_hWnd, 0, 0, 0,
                      m_theme.DpiScale(m_designWidth),
-                     m_theme.DpiScale(Layout_ItemHeight + 1),
+                     m_theme.DpiScale(Layout_ComboHeight),
                      SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 
         ImageList_RemoveAll(m_hImageList);

@@ -209,5 +209,9 @@
   "settingsLogLevelDebug": "Отладочные сообщения",
   "settingsLogLevelTrace": "Детальная трассировка",
   "toggleOn": "Вкл.",
-  "toggleOff": "Откл."
+  "toggleOff": "Откл.",
+  "settingsHotkeyPreview": "Проверка ввода сочетаний",
+  "settingsHotkeyPreviewDescription": "Начните с Win, Alt или Ctrl; Shift добавляйте после них. Backspace/Delete без модификаторов — очистка. Проверка не меняет действующие сочетания.",
+  "hotkeyBoxEmpty": "Не назначено",
+  "hotkeyBoxRecording": "Нажмите сочетание..."
 }

@@ -208,5 +208,7 @@
   "settingsLogLevelDebug": "Debug",
   "settingsLogLevelTrace": "Trace",
   "toggleOn": "Açık",
-  "toggleOff": "Kapalı"
+  "toggleOff": "Kapalı",
+  "hotkeyBoxEmpty": "Atanmamış",
+  "hotkeyBoxRecording": "Bir tuş kombinasyonuna basın..."
 }

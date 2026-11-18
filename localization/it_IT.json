@@ -209,5 +209,7 @@
   "settingsLogLevelDebug": "Debug",
   "settingsLogLevelTrace": "Traccia",
   "toggleOn": "Attivo",
-  "toggleOff": "Disattivo"
+  "toggleOff": "Disattivo",
+  "hotkeyBoxEmpty": "Non assegnato",
+  "hotkeyBoxRecording": "Premi una combinazione di tasti..."
 }

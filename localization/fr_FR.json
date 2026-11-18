@@ -208,5 +208,7 @@
   "settingsLogLevelDebug": "Debug",
   "settingsLogLevelTrace": "Trace",
   "toggleOn": "Oui",
-  "toggleOff": "Non"
+  "toggleOff": "Non",
+  "hotkeyBoxEmpty": "Non attribué",
+  "hotkeyBoxRecording": "Saisissez un raccourci..."
 }

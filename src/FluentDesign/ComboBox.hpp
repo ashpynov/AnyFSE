@@ -46,7 +46,7 @@ namespace FluentDesign
         };
 
     private:
-        static const int Layout_ItemHeight = 38;
+        static constexpr int Layout_ComboHeight = 38;
         static const int Layout_ImageSize = 20;
         static const int Layout_LeftMargin = 16;
         static const int Layout_IconMargin = 8;
