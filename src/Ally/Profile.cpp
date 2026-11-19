@@ -30,6 +30,9 @@ namespace Ally::Profile
         if (mode > Mode::Desktop)
             return;
 
+        DWORD activeMode = Registry::ReadDWORD(c::AllyGamepadConfigRegKey, c::AllyProfileModeRegValue, (DWORD)Mode::Auto);
+
+
         DWORD mouseMode = Registry::ReadDWORD(c::GameInputRegKey, c::GameInputMouseModeActiveRegValue, -1);
         if (mouseMode == 1)
         {
@@ -49,17 +52,20 @@ namespace Ally::Profile
 
         Registry::DeleteValue(c::GameInputRegKey, c::GameInputMouseModeActiveRegValue);
 
-        switch(mode)
+        if (activeMode != (DWORD)mode)
         {
-            case Mode::Auto:
-                Haptic::Feedback(Haptic::Pulse::Triple);
-                break;
-            case Mode::Gamepad:
-                Haptic::Feedback(Haptic::Pulse::Single);
-                break;
-            case Mode::Desktop:
-                Haptic::Feedback(Haptic::Pulse::Double);
-                break;
+            switch(mode)
+            {
+                case Mode::Auto:
+                    Haptic::Feedback(Haptic::Pulse::Triple);
+                    break;
+                case Mode::Gamepad:
+                    Haptic::Feedback(Haptic::Pulse::Single);
+                    break;
+                case Mode::Desktop:
+                    Haptic::Feedback(Haptic::Pulse::Double);
+                    break;
+            }
         }
     }
 
